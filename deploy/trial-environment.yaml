@@ -1,0 +1,16 @@
+apiVersion: "rhpam.redhat.com/v1alpha1"
+kind: "App"
+metadata:
+  name: "trial-env"
+spec:
+  environment: trial-ephemeral
+  console:
+    image: "rhpam70-businesscentral-openshift:1.2"
+    resources:
+      limits:
+        memory: "200Mi"
+    env:
+    - name: key1
+      value: value1
+    - name: key2
+      value: value2

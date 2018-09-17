@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rhpam-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: rhpam-operator
+  template:
+    metadata:
+      labels:
+        name: rhpam-operator
+    spec:
+      containers:
+        - name: rhpam-operator
+          image: bmozaffa/rhpam-operator
+          command:
+          - rhpam-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
