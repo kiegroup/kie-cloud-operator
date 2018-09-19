@@ -3,15 +3,16 @@ package handler
 import (
 	"context"
 
-	"github.com/bmozaffa/rhpam-operator/pkg/apis/rhpam/v1alpha1"
+	"encoding/json"
+	"fmt"
+
+	"github.com/kiegroup/kie-cloud-operator/internal/pkg/kieserver"
+	"github.com/kiegroup/kie-cloud-operator/internal/pkg/rhpamcentr"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/runtime"
-	"github.com/bmozaffa/rhpam-operator/internal/pkg/rhpamcentr"
-	"github.com/bmozaffa/rhpam-operator/internal/pkg/kieserver"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"fmt"
-	"encoding/json"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func NewHandler() sdk.Handler {

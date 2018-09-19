@@ -5,12 +5,19 @@ metadata:
 spec:
   environment: trial-ephemeral
   console:
-    image: "rhpam70-businesscentral-openshift:1.2"
     resources:
+      requests:
+        memory: 1Gi
       limits:
-        memory: "200Mi"
+        memory: 2Gi
     env:
     - name: key1
       value: value1
     - name: key2
       value: value2
+  server:
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 2Gi

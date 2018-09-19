@@ -1,8 +1,10 @@
 package constants
 
-const RhpamcentrServicePrefix = "rhpamcentr"
-const KieServerServicePrefix = "kieserver"
-const RhpamcentrImageStreamName = "rhpam70-businesscentral-openshift"
-const KieServerImageStreamName = "rhpam70-kieserver-openshift"
-const ImageStreamNamespace = "openshift"
-const ImageStreamTag = "1.2"
+const (
+	RhpamcentrServicePrefix   = "rhpamcentr"
+	KieServerServicePrefix    = "kieserver"
+	RhpamcentrImageStreamName = "rhpam70-businesscentral-openshift"
+	KieServerImageStreamName  = "rhpam70-kieserver-openshift"
+	ImageStreamNamespace      = "openshift"
+	ImageStreamTag            = "1.2"
+)

@@ -14,7 +14,10 @@ spec:
     spec:
       containers:
         - name: rhpam-operator
-          image: bmozaffa/rhpam-operator
+          image: docker.io/bmozaffa/rhpam-operator
+          ports:
+          - containerPort: 60000
+            name: metrics
           command:
           - rhpam-operator
           imagePullPolicy: Always
@@ -23,3 +26,5 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: OPERATOR_NAME
+              value: "rhpam-operator"
