@@ -10,6 +10,7 @@ import (
 	"github.com/openshift/api/route"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -18,7 +19,6 @@ import (
 
 func GetRHMAPCentr(cr *v1alpha1.App) []runtime.Object {
 	_, serviceName, labels := shared.GetCommonLabels(cr, constants.RhpamcentrServicePrefix)
-	resources := shared.GetResources(cr.Spec.Console.Resources)
 	image := shared.GetImage(cr.Spec.Console.Image, "rhpam70-businesscentral-openshift")
 
 	dc := v1.DeploymentConfig{
@@ -69,7 +69,14 @@ func GetRHMAPCentr(cr *v1alpha1.App) []runtime.Object {
 							Name:            serviceName,
 							Image:           image,
 							ImagePullPolicy: "Always",
-							Resources:       resources,
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("220Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("220Mi"),
+								},
+							},
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
 									Exec: &corev1.ExecAction{
@@ -114,7 +121,8 @@ func GetRHMAPCentr(cr *v1alpha1.App) []runtime.Object {
 			},
 		},
 	}
-	dc.Spec.Template.Spec.Containers[0].Env = shared.GetEnvVars(defaults.ConsoleEnvironmentDefaults(), cr.Spec.Console.Env)
+	defaultEnv := defaults.ConsoleEnvironmentDefaults()
+	shared.MergeContainerConfigs(dc.Spec.Template.Spec.Containers, cr.Spec.Console, defaultEnv)
 
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
