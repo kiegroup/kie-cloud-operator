@@ -1,19 +1,19 @@
 package kieserver
 
 import (
+	"github.com/kiegroup/kie-cloud-operator/internal/constants"
+	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
+	"github.com/kiegroup/kie-cloud-operator/internal/pkg/shared"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/openshift/api/apps"
+	"github.com/openshift/api/apps/v1"
 	"github.com/openshift/api/route"
+	routev1 "github.com/openshift/api/route/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"github.com/bmozaffa/rhpam-operator/internal/constants"
-	"github.com/bmozaffa/rhpam-operator/pkg/apis/rhpam/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"github.com/bmozaffa/rhpam-operator/internal/pkg/shared"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/api/core/v1"
-	routev1 "github.com/openshift/api/route/v1"
-	"github.com/openshift/api/apps/v1"
-	"github.com/openshift/api/apps"
-	"github.com/bmozaffa/rhpam-operator/internal/pkg/defaults"
 )
 
 func GetKieServer(cr *v1alpha1.App) []runtime.Object {
@@ -24,7 +24,7 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 	dc := v1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
-			APIVersion: apps.GroupName + "/v1",//TODO find out if there is a function that provides this
+			APIVersion: apps.GroupName + "/v1", //TODO find out if there is a function that provides this
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
@@ -38,27 +38,27 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 			},
 			Labels: labels,
 		},
-		Spec:v1.DeploymentConfigSpec{
-			Strategy:v1.DeploymentStrategy{
-				Type:v1.DeploymentStrategyTypeRecreate,
+		Spec: v1.DeploymentConfigSpec{
+			Strategy: v1.DeploymentStrategy{
+				Type: v1.DeploymentStrategyTypeRecreate,
 			},
-			Triggers:v1.DeploymentTriggerPolicies{
+			Triggers: v1.DeploymentTriggerPolicies{
 				{
-					Type:v1.DeploymentTriggerOnImageChange,
-					ImageChangeParams:&v1.DeploymentTriggerImageChangeParams{
-						Automatic:true,
-						ContainerNames:[]string{serviceName},
-						From:corev1.ObjectReference{
-							Kind:"ImageStreamTag",
-							Namespace:constants.ImageStreamNamespace,
-							Name:constants.KieServerImageStreamName + ":" + constants.ImageStreamTag,
+					Type: v1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &v1.DeploymentTriggerImageChangeParams{
+						Automatic:      true,
+						ContainerNames: []string{serviceName},
+						From: corev1.ObjectReference{
+							Kind:      "ImageStreamTag",
+							Namespace: constants.ImageStreamNamespace,
+							Name:      constants.KieServerImageStreamName + ":" + constants.ImageStreamTag,
 						},
 					},
 				},
 			},
-			Replicas:1,
+			Replicas: 1,
 			Selector: labels,
-			Template:&corev1.PodTemplateSpec{
+			Template: &corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
@@ -113,7 +113,6 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 	defaultEnv := defaults.ServerEnvironmentDefaults()
 	defaultEnv["KIE_SERVER_CONTROLLER_SERVICE"] = rhpamcentrServiceName
 	defaultEnv["RHPAMCENTR_MAVEN_REPO_SERVICE"] = rhpamcentrServiceName
-	defaultEnv["EXECUTION_SERVER_ROUTE_NAME"] = serviceName
 	dc.Spec.Template.Spec.Containers[0].Env = shared.GetEnvVars(defaultEnv, cr.Spec.Server.Env)
 
 	service := &corev1.Service{
@@ -141,14 +140,14 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 					TargetPort: intstr.FromInt(8080),
 				},
 			},
-			Selector: map[string]string{"deploymentconfig": serviceName,},
+			Selector: map[string]string{"deploymentconfig": serviceName},
 		},
 	}
 
 	openshiftRoute := routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Route",
-			APIVersion: route.GroupName + "/v1",//TODO find out if there is a function that provides this
+			APIVersion: route.GroupName + "/v1", //TODO find out if there is a function that provides this
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,

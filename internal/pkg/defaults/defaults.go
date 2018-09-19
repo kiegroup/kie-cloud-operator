@@ -1,24 +1,23 @@
 package defaults
 
+//go:generate sh -c "CGO_ENABLED=0 go run .packr/packr.go $PWD"
+
 import (
-	"fmt"
 	"encoding/json"
-	"os"
-	"bytes"
-	"io"
-	"github.com/bmozaffa/rhpam-operator/configs"
+
+	"github.com/gobuffalo/packr"
 )
 
 func ConsoleEnvironmentDefaults() map[string]string {
-	return overrideDefaults("configs/console-env.json")
+	return overrideDefaults("console-env.json")
 }
 
 func ServerEnvironmentDefaults() map[string]string {
-	return overrideDefaults("configs/server-env.json")
+	return overrideDefaults("server-env.json")
 }
 
 func overrideDefaults(filename string) map[string]string {
-	defaults := loadJsonMap("configs/common-env.json")
+	defaults := loadJsonMap("common-env.json")
 	configuration := loadJsonMap(filename)
 	for key, value := range configuration {
 		defaults[key] = value
@@ -27,21 +26,8 @@ func overrideDefaults(filename string) map[string]string {
 }
 
 func loadJsonMap(filename string) map[string]string {
-	bundle := configs.ConfigBundle
-	file, e := bundle.Open(filename)
-	if e != nil {
-		fmt.Println("Failed to load %v", filename)
-		return map[string]string{}
-		os.Exit(1)
-	}
-
-	jsonMap := map[string]string{}
-	json.Unmarshal(streamToByte(file), &jsonMap)
+	box := packr.NewBox("../../../config/app")
+	jsonMap := make(map[string]string)
+	json.Unmarshal(box.Bytes(filename), &jsonMap)
 	return jsonMap
-}
-
-func streamToByte(stream io.Reader) []byte {
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(stream)
-	return buf.Bytes()
 }

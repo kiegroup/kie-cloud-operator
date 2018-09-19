@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DOCKER_REPO_ROOT="/go/src/github.com/bmozaffa/rhpam-operator"
+DOCKER_REPO_ROOT="/go/src/github.com/kiegroup/kie-cloud-operator"
 IMAGE=${IMAGE:-"gcr.io/coreos-k8s-scale-testing/codegen:1.9.3"}
 
 docker run --rm \
@@ -13,8 +13,8 @@ docker run --rm \
   "$IMAGE" \
   "/go/src/k8s.io/code-generator/generate-groups.sh"  \
   "deepcopy" \
-  "github.com/bmozaffa/rhpam-operator/pkg/generated" \
-  "github.com/bmozaffa/rhpam-operator/pkg/apis" \
+  "github.com/kiegroup/kie-cloud-operator/pkg/generated" \
+  "github.com/kiegroup/kie-cloud-operator/pkg/apis" \
   "rhpam:v1alpha1" \
   --go-header-file "./tmp/codegen/boilerplate.go.txt" \
   $@

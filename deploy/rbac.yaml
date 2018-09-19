@@ -1,3 +1,10 @@
+#apiVersion: v1
+#kind: ServiceAccount
+#metadata:
+#  name: rhpam-operator
+
+---
+
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -9,34 +16,13 @@ rules:
   - "*"
   verbs:
   - "*"
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - services
-  - endpoints
-  - persistentvolumeclaims
-  - events
-  - configmaps
-  - secrets
-  verbs:
-  - "*"
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - "*"
 
 ---
 
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: default-account-rhpam-operator
+  name: sa-default-rhpam-operator
 subjects:
 - kind: ServiceAccount
   name: default
@@ -44,3 +30,15 @@ roleRef:
   kind: Role
   name: rhpam-operator
   apiGroup: rbac.authorization.k8s.io
+
+---
+
+kind: RoleBinding
+apiVersion: authorization.openshift.io/v1
+metadata:
+  name: sa-default-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  name: admin

@@ -4,7 +4,7 @@ import (
 	"context"
 	"runtime"
 
-	"github.com/bmozaffa/rhpam-operator/internal/app/handler"
+	"github.com/kiegroup/kie-cloud-operator/internal/app/handler"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
