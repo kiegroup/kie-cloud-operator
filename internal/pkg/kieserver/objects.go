@@ -10,6 +10,7 @@ import (
 	"github.com/openshift/api/route"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -18,7 +19,6 @@ import (
 
 func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 	_, serviceName, labels := shared.GetCommonLabels(cr, constants.KieServerServicePrefix)
-	resources := shared.GetResources(cr.Spec.Server.Resources)
 	image := shared.GetImage(cr.Spec.Server.Image, "rhpam70-kieserver-openshift")
 
 	dc := v1.DeploymentConfig{
@@ -69,7 +69,14 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 							Name:            serviceName,
 							Image:           image,
 							ImagePullPolicy: "Always",
-							Resources:       resources,
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("220Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("220Mi"),
+								},
+							},
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
 									Exec: &corev1.ExecAction{
@@ -113,7 +120,7 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 	defaultEnv := defaults.ServerEnvironmentDefaults()
 	defaultEnv["KIE_SERVER_CONTROLLER_SERVICE"] = rhpamcentrServiceName
 	defaultEnv["RHPAMCENTR_MAVEN_REPO_SERVICE"] = rhpamcentrServiceName
-	dc.Spec.Template.Spec.Containers[0].Env = shared.GetEnvVars(defaultEnv, cr.Spec.Server.Env)
+	shared.MergeContainerConfigs(dc.Spec.Template.Spec.Containers, cr.Spec.Server, defaultEnv)
 
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{

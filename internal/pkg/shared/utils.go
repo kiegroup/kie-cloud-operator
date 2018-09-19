@@ -1,7 +1,9 @@
 package shared
 
 import (
+	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -10,9 +12,9 @@ func GetCommonLabels(app *v1alpha1.App, service string) (string, string, map[str
 	appName := app.ObjectMeta.Name
 	serviceName := appName + "-" + service
 	labels := map[string]string{
-		"application": appName,
-		"deployment":  serviceName,
-		"service":     serviceName,
+		"app":        appName,
+		"deployment": serviceName,
+		"service":    serviceName,
 	}
 	return appName, serviceName, labels
 }
@@ -25,18 +27,6 @@ func GetImage(configuredString string, defaultString string) string {
 	}
 }
 
-func GetResources(configuration corev1.ResourceRequirements) corev1.ResourceRequirements {
-
-	return corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			corev1.ResourceMemory: getQuantity(configuration.Limits.Memory(), "220Mi"),
-		},
-		Requests: corev1.ResourceList{
-			corev1.ResourceMemory: getQuantity(configuration.Requests.Memory(), "220Mi"),
-		},
-	}
-}
-
 func getQuantity(configuredQuantity *resource.Quantity, defaultQuantity string) resource.Quantity {
 	if configuredQuantity.IsZero() {
 		return resource.MustParse(defaultQuantity)
@@ -45,7 +35,7 @@ func getQuantity(configuredQuantity *resource.Quantity, defaultQuantity string) 
 	}
 }
 
-func GetEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVar {
+func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVar {
 	for _, envVar := range vars {
 		defaults[envVar.Name] = envVar.Value
 	}
@@ -56,4 +46,42 @@ func GetEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVa
 		index++
 	}
 	return allVars
+}
+
+func MergeContainerConfigs(containers []corev1.Container, crc corev1.Container, defaultEnv map[string]string) []corev1.Container {
+	crc.Env = getEnvVars(defaultEnv, crc.Env)
+	/*
+				unstructObj, err := k8sutil.UnstructuredFromRuntimeObject(object)
+				if err != nil {
+					return err
+				}
+		 		// Update the arg object with the result
+				err = k8sutil.UnstructuredIntoRuntimeObject(unstructObj, object)
+				if err != nil {
+					return fmt.Errorf("failed to unmarshal the retrieved data: %v", err)
+				}
+	*/
+	for i, c := range containers {
+		/*
+			patch, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, ct)
+			if err != nil {
+				logrus.Warnf("Failed to get merge info: %v", err)
+			}
+			_, err = strategicpatch.StrategicMergePatch(oldData, patch, ct)
+			if err != nil {
+				logrus.Warnf("Failed to merge container configs: %v", err)
+			}
+			err = json.Unmarshal(crcb, &ct)
+			if err != nil {
+				logrus.Warnf("Failed to unmarshal container configs: %v", err)
+			}
+		*/
+		ct := c
+		err := mergo.Merge(&ct, crc, mergo.WithOverride)
+		if err != nil {
+			logrus.Warnf("Failed to unmarshal container configs: %v", err)
+		}
+		containers[i] = ct
+	}
+	return containers
 }
