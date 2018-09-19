@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"runtime"
+	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/internal/app/handler"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
@@ -27,8 +28,8 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Failed to get watch namespace: %v", err)
 	}
-	resyncPeriod := 5
-	logrus.Infof("Watching %s of type %s in project %s, every %d seconds", resource, kind, namespace, resyncPeriod)
+	resyncPeriod := time.Duration(5) * time.Second
+	logrus.Infof("Watching %s of type %s in project %s, every %d seconds", resource, kind, namespace, (resyncPeriod / time.Second))
 	sdk.Watch(resource, kind, namespace, resyncPeriod)
 	sdk.Handle(handler.NewHandler())
 	sdk.Run(context.TODO())

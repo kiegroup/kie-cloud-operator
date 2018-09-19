@@ -1,7 +1,7 @@
-apiVersion: "rhpam.redhat.com/v1alpha1"
-kind: "App"
+apiVersion: rhpam.redhat.com/v1alpha1
+kind: App
 metadata:
-  name: "trial-env"
+  name: trial-env
 spec:
   environment: trial-ephemeral
   console:
