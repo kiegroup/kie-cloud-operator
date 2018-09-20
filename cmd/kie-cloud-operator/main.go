@@ -22,7 +22,7 @@ func printVersion() {
 func main() {
 	printVersion()
 
-	resource := "rhpam.redhat.com/v1alpha1"
+	resource := "kiegroup.org/v1"
 	kind := "App"
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/openshift/api/apps/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -15,13 +15,13 @@ import (
 func TestTrialEnvironmentHandling(t *testing.T) {
 	handler := NewHandler()
 	event := sdk.Event{
-		Object: &v1alpha1.App{
-			Spec: v1alpha1.AppSpec{
+		Object: &v1.App{
+			Spec: v1.AppSpec{
 				Environment: "trial-ephemeral",
 			},
 		},
 		Deleted: false}
-	logrus.Debugf("Testing with environment %v", event.Object.(*v1alpha1.App).Spec.Environment)
+	logrus.Debugf("Testing with environment %v", event.Object.(*v1.App).Spec.Environment)
 
 	defer func() {
 		err := recover().(error)
@@ -35,13 +35,13 @@ func TestTrialEnvironmentHandling(t *testing.T) {
 func TestAuthoringEnvironmentHandling(t *testing.T) {
 	handler := NewHandler()
 	event := sdk.Event{
-		Object: &v1alpha1.App{
-			Spec: v1alpha1.AppSpec{
+		Object: &v1.App{
+			Spec: v1.AppSpec{
 				Environment: "authoring",
 			},
 		},
 		Deleted: false}
-	logrus.Debugf("Testing with environment %v", event.Object.(*v1alpha1.App).Spec.Environment)
+	logrus.Debugf("Testing with environment %v", event.Object.(*v1.App).Spec.Environment)
 
 	err := handler.Handle(nil, event)
 	assert.Equal(t, err, nil, "Authoring environment not yet implemented so it should be a no-op and return nil")
@@ -50,13 +50,13 @@ func TestAuthoringEnvironmentHandling(t *testing.T) {
 func TestUnknownEnvironmentHandling(t *testing.T) {
 	handler := NewHandler()
 	event := sdk.Event{
-		Object: &v1alpha1.App{
-			Spec: v1alpha1.AppSpec{
+		Object: &v1.App{
+			Spec: v1.AppSpec{
 				Environment: "unknown",
 			},
 		},
 		Deleted: false}
-	logrus.Debugf("Testing with environment %v", event.Object.(*v1alpha1.App).Spec.Environment)
+	logrus.Debugf("Testing with environment %v", event.Object.(*v1.App).Spec.Environment)
 
 	err := handler.Handle(nil, event)
 	assert.Equal(t, err, nil, "Unknown environment should result in a no-op and return nil")
@@ -74,11 +74,11 @@ func TestUnknownResourceTypeHandling(t *testing.T) {
 }
 
 func TestTrialEnvironmentObjects(t *testing.T) {
-	cr := &v1alpha1.App{
+	cr := &v1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:       "test-ns",
 		},
-		Spec: v1alpha1.AppSpec{
+		Spec: v1.AppSpec{
 			Environment: "trial-ephemeral",
 		},
 	}

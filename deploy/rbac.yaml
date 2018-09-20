@@ -1,17 +1,17 @@
 #apiVersion: v1
 #kind: ServiceAccount
 #metadata:
-#  name: rhpam-operator
+#  name: kie-cloud-operator
 
 ---
 
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: rhpam-operator
+  name: kie-cloud-operator
 rules:
 - apiGroups:
-  - rhpam.redhat.com
+  - kiegroup.org
   resources:
   - "*"
   verbs:
@@ -22,13 +22,13 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: sa-default-rhpam-operator
+  name: sa-default-kie-cloud-operator
 subjects:
 - kind: ServiceAccount
   name: default
 roleRef:
   kind: Role
-  name: rhpam-operator
+  name: kie-cloud-operator
   apiGroup: rbac.authorization.k8s.io
 
 ---

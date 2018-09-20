@@ -15,6 +15,6 @@ docker run --rm \
   "deepcopy" \
   "github.com/kiegroup/kie-cloud-operator/pkg/generated" \
   "github.com/kiegroup/kie-cloud-operator/pkg/apis" \
-  "rhpam:v1alpha1" \
+  "kiegroup:v1" \
   --go-header-file "./tmp/codegen/boilerplate.go.txt" \
   $@

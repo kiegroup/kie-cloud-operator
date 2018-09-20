@@ -11,7 +11,7 @@ fi
 
 BIN_DIR="$(pwd)/tmp/_output/bin"
 mkdir -p ${BIN_DIR}
-PROJECT_NAME="rhpam-operator"
+PROJECT_NAME="kie-cloud-operator"
 REPO_PATH="github.com/kiegroup/kie-cloud-operator"
 BUILD_PATH="${REPO_PATH}/cmd/${PROJECT_NAME}"
 echo "Building "${PROJECT_NAME}"..."

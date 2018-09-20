@@ -7,7 +7,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/rhpamcentr"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -23,7 +23,7 @@ type Handler struct {
 
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
-	case *v1alpha1.App:
+	case *v1.App:
 		var objects []runtime.Object
 		env := o.Spec.Environment
 		switch env {
@@ -58,13 +58,13 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	return nil
 }
 
-func NewTrialEnv(cr *v1alpha1.App) []runtime.Object {
+func NewTrialEnv(cr *v1.App) []runtime.Object {
 	env := defaults.GetTrialEnvironment()
 	console := rhpamcentr.ConstructObjects(env.Console, cr)
 	server := kieserver.ConstructObjects(env.Servers[0], cr)
 	return []runtime.Object{&console.DeploymentConfig, &console.Service, &console.Route,&server.DeploymentConfig, &server.Service, &server.Route}
 }
 
-func NewAuthoringEnv(cr *v1alpha1.App) []runtime.Object {
+func NewAuthoringEnv(cr *v1.App) []runtime.Object {
 	return []runtime.Object{}
 }

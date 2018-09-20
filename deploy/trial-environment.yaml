@@ -1,4 +1,4 @@
-apiVersion: rhpam.redhat.com/v1alpha1
+apiVersion: kiegroup.org/v1
 kind: App
 metadata:
   name: trial-env

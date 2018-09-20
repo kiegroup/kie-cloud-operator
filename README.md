@@ -1,10 +1,10 @@
 # Build
     dep ensure
-    operator-sdk build docker.io/bmozaffa/rhpam-operator
+    operator-sdk build quay.io/kiegroup/kie-cloud-operator
 
-# Upload to dockerhub
+# Upload to a docker repo
 
-    docker push docker.io/bmozaffa/rhpam-operator:latest
+    docker push quay.io/kiegroup/kie-cloud-operator:latest
 
 # Deploy to OpenShift
 Globally and only once for the whole cluster:

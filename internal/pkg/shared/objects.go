@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -37,7 +37,7 @@ func getTypeMeta(kind string, version string) metav1.TypeMeta {
 	}
 }
 
-func GetObjectMeta(service string, cr *v1alpha1.App, labels map[string]string) metav1.ObjectMeta {
+func GetObjectMeta(service string, cr *v1.App, labels map[string]string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:            service,
 		Namespace:       cr.Namespace,
@@ -46,11 +46,11 @@ func GetObjectMeta(service string, cr *v1alpha1.App, labels map[string]string) m
 	}
 }
 
-func getOwnerReferences(cr *v1alpha1.App) []metav1.OwnerReference {
+func getOwnerReferences(cr *v1.App) []metav1.OwnerReference {
 	return []metav1.OwnerReference{
 		*metav1.NewControllerRef(cr, schema.GroupVersionKind{
-			Group:   v1alpha1.SchemeGroupVersion.Group,
-			Version: v1alpha1.SchemeGroupVersion.Version,
+			Group:   v1.SchemeGroupVersion.Group,
+			Version: v1.SchemeGroupVersion.Version,
 			Kind:    "App",
 		}),
 	}
@@ -152,7 +152,7 @@ func GetDeploymentTrigger(containerName string, isNamespace string, isName strin
 	}
 }
 
-func SetReferences(object *v1alpha1.OpenShiftObject, cr *v1alpha1.App) {
+func SetReferences(object *v1.OpenShiftObject, cr *v1.App) {
 	objects := []runtime.Object{&object.DeploymentConfig, &object.Service, &object.Route}
 	for _, common := range objects {
 		common.(metav1.Object).SetNamespace(cr.Namespace)
