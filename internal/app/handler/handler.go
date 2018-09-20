@@ -2,10 +2,9 @@ package handler
 
 import (
 	"context"
-
 	"encoding/json"
 	"fmt"
-
+	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/rhpamcentr"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
@@ -30,10 +29,10 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 		switch env {
 		case "trial-ephemeral":
 			logrus.Infof("Will set up a trial environment")
-			objects = newTrialEnv(o)
+			objects = NewTrialEnv(o)
 		case "authoring":
 			logrus.Infof("Will set up an authoring environment")
-			objects = newAuthoringEnv(o)
+			objects = NewAuthoringEnv(o)
 		default:
 			logrus.Infof("Environment is %v and not sure what to do with that!", env)
 			return nil
@@ -59,10 +58,13 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	return nil
 }
 
-func newTrialEnv(cr *v1alpha1.App) []runtime.Object {
-	return append(rhpamcentr.GetRHMAPCentr(cr), kieserver.GetKieServer(cr)...)
+func NewTrialEnv(cr *v1alpha1.App) []runtime.Object {
+	env := defaults.GetTrialEnvironment()
+	console := rhpamcentr.ConstructObjects(env.Console, cr)
+	server := kieserver.ConstructObjects(env.Servers[0], cr)
+	return []runtime.Object{&console.DeploymentConfig, &console.Service, &console.Route,&server.DeploymentConfig, &server.Service, &server.Route}
 }
 
-func newAuthoringEnv(cr *v1alpha1.App) []runtime.Object {
+func NewAuthoringEnv(cr *v1alpha1.App) []runtime.Object {
 	return []runtime.Object{}
 }

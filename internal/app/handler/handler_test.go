@@ -2,9 +2,11 @@ package handler
 
 import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/openshift/api/apps/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -69,4 +71,19 @@ func TestUnknownResourceTypeHandling(t *testing.T) {
 
 	err := handler.Handle(nil, event)
 	assert.Equal(t, err, nil, "Unknown event type should result in a no-op and return nil")
+}
+
+func TestTrialEnvironmentObjects(t *testing.T) {
+	cr := &v1alpha1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       "test-ns",
+		},
+		Spec: v1alpha1.AppSpec{
+			Environment: "trial-ephemeral",
+		},
+	}
+	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
+	objects := NewTrialEnv(cr)
+	assert.Equal(t, "trial-env-rhpamcentr", objects[0].(*v1.DeploymentConfig).Name)
+	assert.Equal(t, cr.Namespace, objects[0].(*v1.DeploymentConfig).ObjectMeta.Namespace)
 }
