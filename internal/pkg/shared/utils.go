@@ -1,20 +1,18 @@
 package shared
 
 import (
-	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/imdario/mergo"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func GetCommonLabels(app *v1alpha1.App, service string) (string, string, map[string]string) {
 	appName := app.ObjectMeta.Name
 	serviceName := appName + "-" + service
 	labels := map[string]string{
-		"app":        appName,
-		"deployment": serviceName,
-		"service":    serviceName,
+		"app":     appName,
+		"service": serviceName,
 	}
 	return appName, serviceName, labels
 }
@@ -24,14 +22,6 @@ func GetImage(configuredString string, defaultString string) string {
 		return configuredString
 	} else {
 		return defaultString
-	}
-}
-
-func getQuantity(configuredQuantity *resource.Quantity, defaultQuantity string) resource.Quantity {
-	if configuredQuantity.IsZero() {
-		return resource.MustParse(defaultQuantity)
-	} else {
-		return *configuredQuantity
 	}
 }
 
@@ -51,16 +41,18 @@ func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVa
 func MergeContainerConfigs(containers []corev1.Container, crc corev1.Container, defaultEnv map[string]string) []corev1.Container {
 	crc.Env = getEnvVars(defaultEnv, crc.Env)
 	/*
-				unstructObj, err := k8sutil.UnstructuredFromRuntimeObject(object)
-				if err != nil {
-					return err
-				}
-		 		// Update the arg object with the result
-				err = k8sutil.UnstructuredIntoRuntimeObject(unstructObj, object)
-				if err != nil {
-					return fmt.Errorf("failed to unmarshal the retrieved data: %v", err)
-				}
+		unstructObj, err := k8sutil.UnstructuredFromRuntimeObject(object)
+		if err != nil {
+			return err
+		}
+
+		// Update the arg object with the result
+		err = k8sutil.UnstructuredIntoRuntimeObject(unstructObj, object)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal the retrieved data: %v", err)
+		}
 	*/
+
 	for i, c := range containers {
 		/*
 			patch, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, ct)
@@ -83,5 +75,6 @@ func MergeContainerConfigs(containers []corev1.Container, crc corev1.Container, 
 		}
 		containers[i] = ct
 	}
+
 	return containers
 }

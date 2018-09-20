@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	apiv1 "github.com/openshift/api/apps/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,4 +32,15 @@ type AppSpec struct {
 
 type AppStatus struct {
 	// Fill me
+}
+
+type Environment struct {
+	Console OpenShiftObject `json:"console"`
+	Servers  []OpenShiftObject `json:"servers"`
+}
+
+type OpenShiftObject struct {
+	DeploymentConfig apiv1.DeploymentConfig `json:"deployment"`
+	Service          corev1.Service      `json:"service"`
+	Route            routev1.Route       `json:"route"`
 }

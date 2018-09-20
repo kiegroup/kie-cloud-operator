@@ -3,31 +3,30 @@ package defaults
 //go:generate sh -c "CGO_ENABLED=0 go run .packr/packr.go $PWD"
 
 import (
-	"encoding/json"
-
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
 )
 
-func ConsoleEnvironmentDefaults() map[string]string {
-	return overrideDefaults("console-env.json")
+func GetTrialEnvironment() v1alpha1.Environment {
+	env := v1alpha1.Environment{}
+	loadYaml("trial-env.yaml", &env)
+	return env
 }
 
-func ServerEnvironmentDefaults() map[string]string {
-	return overrideDefaults("server-env.json")
+func GetConsoleObject() v1alpha1.OpenShiftObject {
+	object := v1alpha1.OpenShiftObject{}
+	loadYaml("console.yaml", &object)
+	return object
 }
 
-func overrideDefaults(filename string) map[string]string {
-	defaults := loadJsonMap("common-env.json")
-	configuration := loadJsonMap(filename)
-	for key, value := range configuration {
-		defaults[key] = value
-	}
-	return defaults
+func GetServerObject() v1alpha1.OpenShiftObject {
+	object := v1alpha1.OpenShiftObject{}
+	loadYaml("server.yaml", &object)
+	return object
 }
 
-func loadJsonMap(filename string) map[string]string {
+func loadYaml(filename string, o interface{}) {
 	box := packr.NewBox("../../../config/app")
-	jsonMap := make(map[string]string)
-	json.Unmarshal(box.Bytes(filename), &jsonMap)
-	return jsonMap
+	yaml.Unmarshal(box.Bytes(filename), &o)
 }

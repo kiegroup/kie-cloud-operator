@@ -150,9 +150,7 @@
   digest = "1:467131097f8cb32906df5df5a8bc8b94559139980b03acbc4a35ddd375b2a23c"
   name = "github.com/openshift/api"
   packages = [
-    "apps",
     "apps/v1",
-    "route",
     "route/v1",
   ]
   pruneopts = ""
@@ -489,11 +487,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/ghodss/yaml",
     "github.com/gobuffalo/packr",
     "github.com/imdario/mergo",
-    "github.com/openshift/api/apps",
     "github.com/openshift/api/apps/v1",
-    "github.com/openshift/api/route",
     "github.com/openshift/api/route/v1",
     "github.com/operator-framework/operator-sdk/pkg/sdk",
     "github.com/operator-framework/operator-sdk/pkg/util/k8sutil",

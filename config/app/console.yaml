@@ -1,0 +1,129 @@
+deployment:
+  apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: console
+      service: rhpamcentr
+    name: console-rhpamcentr
+  spec:
+    replicas: 1
+    selector:
+      app: console
+      service: rhpamcentr
+    strategy:
+      resources: {}
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: console
+          service: rhpamcentr
+        name: console-rhpamcentr
+      spec:
+        containers:
+        - env:
+          - name: KIE_ADMIN_USER
+            value: adminUser
+          - name: KIE_ADMIN_PWD
+            value: RedHat
+          - name: KIE_MBEANS
+            value: enabled
+          - name: KIE_SERVER_CONTROLLER_USER
+            value: controllerUser
+          - name: KIE_SERVER_CONTROLLER_PWD
+            value: RedHat
+          - name: KIE_SERVER_USER
+            value: executionUser
+          - name: KIE_SERVER_PWD
+            value: RedHat
+          - name: KIE_MAVEN_USER
+            value: mavenUser
+          - name: KIE_MAVEN_PWD
+            value: RedHat
+          - name: PROBE_IMPL
+            value: probe.eap.jolokia.EapProbe
+          - name: PROBE_DISABLE_BOOT_ERRORS_CHECK
+            value: "true"
+          image: rhpam70-businesscentral-openshift
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u adminUser:RedHat http://localhost:8080/kie-wb.jsp
+            initialDelaySeconds: 180
+            periodSeconds: 15
+            timeoutSeconds: 2
+          name: console-rhpamcentr
+          ports:
+          - containerPort: 8001
+            name: git-ssh
+            protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u adminUser:RedHat http://localhost:8080/kie-wb.jsp
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 2
+          resources:
+            limits:
+              memory: 2Gi
+        terminationGracePeriodSeconds: 60
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - console-rhpamcentr
+        from:
+          kind: ImageStreamTag
+          name: rhpam70-businesscentral-openshift:1.2
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+route:
+  apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: console
+      service: rhpamcentr
+    name: console-rhpamcentr
+  spec:
+    port:
+      targetPort: http
+    to:
+      name: console-rhpamcentr
+service:
+  apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: console
+      service: rhpamcentr
+    name: console-rhpamcentr
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: git-ssh
+      port: 8001
+      protocol: TCP
+      targetPort: 8001
+    selector:
+      app: console
+      service: rhpamcentr

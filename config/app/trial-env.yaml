@@ -1,0 +1,267 @@
+console:
+  deployment:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-rhpamcentr
+      name: trial-env-rhpamcentr
+    spec:
+      replicas: 1
+      selector:
+        app: trial-env
+        service: trial-env-rhpamcentr
+      strategy:
+        resources: {}
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            app: trial-env
+            service: trial-env-rhpamcentr
+          name: trial-env-rhpamcentr
+        spec:
+          containers:
+          - env:
+            - name: KIE_ADMIN_USER
+              value: adminUser
+            - name: KIE_ADMIN_PWD
+              value: RedHat
+            - name: KIE_MBEANS
+              value: enabled
+            - name: KIE_SERVER_CONTROLLER_USER
+              value: controllerUser
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: RedHat
+            - name: KIE_SERVER_USER
+              value: executionUser
+            - name: KIE_SERVER_PWD
+              value: RedHat
+            - name: KIE_MAVEN_USER
+              value: mavenUser
+            - name: KIE_MAVEN_PWD
+              value: RedHat
+            - name: PROBE_IMPL
+              value: probe.eap.jolokia.EapProbe
+            - name: PROBE_DISABLE_BOOT_ERRORS_CHECK
+              value: "true"
+            image: rhpam70-businesscentral-openshift
+            imagePullPolicy: Always
+            livenessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - -c
+                - curl --fail --silent -u adminUser:RedHat http://localhost:8080/kie-wb.jsp
+              initialDelaySeconds: 180
+              periodSeconds: 15
+              timeoutSeconds: 2
+            name: trial-env-rhpamcentr
+            ports:
+            - containerPort: 8001
+              name: git-ssh
+              protocol: TCP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8778
+              name: jolokia
+              protocol: TCP
+            readinessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - -c
+                - curl --fail --silent -u adminUser:RedHat http://localhost:8080/kie-wb.jsp
+              failureThreshold: 6
+              initialDelaySeconds: 60
+              periodSeconds: 30
+              timeoutSeconds: 2
+            resources:
+              limits:
+                memory: 2Gi
+          terminationGracePeriodSeconds: 60
+      test: false
+      triggers:
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - trial-env-rhpamcentr
+          from:
+            kind: ImageStreamTag
+            name: rhpam70-businesscentral-openshift:1.2
+            namespace: openshift
+        type: ImageChange
+      - type: ConfigChange
+  route:
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-rhpamcentr
+      name: trial-env-rhpamcentr
+    spec:
+      port:
+        targetPort: http
+      to:
+        name: trial-env-rhpamcentr
+  service:
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-rhpamcentr
+      name: trial-env-rhpamcentr
+    spec:
+      ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      - name: git-ssh
+        port: 8001
+        protocol: TCP
+        targetPort: 8001
+      selector:
+        app: trial-env
+        service: trial-env-rhpamcentr
+servers:
+- deployment:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-kieserver
+      name: trial-env-kieserver
+    spec:
+      replicas: 1
+      selector:
+        app: trial-env
+        service: trial-env-kieserver
+      strategy:
+        resources: {}
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            app: trial-env
+            service: trial-env-kieserver
+          name: trial-env-kieserver
+        spec:
+          containers:
+          - env:
+            - name: DROOLS_SERVER_FILTER_CLASSES
+              value: "true"
+            - name: KIE_ADMIN_USER
+              value: adminUser
+            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+              value: RedHat
+            - name: RHPAMCENTR_MAVEN_REPO_PATH
+              value: /maven2/
+            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+              value: mavenUser
+            - name: KIE_SERVER_CONTROLLER_SERVICE
+              value: trial-env-rhpamcentr
+            - name: KIE_MBEANS
+              value: enabled
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: RedHat
+            - name: MAVEN_REPOS
+              value: RHPAMCENTR,EXTERNAL
+            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+              value: trial-env-rhpamcentr
+            - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+              value: ROOT.war
+            - name: EXECUTION_SERVER_ROUTE_NAME
+              value: trial-env-kieserver
+            - name: KIE_ADMIN_PWD
+              value: RedHat
+            - name: KIE_SERVER_BYPASS_AUTH_USER
+              value: "false"
+            - name: KIE_SERVER_CONTROLLER_USER
+              value: controllerUser
+            - name: KIE_SERVER_PWD
+              value: RedHat
+            - name: KIE_SERVER_USER
+              value: executionUser
+            - name: KIE_SERVER_CONTROLLER_PROTOCOL
+              value: ws
+            image: rhpam70-kieserver-openshift
+            imagePullPolicy: Always
+            livenessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - -c
+                - curl --fail --silent -u adminUser:RedHat http://localhost:8080/services/rest/server/healthcheck
+              initialDelaySeconds: 180
+              periodSeconds: 15
+              timeoutSeconds: 2
+            name: trial-env-kieserver
+            ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8778
+              name: jolokia
+              protocol: TCP
+            readinessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - -c
+                - curl --fail --silent -u adminUser:RedHat http://localhost:8080/services/rest/server/readycheck
+              failureThreshold: 6
+              initialDelaySeconds: 60
+              periodSeconds: 30
+              timeoutSeconds: 2
+            resources:
+              limits:
+                memory: 1Gi
+          terminationGracePeriodSeconds: 60
+      test: false
+      triggers:
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - trial-env-kieserver
+          from:
+            kind: ImageStreamTag
+            name: rhpam70-kieserver-openshift:1.2
+            namespace: openshift
+        type: ImageChange
+      - type: ConfigChange
+  route:
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-kieserver
+      name: trial-env-kieserver
+    spec:
+      port:
+        targetPort: http
+      to:
+        name: trial-env-kieserver
+  service:
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: trial-env
+        service: trial-env-kieserver
+      name: trial-env-kieserver
+    spec:
+      ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        app: trial-env
+        service: trial-env-kieserver
