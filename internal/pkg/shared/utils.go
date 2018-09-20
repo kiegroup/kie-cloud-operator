@@ -1,13 +1,13 @@
 package shared
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/imdario/mergo"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func GetCommonLabels(app *v1alpha1.App, service string) (string, string, map[string]string) {
+func GetCommonLabels(app *v1.App, service string) (string, string, map[string]string) {
 	appName := app.ObjectMeta.Name
 	serviceName := appName + "-" + service
 	labels := map[string]string{

@@ -2,7 +2,7 @@ package rhpamcentr
 
 import (
 	"github.com/kiegroup/kie-cloud-operator/internal/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
@@ -17,17 +17,17 @@ import (
 func TestTrialEnvironmentStructure(t *testing.T) {
 	appname := "unittest"
 	event := sdk.Event{
-		Object: &v1alpha1.App{
+		Object: &v1.App{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: appname,
 			},
-			Spec: v1alpha1.AppSpec{
+			Spec: v1.AppSpec{
 				Environment: "trial-ephemeral",
 			},
 		},
 		Deleted: false}
-	logrus.Debugf("Testing with environment %v", event.Object.(*v1alpha1.App).Spec.Environment)
-	cr := event.Object.(*v1alpha1.App)
+	logrus.Debugf("Testing with environment %v", event.Object.(*v1.App).Spec.Environment)
+	cr := event.Object.(*v1.App)
 	bc := GetRHMAPCentr(cr)
 	assert.Equal(t, len(bc), 3, "Expect the workbench to have 3 objects")
 

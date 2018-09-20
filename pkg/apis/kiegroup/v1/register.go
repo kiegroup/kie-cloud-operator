@@ -1,4 +1,4 @@
-package v1alpha1
+package v1
 
 import (
 	sdkK8sutil "github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	version   = "v1alpha1"
-	groupName = "rhpam.redhat.com"
+	version   = "v1"
+	groupName = "kiegroup.org"
 )
 
 var (

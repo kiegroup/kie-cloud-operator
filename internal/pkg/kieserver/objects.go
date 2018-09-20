@@ -4,7 +4,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/internal/constants"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/shared"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/rhpam/v1alpha1"
+	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/imdario/mergo"
 	"github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func GetKieServer(cr *v1alpha1.App) []runtime.Object {
+func GetKieServer(cr *opv1.App) []runtime.Object {
 	_, serviceName, labels := shared.GetCommonLabels(cr, constants.KieServerServicePrefix)
 	image := shared.GetImage(cr.Spec.Server.Image, "rhpam70-kieserver-openshift")
 	resourceReqs := map[string]map[corev1.ResourceName]string{"Limits": {corev1.ResourceMemory: "220Mi"}, "Requests": {corev1.ResourceMemory: "220Mi"}}
@@ -71,7 +71,7 @@ func GetKieServer(cr *v1alpha1.App) []runtime.Object {
 	return []runtime.Object{dc.DeepCopyObject(), service, openshiftRoute.DeepCopyObject()}
 }
 
-func ConstructObjects(object v1alpha1.OpenShiftObject, cr *v1alpha1.App) v1alpha1.OpenShiftObject {
+func ConstructObjects(object opv1.OpenShiftObject, cr *opv1.App) opv1.OpenShiftObject {
 	defaultObject := defaults.GetServerObject()
 	mergo.Merge(&defaultObject, object, mergo.WithOverride)
 	shared.SetReferences(&object, cr)

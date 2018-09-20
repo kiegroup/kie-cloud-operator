@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rhpam-operator
+  name: kie-cloud-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: rhpam-operator
+      name: kie-cloud-operator
   template:
     metadata:
       labels:
-        name: rhpam-operator
+        name: kie-cloud-operator
     spec:
       containers:
-        - name: rhpam-operator
-          image: docker.io/bmozaffa/rhpam-operator
+        - name: kie-cloud-operator
+          image: quay.io/kiegroup/kie-cloud-operator
           ports:
           - containerPort: 60000
             name: metrics
           command:
-          - rhpam-operator
+          - kie-cloud-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -27,4 +27,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: OPERATOR_NAME
-              value: "rhpam-operator"
+              value: "kie-cloud-operator"
