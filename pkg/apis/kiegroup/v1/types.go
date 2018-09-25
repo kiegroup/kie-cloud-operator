@@ -20,8 +20,8 @@ type AppList struct {
 type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              AppSpec   `json:"spec"`
-	Status            AppStatus `json:"status,omitempty"`
+	Spec              AppSpec `json:"spec"`
+	Status            string  `json:"status,omitempty"`
 }
 
 type AppSpec struct {
@@ -30,17 +30,13 @@ type AppSpec struct {
 	Server      corev1.Container `json:"server,omitempty"`
 }
 
-type AppStatus struct {
-	// Fill me
-}
-
 type Environment struct {
-	Console OpenShiftObject `json:"console"`
-	Servers  []OpenShiftObject `json:"servers"`
+	Console OpenShiftObject   `json:"console"`
+	Servers []OpenShiftObject `json:"servers"`
 }
 
 type OpenShiftObject struct {
 	DeploymentConfig apiv1.DeploymentConfig `json:"deployment"`
-	Service          corev1.Service      `json:"service"`
-	Route            routev1.Route       `json:"route"`
+	Service          corev1.Service         `json:"service"`
+	Route            routev1.Route          `json:"route"`
 }
