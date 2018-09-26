@@ -23,4 +23,3 @@ In a project:
 # Clean up in the project:
 
     oc delete -f deploy/trial-environment.yaml
-    oc delete all --all
