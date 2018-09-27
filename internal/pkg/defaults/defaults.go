@@ -3,9 +3,9 @@ package defaults
 //go:generate sh -c "CGO_ENABLED=0 go run .packr/packr.go $PWD"
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 )
 
 func GetTrialEnvironment() v1.Environment {

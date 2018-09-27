@@ -5,8 +5,8 @@ import (
 	"github.com/openshift/api/apps/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -76,7 +76,7 @@ func TestUnknownResourceTypeHandling(t *testing.T) {
 func TestTrialEnvironmentObjects(t *testing.T) {
 	cr := &v1.App{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:       "test-ns",
+			Namespace: "test-ns",
 		},
 		Spec: v1.AppSpec{
 			Environment: "trial-ephemeral",

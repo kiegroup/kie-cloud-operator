@@ -1,11 +1,11 @@
 package rhpamcentr
 
 import (
+	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/internal/constants"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/shared"
 	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
-	"github.com/imdario/mergo"
 	"github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"

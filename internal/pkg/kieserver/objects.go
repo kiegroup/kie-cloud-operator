@@ -1,11 +1,11 @@
 package kieserver
 
 import (
+	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/internal/constants"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/shared"
 	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
-	"github.com/imdario/mergo"
 	"github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -16,10 +16,10 @@ func GetKieServer(cr *opv1.App) []runtime.Object {
 	_, serviceName, labels := shared.GetCommonLabels(cr, constants.KieServerServicePrefix)
 	image := shared.GetImage(cr.Spec.Server.Image, "rhpam70-kieserver-openshift")
 	resourceReqs := map[string]map[corev1.ResourceName]string{"Limits": {corev1.ResourceMemory: "220Mi"}, "Requests": {corev1.ResourceMemory: "220Mi"}}
-	livenessProbeInts := map[string]int{"InitialDelaySeconds": 180, "TimeoutSeconds": 2, "PeriodSeconds": 15,}
-	livenessProbeScript := map[string]string{"username": "adminUser", "password": "RedHat", "url": "http://localhost:8080/services/rest/server/healthcheck",}
-	readinessProbeInts := map[string]int{"InitialDelaySeconds": 60, "TimeoutSeconds": 2, "PeriodSeconds": 30, "FailureThreshold": 6,}
-	readinessProbeScript := map[string]string{"username": "adminUser", "password": "RedHat", "url": "http://localhost:8080/services/rest/server/readycheck",}
+	livenessProbeInts := map[string]int{"InitialDelaySeconds": 180, "TimeoutSeconds": 2, "PeriodSeconds": 15}
+	livenessProbeScript := map[string]string{"username": "adminUser", "password": "RedHat", "url": "http://localhost:8080/services/rest/server/healthcheck"}
+	readinessProbeInts := map[string]int{"InitialDelaySeconds": 60, "TimeoutSeconds": 2, "PeriodSeconds": 30, "FailureThreshold": 6}
+	readinessProbeScript := map[string]string{"username": "adminUser", "password": "RedHat", "url": "http://localhost:8080/services/rest/server/readycheck"}
 
 	dc := v1.DeploymentConfig{
 		TypeMeta:   shared.GetDeploymentTypeMeta(),

@@ -9,7 +9,7 @@ import (
 func TestLoadTrialEnvironment(t *testing.T) {
 	defer func() {
 		err := recover()
-		if (err != nil) {
+		if err != nil {
 			logrus.Error(err.(error))
 		}
 	}()

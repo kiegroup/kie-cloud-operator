@@ -13,7 +13,7 @@ func main() {
 	b := builder.New(context.Background(), os.Args[1])
 	// b.Compress = true
 
-	fmt.Println("Generating Packr boxes")
+	fmt.Println("Generating packr boxes")
 
 	err := b.Run()
 	if err != nil {
