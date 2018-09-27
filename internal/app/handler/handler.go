@@ -65,9 +65,9 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 						logrus.Errorf("Failed to create object : %v", err)
 						bytes, err1 := json.Marshal(obj)
 						if err1 != nil {
-							fmt.Println("Can't serialize", obj)
+							logrus.Infof("Can't serialize", obj)
 						} else {
-							fmt.Println("Object is ", string(bytes))
+							logrus.Infof("Object is ", string(bytes))
 						}
 						return err
 					}

@@ -23,3 +23,11 @@ In a project:
 # Clean up in the project:
 
     oc delete -f deploy/trial-environment.yaml
+
+# Development
+
+Change log level at runtime w/ the `LOG_LEVEL` environment variable. e.g. -
+
+```shell
+$ LOG_LEVEL=debug  operator-sdk up local --namespace=<namespace>
+```
