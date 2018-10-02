@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"time"
 
@@ -12,6 +13,26 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	// Set log level... override default w/ command-line variable if set.
+	levelString := os.Getenv("LOG_LEVEL") // panic, fatal, error, warn, info, debug
+	if levelString == "" {
+		levelString = "info"
+	}
+	lev, err := logrus.ParseLevel(levelString)
+	if err != nil {
+		lev = logrus.InfoLevel
+		logrus.Warnf("Defaulting to INFO level logging, %v", err)
+	}
+	logrus.SetLevel(lev)
+
+	// Log as JSON instead of the default ASCII formatter.
+	//logrus.SetFormatter(&logrus.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr can be any io.Writer, see below for File example
+	//logrus.SetOutput(os.Stdout)
+}
 
 func printVersion() {
 	logrus.Infof("Go Version: %s", runtime.Version())

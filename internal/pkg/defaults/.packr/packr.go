@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gobuffalo/packr/builder"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -17,6 +17,6 @@ func main() {
 
 	err := b.Run()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 }
