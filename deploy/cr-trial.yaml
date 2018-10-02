@@ -1,0 +1,23 @@
+apiVersion: kiegroup.org/v1
+kind: App
+metadata:
+  name: trial
+spec:
+  environment: trial
+  console:
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 2Gi
+    env:
+    - name: key1
+      value: value1
+    - name: key2
+      value: value2
+  server:
+    resources:
+      requests:
+        memory:
+      limits:
+        memory: 2Gi

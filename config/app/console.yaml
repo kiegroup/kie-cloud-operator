@@ -1,7 +1,5 @@
-deployment:
-  apiVersion: apps.openshift.io/v1
-  kind: DeploymentConfig
-  metadata:
+deploymentconfigs:
+- metadata:
     labels:
       app: console
       service: rhpamcentr
@@ -93,10 +91,8 @@ deployment:
           namespace: openshift
       type: ImageChange
     - type: ConfigChange
-route:
-  apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
+routes:
+- metadata:
     labels:
       app: console
       service: rhpamcentr
@@ -106,10 +102,8 @@ route:
       targetPort: http
     to:
       name: console-rhpamcentr
-service:
-  apiVersion: v1
-  kind: Service
-  metadata:
+services:
+- metadata:
     labels:
       app: console
       service: rhpamcentr

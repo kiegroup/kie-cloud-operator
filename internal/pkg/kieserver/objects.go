@@ -71,9 +71,8 @@ func GetKieServer(cr *opv1.App) []runtime.Object {
 	return []runtime.Object{dc.DeepCopyObject(), service, openshiftRoute.DeepCopyObject()}
 }
 
-func ConstructObjects(object opv1.OpenShiftObject, cr *opv1.App) opv1.OpenShiftObject {
+func ConstructObject(object opv1.CustomObject, cr *opv1.App) opv1.CustomObject {
 	defaultObject := defaults.GetServerObject()
 	mergo.Merge(&defaultObject, object, mergo.WithOverride)
-	shared.SetReferences(&object, cr)
 	return object
 }

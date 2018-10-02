@@ -20,9 +20,8 @@ func GetCommonLabels(app *v1.App, service string) (string, string, map[string]st
 func GetImage(configuredString string, defaultString string) string {
 	if len(configuredString) > 0 {
 		return configuredString
-	} else {
-		return defaultString
 	}
+	return defaultString
 }
 
 func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVar {
