@@ -1,7 +1,5 @@
-deployment:
-  apiVersion: apps.openshift.io/v1
-  kind: DeploymentConfig
-  metadata:
+deploymentconfigs:
+- metadata:
     labels:
       app: default
       service: kieserver
@@ -104,10 +102,8 @@ deployment:
           namespace: openshift
       type: ImageChange
     - type: ConfigChange
-route:
-  apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
+routes:
+- metadata:
     labels:
       app: default
       service: kieserver
@@ -117,10 +113,8 @@ route:
       targetPort: http
     to:
       name: default-kieserver
-service:
-  apiVersion: v1
-  kind: Service
-  metadata:
+services:
+- metadata:
     labels:
       app: default
       service: kieserver

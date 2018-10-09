@@ -1,9 +1,9 @@
 apiVersion: kiegroup.org/v1
 kind: App
 metadata:
-  name: trial-env
+  name: production
 spec:
-  environment: trial-ephemeral
+  environment: prod
   console:
     resources:
       requests:

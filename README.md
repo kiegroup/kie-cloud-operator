@@ -18,16 +18,16 @@ In a project:
 
 # Trigger application deployment
 
-    oc create -f deploy/trial-environment.yaml
+    oc create -f deploy/cr-trial.yaml
 
-# Clean up in the project:
+# Clean up in the app deployment:
 
-    oc delete -f deploy/trial-environment.yaml
+    oc delete -f deploy/cr-trial.yaml
 
 # Development
 
 Change log level at runtime w/ the `LOG_LEVEL` environment variable. e.g. -
 
 ```shell
-$ LOG_LEVEL=debug  operator-sdk up local --namespace=<namespace>
+$ LOG_LEVEL="debug" operator-sdk up local --namespace=<namespace>
 ```

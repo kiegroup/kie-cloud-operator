@@ -151,6 +151,8 @@
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
+    "authorization/v1",
+    "pkg/serialization",
     "route/v1",
   ]
   pruneopts = ""
@@ -491,6 +493,7 @@
     "github.com/gobuffalo/packr",
     "github.com/imdario/mergo",
     "github.com/openshift/api/apps/v1",
+    "github.com/openshift/api/authorization/v1",
     "github.com/openshift/api/route/v1",
     "github.com/operator-framework/operator-sdk/pkg/sdk",
     "github.com/operator-framework/operator-sdk/pkg/util/k8sutil",

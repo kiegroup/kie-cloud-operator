@@ -1,14 +1,14 @@
 package shared
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
+	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	appsv1 "github.com/openshift/api/apps/v1"
+	authv1 "github.com/openshift/api/authorization/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -37,7 +37,7 @@ func getTypeMeta(kind string, version string) metav1.TypeMeta {
 	}
 }
 
-func GetObjectMeta(service string, cr *v1.App, labels map[string]string) metav1.ObjectMeta {
+func GetObjectMeta(service string, cr *opv1.App, labels map[string]string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:            service,
 		Namespace:       cr.Namespace,
@@ -46,13 +46,9 @@ func GetObjectMeta(service string, cr *v1.App, labels map[string]string) metav1.
 	}
 }
 
-func getOwnerReferences(cr *v1.App) []metav1.OwnerReference {
+func getOwnerReferences(cr *opv1.App) []metav1.OwnerReference {
 	return []metav1.OwnerReference{
-		*metav1.NewControllerRef(cr, schema.GroupVersionKind{
-			Group:   v1.SchemeGroupVersion.Group,
-			Version: v1.SchemeGroupVersion.Version,
-			Kind:    "App",
-		}),
+		*metav1.NewControllerRef(cr, opv1.SchemeGroupVersion.WithKind(cr.GetObjectKind().GroupVersionKind().Kind)),
 	}
 }
 
@@ -152,10 +148,45 @@ func GetDeploymentTrigger(containerName string, isNamespace string, isName strin
 	}
 }
 
-func SetReferences(object *v1.OpenShiftObject, cr *v1.App) {
-	objects := []runtime.Object{&object.DeploymentConfig, &object.Service, &object.Route}
-	for _, common := range objects {
+func ObjectAppend(objs []runtime.Object, object opv1.CustomObject) []runtime.Object {
+	var o []runtime.Object
+	for _, obj := range object.PersistentVolumeClaims {
+		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.ServiceAccounts {
+		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.Secrets {
+		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.RoleBindings {
+		obj.SetGroupVersionKind(authv1.SchemeGroupVersion.WithKind("RoleBinding"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.DeploymentConfigs {
+		obj.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.Services {
+		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
+		o = append(o, obj.DeepCopyObject())
+	}
+	for _, obj := range object.Routes {
+		obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+		o = append(o, obj.DeepCopyObject())
+	}
+
+	return append(objs, o...)
+}
+
+func SetReferences(objs []runtime.Object, cr *opv1.App) []runtime.Object {
+	for i, common := range objs {
 		common.(metav1.Object).SetNamespace(cr.Namespace)
 		common.(metav1.Object).SetOwnerReferences(getOwnerReferences(cr))
+		objs[i] = common
 	}
+	return objs
 }

@@ -1,7 +1,8 @@
 package v1
 
 import (
-	apiv1 "github.com/openshift/api/apps/v1"
+	appsv1 "github.com/openshift/api/apps/v1"
+	authv1 "github.com/openshift/api/authorization/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,12 +32,16 @@ type AppSpec struct {
 }
 
 type Environment struct {
-	Console OpenShiftObject   `json:"console"`
-	Servers []OpenShiftObject `json:"servers"`
+	Console CustomObject   `json:"console,omitempty"`
+	Servers []CustomObject `json:"servers,omitempty"`
 }
 
-type OpenShiftObject struct {
-	DeploymentConfig apiv1.DeploymentConfig `json:"deployment"`
-	Service          corev1.Service         `json:"service"`
-	Route            routev1.Route          `json:"route"`
+type CustomObject struct {
+	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentvolumeclaims,omitempty"`
+	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceaccounts,omitempty"`
+	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
+	RoleBindings           []authv1.RoleBinding           `json:"rolebindings,omitempty"`
+	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentconfigs,omitempty"`
+	Services               []corev1.Service               `json:"services,omitempty"`
+	Routes                 []routev1.Route                `json:"routes,omitempty"`
 }

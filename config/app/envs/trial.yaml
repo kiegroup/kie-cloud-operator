@@ -1,8 +1,6 @@
 console:
-  deployment:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
-    metadata:
+  deploymentconfigs:
+  - metadata:
       labels:
         app: trial-env
         service: trial-env-rhpamcentr
@@ -79,6 +77,8 @@ console:
               periodSeconds: 30
               timeoutSeconds: 2
             resources:
+              requests:
+                memory: 1Gi
               limits:
                 memory: 2Gi
           terminationGracePeriodSeconds: 60
@@ -94,10 +94,8 @@ console:
             namespace: openshift
         type: ImageChange
       - type: ConfigChange
-  route:
-    apiVersion: route.openshift.io/v1
-    kind: Route
-    metadata:
+  routes:
+  - metadata:
       labels:
         app: trial-env
         service: trial-env-rhpamcentr
@@ -107,10 +105,8 @@ console:
         targetPort: http
       to:
         name: trial-env-rhpamcentr
-  service:
-    apiVersion: v1
-    kind: Service
-    metadata:
+  services:
+  - metadata:
       labels:
         app: trial-env
         service: trial-env-rhpamcentr
@@ -129,10 +125,8 @@ console:
         app: trial-env
         service: trial-env-rhpamcentr
 servers:
-- deployment:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
-    metadata:
+- deploymentconfigs:
+  - metadata:
       labels:
         app: trial-env
         service: trial-env-kieserver
@@ -220,8 +214,10 @@ servers:
               periodSeconds: 30
               timeoutSeconds: 2
             resources:
-              limits:
+              requests:
                 memory: 1Gi
+              limits:
+                memory: 2Gi
           terminationGracePeriodSeconds: 60
       test: false
       triggers:
@@ -235,23 +231,8 @@ servers:
             namespace: openshift
         type: ImageChange
       - type: ConfigChange
-  route:
-    apiVersion: route.openshift.io/v1
-    kind: Route
-    metadata:
-      labels:
-        app: trial-env
-        service: trial-env-kieserver
-      name: trial-env-kieserver
-    spec:
-      port:
-        targetPort: http
-      to:
-        name: trial-env-kieserver
-  service:
-    apiVersion: v1
-    kind: Service
-    metadata:
+  services:
+  - metadata:
       labels:
         app: trial-env
         service: trial-env-kieserver
@@ -265,3 +246,14 @@ servers:
       selector:
         app: trial-env
         service: trial-env-kieserver
+  routes:
+  - metadata:
+      labels:
+        app: trial-env
+        service: trial-env-kieserver
+      name: trial-env-kieserver
+    spec:
+      port:
+        targetPort: http
+      to:
+        name: trial-env-kieserver
