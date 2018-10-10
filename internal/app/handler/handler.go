@@ -40,10 +40,11 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			var objects []runtime.Object
 			if o.Spec.Environment != "" {
 				logrus.Infof("Will set up %s environment", o.Spec.Environment)
+
 				objects, err = NewEnv(o)
 				if err != nil {
 					o.Status = "Error"
-					logrus.Errorln(err)
+					logrus.Error(err)
 				}
 			}
 
@@ -87,17 +88,19 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 
 func NewEnv(cr *opv1.App) ([]runtime.Object, error) {
 	var objs []runtime.Object
-	env, err := defaults.GetEnvironment(cr.Spec.Environment)
+	env, err := defaults.GetEnvironment(cr)
 	if err != nil {
 		return []runtime.Object{}, err
 	}
 
+	// create object slice for deployment
 	objs = shared.ObjectAppend(objs, rhpamcentr.ConstructObject(env.Console, cr))
 	for _, s := range env.Servers {
 		objs = shared.ObjectAppend(objs, kieserver.ConstructObject(s, cr))
 	}
 
 	objs = shared.SetReferences(objs, cr)
+
 	return objs, err
 }
 

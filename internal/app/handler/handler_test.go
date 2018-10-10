@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -85,6 +86,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 func TestTrialEnvironmentObjects(t *testing.T) {
 	cr := &opv1.App{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:      "trial",
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
@@ -93,13 +95,14 @@ func TestTrialEnvironmentObjects(t *testing.T) {
 	}
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
 	objects, err := NewEnv(cr)
-	assert.Equal(t, "trial-env-rhpamcentr", objects[0].(*appsv1.DeploymentConfig).Name)
+	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", cr.Name), objects[0].(*appsv1.DeploymentConfig).Name)
 	assert.Equal(t, cr.Namespace, objects[0].(*appsv1.DeploymentConfig).ObjectMeta.Namespace)
 	assert.Nil(t, err)
 }
 func TestProdEnvironmentObjects(t *testing.T) {
 	cr := &opv1.App{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:      "prod",
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
@@ -108,7 +111,7 @@ func TestProdEnvironmentObjects(t *testing.T) {
 	}
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
 	objects, err := NewEnv(cr)
-	assert.Equal(t, "prod-rhpamcentr-claim", objects[0].(*corev1.PersistentVolumeClaim).Name)
+	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr-claim", cr.Name), objects[0].(*corev1.PersistentVolumeClaim).Name)
 	assert.Equal(t, cr.Namespace, objects[0].(*corev1.PersistentVolumeClaim).ObjectMeta.Namespace)
 	assert.Nil(t, err)
 }

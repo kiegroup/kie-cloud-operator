@@ -1,24 +1,24 @@
 console:
-  deploymentconfigs:
+  deploymentConfigs:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-rhpamcentr
-      name: trial-env-rhpamcentr
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      name: "{{.ApplicationName}}-rhpamcentr"
     spec:
       replicas: 1
       selector:
-        app: trial-env
-        service: trial-env-rhpamcentr
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
       strategy:
         resources: {}
         type: Recreate
       template:
         metadata:
           labels:
-            app: trial-env
-            service: trial-env-rhpamcentr
-          name: trial-env-rhpamcentr
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-rhpamcentr"
+          name: "{{.ApplicationName}}-rhpamcentr"
         spec:
           containers:
           - env:
@@ -55,7 +55,7 @@ console:
               initialDelaySeconds: 180
               periodSeconds: 15
               timeoutSeconds: 2
-            name: trial-env-rhpamcentr
+            name: "{{.ApplicationName}}-rhpamcentr"
             ports:
             - containerPort: 8001
               name: git-ssh
@@ -87,7 +87,7 @@ console:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - trial-env-rhpamcentr
+          - "{{.ApplicationName}}-rhpamcentr"
           from:
             kind: ImageStreamTag
             name: rhpam70-businesscentral-openshift:1.2
@@ -97,20 +97,20 @@ console:
   routes:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-rhpamcentr
-      name: trial-env-rhpamcentr
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      name: "{{.ApplicationName}}-rhpamcentr"
     spec:
       port:
         targetPort: http
       to:
-        name: trial-env-rhpamcentr
+        name: "{{.ApplicationName}}-rhpamcentr"
   services:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-rhpamcentr
-      name: trial-env-rhpamcentr
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      name: "{{.ApplicationName}}-rhpamcentr"
     spec:
       ports:
       - name: http
@@ -122,29 +122,33 @@ console:
         protocol: TCP
         targetPort: 8001
       selector:
-        app: trial-env
-        service: trial-env-rhpamcentr
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
 servers:
-- deploymentconfigs:
+
+## RANGE BEGINS
+{{$Name := .ApplicationName}}{{ range $index, $Num := .ServerCount }}
+
+- deploymentConfigs:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-kieserver
-      name: trial-env-kieserver
+        app: "{{$Name}}"
+        service: "{{$Name}}-kieserver-{{$Num}}"
+      name: "{{$Name}}-kieserver-{{$Num}}"
     spec:
       replicas: 1
       selector:
-        app: trial-env
-        service: trial-env-kieserver
+        app: "{{$Name}}"
+        service: "{{$Name}}-kieserver-{{$Num}}"
       strategy:
         resources: {}
         type: Recreate
       template:
         metadata:
           labels:
-            app: trial-env
-            service: trial-env-kieserver
-          name: trial-env-kieserver
+            app: "{{$Name}}"
+            service: "{{$Name}}-kieserver-{{$Num}}"
+          name: "{{$Name}}-kieserver-{{$Num}}"
         spec:
           containers:
           - env:
@@ -159,7 +163,7 @@ servers:
             - name: RHPAMCENTR_MAVEN_REPO_USERNAME
               value: mavenUser
             - name: KIE_SERVER_CONTROLLER_SERVICE
-              value: trial-env-rhpamcentr
+              value: "{{$Name}}-rhpamcentr"
             - name: KIE_MBEANS
               value: enabled
             - name: KIE_SERVER_CONTROLLER_PWD
@@ -167,11 +171,11 @@ servers:
             - name: MAVEN_REPOS
               value: RHPAMCENTR,EXTERNAL
             - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-              value: trial-env-rhpamcentr
+              value: "{{$Name}}-rhpamcentr"
             - name: SSO_OPENIDCONNECT_DEPLOYMENTS
               value: ROOT.war
             - name: EXECUTION_SERVER_ROUTE_NAME
-              value: trial-env-kieserver
+              value: "{{$Name}}-kieserver-{{$Num}}"
             - name: KIE_ADMIN_PWD
               value: RedHat
             - name: KIE_SERVER_BYPASS_AUTH_USER
@@ -195,7 +199,7 @@ servers:
               initialDelaySeconds: 180
               periodSeconds: 15
               timeoutSeconds: 2
-            name: trial-env-kieserver
+            name: "{{$Name}}-kieserver-{{$Num}}"
             ports:
             - containerPort: 8080
               name: http
@@ -224,7 +228,7 @@ servers:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - trial-env-kieserver
+          - "{{$Name}}-kieserver-{{$Num}}"
           from:
             kind: ImageStreamTag
             name: rhpam70-kieserver-openshift:1.2
@@ -234,9 +238,9 @@ servers:
   services:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-kieserver
-      name: trial-env-kieserver
+        app: "{{$Name}}"
+        service: "{{$Name}}-kieserver-{{$Num}}"
+      name: "{{$Name}}-kieserver-{{$Num}}"
     spec:
       ports:
       - name: http
@@ -244,16 +248,17 @@ servers:
         protocol: TCP
         targetPort: 8080
       selector:
-        app: trial-env
-        service: trial-env-kieserver
+        app: "{{$Name}}"
+        service: "{{$Name}}-kieserver-{{$Num}}"
   routes:
   - metadata:
       labels:
-        app: trial-env
-        service: trial-env-kieserver
-      name: trial-env-kieserver
+        app: "{{$Name}}"
+        service: "{{$Name}}-kieserver-{{$Num}}"
+      name: "{{$Name}}-kieserver-{{$Num}}"
     spec:
       port:
         targetPort: http
       to:
-        name: trial-env-kieserver
+        name: "{{$Name}}-kieserver-{{$Num}}"
+{{end}}
