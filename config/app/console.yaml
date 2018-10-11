@@ -1,4 +1,4 @@
-deploymentconfigs:
+deploymentConfigs:
 - metadata:
     labels:
       app: console

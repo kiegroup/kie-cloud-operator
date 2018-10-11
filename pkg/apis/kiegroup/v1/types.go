@@ -26,9 +26,10 @@ type App struct {
 }
 
 type AppSpec struct {
-	Environment string           `json:"environment,omitempty"`
-	Console     corev1.Container `json:"console,omitempty"`
-	Server      corev1.Container `json:"server,omitempty"`
+	Environment   string           `json:"environment,omitempty"`
+	NumKieServers int              `json:"numKieServers"`
+	Console       corev1.Container `json:"console,omitempty"`
+	Server        corev1.Container `json:"server,omitempty"`
 }
 
 type Environment struct {
@@ -37,11 +38,16 @@ type Environment struct {
 }
 
 type CustomObject struct {
-	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentvolumeclaims,omitempty"`
-	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceaccounts,omitempty"`
+	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
+	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
-	RoleBindings           []authv1.RoleBinding           `json:"rolebindings,omitempty"`
-	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentconfigs,omitempty"`
+	RoleBindings           []authv1.RoleBinding           `json:"roleBindings,omitempty"`
+	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
+}
+
+type EnvTemplate struct {
+	ApplicationName string `json:"applicationName,omitempty"`
+	ServerCount     []int  `json:"serverCount,omitempty"`
 }

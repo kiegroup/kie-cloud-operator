@@ -1,10 +1,13 @@
 package defaults
 
 import (
+	"fmt"
 	"testing"
 
+	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestLoadTrialEnvironment(t *testing.T) {
@@ -15,12 +18,63 @@ func TestLoadTrialEnvironment(t *testing.T) {
 		}
 	}()
 
-	env, err := GetEnvironment("trial")
-	assert.Equal(t, env.Servers[0].DeploymentConfigs[0].ObjectMeta.Name, "trial-env-kieserver")
-	assert.Nil(t, err)
+	cr := &opv1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: opv1.AppSpec{
+			Environment: "trial",
+		},
+	}
 
-	_, err = GetEnvironment("fdsfsd")
+	env, err := GetEnvironment(cr)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-0", cr.Name), env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Nil(t, err)
+}
+
+func TestLoadUnknownEnvironment(t *testing.T) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			logrus.Error(err.(error))
+		}
+	}()
+
+	cr := &opv1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "test-ns",
+		},
+		Spec: opv1.AppSpec{
+			Environment: "unknown",
+		},
+	}
+
+	_, err := GetEnvironment(cr)
 	assert.NotNil(t, err)
+}
+func TestMultipleServerDeployment(t *testing.T) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			logrus.Error(err.(error))
+		}
+	}()
+
+	cr := &opv1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: opv1.AppSpec{
+			Environment:   "trial",
+			NumKieServers: 2,
+		},
+	}
+
+	env, err := GetEnvironment(cr)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-1", cr.Name), env.Servers[1].DeploymentConfigs[0].Name)
+	assert.Nil(t, err)
 }
 
 func TestDefaultConsole(t *testing.T) {

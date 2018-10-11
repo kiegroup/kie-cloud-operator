@@ -186,6 +186,7 @@ func SetReferences(objs []runtime.Object, cr *opv1.App) []runtime.Object {
 	for i, common := range objs {
 		common.(metav1.Object).SetNamespace(cr.Namespace)
 		common.(metav1.Object).SetOwnerReferences(getOwnerReferences(cr))
+
 		objs[i] = common
 	}
 	return objs

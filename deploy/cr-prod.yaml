@@ -4,6 +4,7 @@ metadata:
   name: production
 spec:
   environment: prod
+  numKieServers: 2
   console:
     resources:
       requests:
@@ -17,7 +18,5 @@ spec:
       value: value2
   server:
     resources:
-      requests:
-        memory:
       limits:
         memory: 2Gi
