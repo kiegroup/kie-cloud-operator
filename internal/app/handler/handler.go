@@ -3,13 +3,18 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/defaults"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/rhpamcentr"
 	"github.com/kiegroup/kie-cloud-operator/internal/pkg/shared"
 	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
+	routev1 "github.com/openshift/api/route/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/operator-framework/operator-sdk/pkg/k8sclient"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -88,20 +93,85 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 
 func NewEnv(cr *opv1.App) ([]runtime.Object, error) {
 	var objs []runtime.Object
-	env, err := defaults.GetEnvironment(cr)
+	env, password, err := defaults.GetEnvironment(cr)
 	if err != nil {
 		return []runtime.Object{}, err
 	}
+	defer shared.Zeroing(password)
+
+	// console keystore generation
+	consoleCN := cr.Name
+	if len(env.Console.Routes) > 0 {
+		consoleCN = getRouteHost(env.Console.Routes[0], cr)
+	}
+	env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
+			Labels: map[string]string{
+				"app": cr.Name,
+			},
+		},
+		Data: map[string][]byte{
+			"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", password),
+		},
+	})
+
+	// server(s) keystore generation
+	serverCN := cr.Name
+	for i, server := range env.Servers {
+		if len(server.Routes) > 0 {
+			serverCN = getRouteHost(server.Routes[0], cr)
+		}
+		server.Secrets = append(server.Secrets, corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("%s-kieserver-%d-app-secret", cr.Name, i),
+				Labels: map[string]string{
+					"app": cr.Name,
+				},
+			},
+			Data: map[string][]byte{
+				"keystore.jks": shared.GenerateKeystore(serverCN, "jboss", password),
+			},
+		})
+
+		env.Servers[i] = server
+	}
 
 	// create object slice for deployment
-	objs = shared.ObjectAppend(objs, rhpamcentr.ConstructObject(env.Console, cr))
+	objs = shared.ObjectAppend(objs, rhpamcentr.ConstructObject(env.Console, cr), cr)
 	for _, s := range env.Servers {
-		objs = shared.ObjectAppend(objs, kieserver.ConstructObject(s, cr))
+		objs = shared.ObjectAppend(objs, kieserver.ConstructObject(s, cr), cr)
+	}
+	for _, o := range env.Others {
+		objs = shared.ObjectAppend(objs, o, cr)
 	}
 
 	objs = shared.SetReferences(objs, cr)
 
 	return objs, err
+}
+
+func getRouteHost(route routev1.Route, cr *opv1.App) string {
+	route.SetNamespace(cr.Namespace)
+	route.SetOwnerReferences(shared.GetOwnerReferences(cr))
+	groupVK := routev1.SchemeGroupVersion.WithKind("Route")
+	apiVersion, kind := groupVK.ToAPIVersionAndKind()
+
+	routeClient, _, err := k8sclient.GetResourceClient(apiVersion, kind, cr.Namespace)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	shared.CreateObject(routeClient, route.DeepCopyObject())
+	oByte, err := shared.GetObjectByte(routeClient, route.Name)
+	if err != nil {
+		logrus.Error(err)
+	}
+	json.Unmarshal(oByte, &route)
+
+	return route.Spec.Host
 }
 
 // figure out later how to know if there is an update to CR, and mark it's status as Updated
