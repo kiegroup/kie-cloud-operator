@@ -34,6 +34,7 @@ type AppSpec struct {
 
 type Environment struct {
 	Console CustomObject   `json:"console,omitempty"`
+	Others  []CustomObject `json:"others,omitempty"`
 	Servers []CustomObject `json:"servers,omitempty"`
 }
 
@@ -48,6 +49,11 @@ type CustomObject struct {
 }
 
 type EnvTemplate struct {
-	ApplicationName string `json:"applicationName,omitempty"`
-	ServerCount     []int  `json:"serverCount,omitempty"`
+	Template    `json:",inline"`
+	ServerCount []Template `json:"serverCount,omitempty"`
+}
+
+type Template struct {
+	ApplicationName  string `json:"applicationName,omitempty"`
+	KeyStorePassword string `json:"keyStorePassword,omitempty"`
 }

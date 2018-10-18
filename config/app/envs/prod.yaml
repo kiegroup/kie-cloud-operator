@@ -1,10 +1,4 @@
 console:
-  secrets:
-  - metadata:
-      name: "{{.ApplicationName}}-businesscentral-app-secret"
-    data:
-      keystore.jks: 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
-    type: Opaque
   deploymentConfigs:
   - metadata:
       name: "{{.ApplicationName}}-rhpamcentrmon"
@@ -117,7 +111,7 @@ console:
             - name: HTTPS_NAME
               value: "jboss"
             - name: HTTPS_PASSWORD
-              value: "mykeystorepass"
+              value: "{{.KeyStorePassword}}"
             - name: JGROUPS_PING_PROTOCOL
               value: "openshift.DNS_PING"
             - name: OPENSHIFT_DNS_PING_SERVICE_NAME
@@ -230,21 +224,6 @@ console:
         service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
         description: "The JGroups ping port for clustering."
   routes:
-  - id: "{{.ApplicationName}}-rhpamcentrmon-http"
-    metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
-      annotations:
-        description: Route for Business Central Monitoring's http service.
-        haproxy.router.openshift.io/timeout: 60s
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-rhpamcentrmon"
-      port:
-        targetPort: http
   - id: "{{.ApplicationName}}-rhpamcentrmon-https"
     metadata:
       name: "secure-{{.ApplicationName}}-rhpamcentrmon"
@@ -262,6 +241,21 @@ console:
         targetPort: https
       tls:
         termination: passthrough
+  - id: "{{.ApplicationName}}-rhpamcentrmon-http"
+    metadata:
+      name: "{{.ApplicationName}}-rhpamcentrmon"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentrmon"
+      annotations:
+        description: Route for Business Central Monitoring's http service.
+        haproxy.router.openshift.io/timeout: 60s
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-rhpamcentrmon"
+      port:
+        targetPort: http
   persistentVolumeClaims:
   - metadata:
       name: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -274,17 +268,10 @@ console:
       resources:
         requests:
           storage: "64Mi"
-## KIE Servers BEGIN
-servers:
-- secrets:
-  - metadata:
-      name: "{{.ApplicationName}}-kieserver-app-secret"
-      labels:
-        app: "{{.ApplicationName}}"
-    data:
-      keystore.jks: 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
-    type: Opaque
-  serviceAccounts:
+
+## KIE smartrouter BEGIN
+others:
+- serviceAccounts:
   - metadata:
       name: "{{.ApplicationName}}-kieserver"
       labels:
@@ -299,430 +286,6 @@ servers:
       name: "{{.ApplicationName}}-kieserver"
     roleRef:
       name: view
-
-## RANGE BEGINS
-{{$Name := .ApplicationName}}{{ range $index, $Num := .ServerCount }}
-
-  ## PostgreSQL persistent volume claim BEGIN
-- persistentVolumeClaims:
-  - metadata:
-      name: "{{$Name}}-postgresql-claim-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-postgresql-{{$Num}}"
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: "1Gi"
-  ## PostgreSQL persistent volume claim END
-  ## KIE server deployment config BEGIN
-  deploymentConfigs:
-  - metadata:
-      name: "{{$Name}}-kieserver-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-    spec:
-      strategy:
-        type: Recreate
-      triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - "{{$Name}}-kieserver"
-          from:
-            kind: ImageStreamTag
-            namespace: "openshift"
-            name: "rhpam70-kieserver-openshift:1.2"
-      - type: ConfigChange
-      replicas: 3
-      selector:
-        deploymentConfig: "{{$Name}}-kieserver-{{$Num}}"
-      template:
-        metadata:
-          name: "{{$Name}}-kieserver-{{$Num}}"
-          labels:
-            deploymentConfig: "{{$Name}}-kieserver-{{$Num}}"
-            app: "{{$Name}}"
-            service: "{{$Name}}-kieserver-{{$Num}}"
-        spec:
-          serviceAccountName: "{{$Name}}-kieserver"
-          terminationGracePeriodSeconds: 60
-          containers:
-          - name: "{{$Name}}-kieserver"
-            image: "rhpam70-kieserver-openshift"
-            imagePullPolicy: Always
-            resources:
-              requests:
-                memory: "512Mi"
-              limits:
-                memory: "1Gi"
-            volumeMounts:
-            - name: kieserver-keystore-volume
-              mountPath: "/etc/kieserver-secret-volume"
-              readOnly: true
-            livenessProbe:
-              exec:
-                command:
-                - "/bin/bash"
-                - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/healthcheck"
-              initialDelaySeconds: 180
-              timeoutSeconds: 2
-              periodSeconds: 15
-              failureThreshold: 3
-            readinessProbe:
-              exec:
-                command:
-                - "/bin/bash"
-                - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/readycheck"
-              initialDelaySeconds: 60
-              timeoutSeconds: 2
-              periodSeconds: 30
-              failureThreshold: 6
-            ports:
-            - name: jolokia
-              containerPort: 8778
-              protocol: TCP
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-            - name: https
-              containerPort: 8443
-              protocol: TCP
-            - name: ping
-              containerPort: 8888
-              protocol: TCP
-            env:
-            - name: DROOLS_SERVER_FILTER_CLASSES
-              value: "true"
-            - name: KIE_ADMIN_USER
-              value: "adminUser"
-            - name: KIE_ADMIN_PWD
-              value: "RedHat"
-            - name: KIE_MBEANS
-              value: "enabled"
-            - name: KIE_SERVER_BYPASS_AUTH_USER
-              value: "false"
-            - name: KIE_SERVER_CONTROLLER_USER
-              value: "controllerUser"
-            - name: KIE_SERVER_CONTROLLER_PWD
-              value: "RedHat"
-            - name: KIE_SERVER_CONTROLLER_TOKEN
-              value: ""
-            - name: KIE_SERVER_CONTROLLER_SERVICE
-              value: "{{$Name}}-rhpamcentrmon"
-            - name: KIE_SERVER_CONTROLLER_PROTOCOL
-              value: "ws"
-            - name: KIE_SERVER_ID
-              value: "{{$Name}}-kieserver-{{$Num}}"
-            - name: KIE_SERVER_HOST
-              value: ""
-            - name: KIE_SERVER_ROUTE_NAME
-              value: "{{$Name}}-kieserver-{{$Num}}"
-            - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-              value: "false"
-            - name: KIE_SERVER_USER
-              value: "executionUser"
-            - name: KIE_SERVER_PWD
-              value: "RedHat"
-            - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-              value: ""
-            - name: MAVEN_REPOS
-              value: "RHPAMCENTR,EXTERNAL"
-            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-              value: ""
-            - name: RHPAMCENTR_MAVEN_REPO_PATH
-              value: "/maven2/"
-            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-              value: ""
-            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-              value: ""
-            - name: EXTERNAL_MAVEN_REPO_ID
-              value: ""
-            - name: EXTERNAL_MAVEN_REPO_URL
-              value: ""
-            - name: EXTERNAL_MAVEN_REPO_USERNAME
-              value: ""
-            - name: EXTERNAL_MAVEN_REPO_PASSWORD
-              value: ""
-            - name: KIE_SERVER_ROUTER_SERVICE
-              value: "{{$Name}}-smartrouter"
-            - name: KIE_SERVER_ROUTER_PORT
-              value: "9000"
-            - name: KIE_SERVER_ROUTER_PROTOCOL
-              value: ""
-            - name: KIE_SERVER_PERSISTENCE_DS
-              value: "java:/jboss/datasources/rhpam"
-            - name: DATASOURCES
-              value: "RHPAM"
-            - name: RHPAM_JNDI
-              value: "java:/jboss/datasources/rhpam"
-            - name: RHPAM_JTA
-              value: "true"
-  ## PostgreSQL driver settings BEGIN
-            - name: RHPAM_DATABASE
-              value: "rhpam7"
-            - name: RHPAM_DRIVER
-              value: "postgresql"
-            - name: KIE_SERVER_PERSISTENCE_DIALECT
-              value: "org.hibernate.dialect.PostgreSQLDialect"
-            - name: RHPAM_USERNAME
-              value: "rhpam"
-            - name: RHPAM_PASSWORD
-              value: "RedHat"
-            - name: RHPAM_SERVICE_HOST
-              value: "{{$Name}}-postgresql-{{$Num}}"
-            - name: RHPAM_SERVICE_PORT
-              value: "5432"
-            - name: TIMER_SERVICE_DATA_STORE
-              value: "{{$Name}}-postgresql-{{$Num}}"
-  ## PostgreSQL driver settings END
-            - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
-              value: "30000"
-            - name: HTTPS_KEYSTORE_DIR
-              value: "/etc/kieserver-secret-volume"
-            - name: HTTPS_KEYSTORE
-              value: "keystore.jks"
-            - name: HTTPS_NAME
-              value: "jboss"
-            - name: HTTPS_PASSWORD
-              value: "mykeystorepass"
-            - name: JGROUPS_PING_PROTOCOL
-              value: "openshift.DNS_PING"
-            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-              value: "{{$Name}}-kieserver-{{$Num}}-ping"
-            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-              value: "8888"
-            - name: SSO_URL
-              value: ""
-            - name: SSO_OPENIDCONNECT_DEPLOYMENTS
-              value: "ROOT.war"
-            - name: SSO_REALM
-              value: ""
-            - name: SSO_SECRET
-              value: ""
-            - name: SSO_CLIENT
-              value: ""
-            - name: SSO_USERNAME
-              value: ""
-            - name: SSO_PASSWORD
-              value: ""
-            - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-              value: "false"
-            - name: SSO_PRINCIPAL_ATTRIBUTE
-              value: "preferred_username"
-            - name: HOSTNAME_HTTP
-              value: ""
-            - name: HOSTNAME_HTTPS
-              value: ""
-            - name: AUTH_LDAP_URL
-              value: ""
-            - name: AUTH_LDAP_BIND_DN
-              value: ""
-            - name: AUTH_LDAP_BIND_CREDENTIAL
-              value: ""
-            - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-              value: ""
-            - name: AUTH_LDAP_BASE_CTX_DN
-              value: ""
-            - name: AUTH_LDAP_BASE_FILTER
-              value: ""
-            - name: AUTH_LDAP_SEARCH_SCOPE
-              value: ""
-            - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-              value: ""
-            - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-              value: ""
-            - name: AUTH_LDAP_PARSE_USERNAME
-              value: ""
-            - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-              value: ""
-            - name: AUTH_LDAP_USERNAME_END_STRING
-              value: ""
-            - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-              value: ""
-            - name: AUTH_LDAP_ROLES_CTX_DN
-              value: ""
-            - name: AUTH_LDAP_ROLE_FILTER
-              value: ""
-            - name: AUTH_LDAP_ROLE_RECURSION
-              value: ""
-            - name: AUTH_LDAP_DEFAULT_ROLE
-              value: ""
-            - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-              value: ""
-            - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-              value: ""
-            - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-              value: ""
-            - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-              value: ""
-          volumes:
-          - name: kieserver-keystore-volume
-            secret:
-              secretName: "{{$Name}}-kieserver-app-secret"
-  ## KIE server deployment config END
-  ## PostgreSQL deployment config BEGIN
-  - metadata:
-      name: "{{$Name}}-postgresql-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-postgresql-{{$Num}}"
-    spec:
-      strategy:
-        type: Recreate
-      triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - "{{$Name}}-postgresql"
-          from:
-            kind: ImageStreamTag
-            namespace: "openshift"
-            name: "postgresql:9.6"
-      - type: ConfigChange
-      replicas: 1
-      selector:
-        deploymentConfig: "{{$Name}}-postgresql-{{$Num}}"
-      template:
-        metadata:
-          name: "{{$Name}}-postgresql-{{$Num}}"
-          labels:
-            deploymentConfig: "{{$Name}}-postgresql-{{$Num}}"
-            app: "{{$Name}}"
-            service: "{{$Name}}-postgresql-{{$Num}}"
-        spec:
-          terminationGracePeriodSeconds: 60
-          containers:
-          - name: "{{$Name}}-postgresql"
-            image: postgresql
-            imagePullPolicy: Always
-            livenessProbe:
-              exec:
-                command:
-                - "/usr/libexec/check-container"
-                - "--live"
-              initialDelaySeconds: 120
-              timeoutSeconds: 10
-            readinessProbe:
-              exec:
-                command:
-                - "/usr/libexec/check-container"
-              initialDelaySeconds: 5
-              timeoutSeconds: 1
-            ports:
-            - containerPort: 5432
-              protocol: TCP
-            volumeMounts:
-            - mountPath: "/var/lib/pgsql/data"
-              name: "{{$Name}}-postgresql-pvol"
-            env:
-            - name: POSTGRESQL_USER
-              value: "rhpam"
-            - name: POSTGRESQL_PASSWORD
-              value: "RedHat"
-            - name: POSTGRESQL_DATABASE
-              value: "rhpam7"
-            - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
-              value: "100"
-          volumes:
-          - name: "{{$Name}}-postgresql-pvol"
-            persistentVolumeClaim:
-              claimName: "{{$Name}}-postgresql-claim-{{$Num}}"
-  ## PostgreSQL deployment config END
-  ## KIE server services BEGIN
-  services:
-  - spec:
-      ports:
-      - name: http
-        port: 8080
-        targetPort: 8080
-      - name: https
-        port: 8443
-        targetPort: 8443
-      selector:
-        deploymentConfig: "{{$Name}}-kieserver-{{$Num}}"
-    metadata:
-      name: "{{$Name}}-kieserver-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      annotations:
-        description: All the KIE server web server's ports. (First KIE server)
-  - spec:
-      clusterIP: "None"
-      ports:
-      - name: "ping"
-        port: 8888
-        targetPort: 8888
-      selector:
-        deploymentConfig: "{{$Name}}-kieserver-{{$Num}}"
-    metadata:
-      name: "{{$Name}}-kieserver-{{$Num}}-ping"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      annotations:
-        service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-        description: "The JGroups ping port for clustering."
-  ## KIE server services END
-  ## PostgreSQL service BEGIN
-  - metadata:
-      annotations:
-        description: The first database server's port.
-      labels:
-        application: prod
-        service: "{{$Name}}-postgresql-{{$Num}}"
-      name: "{{$Name}}-postgresql-{{$Num}}"
-    spec:
-      ports:
-      - port: 5432
-        targetPort: 5432
-      selector:
-        deploymentConfig: "{{$Name}}-postgresql-{{$Num}}"
-  ## PostgreSQL service END
-  ## KIE server routes BEGIN
-  routes:
-  - id: "{{$Name}}-kieserver-{{$Num}}-http"
-    metadata:
-      name: "{{$Name}}-kieserver-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      annotations:
-        description: Route for First KIE server's http service.
-    spec:
-      host: ""
-      to:
-        name: "{{$Name}}-kieserver-{{$Num}}"
-      port:
-        targetPort: http
-  - id: "{{$Name}}-kieserver-{{$Num}}-https"
-    metadata:
-      name: "secure-{{$Name}}-kieserver-{{$Num}}"
-      labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      annotations:
-        description: Route for First KIE server's https service.
-    spec:
-      host: ""
-      to:
-        name: "{{$Name}}-kieserver-{{$Num}}"
-      port:
-        targetPort: https
-      tls:
-        termination: passthrough
-  ## KIE server routes END
-{{end}}
-## KIE Servers END
-## KIE smartrouter BEGIN
 - persistentVolumeClaims:
   - metadata:
       name: "{{.ApplicationName}}-smartrouter-claim"
@@ -844,3 +407,428 @@ servers:
       to:
         name: "{{.ApplicationName}}-smartrouter"
 ## KIE smartrouter END
+
+## KIE Servers BEGIN
+servers:
+## RANGE BEGINS
+{{ range $index, $Map := .ServerCount }}
+  ## PostgreSQL persistent volume claim BEGIN
+- persistentVolumeClaims:
+  - metadata:
+      name: "{{.ApplicationName}}-postgresql-claim-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-postgresql-{{$index}}"
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: "1Gi"
+  ## PostgreSQL persistent volume claim END
+  ## KIE server deployment config BEGIN
+  deploymentConfigs:
+  - metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+    spec:
+      strategy:
+        type: Recreate
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - "{{.ApplicationName}}-kieserver"
+          from:
+            kind: ImageStreamTag
+            namespace: "openshift"
+            name: "rhpam70-kieserver-openshift:1.2"
+      - type: ConfigChange
+      replicas: 3
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+      template:
+        metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          labels:
+            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          serviceAccountName: "{{.ApplicationName}}-kieserver"
+          terminationGracePeriodSeconds: 60
+          containers:
+          - name: "{{.ApplicationName}}-kieserver"
+            image: "rhpam70-kieserver-openshift"
+            imagePullPolicy: Always
+            resources:
+              requests:
+                memory: "512Mi"
+              limits:
+                memory: "1Gi"
+            volumeMounts:
+            - name: kieserver-keystore-volume
+              mountPath: "/etc/kieserver-secret-volume"
+              readOnly: true
+            livenessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/healthcheck"
+              initialDelaySeconds: 180
+              timeoutSeconds: 2
+              periodSeconds: 15
+              failureThreshold: 3
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/readycheck"
+              initialDelaySeconds: 60
+              timeoutSeconds: 2
+              periodSeconds: 30
+              failureThreshold: 6
+            ports:
+            - name: jolokia
+              containerPort: 8778
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: ping
+              containerPort: 8888
+              protocol: TCP
+            env:
+            - name: DROOLS_SERVER_FILTER_CLASSES
+              value: "true"
+            - name: KIE_ADMIN_USER
+              value: "adminUser"
+            - name: KIE_ADMIN_PWD
+              value: "RedHat"
+            - name: KIE_MBEANS
+              value: "enabled"
+            - name: KIE_SERVER_BYPASS_AUTH_USER
+              value: "false"
+            - name: KIE_SERVER_CONTROLLER_USER
+              value: "controllerUser"
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: "RedHat"
+            - name: KIE_SERVER_CONTROLLER_TOKEN
+              value: ""
+            - name: KIE_SERVER_CONTROLLER_SERVICE
+              value: "{{.ApplicationName}}-rhpamcentrmon"
+            - name: KIE_SERVER_CONTROLLER_PROTOCOL
+              value: "ws"
+            - name: KIE_SERVER_ID
+              value: "{{.ApplicationName}}-kieserver-{{$index}}"
+            - name: KIE_SERVER_HOST
+              value: ""
+            - name: KIE_SERVER_ROUTE_NAME
+              value: "{{.ApplicationName}}-kieserver-{{$index}}"
+            - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+              value: "false"
+            - name: KIE_SERVER_USER
+              value: "executionUser"
+            - name: KIE_SERVER_PWD
+              value: "RedHat"
+            - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+              value: ""
+            - name: MAVEN_REPOS
+              value: "RHPAMCENTR,EXTERNAL"
+            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+              value: ""
+            - name: RHPAMCENTR_MAVEN_REPO_PATH
+              value: "/maven2/"
+            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+              value: ""
+            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+              value: ""
+            - name: EXTERNAL_MAVEN_REPO_ID
+              value: ""
+            - name: EXTERNAL_MAVEN_REPO_URL
+              value: ""
+            - name: EXTERNAL_MAVEN_REPO_USERNAME
+              value: ""
+            - name: EXTERNAL_MAVEN_REPO_PASSWORD
+              value: ""
+            - name: KIE_SERVER_ROUTER_SERVICE
+              value: "{{.ApplicationName}}-smartrouter"
+            - name: KIE_SERVER_ROUTER_PORT
+              value: "9000"
+            - name: KIE_SERVER_ROUTER_PROTOCOL
+              value: ""
+            - name: KIE_SERVER_PERSISTENCE_DS
+              value: "java:/jboss/datasources/rhpam"
+            - name: DATASOURCES
+              value: "RHPAM"
+            - name: RHPAM_JNDI
+              value: "java:/jboss/datasources/rhpam"
+            - name: RHPAM_JTA
+              value: "true"
+  ## PostgreSQL driver settings BEGIN
+            - name: RHPAM_DATABASE
+              value: "rhpam7"
+            - name: RHPAM_DRIVER
+              value: "postgresql"
+            - name: KIE_SERVER_PERSISTENCE_DIALECT
+              value: "org.hibernate.dialect.PostgreSQLDialect"
+            - name: RHPAM_USERNAME
+              value: "rhpam"
+            - name: RHPAM_PASSWORD
+              value: "RedHat"
+            - name: RHPAM_SERVICE_HOST
+              value: "{{.ApplicationName}}-postgresql-{{$index}}"
+            - name: RHPAM_SERVICE_PORT
+              value: "5432"
+            - name: TIMER_SERVICE_DATA_STORE
+              value: "{{.ApplicationName}}-postgresql-{{$index}}"
+  ## PostgreSQL driver settings END
+            - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
+              value: "30000"
+            - name: HTTPS_KEYSTORE_DIR
+              value: "/etc/kieserver-secret-volume"
+            - name: HTTPS_KEYSTORE
+              value: "keystore.jks"
+            - name: HTTPS_NAME
+              value: "jboss"
+            - name: HTTPS_PASSWORD
+              value: "{{.KeyStorePassword}}"
+            - name: JGROUPS_PING_PROTOCOL
+              value: "openshift.DNS_PING"
+            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+              value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
+            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+              value: "8888"
+            - name: SSO_URL
+              value: ""
+            - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+              value: "ROOT.war"
+            - name: SSO_REALM
+              value: ""
+            - name: SSO_SECRET
+              value: ""
+            - name: SSO_CLIENT
+              value: ""
+            - name: SSO_USERNAME
+              value: ""
+            - name: SSO_PASSWORD
+              value: ""
+            - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+              value: "false"
+            - name: SSO_PRINCIPAL_ATTRIBUTE
+              value: "preferred_username"
+            - name: HOSTNAME_HTTP
+              value: ""
+            - name: HOSTNAME_HTTPS
+              value: ""
+            - name: AUTH_LDAP_URL
+              value: ""
+            - name: AUTH_LDAP_BIND_DN
+              value: ""
+            - name: AUTH_LDAP_BIND_CREDENTIAL
+              value: ""
+            - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
+              value: ""
+            - name: AUTH_LDAP_BASE_CTX_DN
+              value: ""
+            - name: AUTH_LDAP_BASE_FILTER
+              value: ""
+            - name: AUTH_LDAP_SEARCH_SCOPE
+              value: ""
+            - name: AUTH_LDAP_SEARCH_TIME_LIMIT
+              value: ""
+            - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
+              value: ""
+            - name: AUTH_LDAP_PARSE_USERNAME
+              value: ""
+            - name: AUTH_LDAP_USERNAME_BEGIN_STRING
+              value: ""
+            - name: AUTH_LDAP_USERNAME_END_STRING
+              value: ""
+            - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
+              value: ""
+            - name: AUTH_LDAP_ROLES_CTX_DN
+              value: ""
+            - name: AUTH_LDAP_ROLE_FILTER
+              value: ""
+            - name: AUTH_LDAP_ROLE_RECURSION
+              value: ""
+            - name: AUTH_LDAP_DEFAULT_ROLE
+              value: ""
+            - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
+              value: ""
+            - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
+              value: ""
+            - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
+              value: ""
+            - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
+              value: ""
+          volumes:
+          - name: kieserver-keystore-volume
+            secret:
+              secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
+  ## KIE server deployment config END
+  ## PostgreSQL deployment config BEGIN
+  - metadata:
+      name: "{{.ApplicationName}}-postgresql-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-postgresql-{{$index}}"
+    spec:
+      strategy:
+        type: Recreate
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - "{{.ApplicationName}}-postgresql"
+          from:
+            kind: ImageStreamTag
+            namespace: "openshift"
+            name: "postgresql:9.6"
+      - type: ConfigChange
+      replicas: 1
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
+      template:
+        metadata:
+          name: "{{.ApplicationName}}-postgresql-{{$index}}"
+          labels:
+            deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-postgresql-{{$index}}"
+        spec:
+          terminationGracePeriodSeconds: 60
+          containers:
+          - name: "{{.ApplicationName}}-postgresql"
+            image: postgresql
+            imagePullPolicy: Always
+            livenessProbe:
+              exec:
+                command:
+                - "/usr/libexec/check-container"
+                - "--live"
+              initialDelaySeconds: 120
+              timeoutSeconds: 10
+            readinessProbe:
+              exec:
+                command:
+                - "/usr/libexec/check-container"
+              initialDelaySeconds: 5
+              timeoutSeconds: 1
+            ports:
+            - containerPort: 5432
+              protocol: TCP
+            volumeMounts:
+            - mountPath: "/var/lib/pgsql/data"
+              name: "{{.ApplicationName}}-postgresql-pvol"
+            env:
+            - name: POSTGRESQL_USER
+              value: "rhpam"
+            - name: POSTGRESQL_PASSWORD
+              value: "RedHat"
+            - name: POSTGRESQL_DATABASE
+              value: "rhpam7"
+            - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
+              value: "100"
+          volumes:
+          - name: "{{.ApplicationName}}-postgresql-pvol"
+            persistentVolumeClaim:
+              claimName: "{{.ApplicationName}}-postgresql-claim-{{$index}}"
+  ## PostgreSQL deployment config END
+  ## KIE server services BEGIN
+  services:
+  - spec:
+      ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+      - name: https
+        port: 8443
+        targetPort: 8443
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+    metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      annotations:
+        description: All the KIE server web server's ports. (First KIE server)
+  - spec:
+      clusterIP: "None"
+      ports:
+      - name: "ping"
+        port: 8888
+        targetPort: 8888
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+    metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      annotations:
+        service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+        description: "The JGroups ping port for clustering."
+  ## KIE server services END
+  ## PostgreSQL service BEGIN
+  - metadata:
+      annotations:
+        description: The first database server's port.
+      labels:
+        application: prod
+        service: "{{.ApplicationName}}-postgresql-{{$index}}"
+      name: "{{.ApplicationName}}-postgresql-{{$index}}"
+    spec:
+      ports:
+      - port: 5432
+        targetPort: 5432
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
+  ## PostgreSQL service END
+  ## KIE server routes BEGIN
+  routes:
+  - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
+    metadata:
+      name: "secure-{{.ApplicationName}}-kieserver-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      annotations:
+        description: Route for First KIE server's https service.
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      port:
+        targetPort: https
+      tls:
+        termination: passthrough
+  - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+    metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      annotations:
+        description: Route for First KIE server's http service.
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      port:
+        targetPort: http
+  ## KIE server routes END
+{{end}}
+## RANGE ends
+## KIE Servers END

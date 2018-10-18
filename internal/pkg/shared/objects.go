@@ -1,15 +1,21 @@
 package shared
 
 import (
+	"encoding/json"
+
 	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	authv1 "github.com/openshift/api/authorization/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	"github.com/operator-framework/operator-sdk/pkg/k8sclient"
+	"github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
 )
 
 func GetDeploymentTypeMeta() metav1.TypeMeta {
@@ -41,12 +47,12 @@ func GetObjectMeta(service string, cr *opv1.App, labels map[string]string) metav
 	return metav1.ObjectMeta{
 		Name:            service,
 		Namespace:       cr.Namespace,
-		OwnerReferences: getOwnerReferences(cr),
+		OwnerReferences: GetOwnerReferences(cr),
 		Labels:          labels,
 	}
 }
 
-func getOwnerReferences(cr *opv1.App) []metav1.OwnerReference {
+func GetOwnerReferences(cr *opv1.App) []metav1.OwnerReference {
 	return []metav1.OwnerReference{
 		*metav1.NewControllerRef(cr, opv1.SchemeGroupVersion.WithKind(cr.GetObjectKind().GroupVersionKind().Kind)),
 	}
@@ -148,7 +154,7 @@ func GetDeploymentTrigger(containerName string, isNamespace string, isName strin
 	}
 }
 
-func ObjectAppend(objs []runtime.Object, object opv1.CustomObject) []runtime.Object {
+func ObjectAppend(objs []runtime.Object, object opv1.CustomObject, cr *opv1.App) []runtime.Object {
 	var o []runtime.Object
 	for _, obj := range object.PersistentVolumeClaims {
 		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
@@ -175,8 +181,10 @@ func ObjectAppend(objs []runtime.Object, object opv1.CustomObject) []runtime.Obj
 		o = append(o, obj.DeepCopyObject())
 	}
 	for _, obj := range object.Routes {
-		obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
-		o = append(o, obj.DeepCopyObject())
+		if !CheckRouteOwnerRef(obj, cr) {
+			obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+			o = append(o, obj.DeepCopyObject())
+		}
 	}
 
 	return append(objs, o...)
@@ -185,9 +193,50 @@ func ObjectAppend(objs []runtime.Object, object opv1.CustomObject) []runtime.Obj
 func SetReferences(objs []runtime.Object, cr *opv1.App) []runtime.Object {
 	for i, common := range objs {
 		common.(metav1.Object).SetNamespace(cr.Namespace)
-		common.(metav1.Object).SetOwnerReferences(getOwnerReferences(cr))
+		common.(metav1.Object).SetOwnerReferences(GetOwnerReferences(cr))
 
 		objs[i] = common
 	}
 	return objs
+}
+
+func CreateObject(resourceInterface dynamic.ResourceInterface, object runtime.Object) {
+	unstructObj, err := k8sutil.UnstructuredFromRuntimeObject(object)
+	if err != nil {
+		logrus.Error(err)
+	}
+	_, err = resourceInterface.Create(unstructObj)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+func GetObjectByte(resourceInterface dynamic.ResourceInterface, objName string) ([]byte, error) {
+	unstructObj, err := resourceInterface.Get(objName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	objectByte, err := unstructObj.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return objectByte, nil
+}
+
+func CheckRouteOwnerRef(route routev1.Route, cr *opv1.App) bool {
+	groupVK := routev1.SchemeGroupVersion.WithKind("Route")
+	apiVersion, kind := groupVK.ToAPIVersionAndKind()
+	routeClient, _, err := k8sclient.GetResourceClient(apiVersion, kind, cr.Namespace)
+	if err != nil {
+		logrus.Error(err)
+	}
+	objectByte, _ := GetObjectByte(routeClient, route.Name)
+	json.Unmarshal(objectByte, &route)
+
+	for _, r := range route.GetOwnerReferences() {
+		if r.UID == cr.UID {
+			return true
+		}
+	}
+	return false
 }

@@ -6,22 +6,20 @@ import (
 	"testing"
 
 	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/kiegroup/v1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
-	"github.com/sirupsen/logrus"
 )
 
-func TestTrialEnvironmentHandling(t *testing.T) {
+func TestEnvironmentHandling(t *testing.T) {
 	handler := NewHandler()
 	event := sdk.Event{
 		Object: &opv1.App{
 			Spec: opv1.AppSpec{
-				Environment: "trial",
+				Environment: "test",
 			},
 		},
 		Deleted: false}
@@ -71,6 +69,7 @@ func TestUnknownResourceTypeHandling(t *testing.T) {
 func TestUnknownEnvironmentObjects(t *testing.T) {
 	cr := &opv1.App{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
@@ -83,35 +82,20 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	assert.Equal(t, "envs/unknown.yaml does not exist, environment not deployed", err.Error())
 }
 
-func TestTrialEnvironmentObjects(t *testing.T) {
+func TestEnvironmentObjects(t *testing.T) {
 	cr := &opv1.App{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "trial",
+			Name:      "test",
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
-			Environment: "trial",
+			Environment: "test",
 		},
 	}
+
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
 	objects, err := NewEnv(cr)
-	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", cr.Name), objects[0].(*appsv1.DeploymentConfig).Name)
-	assert.Equal(t, cr.Namespace, objects[0].(*appsv1.DeploymentConfig).ObjectMeta.Namespace)
-	assert.Nil(t, err)
-}
-func TestProdEnvironmentObjects(t *testing.T) {
-	cr := &opv1.App{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "prod",
-			Namespace: "test-ns",
-		},
-		Spec: opv1.AppSpec{
-			Environment: "prod",
-		},
-	}
-	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
-	objects, err := NewEnv(cr)
-	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr-claim", cr.Name), objects[0].(*corev1.PersistentVolumeClaim).Name)
-	assert.Equal(t, cr.Namespace, objects[0].(*corev1.PersistentVolumeClaim).ObjectMeta.Namespace)
+	assert.Equal(t, fmt.Sprintf("%s-businesscentral-app-secret", cr.Name), objects[0].(*corev1.Secret).Name)
+	assert.Equal(t, cr.Namespace, objects[0].(*corev1.Secret).ObjectMeta.Namespace)
 	assert.Nil(t, err)
 }

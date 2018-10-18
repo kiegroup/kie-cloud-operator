@@ -124,31 +124,32 @@ console:
       selector:
         app: "{{.ApplicationName}}"
         service: "{{.ApplicationName}}-rhpamcentr"
-servers:
 
+## KIE Servers BEGIN
+servers:
 ## RANGE BEGINS
-{{$Name := .ApplicationName}}{{ range $index, $Num := .ServerCount }}
+{{ range $index, $Map := .ServerCount }}
 
 - deploymentConfigs:
   - metadata:
       labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      name: "{{$Name}}-kieserver-{{$Num}}"
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
     spec:
       replicas: 1
       selector:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
       strategy:
         resources: {}
         type: Recreate
       template:
         metadata:
           labels:
-            app: "{{$Name}}"
-            service: "{{$Name}}-kieserver-{{$Num}}"
-          name: "{{$Name}}-kieserver-{{$Num}}"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
           containers:
           - env:
@@ -163,7 +164,7 @@ servers:
             - name: RHPAMCENTR_MAVEN_REPO_USERNAME
               value: mavenUser
             - name: KIE_SERVER_CONTROLLER_SERVICE
-              value: "{{$Name}}-rhpamcentr"
+              value: "{{.ApplicationName}}-rhpamcentr"
             - name: KIE_MBEANS
               value: enabled
             - name: KIE_SERVER_CONTROLLER_PWD
@@ -171,11 +172,11 @@ servers:
             - name: MAVEN_REPOS
               value: RHPAMCENTR,EXTERNAL
             - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-              value: "{{$Name}}-rhpamcentr"
+              value: "{{.ApplicationName}}-rhpamcentr"
             - name: SSO_OPENIDCONNECT_DEPLOYMENTS
               value: ROOT.war
             - name: EXECUTION_SERVER_ROUTE_NAME
-              value: "{{$Name}}-kieserver-{{$Num}}"
+              value: "{{.ApplicationName}}-kieserver-{{$index}}"
             - name: KIE_ADMIN_PWD
               value: RedHat
             - name: KIE_SERVER_BYPASS_AUTH_USER
@@ -199,7 +200,7 @@ servers:
               initialDelaySeconds: 180
               periodSeconds: 15
               timeoutSeconds: 2
-            name: "{{$Name}}-kieserver-{{$Num}}"
+            name: "{{.ApplicationName}}-kieserver-{{$index}}"
             ports:
             - containerPort: 8080
               name: http
@@ -228,7 +229,7 @@ servers:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - "{{$Name}}-kieserver-{{$Num}}"
+          - "{{.ApplicationName}}-kieserver-{{$index}}"
           from:
             kind: ImageStreamTag
             name: rhpam70-kieserver-openshift:1.2
@@ -238,9 +239,9 @@ servers:
   services:
   - metadata:
       labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      name: "{{$Name}}-kieserver-{{$Num}}"
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
     spec:
       ports:
       - name: http
@@ -248,17 +249,19 @@ servers:
         protocol: TCP
         targetPort: 8080
       selector:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
   routes:
   - metadata:
       labels:
-        app: "{{$Name}}"
-        service: "{{$Name}}-kieserver-{{$Num}}"
-      name: "{{$Name}}-kieserver-{{$Num}}"
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
     spec:
       port:
         targetPort: http
       to:
-        name: "{{$Name}}-kieserver-{{$Num}}"
+        name: "{{.ApplicationName}}-kieserver-{{$index}}"
 {{end}}
+## RANGE ends
+## KIE Servers END

@@ -28,7 +28,7 @@ func TestLoadTrialEnvironment(t *testing.T) {
 		},
 	}
 
-	env, err := GetEnvironment(cr)
+	env, _, err := GetEnvironment(cr)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-0", cr.Name), env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
@@ -50,7 +50,7 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 		},
 	}
 
-	_, err := GetEnvironment(cr)
+	_, _, err := GetEnvironment(cr)
 	assert.NotNil(t, err)
 }
 func TestMultipleServerDeployment(t *testing.T) {
@@ -72,7 +72,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 		},
 	}
 
-	env, err := GetEnvironment(cr)
+	env, _, err := GetEnvironment(cr)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-1", cr.Name), env.Servers[1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
