@@ -101,8 +101,12 @@ func NewEnv(cr *opv1.App) ([]runtime.Object, error) {
 
 	// console keystore generation
 	consoleCN := cr.Name
-	if len(env.Console.Routes) > 0 {
-		consoleCN = getRouteHost(env.Console.Routes[0], cr)
+	for _, r := range env.Console.Routes {
+		if shared.CheckTLS(r.Spec.TLS) {
+			consoleCN = getRouteHost(r, cr)
+			// use host of first tls route in env template
+			break
+		}
 	}
 	env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
@@ -120,8 +124,12 @@ func NewEnv(cr *opv1.App) ([]runtime.Object, error) {
 	// server(s) keystore generation
 	serverCN := cr.Name
 	for i, server := range env.Servers {
-		if len(server.Routes) > 0 {
-			serverCN = getRouteHost(server.Routes[0], cr)
+		for _, r := range server.Routes {
+			if shared.CheckTLS(r.Spec.TLS) {
+				serverCN = getRouteHost(r, cr)
+				// use host of first tls route in env template
+				break
+			}
 		}
 		server.Secrets = append(server.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,

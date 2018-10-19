@@ -224,6 +224,21 @@ console:
         service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
         description: "The JGroups ping port for clustering."
   routes:
+  - id: "{{.ApplicationName}}-rhpamcentrmon-http"
+    metadata:
+      name: "{{.ApplicationName}}-rhpamcentrmon"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentrmon"
+      annotations:
+        description: Route for Business Central Monitoring's http service.
+        haproxy.router.openshift.io/timeout: 60s
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-rhpamcentrmon"
+      port:
+        targetPort: http
   - id: "{{.ApplicationName}}-rhpamcentrmon-https"
     metadata:
       name: "secure-{{.ApplicationName}}-rhpamcentrmon"
@@ -241,21 +256,6 @@ console:
         targetPort: https
       tls:
         termination: passthrough
-  - id: "{{.ApplicationName}}-rhpamcentrmon-http"
-    metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
-      annotations:
-        description: Route for Business Central Monitoring's http service.
-        haproxy.router.openshift.io/timeout: 60s
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-rhpamcentrmon"
-      port:
-        targetPort: http
   persistentVolumeClaims:
   - metadata:
       name: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -798,6 +798,20 @@ servers:
   ## PostgreSQL service END
   ## KIE server routes BEGIN
   routes:
+  - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+    metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      labels:
+        app: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-kieserver-{{$index}}"
+      annotations:
+        description: Route for First KIE server's http service.
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-kieserver-{{$index}}"
+      port:
+        targetPort: http
   - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
     metadata:
       name: "secure-{{.ApplicationName}}-kieserver-{{$index}}"
@@ -814,20 +828,6 @@ servers:
         targetPort: https
       tls:
         termination: passthrough
-  - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
-    metadata:
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      annotations:
-        description: Route for First KIE server's http service.
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      port:
-        targetPort: http
   ## KIE server routes END
 {{end}}
 ## RANGE ends

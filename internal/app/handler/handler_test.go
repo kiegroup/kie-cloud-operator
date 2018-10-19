@@ -19,7 +19,7 @@ func TestEnvironmentHandling(t *testing.T) {
 	event := sdk.Event{
 		Object: &opv1.App{
 			Spec: opv1.AppSpec{
-				Environment: "test",
+				Environment: "trial",
 			},
 		},
 		Deleted: false}
@@ -89,7 +89,7 @@ func TestEnvironmentObjects(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
-			Environment: "test",
+			Environment: "trial",
 		},
 	}
 

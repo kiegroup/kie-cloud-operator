@@ -181,8 +181,13 @@ func ObjectAppend(objs []runtime.Object, object opv1.CustomObject, cr *opv1.App)
 		o = append(o, obj.DeepCopyObject())
 	}
 	for _, obj := range object.Routes {
-		if !CheckRouteOwnerRef(obj, cr) {
-			obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+		obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+		// check if tls route already exists
+		if CheckTLS(obj.Spec.TLS) {
+			if !CheckRouteOwnerRef(obj, cr) {
+				o = append(o, obj.DeepCopyObject())
+			}
+		} else {
 			o = append(o, obj.DeepCopyObject())
 		}
 	}
@@ -237,6 +242,13 @@ func CheckRouteOwnerRef(route routev1.Route, cr *opv1.App) bool {
 		if r.UID == cr.UID {
 			return true
 		}
+	}
+	return false
+}
+
+func CheckTLS(tls *routev1.TLSConfig) bool {
+	if tls != nil {
+		return true
 	}
 	return false
 }
