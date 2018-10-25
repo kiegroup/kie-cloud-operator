@@ -29,7 +29,7 @@ func TestLoadTrialEnvironment(t *testing.T) {
 	}
 
 	env, _, err := GetEnvironment(cr)
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-0", cr.Name), env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
 
@@ -67,24 +67,13 @@ func TestMultipleServerDeployment(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: opv1.AppSpec{
-			Environment:   "trial",
-			NumKieServers: 2,
+			Environment:    "trial",
+			KieDeployments: 6,
 		},
 	}
 
 	env, _, err := GetEnvironment(cr)
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-1", cr.Name), env.Servers[1].DeploymentConfigs[0].Name)
+	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
-}
-
-func TestDefaultConsole(t *testing.T) {
-	object := GetConsoleObject()
-	logrus.Infof("Object is %v", object)
-	assert.Equal(t, "console-rhpamcentr", object.DeploymentConfigs[0].Name)
-}
-
-func TestDefaultServer(t *testing.T) {
-	object := GetServerObject()
-	logrus.Infof("Object is %v", object)
-	assert.Equal(t, "default-kieserver", object.DeploymentConfigs[0].Name)
 }

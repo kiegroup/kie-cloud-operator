@@ -196,3 +196,27 @@ func MergeContainerConfigs(containers []corev1.Container, crc corev1.Container, 
 
 	return containers
 }
+
+func isEnvVarInList(envName string, Env []corev1.EnvVar) bool {
+	for _, v := range Env {
+		if v.Name == envName {
+			return true
+		}
+	}
+	return false
+}
+
+func EnvOverride(dst, src []corev1.EnvVar) []corev1.EnvVar {
+	for _, cre := range src {
+		for envIndex, e := range dst {
+			if isEnvVarInList(cre.Name, dst) {
+				if cre.Name == e.Name {
+					dst[envIndex] = cre
+				}
+			} else {
+				dst = append(dst, cre)
+			}
+		}
+	}
+	return dst
+}

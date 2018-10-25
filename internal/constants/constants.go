@@ -6,5 +6,6 @@ const (
 	RhpamcentrImageStreamName = "rhpam70-businesscentral-openshift"
 	KieServerImageStreamName  = "rhpam70-kieserver-openshift"
 	ImageStreamNamespace      = "openshift"
-	ImageStreamTag            = "1.2"
+	RhpamVersion              = "7.1"
+	ImageStreamTag            = "1.1"
 )

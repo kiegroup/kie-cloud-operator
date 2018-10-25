@@ -1,0 +1,18 @@
+apiVersion: kiegroup.org/v1
+kind: App
+metadata:
+  name: production
+spec:
+  environment: production
+  kieDeployments: 2
+  objects:
+    console:
+      resources:
+        requests:
+          memory: 768Mi
+        limits:
+          memory: 2Gi
+    server:
+      env:
+      - name: key1
+        value: value1
