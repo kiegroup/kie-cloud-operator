@@ -4,30 +4,30 @@ objects:
     - name: KIE_ADMIN_USER
       value: adminUser
     - name: KIE_ADMIN_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.AdminPassword}}"
     - name: KIE_SERVER_CONTROLLER_USER
       value: controllerUser
     - name: KIE_SERVER_CONTROLLER_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.ControllerPassword}}"
     - name: KIE_SERVER_USER
       value: executionUser
     - name: KIE_SERVER_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.ServerPassword}}"
 
   server:
     env:
     - name: KIE_ADMIN_USER
       value: adminUser
     - name: KIE_ADMIN_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.AdminPassword}}"
     - name: KIE_SERVER_CONTROLLER_USER
       value: controllerUser
     - name: KIE_SERVER_CONTROLLER_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.ControllerPassword}}"
     - name: KIE_SERVER_USER
       value: executionUser
     - name: KIE_SERVER_PWD
-      value: "{{.AppPassword}}"
+      value: "{{.ServerPassword}}"
     - name: DROOLS_SERVER_FILTER_CLASSES
       value: "true"
     - name: RHPAMCENTR_MAVEN_REPO_PATH

@@ -32,19 +32,21 @@ func GetEnvironment(cr *opv1.App) (opv1.Environment, []byte, error) {
 		cr.Spec.ImageTag = constants.ImageStreamTag
 	}
 
-	//password := []byte("mykeystorepass")
 	password := shared.GeneratePassword(8)
 
 	re := regexp.MustCompile("[0-9]+")
 	// create go template
-	template := opv1.Template{
-		ApplicationName:  cr.Name,
-		Version:          strings.Join(re.FindAllString(cr.Spec.Version, -1), ""),
-		ImageTag:         cr.Spec.ImageTag,
-		KeyStorePassword: string(password),
-		AppPassword:      string(shared.GeneratePassword(8)),
+	template := Template{
+		ApplicationName:    cr.Name,
+		Version:            strings.Join(re.FindAllString(cr.Spec.Version, -1), ""),
+		ImageTag:           cr.Spec.ImageTag,
+		KeyStorePassword:   string(password),
+		AdminPassword:      string(shared.GeneratePassword(8)),
+		ControllerPassword: string(shared.GeneratePassword(8)),
+		ServerPassword:     string(shared.GeneratePassword(8)),
+		MavenPassword:      string(shared.GeneratePassword(8)),
 	}
-	envTemplate := opv1.EnvTemplate{
+	envTemplate := EnvTemplate{
 		Template: template,
 	}
 	for i := 0; i < cr.Spec.KieDeployments; i++ {
@@ -60,7 +62,7 @@ func GetEnvironment(cr *opv1.App) (opv1.Environment, []byte, error) {
 	if err != nil {
 		logrus.Error(err)
 	}
-	// envs.env <- common.env <- cr.env
+
 	cr.Spec.Objects.Console.Env = shared.EnvOverride(common.Objects.Console.Env, cr.Spec.Objects.Console.Env)
 	cr.Spec.Objects.Server.Env = shared.EnvOverride(common.Objects.Server.Env, cr.Spec.Objects.Server.Env)
 
@@ -76,7 +78,7 @@ func GetEnvironment(cr *opv1.App) (opv1.Environment, []byte, error) {
 	return env, password, nil
 }
 
-func loadYaml(filename string, t opv1.EnvTemplate) ([]byte, error) {
+func loadYaml(filename string, t EnvTemplate) ([]byte, error) {
 	box := packr.NewBox("../../../config/app")
 
 	if box.Has(filename) {
@@ -87,7 +89,7 @@ func loadYaml(filename string, t opv1.EnvTemplate) ([]byte, error) {
 	return nil, fmt.Errorf("%s does not exist, environment not deployed", filename)
 }
 
-func parseTemplate(e opv1.EnvTemplate, objBytes []byte) []byte {
+func parseTemplate(e EnvTemplate, objBytes []byte) []byte {
 	var b bytes.Buffer
 
 	tmpl, err := template.New(e.ApplicationName).Parse(string(objBytes[:]))

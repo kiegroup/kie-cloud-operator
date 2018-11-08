@@ -67,7 +67,7 @@ console:
             imagePullPolicy: Always
             resources:
               requests:
-                memory: 512Mi
+                memory: 768Mi
               limits:
                 memory: 1Gi
             volumeMounts:
@@ -81,7 +81,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -90,7 +90,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -112,7 +112,7 @@ console:
             - name: KIE_MAVEN_USER
               value: mavenUser
             - name: KIE_MAVEN_PWD
-              value: "{{.AppPassword}}"
+              value: "{{.MavenPassword}}"
             - name: KIE_MBEANS
               value: enabled
             - name: HTTPS_KEYSTORE_DIR
@@ -300,7 +300,7 @@ servers:
             imagePullPolicy: Always
             resources:
               requests:
-                memory: 512Mi
+                memory: 768Mi
               limits:
                 memory: 1Gi
             volumeMounts:
@@ -316,7 +316,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/healthcheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -326,7 +326,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/readycheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -345,7 +345,7 @@ servers:
             - name: RHPAMCENTR_MAVEN_REPO_USERNAME
               value: mavenUser
             - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.MavenPassword}}"
             - name: RHPAMCENTR_MAVEN_REPO_SERVICE
               value: "{{.ApplicationName}}-rhpamcentr"
             - name: KIE_SERVER_CONTROLLER_TOKEN
@@ -388,7 +388,7 @@ servers:
             - name: RHPAM_USERNAME
               value: "sa"
             - name: RHPAM_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: RHPAM_XA_CONNECTION_PROPERTY_URL
               value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
             - name: RHPAM_SERVICE_HOST
@@ -406,12 +406,6 @@ servers:
               value: "jboss"
             - name: HTTPS_PASSWORD
               value: "{{.KeyStorePassword}}"
-            - name: JGROUPS_PING_PROTOCOL
-              value: "openshift.DNS_PING"
-            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-              value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
-            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-              value: "8888"
             - name: SSO_URL
               value: ""
             - name: SSO_REALM

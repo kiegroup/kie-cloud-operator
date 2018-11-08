@@ -6,12 +6,10 @@ spec:
   environment: trial
   objects:
     console:
-      env:
-      - name: key1
-        value: value1
+      resources:
+        limits:
+          memory: 2Gi
     server:
       resources:
         requests:
           memory:
-        limits:
-          memory: 1Gi

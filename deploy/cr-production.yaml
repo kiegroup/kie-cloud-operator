@@ -8,8 +8,6 @@ spec:
   objects:
     console:
       resources:
-        requests:
-          memory: 768Mi
         limits:
           memory: 2Gi
     server:

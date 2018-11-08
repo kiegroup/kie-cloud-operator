@@ -67,7 +67,7 @@ console:
             imagePullPolicy: Always
             resources:
               requests:
-                memory: 512Mi
+                memory: 768Mi
               limits:
                 memory: 1Gi
             volumeMounts:
@@ -81,7 +81,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -90,7 +90,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -112,7 +112,7 @@ console:
             - name: KIE_MAVEN_USER
               value: mavenUser
             - name: KIE_MAVEN_PWD
-              value: "{{.AppPassword}}"
+              value: "{{.MavenPassword}}"
             - name: KIE_MBEANS
               value: enabled
             - name: HTTPS_KEYSTORE_DIR
@@ -146,7 +146,7 @@ console:
             - name: APPFORMER_JMS_BROKER_USER
               value: "jmsBrokserUser"
             - name: APPFORMER_JMS_BROKER_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: SSO_URL
               value: ""
             - name: SSO_OPENIDCONNECT_DEPLOYMENTS
@@ -439,7 +439,7 @@ others:
             - name: MYSQL_USER
               value: "rhpam"
             - name: MYSQL_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: MYSQL_DATABASE
               value: "rhpam7"
           volumes:
@@ -471,7 +471,7 @@ others:
             - name: AMQ_USER
               value: "jmsBrokserUser"
             - name: AMQ_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: AMQ_ROLE
               value: admin
             - name: AMQ_NAME
@@ -645,7 +645,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/healthcheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -655,7 +655,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/readycheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -674,7 +674,7 @@ servers:
             - name: RHPAMCENTR_MAVEN_REPO_USERNAME
               value: mavenUser
             - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.MavenPassword}}"
             - name: RHPAMCENTR_MAVEN_REPO_SERVICE
               value: "{{.ApplicationName}}-rhpamcentr"
             - name: AUTO_CONFIGURE_EJB_TIMER
@@ -719,7 +719,7 @@ servers:
             - name: RHPAM_USERNAME
               value: "rhpam"
             - name: RHPAM_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: RHPAM_SERVICE_HOST
               value: "{{.ApplicationName}}-mysql"
             - name: RHPAM_SERVICE_PORT
@@ -735,12 +735,6 @@ servers:
               value: "jboss"
             - name: HTTPS_PASSWORD
               value: "{{.KeyStorePassword}}"
-            - name: JGROUPS_PING_PROTOCOL
-              value: "openshift.DNS_PING"
-            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-              value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
-            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-              value: "8888"
             - name: SSO_URL
               value: ""
             - name: SSO_REALM

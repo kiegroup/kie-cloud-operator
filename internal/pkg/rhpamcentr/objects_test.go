@@ -50,4 +50,8 @@ func TestConstructConsoleObject(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(cr.Spec.Version, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "RedHat",
+	})
 }

@@ -54,7 +54,7 @@ console:
             imagePullPolicy: Always
             resources:
               requests:
-                memory: 512Mi
+                memory: 768Mi
               limits:
                 memory: 1Gi
             volumeMounts:
@@ -68,7 +68,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -77,7 +77,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -332,9 +332,9 @@ others:
             - name: KIE_SERVER_ROUTER_PROTOCOL
               value: ""
             - name: KIE_SERVER_CONTROLLER_USER
-              value: "controllerUser"
+              value: controllerUser
             - name: KIE_SERVER_CONTROLLER_PWD
-              value: "{{.AppPassword}}"
+              value: "{{.ControllerPassword}}"
             - name: KIE_SERVER_CONTROLLER_TOKEN
               value: ""
             - name: KIE_SERVER_CONTROLLER_SERVICE
@@ -454,7 +454,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/healthcheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -464,7 +464,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:{{.AppPassword}}' http://localhost:8080/services/rest/server/readycheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -527,7 +527,7 @@ servers:
             - name: RHPAM_USERNAME
               value: "rhpam"
             - name: RHPAM_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: RHPAM_SERVICE_HOST
               value: "{{.ApplicationName}}-postgresql-{{$index}}"
             - name: RHPAM_SERVICE_PORT
@@ -677,7 +677,7 @@ servers:
             - name: POSTGRESQL_USER
               value: "rhpam"
             - name: POSTGRESQL_PASSWORD
-              value: "{{.AppPassword}}"
+              value: "{{.AdminPassword}}"
             - name: POSTGRESQL_DATABASE
               value: "rhpam7"
             - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS

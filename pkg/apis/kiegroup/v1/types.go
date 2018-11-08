@@ -64,16 +64,3 @@ type CustomObject struct {
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
 }
-
-type EnvTemplate struct {
-	Template    `json:",inline"`
-	ServerCount []Template `json:"serverCount,omitempty"`
-}
-
-type Template struct {
-	ApplicationName  string `json:"applicationName,omitempty"`
-	Version          string `json:"version,omitempty"`
-	ImageTag         string `json:"imageTag,omitempty"`
-	KeyStorePassword string `json:"keyStorePassword,omitempty"`
-	AppPassword      string `json:"appPassword,omitempty"`
-}

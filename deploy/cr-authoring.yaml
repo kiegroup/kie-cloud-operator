@@ -10,10 +10,7 @@ spec:
       resources:
         limits:
           memory: 2Gi
+    server:
       env:
       - name: key1
         value: value1
-    server:
-      resources:
-        limits:
-          memory: 2Gi

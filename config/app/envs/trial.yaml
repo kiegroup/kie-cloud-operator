@@ -22,15 +22,21 @@ console:
         spec:
           containers:
           - env:
+            - name: KIE_ADMIN_PWD
+              value: RedHat
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: RedHat
+            - name: KIE_SERVER_PWD
+              value: RedHat
             - name: KIE_MAVEN_USER
               value: mavenUser
             - name: KIE_MAVEN_PWD
-              value: "{{.AppPassword}}"
+              value: RedHat
             image: rhpam{{.Version}}-businesscentral-openshift
             imagePullPolicy: Always
             resources:
               requests:
-                memory: 512Mi
+                memory: 768Mi
               limits:
                 memory: 1Gi
             livenessProbe:
@@ -38,7 +44,7 @@ console:
                 command:
                 - /bin/bash
                 - -c
-                - curl --fail --silent -u adminUser:{{.AppPassword}} http://localhost:8080/kie-wb.jsp
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 180
               periodSeconds: 15
               timeoutSeconds: 2
@@ -58,7 +64,7 @@ console:
                 command:
                 - /bin/bash
                 - -c
-                - curl --fail --silent -u adminUser:{{.AppPassword}} http://localhost:8080/kie-wb.jsp
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               failureThreshold: 6
               initialDelaySeconds: 60
               periodSeconds: 30
@@ -135,12 +141,18 @@ servers:
         spec:
           containers:
           - env:
+            - name: KIE_ADMIN_PWD
+              value: RedHat
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: RedHat
+            - name: KIE_SERVER_PWD
+              value: RedHat
             - name: EXECUTION_SERVER_ROUTE_NAME
               value: "{{.ApplicationName}}-kieserver-{{$index}}"
             - name: RHPAMCENTR_MAVEN_REPO_USERNAME
               value: mavenUser
             - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-              value: "{{.AppPassword}}"
+              value: RedHat
             - name: RHPAMCENTR_MAVEN_REPO_SERVICE
               value: "{{.ApplicationName}}-rhpamcentr"
             image: rhpam{{.Version}}-kieserver-openshift
@@ -155,7 +167,7 @@ servers:
                 command:
                 - /bin/bash
                 - -c
-                - curl --fail --silent -u adminUser:{{.AppPassword}} http://localhost:8080/services/rest/server/healthcheck
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
               initialDelaySeconds: 180
               periodSeconds: 15
               timeoutSeconds: 2
@@ -172,7 +184,7 @@ servers:
                 command:
                 - /bin/bash
                 - -c
-                - curl --fail --silent -u adminUser:{{.AppPassword}} http://localhost:8080/services/rest/server/readycheck
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
               failureThreshold: 6
               initialDelaySeconds: 60
               periodSeconds: 30
