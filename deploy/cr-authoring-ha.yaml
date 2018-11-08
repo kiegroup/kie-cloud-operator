@@ -1,15 +1,16 @@
 apiVersion: kiegroup.org/v1
 kind: App
 metadata:
-  name: trial
+  name: authoring-ha
 spec:
-  environment: trial
+  environment: authoring-ha
+  kieDeployments: 2
   objects:
     console:
       resources:
         limits:
           memory: 2Gi
     server:
-      resources:
-        requests:
-          memory:
+      env:
+      - name: key1
+        value: value1

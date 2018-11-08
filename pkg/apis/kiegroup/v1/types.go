@@ -26,10 +26,27 @@ type App struct {
 }
 
 type AppSpec struct {
-	Environment   string           `json:"environment,omitempty"`
-	NumKieServers int              `json:"numKieServers"`
-	Console       corev1.Container `json:"console,omitempty"`
-	Server        corev1.Container `json:"server,omitempty"`
+	// KIE environment type to deploy (prod, authoring, trial, etc)
+	Environment string `json:"environment,omitempty"`
+	// RHPAM version to deploy
+	Version string `json:"version,omitempty"`
+	// Image tag to use
+	ImageTag string `json:"imageTag,omitempty"`
+	// Number of KieServer DeploymentConfigs (defaults to 1)
+	KieDeployments int        `json:"kieDeployments"`
+	Objects        AppObjects `json:"objects,omitempty"`
+}
+
+type AppObjects struct {
+	// KIE Server container configs
+	Console AppObject `json:"console,omitempty"`
+	// Business Central container configs
+	Server AppObject `json:"server,omitempty"`
+}
+
+type AppObject struct {
+	Env       []corev1.EnvVar             `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,7,rep,name=env"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 }
 
 type Environment struct {
@@ -46,14 +63,4 @@ type CustomObject struct {
 	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
-}
-
-type EnvTemplate struct {
-	Template    `json:",inline"`
-	ServerCount []Template `json:"serverCount,omitempty"`
-}
-
-type Template struct {
-	ApplicationName  string `json:"applicationName,omitempty"`
-	KeyStorePassword string `json:"keyStorePassword,omitempty"`
 }

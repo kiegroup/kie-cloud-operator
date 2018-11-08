@@ -1,15 +1,16 @@
 apiVersion: kiegroup.org/v1
 kind: App
 metadata:
-  name: trial
+  name: production
 spec:
-  environment: trial
+  environment: production
+  kieDeployments: 2
   objects:
     console:
       resources:
         limits:
           memory: 2Gi
     server:
-      resources:
-        requests:
-          memory:
+      env:
+      - name: key1
+        value: value1

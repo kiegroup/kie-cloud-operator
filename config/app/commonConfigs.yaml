@@ -1,0 +1,46 @@
+objects:
+  console:
+    env:
+    - name: KIE_ADMIN_USER
+      value: adminUser
+    - name: KIE_ADMIN_PWD
+      value: "{{.AdminPassword}}"
+    - name: KIE_SERVER_CONTROLLER_USER
+      value: controllerUser
+    - name: KIE_SERVER_CONTROLLER_PWD
+      value: "{{.ControllerPassword}}"
+    - name: KIE_SERVER_USER
+      value: executionUser
+    - name: KIE_SERVER_PWD
+      value: "{{.ServerPassword}}"
+
+  server:
+    env:
+    - name: KIE_ADMIN_USER
+      value: adminUser
+    - name: KIE_ADMIN_PWD
+      value: "{{.AdminPassword}}"
+    - name: KIE_SERVER_CONTROLLER_USER
+      value: controllerUser
+    - name: KIE_SERVER_CONTROLLER_PWD
+      value: "{{.ControllerPassword}}"
+    - name: KIE_SERVER_USER
+      value: executionUser
+    - name: KIE_SERVER_PWD
+      value: "{{.ServerPassword}}"
+    - name: DROOLS_SERVER_FILTER_CLASSES
+      value: "true"
+    - name: RHPAMCENTR_MAVEN_REPO_PATH
+      value: /maven2/
+    - name: KIE_SERVER_CONTROLLER_SERVICE
+      value: "{{.ApplicationName}}-rhpamcentr"
+    - name: KIE_MBEANS
+      value: enabled
+    - name: MAVEN_REPOS
+      value: RHPAMCENTR,EXTERNAL
+    - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+      value: ROOT.war
+    - name: KIE_SERVER_BYPASS_AUTH_USER
+      value: "false"
+    - name: KIE_SERVER_CONTROLLER_PROTOCOL
+      value: ws

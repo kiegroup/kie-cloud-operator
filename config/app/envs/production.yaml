@@ -1,10 +1,24 @@
 console:
+  serviceAccounts:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamsvc"
+      labels:
+        application: "{{.ApplicationName}}"
+  rolebindings:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamsvc-view"
+    subjects:
+    - kind: ServiceAccount
+      name: "{{.ApplicationName}}-rhpamsvc"
+    roleRef:
+      name: view
+
   deploymentConfigs:
   - metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon"
+      name: "{{.ApplicationName}}-rhpamcentr"
       labels:
         app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
+        service: "{{.ApplicationName}}-rhpamcentr"
       annotations:
         template.alpha.openshift.io/wait-for-ready: "true"
     spec:
@@ -15,34 +29,34 @@ console:
         imageChangeParams:
           automatic: true
           containerNames:
-          - "{{.ApplicationName}}-rhpamcentrmon"
+          - "{{.ApplicationName}}-rhpamcentr"
           from:
             kind: ImageStreamTag
             namespace: "openshift"
-            name: "rhpam70-businesscentral-monitoring-openshift:1.2"
+            name: "rhpam{{.Version}}-businesscentral-monitoring-openshift:{{.ImageTag}}"
       - type: ConfigChange
   ## Replicas for Business Central Monitoring
       replicas: 3
       selector:
-        deploymentConfig: "{{.ApplicationName}}-rhpamcentrmon"
+        deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
       template:
         metadata:
-          name: "{{.ApplicationName}}-rhpamcentrmon"
+          name: "{{.ApplicationName}}-rhpamcentr"
           labels:
-            deploymentConfig: "{{.ApplicationName}}-rhpamcentrmon"
+            deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
             app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-rhpamcentrmon"
+            service: "{{.ApplicationName}}-rhpamcentr"
         spec:
           terminationGracePeriodSeconds: 60
           containers:
-          - name: "{{.ApplicationName}}-rhpamcentrmon"
-            image: rhpam70-businesscentral-monitoring-openshift
+          - name: "{{.ApplicationName}}-rhpamcentr"
+            image: rhpam{{.Version}}-businesscentral-monitoring-openshift
             imagePullPolicy: Always
             resources:
               requests:
-                memory: "512Mi"
+                memory: 768Mi
               limits:
-                memory: "1Gi"
+                memory: 1Gi
             volumeMounts:
             - name: businesscentral-keystore-volume
               mountPath: "/etc/businesscentral-secret-volume"
@@ -54,7 +68,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -63,7 +77,7 @@ console:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/kie-wb.jsp"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -82,14 +96,6 @@ console:
               containerPort: 8888
               protocol: TCP
             env:
-            - name: KIE_ADMIN_PWD
-              value: "RedHat"
-            - name: KIE_ADMIN_USER
-              value: "adminUser"
-            - name: KIE_SERVER_PWD
-              value: "RedHat"
-            - name: KIE_SERVER_USER
-              value: "executionUser"
             - name: MAVEN_REPO_ID
               value: ""
             - name: MAVEN_REPO_URL
@@ -98,10 +104,6 @@ console:
               value: ""
             - name: MAVEN_REPO_PASSWORD
               value: ""
-            - name: KIE_SERVER_CONTROLLER_USER
-              value: "controllerUser"
-            - name: KIE_SERVER_CONTROLLER_PWD
-              value: "RedHat"
             - name: KIE_SERVER_CONTROLLER_TOKEN
               value: ""
             - name: HTTPS_KEYSTORE_DIR
@@ -115,7 +117,7 @@ console:
             - name: JGROUPS_PING_PROTOCOL
               value: "openshift.DNS_PING"
             - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-              value: "{{.ApplicationName}}-rhpamcentrmon-ping"
+              value: "{{.ApplicationName}}-rhpamcentr-ping"
             - name: OPENSHIFT_DNS_PING_SERVICE_PORT
               value: "8888"
             - name: SSO_URL
@@ -199,12 +201,12 @@ console:
         port: 8443
         targetPort: 8443
       selector:
-        deploymentConfig: "{{.ApplicationName}}-rhpamcentrmon"
+        deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
     metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon"
+      name: "{{.ApplicationName}}-rhpamcentr"
       labels:
         app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
+        service: "{{.ApplicationName}}-rhpamcentr"
       annotations:
         description: All the Business Central Monitoring web server's ports.
   - spec:
@@ -214,54 +216,40 @@ console:
         port: 8888
         targetPort: 8888
       selector:
-        deploymentConfig: "{{.ApplicationName}}-rhpamcentrmon"
+        deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
     metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon-ping"
+      name: "{{.ApplicationName}}-rhpamcentr-ping"
       labels:
         app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
+        service: "{{.ApplicationName}}-rhpamcentr"
       annotations:
         service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
         description: "The JGroups ping port for clustering."
   routes:
-  - id: "{{.ApplicationName}}-rhpamcentrmon-http"
+  - id: "{{.ApplicationName}}-rhpamcentr-https"
     metadata:
-      name: "{{.ApplicationName}}-rhpamcentrmon"
+      name: "{{.ApplicationName}}-rhpamcentr"
       labels:
         app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
-      annotations:
-        description: Route for Business Central Monitoring's http service.
-        haproxy.router.openshift.io/timeout: 60s
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-rhpamcentrmon"
-      port:
-        targetPort: http
-  - id: "{{.ApplicationName}}-rhpamcentrmon-https"
-    metadata:
-      name: "secure-{{.ApplicationName}}-rhpamcentrmon"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
+        service: "{{.ApplicationName}}-rhpamcentr"
       annotations:
         description: Route for Business Central Monitoring's https service.
         haproxy.router.openshift.io/timeout: 60s
     spec:
       host: ""
       to:
-        name: "{{.ApplicationName}}-rhpamcentrmon"
+        name: "{{.ApplicationName}}-rhpamcentr"
       port:
         targetPort: https
       tls:
+        insecureEdgeTerminationPolicy: Redirect
         termination: passthrough
   persistentVolumeClaims:
   - metadata:
       name: "{{.ApplicationName}}-rhpamcentr-claim"
       labels:
         app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentrmon"
+        service: "{{.ApplicationName}}-rhpamcentr"
     spec:
       accessModes:
       - ReadWriteMany
@@ -271,21 +259,6 @@ console:
 
 ## KIE smartrouter BEGIN
 others:
-- serviceAccounts:
-  - metadata:
-      name: "{{.ApplicationName}}-kieserver"
-      labels:
-        app: "{{.ApplicationName}}"
-  rolebindings:
-  - metadata:
-      name: "{{.ApplicationName}}-kieserver-view"
-      labels:
-        app: "{{.ApplicationName}}"
-    subjects:
-    - kind: ServiceAccount
-      name: "{{.ApplicationName}}-kieserver"
-    roleRef:
-      name: view
 - persistentVolumeClaims:
   - metadata:
       name: "{{.ApplicationName}}-smartrouter-claim"
@@ -316,7 +289,7 @@ others:
           from:
             kind: ImageStreamTag
             namespace: "openshift"
-            name: "rhpam70-smartrouter-openshift:1.2"
+            name: "rhpam{{.Version}}-smartrouter-openshift:{{.ImageTag}}"
       - type: ConfigChange
       replicas: 2
       selector:
@@ -332,7 +305,7 @@ others:
           terminationGracePeriodSeconds: 60
           containers:
           - name: "{{.ApplicationName}}-smartrouter"
-            image: rhpam70-smartrouter-openshift
+            image: rhpam{{.Version}}-smartrouter-openshift
             imagePullPolicy: Always
             resources:
               requests:
@@ -359,13 +332,13 @@ others:
             - name: KIE_SERVER_ROUTER_PROTOCOL
               value: ""
             - name: KIE_SERVER_CONTROLLER_USER
-              value: "controllerUser"
+              value: controllerUser
             - name: KIE_SERVER_CONTROLLER_PWD
-              value: "RedHat"
+              value: "{{.ControllerPassword}}"
             - name: KIE_SERVER_CONTROLLER_TOKEN
               value: ""
             - name: KIE_SERVER_CONTROLLER_SERVICE
-              value: "{{.ApplicationName}}-rhpamcentrmon"
+              value: "{{.ApplicationName}}-rhpamcentr"
             - name: KIE_SERVER_CONTROLLER_PROTOCOL
               value: "http"
             - name: KIE_SERVER_ROUTER_REPO
@@ -394,7 +367,7 @@ others:
       annotations:
         description: The smart router server http port.
   routes:
-  - id: "{{.ApplicationName}}-smartrouter-http"
+  - id: "{{.ApplicationName}}-smartrouter-https"
     metadata:
       name: "{{.ApplicationName}}-smartrouter"
       labels:
@@ -406,6 +379,9 @@ others:
       host: ""
       to:
         name: "{{.ApplicationName}}-smartrouter"
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: passthrough
 ## KIE smartrouter END
 
 ## KIE Servers BEGIN
@@ -445,7 +421,7 @@ servers:
           from:
             kind: ImageStreamTag
             namespace: "openshift"
-            name: "rhpam70-kieserver-openshift:1.2"
+            name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
       - type: ConfigChange
       replicas: 3
       selector:
@@ -458,17 +434,17 @@ servers:
             app: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          serviceAccountName: "{{.ApplicationName}}-kieserver"
+          serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
           terminationGracePeriodSeconds: 60
           containers:
           - name: "{{.ApplicationName}}-kieserver"
-            image: "rhpam70-kieserver-openshift"
+            image: "rhpam{{.Version}}-kieserver-openshift"
             imagePullPolicy: Always
             resources:
               requests:
-                memory: "512Mi"
+                memory: 512Mi
               limits:
-                memory: "1Gi"
+                memory: 1Gi
             volumeMounts:
             - name: kieserver-keystore-volume
               mountPath: "/etc/kieserver-secret-volume"
@@ -478,7 +454,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/healthcheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
               initialDelaySeconds: 180
               timeoutSeconds: 2
               periodSeconds: 15
@@ -488,7 +464,7 @@ servers:
                 command:
                 - "/bin/bash"
                 - "-c"
-                - "curl --fail --silent -u 'adminUser:RedHat' http://localhost:8080/services/rest/server/readycheck"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
               initialDelaySeconds: 60
               timeoutSeconds: 2
               periodSeconds: 30
@@ -507,26 +483,8 @@ servers:
               containerPort: 8888
               protocol: TCP
             env:
-            - name: DROOLS_SERVER_FILTER_CLASSES
-              value: "true"
-            - name: KIE_ADMIN_USER
-              value: "adminUser"
-            - name: KIE_ADMIN_PWD
-              value: "RedHat"
-            - name: KIE_MBEANS
-              value: "enabled"
-            - name: KIE_SERVER_BYPASS_AUTH_USER
-              value: "false"
-            - name: KIE_SERVER_CONTROLLER_USER
-              value: "controllerUser"
-            - name: KIE_SERVER_CONTROLLER_PWD
-              value: "RedHat"
             - name: KIE_SERVER_CONTROLLER_TOKEN
               value: ""
-            - name: KIE_SERVER_CONTROLLER_SERVICE
-              value: "{{.ApplicationName}}-rhpamcentrmon"
-            - name: KIE_SERVER_CONTROLLER_PROTOCOL
-              value: "ws"
             - name: KIE_SERVER_ID
               value: "{{.ApplicationName}}-kieserver-{{$index}}"
             - name: KIE_SERVER_HOST
@@ -535,21 +493,7 @@ servers:
               value: "{{.ApplicationName}}-kieserver-{{$index}}"
             - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
               value: "false"
-            - name: KIE_SERVER_USER
-              value: "executionUser"
-            - name: KIE_SERVER_PWD
-              value: "RedHat"
             - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-              value: ""
-            - name: MAVEN_REPOS
-              value: "RHPAMCENTR,EXTERNAL"
-            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-              value: ""
-            - name: RHPAMCENTR_MAVEN_REPO_PATH
-              value: "/maven2/"
-            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-              value: ""
-            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
               value: ""
             - name: EXTERNAL_MAVEN_REPO_ID
               value: ""
@@ -583,7 +527,7 @@ servers:
             - name: RHPAM_USERNAME
               value: "rhpam"
             - name: RHPAM_PASSWORD
-              value: "RedHat"
+              value: "{{.AdminPassword}}"
             - name: RHPAM_SERVICE_HOST
               value: "{{.ApplicationName}}-postgresql-{{$index}}"
             - name: RHPAM_SERVICE_PORT
@@ -609,8 +553,6 @@ servers:
               value: "8888"
             - name: SSO_URL
               value: ""
-            - name: SSO_OPENIDCONNECT_DEPLOYMENTS
-              value: "ROOT.war"
             - name: SSO_REALM
               value: ""
             - name: SSO_SECRET
@@ -735,7 +677,7 @@ servers:
             - name: POSTGRESQL_USER
               value: "rhpam"
             - name: POSTGRESQL_PASSWORD
-              value: "RedHat"
+              value: "{{.AdminPassword}}"
             - name: POSTGRESQL_DATABASE
               value: "rhpam7"
             - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
@@ -763,7 +705,7 @@ servers:
         app: "{{.ApplicationName}}"
         service: "{{.ApplicationName}}-kieserver-{{$index}}"
       annotations:
-        description: All the KIE server web server's ports. (First KIE server)
+        description: All the KIE server web server's ports. (KIE server)
   - spec:
       clusterIP: "None"
       ports:
@@ -784,7 +726,7 @@ servers:
   ## PostgreSQL service BEGIN
   - metadata:
       annotations:
-        description: The first database server's port.
+        description: The database server's port.
       labels:
         application: prod
         service: "{{.ApplicationName}}-postgresql-{{$index}}"
@@ -798,28 +740,14 @@ servers:
   ## PostgreSQL service END
   ## KIE server routes BEGIN
   routes:
-  - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+  - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
     metadata:
       name: "{{.ApplicationName}}-kieserver-{{$index}}"
       labels:
         app: "{{.ApplicationName}}"
         service: "{{.ApplicationName}}-kieserver-{{$index}}"
       annotations:
-        description: Route for First KIE server's http service.
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      port:
-        targetPort: http
-  - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
-    metadata:
-      name: "secure-{{.ApplicationName}}-kieserver-{{$index}}"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      annotations:
-        description: Route for First KIE server's https service.
+        description: Route for KIE server's https service.
     spec:
       host: ""
       to:
@@ -827,6 +755,7 @@ servers:
       port:
         targetPort: https
       tls:
+        insecureEdgeTerminationPolicy: Redirect
         termination: passthrough
   ## KIE server routes END
 {{end}}
