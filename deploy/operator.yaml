@@ -12,8 +12,10 @@ spec:
       labels:
         name: kie-cloud-operator
     spec:
+      serviceAccountName: kie-cloud-operator
       containers:
         - name: kie-cloud-operator
+          # Replace this with the built image name
           image: quay.io/kiegroup/kie-cloud-operator
           ports:
           - containerPort: 60000
@@ -26,5 +28,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "kie-cloud-operator"

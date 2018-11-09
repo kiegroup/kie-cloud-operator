@@ -1,3 +1,0 @@
-apiVersion: kiegroup.org/v1
-kind: App
-projectName: kie-cloud-operator
