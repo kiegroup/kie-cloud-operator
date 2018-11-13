@@ -14,6 +14,8 @@ rules:
   - events
   - configmaps
   - secrets
+  - serviceaccounts
+  - rolebindings
   verbs:
   - '*'
 - apiGroups:
@@ -33,11 +35,11 @@ rules:
   - get
   - create
 - apiGroups:
+  - app.kiegroup.org
   - apps.openshift.io
   - authorization.openshift.io
   - image.openshift.io
   - route.openshift.io
-  - app.kiegroup.org
   resources:
   - '*'
   verbs:
