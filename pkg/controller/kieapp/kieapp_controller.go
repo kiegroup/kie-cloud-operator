@@ -12,7 +12,9 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/rhpamcentr"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbac_v1 "k8s.io/api/rbac/v1"
@@ -20,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -37,7 +40,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileKieApp{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileKieApp{client: mgr.GetClient(), clientConfig: mgr.GetConfig(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -110,6 +113,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &oimagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &appv1alpha1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -119,8 +130,9 @@ var _ reconcile.Reconciler = &ReconcileKieApp{}
 type ReconcileKieApp struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client       client.Client
+	clientConfig *rest.Config
+	scheme       *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -145,6 +157,7 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
+	// Create/Reconcile environment
 	env, rResult, err := r.NewEnv(instance)
 	if err != nil {
 		return rResult, err
@@ -161,14 +174,30 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 
 	// Update DeploymentConfigs if needed
 	var dcUpdates []oappsv1.DeploymentConfig
+	isTags := map[string]string{"centos:7": "openshift"}
+	//isTags := make(map[string]string)
 	for _, dc := range dcList.Items {
 		for _, cDc := range env.Console.DeploymentConfigs {
+			for _, trigger := range cDc.Spec.Triggers {
+				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+					if !existsInMap(isTags, trigger.ImageChangeParams.From.Name) {
+						isTags[trigger.ImageChangeParams.From.Name] = trigger.ImageChangeParams.From.Namespace
+					}
+				}
+			}
 			if dc.Name == cDc.Name {
 				dcUpdates = r.dcUpdateCheck(dc, cDc, dcUpdates, instance)
 			}
 		}
 		for _, server := range env.Servers {
 			for _, sDc := range server.DeploymentConfigs {
+				for _, trigger := range sDc.Spec.Triggers {
+					if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+						if !existsInMap(isTags, trigger.ImageChangeParams.From.Name) {
+							isTags[trigger.ImageChangeParams.From.Name] = trigger.ImageChangeParams.From.Namespace
+						}
+					}
+				}
 				if dc.Name == sDc.Name {
 					dcUpdates = r.dcUpdateCheck(dc, sDc, dcUpdates, instance)
 				}
@@ -176,6 +205,13 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 		}
 		for _, other := range env.Others {
 			for _, oDc := range other.DeploymentConfigs {
+				for _, trigger := range oDc.Spec.Triggers {
+					if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+						if !existsInMap(isTags, trigger.ImageChangeParams.From.Name) {
+							isTags[trigger.ImageChangeParams.From.Name] = trigger.ImageChangeParams.From.Namespace
+						}
+					}
+				}
 				if dc.Name == oDc.Name {
 					dcUpdates = r.dcUpdateCheck(dc, oDc, dcUpdates, instance)
 				}
@@ -191,6 +227,31 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 			}
 		}
 		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// Check/Create ImageStream
+	is := &oimagev1.ImageStreamTag{}
+	imageV1Client, err := imagev1.NewForConfig(r.clientConfig)
+	var createIsTags []string
+	if err != nil {
+		return reconcile.Result{}, err
+	} else {
+		for image, ns := range isTags {
+			is, err = imageV1Client.ImageStreamTags(ns).Get(image, metav1.GetOptions{})
+			if err != nil {
+				isTags[image] = instance.Namespace
+				is, err = imageV1Client.ImageStreamTags(isTags[image]).Get(image, metav1.GetOptions{})
+				if err != nil {
+					logrus.Printf("Failed to get imagestream: %v", err)
+					// !!!!!!!!!!!!!! how handle????
+					createIsTags = append(createIsTags, image)
+					return reconcile.Result{}, err
+				}
+			}
+			if is != nil {
+				logrus.Printf("%v/%v - %v", is.Namespace, is.Name, is.Image.Name)
+			}
+		}
 	}
 
 	// Update status.Deployments if needed
@@ -514,4 +575,14 @@ func (r *ReconcileKieApp) getRouteHost(route routev1.Route, cr *appv1alpha1.KieA
 	}
 
 	return found.Spec.Host
+}
+
+func existsInMap(m map[string]string, i string) bool {
+	for _, ele := range m {
+		_, ok := m[ele]
+		if ok {
+			return true
+		}
+	}
+	return false
 }

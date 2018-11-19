@@ -305,11 +305,25 @@
   packages = [
     "apps/v1",
     "authorization/v1",
+    "image/docker10",
+    "image/dockerpre012",
+    "image/v1",
     "pkg/serialization",
     "route/v1",
   ]
   pruneopts = ""
   revision = "0d921e363e951d89f583292c60d013c318df64dc"
+  version = "v3.9.0"
+
+[[projects]]
+  digest = "1:7da30d36edabf50fb5bc07f759991589c5ca72e75b3dd50fa58c57d94e96fd15"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "image/clientset/versioned/scheme",
+    "image/clientset/versioned/typed/image/v1",
+  ]
+  pruneopts = ""
+  revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
   version = "v3.9.0"
 
 [[projects]]
@@ -831,7 +845,9 @@
     "github.com/imdario/mergo",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/authorization/v1",
+    "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/pavel-v-chernykh/keystore-go",
@@ -848,6 +864,7 @@
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/client-go/dynamic",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
+    "k8s.io/client-go/rest",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
