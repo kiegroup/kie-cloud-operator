@@ -1,12 +1,11 @@
 # Requirements
  - go v1.10.x
  - operator-sdk v0.1.1
+ - dep v0.5.x
 
 # Build
 ```shell
-dep ensure
-go generate ./...
-operator-sdk build quay.io/kiegroup/kie-cloud-operator
+make
 ```
 
 # Upload to a container registry -
@@ -44,14 +43,12 @@ oc create -f deploy/v1alpha1_crs/kieapp_trial.yaml
 Change log level at runtime w/ the `LOG_LEVEL` environment variable. e.g. -
 
 ```shell
-dep ensure
+make dep
+make clean
 LOG_LEVEL="debug" operator-sdk up local --namespace=<namespace>
 ```
 
-Before submitting PR, please be sure to vet, format, and test your code.
+Before submitting PR, please be sure to vet, generate, format, and test your code. This can all be done with one command.
 ```shell
-operator-sdk generate k8s
-go vet ./...
-go fmt ./...
-go test ./...
+make test
 ```
