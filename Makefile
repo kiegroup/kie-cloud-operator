@@ -28,7 +28,7 @@ go-generate: dep
 	$(Q)go generate ./...
 
 sdk-generate: dep
-	$(Q)operator-sdk generate k8s
+	operator-sdk generate k8s
 
 format:
 	$(Q)go fmt ./...
@@ -37,10 +37,10 @@ test: dep vet sdk-generate format
 	$(Q)go test ./...
 
 build: go-generate test
-	$(Q)operator-sdk build quay.io/kiegroup/kie-cloud-operator
+	operator-sdk build $(IMAGE)
 
 clean:
-	$(Q)rm -rf build/_output pkg/controller/kieapp/defaults/a_defaults-packr.go
+	rm -rf build/_output pkg/controller/kieapp/defaults/a_defaults-packr.go
 
 .PHONY: all dep vet go-generate sdk-generate format test build clean
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/stretchr/testify/assert"
@@ -24,14 +24,14 @@ func TestConstructConsoleObject(t *testing.T) {
 		Name:  "CONSOLE_TEST",
 		Value: "test",
 	}
-	cr := &v1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment: "trial",
-			Objects: v1alpha1.KieAppObjects{
-				Console: v1alpha1.KieAppObject{
+			Objects: v1.KieAppObjects{
+				Console: v1.KieAppObject{
 					Env: []corev1.EnvVar{
 						envReplace,
 						envAddition,

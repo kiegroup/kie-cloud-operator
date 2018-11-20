@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,12 +18,12 @@ func TestLoadTrialEnvironment(t *testing.T) {
 		}
 	}()
 
-	cr := &v1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment: "trial",
 		},
 	}
@@ -41,11 +41,11 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 		}
 	}()
 
-	cr := &v1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test-ns",
 		},
-		Spec: v1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment: "unknown",
 		},
 	}
@@ -61,12 +61,12 @@ func TestMultipleServerDeployment(t *testing.T) {
 		}
 	}()
 
-	cr := &v1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment:    "trial",
 			KieDeployments: 6,
 		},

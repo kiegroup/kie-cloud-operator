@@ -11,13 +11,13 @@ import (
 	"math/rand"
 	"time"
 
-	opv1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/pavel-v-chernykh/keystore-go"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func GetCommonLabels(app *opv1.KieApp, service string) (string, string, map[string]string) {
+func GetCommonLabels(app *v1.KieApp, service string) (string, string, map[string]string) {
 	appName := app.ObjectMeta.Name
 	serviceName := appName + "-" + service
 	labels := map[string]string{
@@ -100,7 +100,7 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 		SignatureAlgorithm: x509.SHA256WithRSA,
 		PublicKeyAlgorithm: x509.ECDSA,
 		NotBefore:          time.Now(),
-		NotAfter:           time.Now().AddDate(1, 0, 0),
+		NotAfter:           time.Now().AddDate(10, 0, 0),
 		SerialNumber:       serialNumber,
 		SubjectKeyId:       sha256.New().Sum(nil),
 		IsCA:               true,

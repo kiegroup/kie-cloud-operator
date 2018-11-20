@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +36,7 @@ func getTypeMeta(kind string, version string) metav1.TypeMeta {
 	}
 }
 
-func GetObjectMeta(service string, cr *v1alpha1.KieApp, labels map[string]string) metav1.ObjectMeta {
+func GetObjectMeta(service string, cr *v1.KieApp, labels map[string]string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:            service,
 		Namespace:       cr.Namespace,
@@ -45,9 +45,9 @@ func GetObjectMeta(service string, cr *v1alpha1.KieApp, labels map[string]string
 	}
 }
 
-func GetOwnerReferences(cr *v1alpha1.KieApp) []metav1.OwnerReference {
+func GetOwnerReferences(cr *v1.KieApp) []metav1.OwnerReference {
 	return []metav1.OwnerReference{
-		*metav1.NewControllerRef(cr, v1alpha1.SchemeGroupVersion.WithKind(cr.GetObjectKind().GroupVersionKind().Kind)),
+		*metav1.NewControllerRef(cr, v1.SchemeGroupVersion.WithKind(cr.GetObjectKind().GroupVersionKind().Kind)),
 	}
 }
 

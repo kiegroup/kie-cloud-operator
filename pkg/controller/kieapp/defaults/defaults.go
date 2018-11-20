@@ -11,7 +11,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	corev1 "k8s.io/api/core/v1"
@@ -19,26 +19,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GetEnvironment(cr *v1alpha1.KieApp) (v1alpha1.Environment, v1alpha1.KieAppSpec, error) {
-	var env v1alpha1.Environment
+func GetEnvironment(cr *v1.KieApp) (v1.Environment, v1.KieAppSpec, error) {
+	var env v1.Environment
 
 	// default to '1' Kie DC
 	if cr.Spec.KieDeployments == 0 {
 		cr.Spec.KieDeployments = 1
 	}
 	if len(cr.Spec.Objects.Console.Env) == 0 {
-		cr.Spec.Objects.Console.Env = []corev1.EnvVar{corev1.EnvVar{Name: "empty"}}
+		cr.Spec.Objects.Console.Env = []corev1.EnvVar{{Name: "empty"}}
 	}
 	if len(cr.Spec.Objects.Server.Env) == 0 {
-		cr.Spec.Objects.Server.Env = []corev1.EnvVar{corev1.EnvVar{Name: "empty"}}
+		cr.Spec.Objects.Server.Env = []corev1.EnvVar{{Name: "empty"}}
 	}
 
-	re := regexp.MustCompile("[0-9]+")
+	pattern := regexp.MustCompile("[0-9]+")
 	// create go template if does not exist
 	if cr.Spec.Template.ApplicationName == "" {
-		cr.Spec.Template = v1alpha1.Template{
+		cr.Spec.Template = v1.Template{
 			ApplicationName:    cr.Name,
-			Version:            strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""),
+			Version:            strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""),
 			ImageTag:           constants.ImageStreamTag,
 			KeyStorePassword:   string(shared.GeneratePassword(8)),
 			AdminPassword:      string(shared.GeneratePassword(8)),
@@ -47,7 +47,7 @@ func GetEnvironment(cr *v1alpha1.KieApp) (v1alpha1.Environment, v1alpha1.KieAppS
 			MavenPassword:      string(shared.GeneratePassword(8)),
 		}
 	}
-	envTemplate := v1alpha1.EnvTemplate{
+	envTemplate := v1.EnvTemplate{
 		Template: cr.Spec.Template,
 	}
 	for i := 0; i < cr.Spec.KieDeployments; i++ {
@@ -56,9 +56,9 @@ func GetEnvironment(cr *v1alpha1.KieApp) (v1alpha1.Environment, v1alpha1.KieAppS
 
 	commonBytes, err := loadYaml("commonConfigs.yaml", envTemplate)
 	if err != nil {
-		return env, v1alpha1.KieAppSpec{}, err
+		return env, v1.KieAppSpec{}, err
 	}
-	var common v1alpha1.KieAppSpec
+	var common v1.KieAppSpec
 	err = yaml.Unmarshal(commonBytes, &common)
 	if err != nil {
 		logrus.Error(err)
@@ -76,7 +76,7 @@ func GetEnvironment(cr *v1alpha1.KieApp) (v1alpha1.Environment, v1alpha1.KieAppS
 	return env, common, nil
 }
 
-func loadYaml(filename string, t v1alpha1.EnvTemplate) ([]byte, error) {
+func loadYaml(filename string, t v1.EnvTemplate) ([]byte, error) {
 	box := packr.NewBox("../../../../config")
 
 	if box.Has(filename) {
@@ -92,7 +92,7 @@ func loadYaml(filename string, t v1alpha1.EnvTemplate) ([]byte, error) {
 	return nil, fmt.Errorf("%s does not exist, environment not deployed", filename)
 }
 
-func parseTemplate(e v1alpha1.EnvTemplate, objBytes []byte) []byte {
+func parseTemplate(e v1.EnvTemplate, objBytes []byte) []byte {
 	var b bytes.Buffer
 
 	tmpl, err := template.New(e.ApplicationName).Parse(string(objBytes[:]))

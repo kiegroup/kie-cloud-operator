@@ -8,9 +8,9 @@ import (
 var AddToManagerFuncs []func(manager.Manager) error
 
 // AddToManager adds all Controllers to the Manager
-func AddToManager(m manager.Manager) error {
-	for _, f := range AddToManagerFuncs {
-		if err := f(m); err != nil {
+func AddToManager(mgr manager.Manager) error {
+	for _, functions := range AddToManagerFuncs {
+		if err := functions(mgr); err != nil {
 			return err
 		}
 	}
