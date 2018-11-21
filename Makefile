@@ -21,8 +21,8 @@ all: build
 dep:
 	$(Q)dep ensure -v
 
-vet: dep
-	$(Q)go vet ./...
+format:
+	$(Q)go fmt ./...
 
 go-generate: dep
 	$(Q)go generate ./...
@@ -30,10 +30,10 @@ go-generate: dep
 sdk-generate: dep
 	operator-sdk generate k8s
 
-format:
-	$(Q)go fmt ./...
+vet: sdk-generate
+	$(Q)go vet ./...
 
-test: dep vet sdk-generate format
+test: vet format
 	$(Q)go test ./...
 
 build: go-generate test

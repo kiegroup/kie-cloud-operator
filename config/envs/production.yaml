@@ -11,6 +11,7 @@ console:
     - kind: ServiceAccount
       name: "{{.ApplicationName}}-rhpamsvc"
     roleRef:
+      kind: Role
       name: view
 
   deploymentConfigs:

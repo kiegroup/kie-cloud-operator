@@ -29,7 +29,6 @@ rules:
 - apiGroups:
   - app.kiegroup.org
   - apps.openshift.io
-  - authorization.openshift.io
   - image.openshift.io
   - route.openshift.io
   resources:

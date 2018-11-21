@@ -304,11 +304,9 @@
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
-    "authorization/v1",
     "image/docker10",
     "image/dockerpre012",
     "image/v1",
-    "pkg/serialization",
     "route/v1",
   ]
   pruneopts = ""
@@ -844,7 +842,6 @@
     "github.com/gobuffalo/packr",
     "github.com/imdario/mergo",
     "github.com/openshift/api/apps/v1",
-    "github.com/openshift/api/authorization/v1",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
@@ -864,7 +861,6 @@
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/client-go/dynamic",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
-    "k8s.io/client-go/rest",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
