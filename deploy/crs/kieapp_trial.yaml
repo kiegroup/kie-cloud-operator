@@ -1,0 +1,15 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: trial
+spec:
+  environment: trial
+  objects:
+    console:
+      resources:
+        limits:
+          memory: 2Gi
+    server:
+      resources:
+        requests:
+          memory:

@@ -1,0 +1,16 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: authoring
+spec:
+  environment: authoring
+  kieDeployments: 2
+  objects:
+    console:
+      resources:
+        limits:
+          memory: 2Gi
+    server:
+      env:
+      - name: key1
+        value: value1
