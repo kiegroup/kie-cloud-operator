@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	appv1alpha1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/rhpamcentr"
@@ -52,14 +52,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource KieApp
-	err = c.Watch(&source.Kind{Type: &appv1alpha1.KieApp{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.KieApp{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	err = c.Watch(&source.Kind{Type: &oappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &rbac_v1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &oimagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.KieApp{},
+		OwnerType:    &v1.KieApp{},
 	})
 	if err != nil {
 		return err
@@ -140,12 +140,12 @@ type ReconcileKieApp struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// logrus.Printf("Reconciling KieApp %s/%s\n", request.Namespace, request.Name)
 
 	// Fetch the KieApp instance
-	instance := &appv1alpha1.KieApp{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	instance := &v1.KieApp{}
+	err := reconciler.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -157,15 +157,14 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	// Create/Reconcile environment
-	env, rResult, err := r.NewEnv(instance)
+	env, rResult, err := reconciler.NewEnv(instance)
 	if err != nil {
 		return rResult, err
 	}
 
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &oappsv1.DeploymentConfigList{}
-	err = r.client.List(context.TODO(), listOps, dcList)
+	err = reconciler.client.List(context.TODO(), listOps, dcList)
 	if err != nil {
 		logrus.Printf("Failed to list dc's: %v", err)
 		return reconcile.Result{}, err
@@ -186,7 +185,7 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 				}
 			}
 			if dc.Name == cDc.Name {
-				dcUpdates = r.dcUpdateCheck(dc, cDc, dcUpdates, instance)
+				dcUpdates = reconciler.dcUpdateCheck(dc, cDc, dcUpdates, instance)
 			}
 		}
 		for _, server := range env.Servers {
@@ -199,7 +198,7 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 					}
 				}
 				if dc.Name == sDc.Name {
-					dcUpdates = r.dcUpdateCheck(dc, sDc, dcUpdates, instance)
+					dcUpdates = reconciler.dcUpdateCheck(dc, sDc, dcUpdates, instance)
 				}
 			}
 		}
@@ -213,7 +212,7 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 					}
 				}
 				if dc.Name == oDc.Name {
-					dcUpdates = r.dcUpdateCheck(dc, oDc, dcUpdates, instance)
+					dcUpdates = reconciler.dcUpdateCheck(dc, oDc, dcUpdates, instance)
 				}
 			}
 		}
@@ -221,7 +220,7 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 	if len(dcUpdates) > 0 {
 		for _, uDc := range dcUpdates {
 			newDC := uDc.DeepCopyObject()
-			rResult, err := r.updateObj(uDc.Name, uDc.Namespace, newDC)
+			rResult, err := reconciler.updateObj(uDc.Name, uDc.Namespace, newDC)
 			if err != nil {
 				return rResult, err
 			}
@@ -231,40 +230,40 @@ func (r *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result
 
 	// Check/Create ImageStream
 	is := &oimagev1.ImageStreamTag{}
-	imageV1Client, err := imagev1.NewForConfig(r.clientConfig)
+	imageV1Client, err := imagev1.NewForConfig(reconciler.clientConfig)
 	var createIsTags []string
 	if err != nil {
 		return reconcile.Result{}, err
-	} else {
-		for image, ns := range isTags {
-			is, err = imageV1Client.ImageStreamTags(ns).Get(image, metav1.GetOptions{})
+	}
+
+	for image, ns := range isTags {
+		is, err = imageV1Client.ImageStreamTags(ns).Get(image, metav1.GetOptions{})
+		if err != nil {
+			isTags[image] = instance.Namespace
+			is, err = imageV1Client.ImageStreamTags(isTags[image]).Get(image, metav1.GetOptions{})
 			if err != nil {
-				isTags[image] = instance.Namespace
-				is, err = imageV1Client.ImageStreamTags(isTags[image]).Get(image, metav1.GetOptions{})
-				if err != nil {
-					logrus.Printf("Failed to get imagestream: %v", err)
-					// !!!!!!!!!!!!!! how handle????
-					createIsTags = append(createIsTags, image)
-					return reconcile.Result{}, err
-				}
+				logrus.Printf("Failed to get imagestream: %v", err)
+				// !!!!!!!!!!!!!! how handle????
+				createIsTags = append(createIsTags, image)
+				return reconcile.Result{}, err
 			}
-			if is != nil {
-				logrus.Printf("%v/%v - %v", is.Namespace, is.Name, is.Image.Name)
-			}
+		}
+		if is != nil {
+			logrus.Printf("%v/%v - %v", is.Namespace, is.Name, is.Image.Name)
 		}
 	}
 
 	// Update status.Deployments if needed
 	if !reflect.DeepEqual(dcNames, instance.Status.Deployments) {
 		instance.Status.Deployments = dcNames
-		return r.crUpdate(instance)
+		return reconciler.crUpdate(instance)
 	}
 
 	return rResult, nil
 }
 
-func (r *ReconcileKieApp) crUpdate(cr *appv1alpha1.KieApp) (reconcile.Result, error) {
-	err := r.client.Update(context.TODO(), cr)
+func (reconciler *ReconcileKieApp) crUpdate(cr *v1.KieApp) (reconcile.Result, error) {
+	err := reconciler.client.Update(context.TODO(), cr)
 	if err != nil {
 		logrus.Printf("failed to update instance status: %v", err)
 		return reconcile.Result{}, err
@@ -272,7 +271,7 @@ func (r *ReconcileKieApp) crUpdate(cr *appv1alpha1.KieApp) (reconcile.Result, er
 	return reconcile.Result{Requeue: true}, nil
 }
 
-func (r *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *appv1alpha1.KieApp) []oappsv1.DeploymentConfig {
+func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
 	update := false
 	cContainer := current.Spec.Template.Spec.Containers[0]
 	nContainer := new.Spec.Template.Spec.Containers[0]
@@ -285,7 +284,7 @@ func (r *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, d
 	}
 	if update {
 		dcnew := new
-		controllerutil.SetControllerReference(cr, &dcnew, r.scheme)
+		controllerutil.SetControllerReference(cr, &dcnew, reconciler.scheme)
 		dcnew.SetNamespace(current.Namespace)
 		dcnew.SetResourceVersion(current.ResourceVersion)
 		dcnew.SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
@@ -294,19 +293,18 @@ func (r *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, d
 	return dcUpdates
 }
 
-func (r *ReconcileKieApp) NewEnv(cr *appv1alpha1.KieApp) (appv1alpha1.Environment, reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, common, err := defaults.GetEnvironment(cr)
 	if err != nil {
-		return appv1alpha1.Environment{}, reconcile.Result{}, err
+		return v1.Environment{}, reconcile.Result{}, err
 	}
-	//defer shared.Zeroing(password)
 
 	// console keystore generation
 	consoleCN := ""
 	for _, rt := range env.Console.Routes {
 		if CheckTLS(rt.Spec.TLS) {
 			// use host of first tls route in env template
-			consoleCN = r.getRouteHost(rt, cr)
+			consoleCN = reconciler.getRouteHost(rt, cr)
 			break
 		}
 	}
@@ -332,7 +330,7 @@ func (r *ReconcileKieApp) NewEnv(cr *appv1alpha1.KieApp) (appv1alpha1.Environmen
 		for _, rt := range server.Routes {
 			if CheckTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
-				serverCN = r.getRouteHost(rt, cr)
+				serverCN = reconciler.getRouteHost(rt, cr)
 				break
 			}
 		}
@@ -355,22 +353,22 @@ func (r *ReconcileKieApp) NewEnv(cr *appv1alpha1.KieApp) (appv1alpha1.Environmen
 		env.Servers[i] = server
 	}
 	env = ConsolidateObjects(env, common, cr)
-	rResult, err := r.crUpdate(cr)
+	rResult, err := reconciler.crUpdate(cr)
 	if err != nil {
 		return env, rResult, err
 	}
-	rResult, _ = r.createObjects(env.Console, cr)
+	rResult, _ = reconciler.createCustomObjects(env.Console, cr)
 	if err != nil {
 		return env, rResult, err
 	}
 	for _, s := range env.Servers {
-		rResult, _ = r.createObjects(s, cr)
+		rResult, _ = reconciler.createCustomObjects(s, cr)
 		if err != nil {
 			return env, rResult, err
 		}
 	}
 	for _, o := range env.Others {
-		rResult, _ = r.createObjects(o, cr)
+		rResult, _ = reconciler.createCustomObjects(o, cr)
 		if err != nil {
 			return env, rResult, err
 		}
@@ -379,7 +377,7 @@ func (r *ReconcileKieApp) NewEnv(cr *appv1alpha1.KieApp) (appv1alpha1.Environmen
 	return env, rResult, nil
 }
 
-func ConsolidateObjects(env appv1alpha1.Environment, common appv1alpha1.KieAppSpec, cr *appv1alpha1.KieApp) appv1alpha1.Environment {
+func ConsolidateObjects(env v1.Environment, common v1.KieAppSpec, cr *v1.KieApp) v1.Environment {
 	env.Console = rhpamcentr.ConstructObject(env.Console, common, cr)
 	for i, s := range env.Servers {
 		s = kieserver.ConstructObject(s, common, cr)
@@ -388,107 +386,69 @@ func ConsolidateObjects(env appv1alpha1.Environment, common appv1alpha1.KieAppSp
 	return env
 }
 
-func (r *ReconcileKieApp) createObjects(object appv1alpha1.CustomObject, cr *appv1alpha1.KieApp) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) createCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
 	for _, obj := range object.PersistentVolumeClaims {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
-		dObj := obj.DeepCopyObject()
-		found := &corev1.PersistentVolumeClaim{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.PersistentVolumeClaim{})
 	}
 	for _, obj := range object.ServiceAccounts {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
-		dObj := obj.DeepCopyObject()
-		found := &corev1.ServiceAccount{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.ServiceAccount{})
 	}
 	for _, obj := range object.Secrets {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
-		dObj := obj.DeepCopyObject()
-		found := &corev1.Secret{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.Secret{})
 	}
 	for _, obj := range object.RoleBindings {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(rbac_v1.SchemeGroupVersion.WithKind("RoleBinding"))
-		dObj := obj.DeepCopyObject()
-		found := &rbac_v1.RoleBinding{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &rbac_v1.RoleBinding{})
 	}
 	for _, obj := range object.DeploymentConfigs {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
-		dObj := obj.DeepCopyObject()
-		found := &oappsv1.DeploymentConfig{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &oappsv1.DeploymentConfig{})
 	}
 	for _, obj := range object.Services {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-		dObj := obj.DeepCopyObject()
-		found := &corev1.Service{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.Service{})
 	}
 	for _, obj := range object.Routes {
-		controllerutil.SetControllerReference(cr, &obj, r.scheme)
-		obj.SetNamespace(cr.Namespace)
 		obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
-		dObj := obj.DeepCopyObject()
-		found := &routev1.Route{}
-		_, _ = r.createObj(
-			obj.Name,
-			obj.Namespace,
-			dObj,
-			r.client.Get(context.TODO(), types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, found),
-		)
+		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
+		obj.SetNamespace(cr.Namespace)
+		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &routev1.Route{})
 	}
 
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileKieApp) createObj(name, namespace string, obj runtime.Object, err error) (reconcile.Result, error) {
+// createCustomObject checks for an object's existence before creating it
+func (reconciler *ReconcileKieApp) createCustomObject(name, namespace string, deepCopyObj, emptyObj runtime.Object) (reconcile.Result, error) {
+	return reconciler.createObj(
+		name,
+		namespace,
+		deepCopyObj,
+		reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
+	)
+}
+
+// createObj creates an object based on the error passed in from a `client.Get`
+func (reconciler *ReconcileKieApp) createObj(name, namespace string, obj runtime.Object, err error) (reconcile.Result, error) {
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Object
 		logrus.Printf("Creating a new %s %s/%s\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name)
-		err = r.client.Create(context.TODO(), obj)
+		err = reconciler.client.Create(context.TODO(), obj)
 		if err != nil {
 			logrus.Printf("Failed to create new %s %s/%s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
 			return reconcile.Result{}, err
@@ -503,9 +463,9 @@ func (r *ReconcileKieApp) createObj(name, namespace string, obj runtime.Object, 
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileKieApp) updateObj(name, namespace string, obj runtime.Object) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) updateObj(name, namespace string, obj runtime.Object) (reconcile.Result, error) {
 	logrus.Printf("Updating %s %s/%s\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name)
-	err := r.client.Update(context.TODO(), obj)
+	err := reconciler.client.Update(context.TODO(), obj)
 	if err != nil {
 		logrus.Printf("Failed to update %s : %v\n", obj.GetObjectKind().GroupVersionKind().Kind, err)
 		return reconcile.Result{}, err
@@ -531,11 +491,11 @@ func getPodNames(pods []corev1.Pod) []string {
 }
 
 // getPodNames returns the pod names of the array of pods passed in
-func getDcNames(dcs []oappsv1.DeploymentConfig, cr *appv1alpha1.KieApp) []string {
+func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 	var dcNames []string
 	for _, dc := range dcs {
-		for _, or := range dc.GetOwnerReferences() {
-			if or.UID == cr.UID {
+		for _, ownerRef := range dc.GetOwnerReferences() {
+			if ownerRef.UID == cr.UID {
 				dcNames = append(dcNames, dc.Name)
 			}
 		}
@@ -543,15 +503,15 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *appv1alpha1.KieApp) []string
 	return dcNames
 }
 
-func (r *ReconcileKieApp) getRouteHost(route routev1.Route, cr *appv1alpha1.KieApp) string {
-	controllerutil.SetControllerReference(cr, &route, r.scheme)
-	route.SetNamespace(cr.Namespace)
+func (reconciler *ReconcileKieApp) getRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+	controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
+	route.SetNamespace(cr.Namespace)
 	dRoute := route.DeepCopyObject()
 	found := &routev1.Route{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+	err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		_, err = r.createObj(
+		_, err = reconciler.createObj(
 			route.Name,
 			route.Namespace,
 			dRoute,
@@ -565,7 +525,7 @@ func (r *ReconcileKieApp) getRouteHost(route routev1.Route, cr *appv1alpha1.KieA
 	found = &routev1.Route{}
 	for i := 1; i < 60; i++ {
 		time.Sleep(time.Duration(100) * time.Millisecond)
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+		err = reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 		if err == nil {
 			break
 		}

@@ -1,9 +1,9 @@
-apiVersion: app.kiegroup.org/v1alpha1
+apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: authoring
+  name: production
 spec:
-  environment: authoring
+  environment: production
   kieDeployments: 2
   objects:
     console:

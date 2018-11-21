@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	appv1alpha1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/sirupsen/logrus"
@@ -16,12 +16,12 @@ import (
 )
 
 func TestUnknownEnvironmentObjects(t *testing.T) {
-	cr := &appv1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: appv1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment: "unknown",
 		},
 	}
@@ -31,7 +31,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env = ConsolidateObjects(env, common, cr)
 
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
-	assert.Equal(t, appv1alpha1.Environment{}, env, "Env object should be empty")
+	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, environment not deployed", cr.Spec.Environment), err.Error())
 }
 
@@ -45,14 +45,14 @@ func TestTrialConsoleEnv(t *testing.T) {
 		Name:  "CONSOLE_TEST",
 		Value: "test",
 	}
-	cr := &appv1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: appv1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment: "trial",
-			Objects: appv1alpha1.KieAppObjects{
-				Console: appv1alpha1.KieAppObject{
+			Objects: v1.KieAppObjects{
+				Console: v1.KieAppObject{
 					Env: []corev1.EnvVar{
 						envReplace,
 						envAddition,
@@ -93,15 +93,15 @@ func TestTrialServerEnv(t *testing.T) {
 		Name:  "COMMON_TEST",
 		Value: "test",
 	}
-	cr := &appv1alpha1.KieApp{
+	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: appv1alpha1.KieAppSpec{
+		Spec: v1.KieAppSpec{
 			Environment:    "trial",
 			KieDeployments: 3,
-			Objects: appv1alpha1.KieAppObjects{
-				Server: appv1alpha1.KieAppObject{
+			Objects: v1.KieAppObjects{
+				Server: v1.KieAppObject{
 					Env: []corev1.EnvVar{
 						envReplace,
 						envAddition,
@@ -120,8 +120,8 @@ func TestTrialServerEnv(t *testing.T) {
 
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)
-	re := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	pattern := regexp.MustCompile("[0-9]+")
+	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{

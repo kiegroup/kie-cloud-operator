@@ -2,12 +2,12 @@ package rhpamcentr
 
 import (
 	"github.com/imdario/mergo"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1alpha1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/sirupsen/logrus"
 )
 
-func ConstructObject(object v1alpha1.CustomObject, common v1alpha1.KieAppSpec, cr *v1alpha1.KieApp) v1alpha1.CustomObject {
+func ConstructObject(object v1.CustomObject, common v1.KieAppSpec, cr *v1.KieApp) v1.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
 		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
 			c.Env = shared.EnvOverride(common.Objects.Console.Env, c.Env)

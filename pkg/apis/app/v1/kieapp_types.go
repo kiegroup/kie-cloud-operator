@@ -1,4 +1,4 @@
-package v1alpha1
+package v1
 
 import (
 	appsv1 "github.com/openshift/api/apps/v1"

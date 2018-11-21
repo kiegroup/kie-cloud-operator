@@ -17,7 +17,7 @@ docker push quay.io/kiegroup/kie-cloud-operator:latest
 # Deploy to OpenShift
 Globally and only once for the whole cluster:
 ```shell
-oc create -f deploy/crds/app_v1alpha1_kieapp_crd.yaml
+oc create -f deploy/crds/kieapp_crd.yaml
 ```
 
 In a project:
@@ -30,12 +30,12 @@ oc create -f deploy/operator.yaml
 
 # Trigger application deployment
 ```shell
-oc create -f deploy/v1alpha1_crs/kieapp_trial.yaml
+oc create -f deploy/crs/kieapp_trial.yaml
 ```
 
 # Clean up an App deployment:
 ```shell
-oc create -f deploy/v1alpha1_crs/kieapp_trial.yaml
+oc delete KieApp trial
 ```
 
 # Development
