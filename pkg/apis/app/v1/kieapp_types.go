@@ -2,9 +2,9 @@ package v1
 
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
-	authv1 "github.com/openshift/api/authorization/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,7 +74,7 @@ type CustomObject struct {
 	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
 	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
-	RoleBindings           []authv1.RoleBinding           `json:"roleBindings,omitempty"`
+	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
 	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`

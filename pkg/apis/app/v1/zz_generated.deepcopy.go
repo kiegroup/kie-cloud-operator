@@ -22,9 +22,9 @@ package v1
 
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
-	authorizationv1 "github.com/openshift/api/authorization/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -54,7 +54,7 @@ func (in *CustomObject) DeepCopyInto(out *CustomObject) {
 	}
 	if in.RoleBindings != nil {
 		in, out := &in.RoleBindings, &out.RoleBindings
-		*out = make([]authorizationv1.RoleBinding, len(*in))
+		*out = make([]rbacv1.RoleBinding, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
