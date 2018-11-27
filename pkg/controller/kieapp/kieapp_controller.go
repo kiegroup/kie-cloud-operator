@@ -162,7 +162,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	dcList := &oappsv1.DeploymentConfigList{}
 	err = reconciler.client.List(context.TODO(), listOps, dcList)
 	if err != nil {
-		logrus.Infof("Failed to list dc's: %v", err)
+		logrus.Warnf("Failed to list dc's: %v", err)
 		return reconcile.Result{}, err
 	}
 	dcNames := getDcNames(dcList.Items, instance)
@@ -272,7 +272,10 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 
 	if update {
 		dcnew := new
-		controllerutil.SetControllerReference(cr, &dcnew, reconciler.scheme)
+		err := controllerutil.SetControllerReference(cr, &dcnew, reconciler.scheme)
+		if err != nil {
+			logrus.Errorf("Error setting controller reference for dc %s - %v", dcnew.Name, err)
+		}
 		dcnew.SetNamespace(current.Namespace)
 		dcnew.SetResourceVersion(current.ResourceVersion)
 		dcnew.SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
@@ -346,18 +349,18 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 	if err != nil {
 		return env, rResult, err
 	}
-	rResult, _ = reconciler.createCustomObjects(env.Console, cr)
+	rResult, err = reconciler.createCustomObjects(env.Console, cr)
 	if err != nil {
 		return env, rResult, err
 	}
 	for _, s := range env.Servers {
-		rResult, _ = reconciler.createCustomObjects(s, cr)
+		rResult, err = reconciler.createCustomObjects(s, cr)
 		if err != nil {
 			return env, rResult, err
 		}
 	}
 	for _, o := range env.Others {
-		rResult, _ = reconciler.createCustomObjects(o, cr)
+		rResult, err = reconciler.createCustomObjects(o, cr)
 		if err != nil {
 			return env, rResult, err
 		}
@@ -376,35 +379,26 @@ func ConsolidateObjects(env v1.Environment, common v1.KieAppSpec, cr *v1.KieApp)
 }
 
 func (reconciler *ReconcileKieApp) createCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
-	for _, obj := range object.PersistentVolumeClaims {
-		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.PersistentVolumeClaim{})
+	var allObjects []v1.OpenShiftObject
+	for index := range object.PersistentVolumeClaims {
+		object.PersistentVolumeClaims[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
+		allObjects = append(allObjects, &object.PersistentVolumeClaims[index])
 	}
-	for _, obj := range object.ServiceAccounts {
-		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.ServiceAccount{})
+	for index := range object.ServiceAccounts {
+		object.ServiceAccounts[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
+		allObjects = append(allObjects, &object.ServiceAccounts[index])
 	}
-	for _, obj := range object.Secrets {
-		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.Secret{})
+	for index := range object.Secrets {
+		object.Secrets[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
+		allObjects = append(allObjects, &object.Secrets[index])
 	}
-	for _, obj := range object.RoleBindings {
-		obj.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &rbacv1.RoleBinding{})
+	for index := range object.RoleBindings {
+		object.RoleBindings[index].SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
+		allObjects = append(allObjects, &object.RoleBindings[index])
 	}
-	for _, obj := range object.DeploymentConfigs {
-		obj.SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		for ti, trigger := range obj.Spec.Triggers {
+	for index := range object.DeploymentConfigs {
+		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
+		for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
 			if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
 				if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace) {
 					if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, cr.Namespace) {
@@ -419,29 +413,41 @@ func (reconciler *ReconcileKieApp) createCustomObjects(object v1.CustomObject, c
 						trigger.ImageChangeParams.From.Namespace = cr.Namespace
 					}
 				}
-				obj.Spec.Triggers[ti] = trigger
+				object.DeploymentConfigs[index].Spec.Triggers[ti] = trigger
 			}
 		}
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &oappsv1.DeploymentConfig{})
+		allObjects = append(allObjects, &object.DeploymentConfigs[index])
 	}
-	for _, obj := range object.Services {
-		obj.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &corev1.Service{})
+	for index := range object.Services {
+		object.Services[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
+		allObjects = append(allObjects, &object.Services[index])
 	}
-	for _, obj := range object.Routes {
-		obj.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
-		controllerutil.SetControllerReference(cr, &obj, reconciler.scheme)
-		obj.SetNamespace(cr.Namespace)
-		_, _ = reconciler.createCustomObject(obj.Name, obj.Namespace, obj.DeepCopyObject(), &routev1.Route{})
+	for index := range object.Routes {
+		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+		allObjects = append(allObjects, &object.Routes[index])
 	}
 
+	for _, obj := range allObjects {
+		_, err := reconciler.createCustomObject(obj, cr)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
 	return reconcile.Result{}, nil
 }
 
 // createCustomObject checks for an object's existence before creating it
-func (reconciler *ReconcileKieApp) createCustomObject(name, namespace string, deepCopyObj, emptyObj runtime.Object) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
+	name := obj.GetName()
+	namespace := cr.GetNamespace()
+	err := controllerutil.SetControllerReference(cr, obj, reconciler.scheme)
+	if err != nil {
+		logrus.Errorf("Failed to create new %s %s/%s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
+		return reconcile.Result{}, err
+	}
+	obj.SetNamespace(namespace)
+	deepCopyObj := obj.DeepCopyObject()
+	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(
 		name,
 		namespace,
@@ -457,7 +463,7 @@ func (reconciler *ReconcileKieApp) createObj(name, namespace string, obj runtime
 		logrus.Infof("Creating a new %s %s/%s\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name)
 		err = reconciler.client.Create(context.TODO(), obj)
 		if err != nil {
-			logrus.Infof("Failed to create new %s %s/%s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
+			logrus.Warnf("Failed to create new %s %s/%s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
 			return reconcile.Result{}, err
 		}
 		// Object created successfully - return and requeue
@@ -473,7 +479,7 @@ func (reconciler *ReconcileKieApp) createObj(name, namespace string, obj runtime
 func (reconciler *ReconcileKieApp) updateObj(obj runtime.Object) (reconcile.Result, error) {
 	err := reconciler.client.Update(context.TODO(), obj)
 	if err != nil {
-		logrus.Infof("Failed to update %s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, err)
+		logrus.Warnf("Failed to update %s: %v\n", obj.GetObjectKind().GroupVersionKind().Kind, err)
 		return reconcile.Result{}, err
 	}
 	// Spec updated - return and requeue
@@ -485,15 +491,6 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 		return true
 	}
 	return false
-}
-
-// getPodNames returns the pod names of the array of pods passed in
-func getPodNames(pods []corev1.Pod) []string {
-	var podNames []string
-	for _, pod := range pods {
-		podNames = append(podNames, pod.Name)
-	}
-	return podNames
 }
 
 // getPodNames returns the pod names of the array of pods passed in
@@ -511,11 +508,14 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 
 func (reconciler *ReconcileKieApp) getRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
-	controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
+	err := controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
+	if err != nil {
+		logrus.Errorf("Error setting controller reference for route %s - %v", route.Name, err)
+	}
 	route.SetNamespace(cr.Namespace)
 	dRoute := route.DeepCopyObject()
 	found := &routev1.Route{}
-	err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+	err = reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		_, err = reconciler.createObj(
 			route.Name,
