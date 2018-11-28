@@ -21,7 +21,31 @@ import (
 
 func GetEnvironment(cr *v1.KieApp) (v1.Environment, v1.KieAppSpec, error) {
 	var env v1.Environment
+	envTemplate := getEnvTemplate(cr)
 
+	commonBytes, err := loadYaml("commonConfigs.yaml", envTemplate)
+	if err != nil {
+		return env, v1.KieAppSpec{}, err
+	}
+	var common v1.KieAppSpec
+	err = yaml.Unmarshal(commonBytes, &common)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	yamlBytes, err := loadYaml(fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), envTemplate)
+	if err != nil {
+		return env, common, err
+	}
+	err = yaml.Unmarshal(yamlBytes, &env)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	return env, common, nil
+}
+
+func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	// default to '1' Kie DC
 	if cr.Spec.KieDeployments == 0 {
 		cr.Spec.KieDeployments = 1
@@ -54,26 +78,7 @@ func GetEnvironment(cr *v1.KieApp) (v1.Environment, v1.KieAppSpec, error) {
 		envTemplate.ServerCount = append(envTemplate.ServerCount, cr.Spec.Template)
 	}
 
-	commonBytes, err := loadYaml("commonConfigs.yaml", envTemplate)
-	if err != nil {
-		return env, v1.KieAppSpec{}, err
-	}
-	var common v1.KieAppSpec
-	err = yaml.Unmarshal(commonBytes, &common)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	yamlBytes, err := loadYaml(fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), envTemplate)
-	if err != nil {
-		return env, common, err
-	}
-	err = yaml.Unmarshal(yamlBytes, &env)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	return env, common, nil
+	return envTemplate
 }
 
 func loadYaml(filename string, t v1.EnvTemplate) ([]byte, error) {
