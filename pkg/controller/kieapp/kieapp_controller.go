@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -44,13 +45,18 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	if err != nil {
 		logrus.Error(err)
 	}
-	return &ReconcileKieApp{client: mgr.GetClient(), imageClient: imageClient, scheme: mgr.GetScheme()}
+	return &ReconcileKieApp{client: mgr.GetClient(), cache: mgr.GetCache(), imageClient: imageClient, scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
 	c, err := controller.New("kieapp-controller", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -126,7 +132,9 @@ var _ reconcile.Reconciler = &ReconcileKieApp{}
 type ReconcileKieApp struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client      client.Client
+	client client.Client
+	// can cache be leveraged instead in some locations?
+	cache       cache.Cache
 	imageClient *imagev1.ImageV1Client
 	scheme      *runtime.Scheme
 }
@@ -137,7 +145,10 @@ type ReconcileKieApp struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// logrus.Infof("Reconciling KieApp %s/%s\n", request.Namespace, request.Name)
+	logrus.Debugf("Reconciling %s/%s\n", request.Namespace, request.Name)
+
+	// Fetch/Create critical ConfigMaps
+	_, _ = reconciler.initConfigMaps(request)
 
 	// Fetch the KieApp instance
 	instance := &v1.KieApp{}
@@ -286,7 +297,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 }
 
 func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
-	env, common, err := defaults.GetEnvironment(cr)
+	env, common, err := defaults.GetEnvironment(cr, reconciler.client)
 	if err != nil {
 		return v1.Environment{}, reconcile.Result{}, err
 	}
@@ -541,4 +552,30 @@ func (reconciler *ReconcileKieApp) getRouteHost(route routev1.Route, cr *v1.KieA
 	}
 
 	return found.Spec.Host
+}
+
+func (reconciler *ReconcileKieApp) initConfigMaps(request reconcile.Request) (reconcile.Result, error) {
+	configMaps := defaults.ConfigMapsFromFile(request.Namespace)
+
+	for _, configMap := range configMaps {
+		name := configMap.Name
+		namespace := configMap.Namespace
+
+		emptyObj := &corev1.ConfigMap{}
+		err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj)
+		if err != nil {
+			logrus.Error(err)
+		}
+
+		configMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
+		deepCopyObj := configMap.DeepCopyObject()
+		emptyObj = &corev1.ConfigMap{}
+		_, _ = reconciler.createObj(
+			name,
+			namespace,
+			deepCopyObj,
+			reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
+		)
+	}
+	return reconcile.Result{}, nil
 }

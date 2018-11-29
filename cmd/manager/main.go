@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
@@ -60,7 +61,8 @@ func main() {
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
+	syncPeriod := time.Duration(2) * time.Hour
+	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace, SyncPeriod: &syncPeriod})
 	if err != nil {
 		logrus.Fatal(err)
 	}

@@ -1,9 +1,11 @@
 package defaults
 
 import (
+	"testing"
+
 	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
-	"testing"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/stretchr/testify/assert"
@@ -11,7 +13,7 @@ import (
 )
 
 func TestMergeServices(t *testing.T) {
-	baseline, err := getConsole("trial", "test")
+	baseline, err := getConsole("trial", "test", t)
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -59,7 +61,7 @@ func TestMergeServices(t *testing.T) {
 }
 
 func TestMergeRoutes(t *testing.T) {
-	baseline, err := getConsole("trial", "test")
+	baseline, err := getConsole("trial", "test", t)
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -106,7 +108,7 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr-2", finalRoute2.Name, "Second route name should end with -3")
 }
 
-func getConsole(environment string, name string) (v1.CustomObject, error) {
+func getConsole(environment string, name string, t *testing.T) (v1.CustomObject, error) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -117,7 +119,7 @@ func getConsole(environment string, name string) (v1.CustomObject, error) {
 		},
 	}
 
-	env, _, err := GetEnvironment(cr)
+	env, _, err := GetEnvironment(cr, fake.NewFakeClient())
 	if err != nil {
 		return v1.CustomObject{}, err
 	}
@@ -126,11 +128,11 @@ func getConsole(environment string, name string) (v1.CustomObject, error) {
 
 func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var prodEnv v1.Environment
-	err := getParsedTemplate("envs/production-lite.yaml", "prod", &prodEnv)
+	err := getParsedTemplate("envs/production-lite.yaml", "prod", &prodEnv, t)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var servers v1.CustomObject
-	err = getParsedTemplate("common/server.yaml", "prod", &servers)
+	err = getParsedTemplate("common/server.yaml", "prod", &servers, t)
 	assert.Nil(t, err, "Error: %v", err)
 
 	baseEnvCount := len(servers.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
@@ -148,7 +150,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
 
-func getParsedTemplate(filename string, name string, object interface{}) error {
+func getParsedTemplate(filename string, name string, object interface{}, t *testing.T) error {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -157,7 +159,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	envTemplate := getEnvTemplate(cr)
 
-	yamlBytes, err := loadYaml((filename), envTemplate)
+	yamlBytes, err := loadYaml(fake.NewFakeClient(), filename, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}
