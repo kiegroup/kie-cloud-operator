@@ -162,13 +162,27 @@ func TestMergeAuthoringServer(t *testing.T) {
 	merge(&servers, &prodEnv.Servers[0])
 
 	err = getParsedTemplate("testdata/expected/authoring.yaml", "fake", &expected)
+	assert.Nil(t, err, "Error: %v", err)
+	assert.Equal(t, &expected, &servers)
+}
+
+func TestMergeAuthoringPostgresServer(t *testing.T) {
+	var prodEnv v1.Environment
+	err := getParsedTemplate("testdata/envs/authoring-postgres-lite.yaml", "prod", &prodEnv)
+	assert.Nil(t, err, "Error: %v", err)
+	var servers, expected v1.CustomObject
+	err = getParsedTemplate("common/server.yaml", "prod", &servers)
+	assert.Nil(t, err, "Error: %v", err)
+
+	merge(&servers, &prodEnv.Servers[0])
+
+	err = getParsedTemplate("testdata/expected/authoring-postgres.yaml", "fake", &expected)
 	var d, _ = yaml.Marshal(&servers)
 	fmt.Printf("########MERGED\n%s", d)
 
 	marshalledExpected, _ := yaml.Marshal(&expected)
 	fmt.Printf("--------Expected: \n%s", marshalledExpected)
 	fmt.Printf("are equal: %v\n", reflect.DeepEqual(&expected, &servers))
-
 	assert.Nil(t, err, "Error: %v", err)
 	assert.Equal(t, &expected, &servers)
 }

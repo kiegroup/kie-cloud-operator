@@ -1,9 +1,12 @@
 deploymentConfigs:
 - metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-kieserver-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
     name: prod-kieserver-0
   spec:
     replicas: 1
@@ -16,56 +19,42 @@ deploymentConfigs:
       metadata:
         creationTimestamp: null
         labels:
-          app: prod
+          app: prod-kieserver-0
+          application: prod
           deploymentConfig: prod-kieserver-0
-          service: prod-kieserver-0
+          service: prod-kieserver
         name: prod-kieserver-0
       spec:
         containers:
         - env:
-          - name: KIE_SERVER_CONTROLLER_TOKEN
+          - name: KIE_ADMIN_USER
+            value: adminUser
+          - name: KIE_ADMIN_PWD
+            value: AdminPwd
+          - name: KIE_SERVER_USER
+            value: executionUser
+          - name: KIE_SERVER_PWD
+            value: ExecutionPwd
+          - name: DROOLS_SERVER_FILTER_CLASSES
+            value: "true"
+          - name: KIE_SERVER_CONTROLLER_USER
+            value: controllerUser
+          - name: KIE_SERVER_CONTROLLER_PWD
+            value: ControllerPwd
+          - name: KIE_SERVER_CONTROLLER_SERVICE
+            value: prod-rhpamcentr
+          - name: KIE_SERVER_CONTROLLER_PROTOCOL
+            value: ws
+          - name: KIE_MBEANS
+            value: enabled
           - name: KIE_SERVER_ID
             value: prod-kieserver-0
-          - name: KIE_SERVER_ROUTE_NAME
-            value: prod-kieserver-0
-          - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+          - name: MAVEN_REPOS
+            value: RHPAMCENTR,EXTERNAL
+          - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+            value: ROOT.war
+          - name: KIE_SERVER_BYPASS_AUTH_USER
             value: "false"
-          - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-          - name: EXTERNAL_MAVEN_REPO_ID
-          - name: EXTERNAL_MAVEN_REPO_URL
-          - name: EXTERNAL_MAVEN_REPO_USERNAME
-          - name: EXTERNAL_MAVEN_REPO_PASSWORD
-          - name: KIE_SERVER_ROUTER_SERVICE
-            value: prod-smartrouter
-          - name: KIE_SERVER_ROUTER_PORT
-            value: "9000"
-          - name: KIE_SERVER_ROUTER_PROTOCOL
-          - name: KIE_SERVER_PERSISTENCE_DS
-            value: java:/jboss/datasources/rhpam
-          - name: DATASOURCES
-            value: RHPAM
-          - name: RHPAM_JNDI
-            value: java:/jboss/datasources/rhpam
-          - name: RHPAM_JTA
-            value: "true"
-          - name: RHPAM_DATABASE
-            value: rhpam7
-          - name: RHPAM_DRIVER
-            value: postgresql
-          - name: KIE_SERVER_PERSISTENCE_DIALECT
-            value: org.hibernate.dialect.PostgreSQLDialect
-          - name: RHPAM_USERNAME
-            value: rhpam
-          - name: RHPAM_PASSWORD
-            value: 3K3SRkKu
-          - name: RHPAM_SERVICE_HOST
-            value: prod-postgresql-0
-          - name: RHPAM_SERVICE_PORT
-            value: "5432"
-          - name: TIMER_SERVICE_DATA_STORE
-            value: prod-postgresql-0
-          - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
-            value: "30000"
           - name: HTTPS_KEYSTORE_DIR
             value: /etc/kieserver-secret-volume
           - name: HTTPS_KEYSTORE
@@ -73,64 +62,95 @@ deploymentConfigs:
           - name: HTTPS_NAME
             value: jboss
           - name: HTTPS_PASSWORD
-            value: Sts1V2TY
-          - name: JGROUPS_PING_PROTOCOL
-            value: openshift.DNS_PING
-          - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-            value: prod-kieserver-0-ping
-          - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-            value: "8888"
-          - name: SSO_URL
-          - name: SSO_REALM
-          - name: SSO_SECRET
-          - name: SSO_CLIENT
-          - name: SSO_USERNAME
-          - name: SSO_PASSWORD
-          - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-            value: "false"
-          - name: SSO_PRINCIPAL_ATTRIBUTE
-            value: preferred_username
-          - name: HOSTNAME_HTTP
-          - name: HOSTNAME_HTTPS
-          - name: AUTH_LDAP_URL
-          - name: AUTH_LDAP_BIND_DN
-          - name: AUTH_LDAP_BIND_CREDENTIAL
-          - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-          - name: AUTH_LDAP_BASE_CTX_DN
-          - name: AUTH_LDAP_BASE_FILTER
-          - name: AUTH_LDAP_SEARCH_SCOPE
-          - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-          - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-          - name: AUTH_LDAP_PARSE_USERNAME
-          - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-          - name: AUTH_LDAP_USERNAME_END_STRING
-          - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-          - name: AUTH_LDAP_ROLES_CTX_DN
-          - name: AUTH_LDAP_ROLE_FILTER
-          - name: AUTH_LDAP_ROLE_RECURSION
-          - name: AUTH_LDAP_DEFAULT_ROLE
-          - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-          - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-          - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-          - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
+            value: KSPwd
+          - name: DATASOURCES
+            value: RHPAM
+          - name: RHPAM_DATABASE
+            value: rhpam7
+          - name: RHPAM_JNDI
+            value: java:/jboss/datasources/rhpam
+          - name: RHPAM_JTA
+            value: "true"
+          - name: KIE_SERVER_PERSISTENCE_DS
+            value: java:/jboss/datasources/rhpam
+          - name: RHPAM_DRIVER
+            value: postgresql
+          - name: RHPAM_USERNAME
+            value: rhpam
+          - name: RHPAM_PASSWORD
+            value: AdminPwd
+          - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+          - name: RHPAM_SERVICE_HOST
+            value: prod-postgresql-0
+          - name: RHPAM_SERVICE_PORT
+            value: "5432"
+          - name: KIE_SERVER_PERSISTENCE_DIALECT
+            value: org.hibernate.dialect.PostgreSQLDialect
+          - name: DROOLS_SERVER_FILTER_CLASSES
+            value: "true"
+          - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+            value: MvnPwd
+          - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
+            value: "30000"
+          - name: RHPAM_TX_ISOLATION
+            value: TRANSACTION_READ_COMMITTED
+          - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+            value: prod-rhpamcentr
+          - name: RHPAMCENTR_MAVEN_REPO_PATH
+            value: /maven2/
+          - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+            value: mavenUser
           image: rhpam71-kieserver-openshift
           imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
+            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 15
+            timeoutSeconds: 2
           name: prod-kieserver
           ports:
-          - containerPort: 8888
-            name: ping
+          - containerPort: 8778
+            name: jolokia
             protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          - containerPort: 8443
+            name: https
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 2
           resources:
             limits:
               memory: 1Gi
             requests:
-              memory: 512Mi
+              memory: 768Mi
+          volumeMounts:
+          - mountPath: /etc/kieserver-secret-volume
+            name: kieserver-keystore-volume
+            readOnly: true
         serviceAccountName: prod-rhpamsvc
         terminationGracePeriodSeconds: 60
         volumes:
         - name: kieserver-keystore-volume
           secret:
             secretName: prod-kieserver-0-app-secret
+        - name: prod-h2-pvol
+          persistentVolumeClaim:
+            claimName: prod-h2-claim-0
     test: false
     triggers:
     - imageChangeParams:
@@ -153,8 +173,9 @@ deploymentConfigs:
 - metadata:
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-postgresql-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-postgresql
     name: prod-postgresql-0
   spec:
     replicas: 1
@@ -167,9 +188,10 @@ deploymentConfigs:
       metadata:
         creationTimestamp: null
         labels:
-          app: prod
+          app: prod-kieserver-0
+          application: prod
           deploymentConfig: prod-postgresql-0
-          service: prod-postgresql-0
+          service: prod-postgresql
         name: prod-postgresql-0
       spec:
         containers:
@@ -177,7 +199,7 @@ deploymentConfigs:
           - name: POSTGRESQL_USER
             value: rhpam
           - name: POSTGRESQL_PASSWORD
-            value: 3K3SRkKu
+            value: PostgresPwd
           - name: POSTGRESQL_DATABASE
             value: rhpam7
           - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
@@ -218,7 +240,7 @@ deploymentConfigs:
         - prod-postgresql
         from:
           kind: ImageStreamTag
-          name: postgresql:9.6
+          name: postgresql:10
           namespace: openshift
       type: ImageChange
     - type: ConfigChange
@@ -233,8 +255,9 @@ persistentVolumeClaims:
 - metadata:
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-postgresql-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-postgresql
     name: prod-postgresql-claim-0
   spec:
     accessModes:
@@ -249,8 +272,9 @@ routes:
       description: Route for KIE server's https service.
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-kieserver-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
     name: prod-kieserver-0
   spec:
     host: ""
@@ -271,8 +295,9 @@ services:
       description: All the KIE server web server's ports. (KIE server)
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-kieserver-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
     name: prod-kieserver-0
   spec:
     ports:
@@ -292,8 +317,9 @@ services:
       service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
     creationTimestamp: null
     labels:
-      app: prod
-      service: prod-kieserver-0
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
     name: prod-kieserver-0-ping
   spec:
     clusterIP: None
@@ -303,21 +329,5 @@ services:
       targetPort: 8888
     selector:
       deploymentConfig: prod-kieserver-0
-  status:
-    loadBalancer: {}
-- metadata:
-    annotations:
-      description: The database server's port.
-    creationTimestamp: null
-    labels:
-      application: prod
-      service: prod-postgresql-0
-    name: prod-postgresql-0
-  spec:
-    ports:
-    - port: 5432
-      targetPort: 5432
-    selector:
-      deploymentConfig: prod-postgresql-0
   status:
     loadBalancer: {}

@@ -239,28 +239,12 @@ console:
       tls:
         insecureEdgeTerminationPolicy: Redirect
         termination: passthrough
-
 ## KIE Servers BEGIN
 servers:
 ## RANGE BEGINS
 {{ range $index, $Map := .ServerCount }}
-- persistentVolumeClaims:
-  ## H2 persistent volume claim BEGIN
-  - metadata:
-      name: "{{.ApplicationName}}-h2-claim-{{$index}}"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: "1Gi"
-  ## H2 persistent volume claim END
-
-  ## KIE server deployment config BEGIN
-  deploymentConfigs:
+- deploymentConfigs:
+## KIE server deployment config BEGIN
   - metadata:
       name: "{{.ApplicationName}}-kieserver-{{$index}}"
     spec:
@@ -274,11 +258,6 @@ servers:
             resources:
               requests:
                 memory: 768Mi
-            volumeMounts:
-  ## H2 volume mount BEGIN
-            - name: "{{.ApplicationName}}-h2-pvol"
-              mountPath: "/opt/eap/standalone/data"
-  ## H2 volume mount END
             env:
             - name: MAVEN_REPOS
               value: "RHPAMCENTR,EXTERNAL"
@@ -294,61 +273,11 @@ servers:
               value: ""
             - name: KIE_SERVER_ID
               value: "{{.ApplicationName}}-kieserver-{{$index}}"
-            - name: KIE_SERVER_HOST
-              value: ""
             - name: KIE_SERVER_ROUTE_NAME
               value: "{{.ApplicationName}}-kieserver-{{$index}}"
             - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
               value: "false"
-          volumes:
-          - name: kieserver-keystore-volume
-            secret:
-              secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
-  ## H2 volume settings BEGIN
-          - name: "{{.ApplicationName}}-h2-pvol"
-            persistentVolumeClaim:
-              claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
-  ## H2 volume settings END
-
   ## KIE server deployment config END
-  ## KIE server services BEGIN
-  services:
-  - spec:
-      ports:
-      - name: http
-        port: 8080
-        targetPort: 8080
-      - name: https
-        port: 8443
-        targetPort: 8443
-      selector:
-        deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
-    metadata:
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      annotations:
-        description: All the KIE server web server's ports.
-  ## KIE server routes BEGIN
-  routes:
-  - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
-    metadata:
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      annotations:
-        description: Route for KIE server's https service.
-    spec:
-      host: ""
-      to:
-        name: "{{.ApplicationName}}-kieserver-{{$index}}"
-      port:
-        targetPort: https
-      tls:
-        insecureEdgeTerminationPolicy: Redirect
-        termination: passthrough
 {{end}}
 ## RANGE ends
 ## KIE Servers END
