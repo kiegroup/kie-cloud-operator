@@ -1,9 +1,12 @@
 package defaults
 
 import (
+	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
-	"testing"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/stretchr/testify/assert"
@@ -148,6 +151,28 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
 
+func TestMergeAuthoringServer(t *testing.T) {
+	var prodEnv v1.Environment
+	err := getParsedTemplate("testdata/envs/authoring-lite.yaml", "prod", &prodEnv)
+	assert.Nil(t, err, "Error: %v", err)
+	var servers, expected v1.CustomObject
+	err = getParsedTemplate("common/server.yaml", "prod", &servers)
+	assert.Nil(t, err, "Error: %v", err)
+
+	merge(&servers, &prodEnv.Servers[0])
+
+	err = getParsedTemplate("testdata/expected/authoring.yaml", "fake", &expected)
+	var d, _ = yaml.Marshal(&servers)
+	fmt.Printf("########MERGED\n%s", d)
+
+	marshalledExpected, _ := yaml.Marshal(&expected)
+	fmt.Printf("--------Expected: \n%s", marshalledExpected)
+	fmt.Printf("are equal: %v\n", reflect.DeepEqual(&expected, &servers))
+
+	assert.Nil(t, err, "Error: %v", err)
+	assert.Equal(t, &expected, &servers)
+}
+
 func getParsedTemplate(filename string, name string, object interface{}) error {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -157,7 +182,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	envTemplate := getEnvTemplate(cr)
 
-	yamlBytes, err := loadYaml((filename), envTemplate)
+	yamlBytes, err := loadYaml(filename, envTemplate)
 	if err != nil {
 		return err
 	}

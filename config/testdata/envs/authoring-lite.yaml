@@ -1,0 +1,265 @@
+console:
+  serviceAccounts:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamsvc"
+      labels:
+        application: "{{.ApplicationName}}"
+  rolebindings:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamsvc-view"
+    subjects:
+    - kind: ServiceAccount
+      name: "{{.ApplicationName}}-rhpamsvc"
+    roleRef:
+      kind: Role
+      name: view
+
+  persistentVolumeClaims:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamcentr-claim"
+      labels:
+        app: "{{.ApplicationName}}-rhpamcentr"
+        application: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
+  deploymentConfigs:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamcentr"
+      labels:
+        app: "{{.ApplicationName}}-rhpamcentr"
+        application: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      annotations:
+        template.alpha.openshift.io/wait-for-ready: "true"
+    spec:
+      strategy:
+        type: Recreate
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - "{{.ApplicationName}}-rhpamcentr"
+          from:
+            kind: ImageStreamTag
+            namespace: "openshift"
+            name: "rhpam{{.Version}}-businesscentral-openshift:{{.ImageTag}}"
+      - type: ConfigChange
+  ## Replicas for Business Central
+      replicas: 1
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+      template:
+        metadata:
+          name: "{{.ApplicationName}}-rhpamcentr"
+          labels:
+            app: "{{.ApplicationName}}-rhpamcentr"
+            application: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-rhpamcentr"
+            deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+        spec:
+          serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
+          terminationGracePeriodSeconds: 60
+          containers:
+          - name: "{{.ApplicationName}}-rhpamcentr"
+            image: rhpam{{.Version}}-businesscentral-openshift
+            imagePullPolicy: Always
+            resources:
+              requests:
+                memory: 768Mi
+              limits:
+                memory: 1Gi
+            volumeMounts:
+            - name: businesscentral-keystore-volume
+              mountPath: "/etc/businesscentral-secret-volume"
+              readOnly: true
+            - name: "{{.ApplicationName}}-rhpamcentr-pvol"
+              mountPath: "/opt/eap/standalone/data/kie"
+            livenessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
+              initialDelaySeconds: 180
+              timeoutSeconds: 2
+              periodSeconds: 15
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
+              initialDelaySeconds: 60
+              timeoutSeconds: 2
+              periodSeconds: 30
+              failureThreshold: 6
+            ports:
+            - name: jolokia
+              containerPort: 8778
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: git-ssh
+              containerPort: 8001
+              protocol: TCP
+            env:
+            - name: KIE_MAVEN_USER
+              value: mavenUser
+            - name: KIE_MAVEN_PWD
+              value: MvnPwd
+            - name: KIE_MBEANS
+              value: enabled
+            - name: HTTPS_KEYSTORE_DIR
+              value: "/etc/businesscentral-secret-volume"
+            - name: HTTPS_KEYSTORE
+              value: "keystore.jks"
+            - name: HTTPS_NAME
+              value: "jboss"
+            - name: HTTPS_PASSWORD
+              value: KSPwd
+            - name: WORKBENCH_ROUTE_NAME
+              value: "{{.ApplicationName}}-rhpamcentr"
+          volumes:
+          - name: businesscentral-keystore-volume
+            secret:
+              secretName: "{{.ApplicationName}}-businesscentral-app-secret"
+          - name: "{{.ApplicationName}}-rhpamcentr-pvol"
+            persistentVolumeClaim:
+              claimName: "{{.ApplicationName}}-rhpamcentr-claim"
+  services:
+  - spec:
+      ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+      - name: https
+        port: 8443
+        targetPort: 8443
+      - name: git-ssh
+        port: 8001
+        targetPort: 8001
+      selector:
+        deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+    metadata:
+      name: "{{.ApplicationName}}-rhpamcentr"
+      labels:
+        app: "{{.ApplicationName}}-rhpamcentr"
+        application: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      annotations:
+        description: All the Business Central web server's ports.
+
+  routes:
+  - id: "{{.ApplicationName}}-rhpamcentr-https"
+    metadata:
+      name: "{{.ApplicationName}}-rhpamcentr"
+      labels:
+        app: "{{.ApplicationName}}-rhpamcentr"
+        application: "{{.ApplicationName}}"
+        service: "{{.ApplicationName}}-rhpamcentr"
+      annotations:
+        description: Route for Business Central's https service.
+        haproxy.router.openshift.io/timeout: 60s
+    spec:
+      host: ""
+      to:
+        name: "{{.ApplicationName}}-rhpamcentr"
+      port:
+        targetPort: https
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: passthrough
+
+## KIE Servers BEGIN
+servers:
+## RANGE BEGINS
+{{ range $index, $Map := .ServerCount }}
+  ## KIE server deployment config BEGIN
+  deploymentConfigs:
+  - metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+    spec:
+      replicas: 1
+      template:
+        spec:
+          containers:
+          - name: "{{.ApplicationName}}-kieserver"
+            resources:
+              requests:
+                memory: 768Mi
+            volumeMounts:
+            - name: kieserver-keystore-volume
+              mountPath: "/etc/kieserver-secret-volume"
+              readOnly: true
+            env:
+            ## Test PWD BEGIN
+            - name: KIE_ADMIN_PWD
+              value: AdminPwd
+            - name: KIE_SERVER_CONTROLLER_PWD
+              value: ControllerPwd
+            - name: KIE_SERVER_PWD
+              value: ExecutionPwd
+            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+              value: MvnPwd
+            - name: HTTPS_PASSWORD
+              value: KSPwd
+            - name: RHPAM_PASSWORD
+              value: AdminPwd
+            ## Test PWD END
+            ## PostgreSQL driver settings BEGIN
+            - name: RHPAM_DRIVER
+              value: "postgresql"
+            - name: RHPAM_USERNAME
+              value: "rhpam"
+            #- name: RHPAM_PASSWORD
+            #  value: "{{.AdminPassword}}"
+            - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+            - name: RHPAM_SERVICE_HOST
+              value: "{{.ApplicationName}}-postgresql-{{$index}}"
+            - name: RHPAM_SERVICE_PORT
+              value: "5432"
+            - name: KIE_SERVER_PERSISTENCE_DIALECT
+              value: "org.hibernate.dialect.PostgreSQLDialect"
+            - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
+              value: "30000"
+            - name: RHPAM_TX_ISOLATION
+              value: "TRANSACTION_READ_COMMITTED"
+            ## PostgreSQL driver settings END
+            ## Maven config for local rhpamcentr BEGIN
+            - name: MAVEN_REPOS
+              value: "RHPAMCENTR,EXTERNAL"
+            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+              value: "{{.ApplicationName}}-rhpamcentr"
+            - name: RHPAMCENTR_MAVEN_REPO_PATH
+              value: "/maven2/"
+            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+              value: mavenUser
+            #- name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+            #  value: "{{.MavenPassword}}"
+            ## Maven config for local rhpamcentr END
+  ## KIE server deployment config END
+  ## PostgreSQL deployment config BEGIN
+  - metadata:
+      name: "{{.ApplicationName}}-postgresql-{{$index}}"
+    spec:
+      template:
+        spec:
+          containers:
+          - env:
+            - name: POSTGRESQL_PASSWORD
+              value: PostgresPwd
+  ## KIE server deployment config END
+{{end}}
+## RANGE ends
+## KIE Servers END
