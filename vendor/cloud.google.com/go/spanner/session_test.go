@@ -19,6 +19,7 @@ package spanner
 import (
 	"bytes"
 	"container/heap"
+	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -26,7 +27,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner/internal/testutil"
-	"golang.org/x/net/context"
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

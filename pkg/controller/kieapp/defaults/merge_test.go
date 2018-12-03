@@ -1,8 +1,6 @@
 package defaults
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -180,12 +178,7 @@ func TestMergeAuthoringPostgresServer(t *testing.T) {
 	merge(&servers, &prodEnv.Servers[0])
 
 	err = getParsedTemplate("testdata/expected/authoring-postgres.yaml", "fake", &expected)
-	var d, _ = yaml.Marshal(&servers)
-	fmt.Printf("########MERGED\n%s", d)
 
-	marshalledExpected, _ := yaml.Marshal(&expected)
-	fmt.Printf("--------Expected: \n%s", marshalledExpected)
-	fmt.Printf("are equal: %v\n", reflect.DeepEqual(&expected, &servers))
 	assert.Nil(t, err, "Error: %v", err)
 	assert.Equal(t, &expected, &servers)
 }
@@ -211,7 +204,7 @@ func TestMergeDeploymentconfigs_Metadata(t *testing.T) {
 		*buildDC("dc1"),
 	}
 	overwrite := []appsv1.DeploymentConfig{
-		appsv1.DeploymentConfig{
+		{
 			ObjectMeta: *buildObjectMeta("dc1-dc"),
 		},
 	}
