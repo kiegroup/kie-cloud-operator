@@ -15,6 +15,7 @@
 package trace
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"net"
@@ -23,7 +24,6 @@ import (
 	"testing"
 
 	pb "cloud.google.com/go/trace/testdata/helloworld"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

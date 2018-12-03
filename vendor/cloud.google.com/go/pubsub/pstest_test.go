@@ -15,13 +15,13 @@
 package pubsub_test
 
 import (
+	"context"
 	"strconv"
 	"sync"
 	"testing"
 
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/pubsub/pstest"
-	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 )

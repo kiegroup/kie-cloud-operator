@@ -6,9 +6,17 @@ matrix:
   include:
   - os: linux
     go: "1.9.x"
+  - os: windows
+    go: "1.9.x"
   - os: linux
     go: "1.10.x"
+  - os: windows
+    go: "1.10.x"
   - os: linux
+    go: "1.11.x"
+    env:
+      - GO111MODULE=off
+  - os: windows
     go: "1.11.x"
     env:
       - GO111MODULE=off
@@ -16,7 +24,13 @@ matrix:
     go: "1.11.x"
     env:
       - GO111MODULE=on
+  - os: windows
+    go: "1.11.x"
+    env:
+      - GO111MODULE=on
 
-install: make ci-deps
+install: false
 
-script: make ci-test
+script: 
+  - go get -v -t ./...
+  - go test -v  -timeout=5s -race ./...

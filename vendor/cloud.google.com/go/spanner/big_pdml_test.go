@@ -19,10 +19,9 @@
 package spanner
 
 import (
+	"context"
 	"fmt"
 	"testing"
-
-	"golang.org/x/net/context"
 )
 
 func TestBigPDML(t *testing.T) {

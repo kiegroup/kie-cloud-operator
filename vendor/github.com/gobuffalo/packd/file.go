@@ -26,8 +26,12 @@ func (f virtualFile) Name() string {
 	return f.name
 }
 
-func (f virtualFile) Seek(offset int64, whence int) (int64, error) {
-	return -1, nil
+func (f *virtualFile) Seek(offset int64, whence int) (int64, error) {
+	if offset == 0 && whence == io.SeekStart {
+		f.buf = bytes.NewBuffer(f.original)
+		return 0, nil
+	}
+	return -1, errors.New("Unsuported Seek operation")
 }
 
 func (f virtualFile) FileInfo() (os.FileInfo, error) {
