@@ -12,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func merge(baseline *v1.CustomObject, overwrite *v1.CustomObject) {
@@ -138,16 +137,12 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 	}
 	baselineRefs := getDeploymentConfigReferenceSlice(baseline)
 	overwriteRefs := getDeploymentConfigReferenceSlice(overwrite)
-	for _, overwriteItem := range overwrite {
+	for overwriteIndex := range overwrite {
+		overwriteItem := overwrite[overwriteIndex]
 		baselineIndex, _ := findOpenShiftObject(&overwriteItem, baselineRefs)
 		if baselineIndex >= 0 {
 			baselineItem := baseline[baselineIndex]
-			err := mergeLabels(&overwriteItem.ObjectMeta, &baselineItem.ObjectMeta) //reverse merge to maintain changes
-			if err != nil {
-				logrus.Errorf("%v", err)
-				return nil
-			}
-			err = mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
 			if err != nil {
 				logrus.Errorf("%v", err)
 				return nil
@@ -170,16 +165,6 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 
 }
 
-func mergeLabels(baseline metav1.Object, overwrite metav1.Object) error {
-	mergedLabels := baseline.GetLabels()
-	err := mergo.Merge(&mergedLabels, overwrite.GetLabels(), mergo.WithOverride)
-	if err != nil {
-		return err
-	}
-	baseline.SetLabels(mergedLabels)
-	return nil
-}
-
 func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.DeploymentConfigSpec) (appsv1.DeploymentConfigSpec, error) {
 	mergedTemplate, err := mergeTemplate(baseline.Template, overwrite.Template)
 	if err != nil {
@@ -195,11 +180,10 @@ func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.Deployment
 }
 
 func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTemplateSpec) (*corev1.PodTemplateSpec, error) {
-	err := mergeLabels(overwrite, baseline)
-	if err != nil {
-		return nil, err
+	if overwrite == nil {
+		return baseline, nil
 	}
-	err = mergo.Merge(&overwrite.ObjectMeta, baseline.ObjectMeta)
+	err := mergo.Merge(&overwrite.ObjectMeta, baseline.ObjectMeta)
 	if err != nil {
 		logrus.Errorf("%v", err)
 		return nil, nil
@@ -224,7 +208,7 @@ func mergePodSpecs(baseline corev1.PodSpec, overwrite corev1.PodSpec) (corev1.Po
 	}
 	overwrite.Containers = mergedContainers
 
-	err = mergo.Merge(&baseline, overwrite)
+	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
 	if err != nil {
 		return corev1.PodSpec{}, err
 	}

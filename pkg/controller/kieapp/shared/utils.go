@@ -155,13 +155,13 @@ func GeneratePassword(length int) []byte {
 	return buf
 }
 
-func getEnvVar(envName string, Env []corev1.EnvVar) (int, *corev1.EnvVar) {
-	for pos, v := range Env {
+func getEnvVar(envName string, env []corev1.EnvVar) int {
+	for pos, v := range env {
 		if v.Name == envName {
-			return pos, &v
+			return pos
 		}
 	}
-	return -1, nil
+	return -1
 }
 
 func envVarEqual(env corev1.EnvVar, envList []corev1.EnvVar) bool {
@@ -179,7 +179,7 @@ func envVarEqual(env corev1.EnvVar, envList []corev1.EnvVar) bool {
 
 func EnvOverride(dst, src []corev1.EnvVar) []corev1.EnvVar {
 	for _, cre := range src {
-		pos, _ := getEnvVar(cre.Name, dst)
+		pos := getEnvVar(cre.Name, dst)
 		if pos != -1 {
 			dst[pos] = cre
 		} else {

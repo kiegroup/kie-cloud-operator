@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
+	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/sirupsen/logrus"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -187,6 +190,109 @@ func TestMergeAuthoringPostgresServer(t *testing.T) {
 	assert.Equal(t, &expected, &servers)
 }
 
+func TestMergeDeploymentconfigs(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+
+	overwrite := []appsv1.DeploymentConfig{
+		*buildDC("overwrite-dc2"),
+		*buildDC("dc1"),
+	}
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, 2, len(results))
+	assert.Equal(t, overwrite[0], results[1])
+	assert.Equal(t, overwrite[1], results[0])
+}
+
+func TestMergeDeploymentconfigs_Metadata(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite := []appsv1.DeploymentConfig{
+		appsv1.DeploymentConfig{
+			ObjectMeta: *buildObjectMeta("dc1-dc"),
+		},
+	}
+	baseline[0].ObjectMeta.Labels["foo"] = "replace me"
+	baseline[0].ObjectMeta.Labels["john"] = "doe"
+	overwrite[0].ObjectMeta.Labels["foo"] = "replaced"
+	overwrite[0].ObjectMeta.Labels["ping"] = "pong"
+
+	baseline[0].ObjectMeta.Annotations["foo"] = "replace me"
+	baseline[0].ObjectMeta.Annotations["john"] = "doe"
+	overwrite[0].ObjectMeta.Annotations["foo"] = "replaced"
+	overwrite[0].ObjectMeta.Annotations["ping"] = "pong"
+
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, "replaced", results[0].ObjectMeta.Labels["foo"])
+	assert.Equal(t, "doe", results[0].ObjectMeta.Labels["john"])
+	assert.Equal(t, "pong", results[0].ObjectMeta.Labels["ping"])
+
+	assert.Equal(t, "replaced", results[0].ObjectMeta.Annotations["foo"])
+	assert.Equal(t, "doe", results[0].ObjectMeta.Annotations["john"])
+	assert.Equal(t, "pong", results[0].ObjectMeta.Annotations["ping"])
+}
+
+func TestMergeDeploymentconfigs_TemplateMetadata(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	baseline[0].Spec.Template.ObjectMeta.Labels["foo"] = "replace me"
+	baseline[0].Spec.Template.ObjectMeta.Labels["john"] = "doe"
+	overwrite[0].Spec.Template.ObjectMeta.Labels["foo"] = "replaced"
+	overwrite[0].Spec.Template.ObjectMeta.Labels["ping"] = "pong"
+
+	baseline[0].Spec.Template.ObjectMeta.Annotations["foo"] = "replace me"
+	baseline[0].Spec.Template.ObjectMeta.Annotations["john"] = "doe"
+	overwrite[0].Spec.Template.ObjectMeta.Annotations["foo"] = "replaced"
+	overwrite[0].Spec.Template.ObjectMeta.Annotations["ping"] = "pong"
+
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, "replaced", results[0].Spec.Template.ObjectMeta.Labels["foo"])
+	assert.Equal(t, "doe", results[0].Spec.Template.ObjectMeta.Labels["john"])
+	assert.Equal(t, "pong", results[0].Spec.Template.ObjectMeta.Labels["ping"])
+
+	assert.Equal(t, "replaced", results[0].Spec.Template.ObjectMeta.Annotations["foo"])
+	assert.Equal(t, "doe", results[0].Spec.Template.ObjectMeta.Annotations["john"])
+	assert.Equal(t, "pong", results[0].Spec.Template.ObjectMeta.Annotations["ping"])
+}
+
+func TestMergeDeploymentconfigs_Spec(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite[0].Spec.Strategy.Type = "Other Strategy"
+	overwrite[0].Spec.Triggers[0] = appsv1.DeploymentTriggerPolicy{
+		Type: "ImageChange",
+		ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+			From: corev1.ObjectReference{
+				Name: "other-image:future",
+			},
+		},
+	}
+	overwrite[0].Spec.Triggers = append(overwrite[0].Spec.Triggers, appsv1.DeploymentTriggerPolicy{
+		Type: "ConfigChange",
+	})
+
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, appsv1.DeploymentStrategyType("Other Strategy"), results[0].Spec.Strategy.Type)
+	assert.Equal(t, 2, len(results[0].Spec.Triggers))
+	assert.Equal(t, "openshift", results[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, "other-image:future", results[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, appsv1.DeploymentTriggerType("ConfigChange"), results[0].Spec.Triggers[1].Type)
+}
+
 func getParsedTemplate(filename string, name string, object interface{}) error {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -205,4 +311,146 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 		logrus.Error(err)
 	}
 	return nil
+}
+
+func buildDC(name string) *appsv1.DeploymentConfig {
+	return &appsv1.DeploymentConfig{
+		ObjectMeta: *buildObjectMeta(name + "-dc"),
+		Spec: appsv1.DeploymentConfigSpec{
+			Strategy: appsv1.DeploymentStrategy{
+				Type: "Recreate",
+			},
+			Triggers: appsv1.DeploymentTriggerPolicies{
+				{
+					Type: "ImageChange",
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							name + "-container-1",
+						},
+						From: corev1.ObjectReference{
+							Kind:      "ImageStreamTag",
+							Namespace: "openshift",
+							Name:      "rhpam70-kieserver:latest",
+						},
+					},
+				},
+			},
+			Replicas: 3,
+			Selector: map[string]string{
+				"deploymentConfig": name,
+			},
+			Template: &corev1.PodTemplateSpec{
+				ObjectMeta: *buildObjectMeta(name + "-tplt"),
+				Spec: corev1.PodSpec{
+					ServiceAccountName: name + "test-sa",
+					Containers: []corev1.Container{
+						{
+							Name:  name + "container",
+							Image: "image-" + name,
+							Env: []corev1.EnvVar{
+								{
+									Name:  name + "-env-1",
+									Value: name + "-val-1",
+								},
+								{
+									Name:  name + "-env-2",
+									Value: name + "-val-2",
+								},
+								{
+									Name: name + "-env-3",
+									ValueFrom: &corev1.EnvVarSource{
+										ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: name + "-configmap",
+											},
+											Key: name + "-configmap-key",
+										},
+									},
+								},
+							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									"memory": *resource.NewQuantity(1, "Mi"),
+									"cpu":    *resource.NewQuantity(1, ""),
+								},
+								Requests: corev1.ResourceList{
+									"memory": *resource.NewQuantity(2, "Mi"),
+									"cpu":    *resource.NewQuantity(2, ""),
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      name + "-volume-mount-1",
+									MountPath: "/etc/kieserver/" + name + "/path1",
+									ReadOnly:  true,
+								},
+							},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          name + "-port1",
+									Protocol:      "TCP",
+									ContainerPort: 9090,
+								},
+								{
+									Name:          name + "-port2",
+									Protocol:      "TCP",
+									ContainerPort: 8443,
+								},
+							},
+							LivenessProbe:  buildProbe(name+"-liveness", 30, 2),
+							ReadinessProbe: buildProbe(name+"-readiness", 60, 4),
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: name + "-emptydir-volume",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: name + "-secret-volume",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: name + "-secret",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func buildObjectMeta(name string) *metav1.ObjectMeta {
+	return &metav1.ObjectMeta{
+		Name:      name,
+		Namespace: name + "-ns",
+		Labels: map[string]string{
+			name + ".label1": name + "-labelValue1",
+			name + ".label2": name + "-labelValue2",
+		},
+		Annotations: map[string]string{
+			name + ".annotation1": name + "-annValue1",
+			name + ".annotation2": name + "-annValue2",
+		},
+	}
+}
+
+func buildProbe(name string, delay, timeout int32) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			Exec: &corev1.ExecAction{
+				Command: []string{
+					"/bin/" + name,
+					"-c",
+					name,
+				},
+			},
+		},
+		InitialDelaySeconds: delay,
+		TimeoutSeconds:      timeout,
+	}
 }
