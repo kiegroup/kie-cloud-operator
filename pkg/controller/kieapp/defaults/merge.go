@@ -138,8 +138,8 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 	baselineRefs := getDeploymentConfigReferenceSlice(baseline)
 	overwriteRefs := getDeploymentConfigReferenceSlice(overwrite)
 	for overwriteIndex := range overwrite {
-		overwriteItem := overwrite[overwriteIndex]
-		baselineIndex, _ := findOpenShiftObject(&overwriteItem, baselineRefs)
+		overwriteItem := &overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(overwriteItem, baselineRefs)
 		if baselineIndex >= 0 {
 			baselineItem := baseline[baselineIndex]
 			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
@@ -172,6 +172,12 @@ func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.Deployment
 	}
 	overwrite.Template = mergedTemplate
 
+	mergedTriggers, err := mergeTriggers(baseline.Triggers, overwrite.Triggers)
+	if err != nil {
+		return appsv1.DeploymentConfigSpec{}, err
+	}
+	overwrite.Triggers = mergedTriggers
+
 	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
 	if err != nil {
 		return appsv1.DeploymentConfigSpec{}, nil
@@ -199,6 +205,59 @@ func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTempla
 		return nil, err
 	}
 	return baseline, nil
+}
+
+func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.DeploymentTriggerPolicies) (appsv1.DeploymentTriggerPolicies, error) {
+	var mergedTriggers []appsv1.DeploymentTriggerPolicy
+	for baselineIndex, baselineItem := range baseline {
+		_, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
+		if found == (appsv1.DeploymentTriggerPolicy{}) {
+			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+		} else {
+			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			if baselineItem.ImageChangeParams != nil {
+				if found.ImageChangeParams == nil {
+					found.ImageChangeParams = baselineItem.ImageChangeParams
+				} else {
+					mergedImageChangeParams, err := mergeImageChangeParams(*baselineItem.ImageChangeParams, *found.ImageChangeParams)
+					if err != nil {
+						return nil, err
+					}
+					found.ImageChangeParams = &mergedImageChangeParams
+				}
+			}
+			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
+			if err != nil {
+				return nil, err
+			}
+		}
+		mergedTriggers = append(mergedTriggers, baseline[baselineIndex])
+	}
+	for overwriteIndex, overwriteItem := range overwrite {
+		_, found := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
+		if found == (appsv1.DeploymentTriggerPolicy{}) {
+			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
+		}
+	}
+	return mergedTriggers, nil
+}
+
+func mergeImageChangeParams(baseline appsv1.DeploymentTriggerImageChangeParams, overwrite appsv1.DeploymentTriggerImageChangeParams) (appsv1.DeploymentTriggerImageChangeParams, error) {
+	err := mergo.Merge(&baseline, overwrite, mergo.WithOverride)
+	if err != nil {
+		return appsv1.DeploymentTriggerImageChangeParams{}, err
+	}
+	return baseline, nil
+}
+
+func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []appsv1.DeploymentTriggerPolicy) (int, appsv1.DeploymentTriggerPolicy) {
+	for index, candidate := range slice {
+		if candidate.Type == object.Type {
+			return index, candidate
+		}
+	}
+	return -1, appsv1.DeploymentTriggerPolicy{}
 }
 
 func mergePodSpecs(baseline corev1.PodSpec, overwrite corev1.PodSpec) (corev1.PodSpec, error) {
