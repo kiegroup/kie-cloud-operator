@@ -1,6 +1,8 @@
 package defaults
 
 import (
+	"reflect"
+
 	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -10,8 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
 )
 
 func merge(baseline *v1.CustomObject, overwrite *v1.CustomObject) {
@@ -131,52 +131,38 @@ func getRoleBindingReferenceSlice(objects []rbacv1.RoleBinding) []v1.OpenShiftOb
 func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []appsv1.DeploymentConfig) []appsv1.DeploymentConfig {
 	if len(overwrite) == 0 {
 		return baseline
-	} else if len(baseline) == 0 {
+	}
+	if len(baseline) == 0 {
 		return overwrite
-	} else {
-		baselineRefs := getDeploymentConfigReferenceSlice(baseline)
-		overwriteRefs := getDeploymentConfigReferenceSlice(overwrite)
-		for overwriteIndex := range overwrite {
-			overwriteItem := overwrite[overwriteIndex]
-			baselineIndex, _ := findOpenShiftObject(&overwriteItem, baselineRefs)
-			if baselineIndex >= 0 {
-				baselineItem := baseline[baselineIndex]
-				err := mergeLabels(&overwriteItem.ObjectMeta, &baselineItem.ObjectMeta) //reverse merge to maintain changes
-				if err != nil {
-					logrus.Errorf("%v", err)
-					return nil
-				}
-				err = mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
-				if err != nil {
-					logrus.Errorf("%v", err)
-					return nil
-				}
-				mergedSpec, err := mergeSpec(baselineItem.Spec, overwriteItem.Spec)
-				if err != nil {
-					logrus.Errorf("%v", err)
-					return nil
-				}
-				overwriteItem.Spec = mergedSpec
+	}
+	baselineRefs := getDeploymentConfigReferenceSlice(baseline)
+	overwriteRefs := getDeploymentConfigReferenceSlice(overwrite)
+	for overwriteIndex := range overwrite {
+		overwriteItem := overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(&overwriteItem, baselineRefs)
+		if baselineIndex >= 0 {
+			baselineItem := baseline[baselineIndex]
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			if err != nil {
+				logrus.Errorf("%v", err)
+				return nil
 			}
+			mergedSpec, err := mergeSpec(baselineItem.Spec, overwriteItem.Spec)
+			if err != nil {
+				logrus.Errorf("%v", err)
+				return nil
+			}
+			overwriteItem.Spec = mergedSpec
 		}
-		slice := make([]appsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
-		err := mergeObjects(baselineRefs, overwriteRefs, slice)
-		if err != nil {
-			logrus.Errorf("%v", err)
-			return nil
-		}
-		return slice
 	}
-}
-
-func mergeLabels(baseline metav1.Object, overwrite metav1.Object) error {
-	mergedLabels := baseline.GetLabels()
-	err := mergo.Merge(&mergedLabels, overwrite.GetLabels(), mergo.WithOverride)
+	slice := make([]appsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
+	err := mergeObjects(baselineRefs, overwriteRefs, slice)
 	if err != nil {
-		return err
+		logrus.Errorf("%v", err)
+		return nil
 	}
-	baseline.SetLabels(mergedLabels)
-	return nil
+	return slice
+
 }
 
 func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.DeploymentConfigSpec) (appsv1.DeploymentConfigSpec, error) {
@@ -194,9 +180,13 @@ func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.Deployment
 }
 
 func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTemplateSpec) (*corev1.PodTemplateSpec, error) {
-	err := mergeLabels(overwrite, baseline)
+	if overwrite == nil {
+		return baseline, nil
+	}
+	err := mergo.Merge(&overwrite.ObjectMeta, baseline.ObjectMeta)
 	if err != nil {
-		return nil, err
+		logrus.Errorf("%v", err)
+		return nil, nil
 	}
 	mergedPodSpec, err := mergePodSpecs(baseline.Spec, overwrite.Spec)
 	if err != nil {
@@ -233,6 +223,9 @@ func mergeContainers(baseline []corev1.Container, overwrite []corev1.Container) 
 	} else if len(baseline) > 1 || len(overwrite) > 1 {
 		err := errors.New("Merge algorithm does not yet support multiple containers within a deployment")
 		return nil, err
+	}
+	if baseline[0].Env == nil {
+		baseline[0].Env = make([]corev1.EnvVar, 0)
 	}
 	overwrite[0].Env = shared.EnvOverride(baseline[0].Env, overwrite[0].Env)
 	mergedPorts, err := mergePorts(baseline[0].Ports, overwrite[0].Ports)

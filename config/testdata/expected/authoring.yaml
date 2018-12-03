@@ -1,0 +1,253 @@
+deploymentConfigs:
+- metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
+    creationTimestamp: null
+    labels:
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
+    name: prod-kieserver-0
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: prod-kieserver-0
+    strategy:
+      resources: {}
+      type: Recreate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: prod-kieserver-0
+          application: prod
+          deploymentConfig: prod-kieserver-0
+          service: prod-kieserver
+        name: prod-kieserver-0
+      spec:
+        containers:
+        - env:
+          - name: KIE_ADMIN_USER
+            value: adminUser
+          - name: KIE_ADMIN_PWD
+            value: AdminPwd
+          - name: KIE_SERVER_USER
+            value: executionUser
+          - name: KIE_SERVER_PWD
+            value: ExecutionPwd
+          - name: DROOLS_SERVER_FILTER_CLASSES
+            value: "true"
+          - name: KIE_SERVER_CONTROLLER_USER
+            value: controllerUser
+          - name: KIE_SERVER_CONTROLLER_PWD
+            value: ControllerPwd
+          - name: KIE_SERVER_CONTROLLER_SERVICE
+            value: prod-rhpamcentr
+          - name: KIE_SERVER_CONTROLLER_PROTOCOL
+            value: ws
+          - name: KIE_MBEANS
+            value: enabled
+          - name: KIE_SERVER_ID
+            value: prod-kieserver-0
+          - name: MAVEN_REPOS
+            value: RHPAMCENTR,EXTERNAL
+          - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+            value: ROOT.war
+          - name: KIE_SERVER_BYPASS_AUTH_USER
+            value: "false"
+          - name: HTTPS_KEYSTORE_DIR
+            value: /etc/kieserver-secret-volume
+          - name: HTTPS_KEYSTORE
+            value: keystore.jks
+          - name: HTTPS_NAME
+            value: jboss
+          - name: HTTPS_PASSWORD
+            value: KSPwd
+          - name: DATASOURCES
+            value: RHPAM
+          - name: RHPAM_DATABASE
+            value: rhpam7
+          - name: RHPAM_JNDI
+            value: java:/jboss/datasources/rhpam
+          - name: RHPAM_JTA
+            value: "true"
+          - name: KIE_SERVER_PERSISTENCE_DS
+            value: java:/jboss/datasources/rhpam
+          - name: RHPAM_DRIVER
+            value: h2
+          - name: RHPAM_USERNAME
+            value: sa
+          - name: RHPAM_PASSWORD
+            value: AdminPwd
+          - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+            value: jdbc:h2:/opt/eap/standalone/data/rhpam
+          - name: RHPAM_SERVICE_HOST
+            value: dummy_ignored
+          - name: RHPAM_SERVICE_PORT
+            value: "12345"
+          - name: KIE_SERVER_PERSISTENCE_DIALECT
+            value: org.hibernate.dialect.H2Dialect
+          - name: DROOLS_SERVER_FILTER_CLASSES
+            value: "true"
+          - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+            value: MvnPwd
+          - name: KIE_SERVER_HOST
+          - name: KIE_SERVER_ROUTE_NAME
+            value: prod-kieserver-0
+          - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+            value: "false"
+          - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+            value: prod-rhpamcentr
+          - name: RHPAMCENTR_MAVEN_REPO_PATH
+            value: /maven2/
+          - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+            value: mavenUser
+          image: rhpam71-kieserver-openshift
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
+            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 15
+            timeoutSeconds: 2
+          name: prod-kieserver
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          - containerPort: 8443
+            name: https
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 2
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 768Mi
+          volumeMounts:
+          - mountPath: /etc/kieserver-secret-volume
+            name: kieserver-keystore-volume
+            readOnly: true
+        serviceAccountName: prod-rhpamsvc
+        terminationGracePeriodSeconds: 60
+        volumes:
+        - name: kieserver-keystore-volume
+          secret:
+            secretName: prod-kieserver-0-app-secret
+        - name: prod-h2-pvol
+          persistentVolumeClaim:
+            claimName: prod-h2-claim-0
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - prod-kieserver
+        from:
+          kind: ImageStreamTag
+          name: rhpam71-kieserver-openshift:1.1
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+  status:
+    availableReplicas: 0
+    latestVersion: 0
+    observedGeneration: 0
+    replicas: 0
+    unavailableReplicas: 0
+    updatedReplicas: 0
+persistentVolumeClaims:
+- metadata:
+    creationTimestamp: null
+    labels:
+      app: prod
+      service: prod-kieserver-0
+    name: prod-h2-claim-0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+  status: {}
+routes:
+- metadata:
+    annotations:
+      description: Route for KIE server's https service.
+    creationTimestamp: null
+    labels:
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
+    name: prod-kieserver-0
+  spec:
+    host: ""
+    port:
+      targetPort: https
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: passthrough
+    to:
+      kind: ""
+      name: prod-kieserver-0
+      weight: null
+  status:
+    ingress: null
+services:
+- metadata:
+    annotations:
+      description: All the KIE server web server's ports. (KIE server)
+    creationTimestamp: null
+    labels:
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
+    name: prod-kieserver-0
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: https
+      port: 8443
+      targetPort: 8443
+    selector:
+      deploymentConfig: prod-kieserver-0
+  status:
+    loadBalancer: {}
+- metadata:
+    annotations:
+      description: The JGroups ping port for clustering.
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: prod-kieserver-0
+      application: prod
+      service: prod-kieserver
+    name: prod-kieserver-0-ping
+  spec:
+    clusterIP: None
+    ports:
+    - name: ping
+      port: 8888
+      targetPort: 8888
+    selector:
+      deploymentConfig: prod-kieserver-0
+  status:
+    loadBalancer: {}

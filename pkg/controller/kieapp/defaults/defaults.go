@@ -19,6 +19,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// GetEnvironment Loads the commonConfigs.yaml file and then overrides the values
+// with the provided env yaml file. e.g. envs/production-lite.yaml
 func GetEnvironment(cr *v1.KieApp) (v1.Environment, v1.KieAppSpec, error) {
 	var env v1.Environment
 	envTemplate := getEnvTemplate(cr)
