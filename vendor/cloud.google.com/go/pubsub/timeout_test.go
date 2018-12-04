@@ -15,13 +15,13 @@
 package pubsub
 
 import (
+	"context"
 	"log"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/pubsub/pstest"
-	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 )

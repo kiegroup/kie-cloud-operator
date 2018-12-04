@@ -1,0 +1,72 @@
+console:
+  deploymentConfigs:
+  - metadata:
+      name: "{{.ApplicationName}}-rhpamcentr"
+    spec:
+      template:
+        metadata:
+          name: "{{.ApplicationName}}-rhpamcentr"
+        spec:
+          containers:
+          - name: "{{.ApplicationName}}-rhpamcentr"
+            ports:
+            - name: git-ssh
+              containerPort: 8001
+              protocol: TCP
+            env:
+            - name: KIE_MAVEN_USER
+              value: mavenUser
+            - name: KIE_MAVEN_PWD
+              value: "{{.MavenPassword}}"
+
+  services:
+  - spec:
+      ports:
+      - name: git-ssh
+        port: 8001
+        targetPort: 8001
+    metadata:
+      name: "{{.ApplicationName}}-rhpamcentr"
+
+## KIE Servers BEGIN
+servers:
+## RANGE BEGINS
+{{ range $index, $Map := .ServerCount }}
+- deploymentConfigs:
+## KIE server deployment config BEGIN
+  - metadata:
+      name: "{{.ApplicationName}}-kieserver-{{$index}}"
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          containers:
+          - name: "{{.ApplicationName}}-kieserver"
+            resources:
+              requests:
+                memory: 768Mi
+            env:
+            - name: MAVEN_REPOS
+              value: "RHPAMCENTR,EXTERNAL"
+            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+              value: mavenUser
+            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+              value: "{{.MavenPassword}}"
+            - name: RHPAMCENTR_MAVEN_REPO_PATH
+              value: /maven2/
+            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+              value: "{{.ApplicationName}}-rhpamcentr"
+            - name: KIE_SERVER_CONTROLLER_TOKEN
+              value: ""
+            - name: KIE_SERVER_ID
+              value: "{{.ApplicationName}}-kieserver-{{$index}}"
+            - name: KIE_SERVER_ROUTE_NAME
+              value: "{{.ApplicationName}}-kieserver-{{$index}}"
+            - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+              value: "false"
+  ## KIE server deployment config END
+{{end}}
+## RANGE ends
+## KIE Servers END

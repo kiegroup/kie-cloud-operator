@@ -30,14 +30,12 @@ objects:
       value: "{{.ServerPassword}}"
     - name: DROOLS_SERVER_FILTER_CLASSES
       value: "true"
-    - name: RHPAMCENTR_MAVEN_REPO_PATH
-      value: /maven2/
     - name: KIE_SERVER_CONTROLLER_SERVICE
       value: "{{.ApplicationName}}-rhpamcentr"
     - name: KIE_MBEANS
       value: enabled
     - name: MAVEN_REPOS
-      value: RHPAMCENTR,EXTERNAL
+      value: EXTERNAL
     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
       value: ROOT.war
     - name: KIE_SERVER_BYPASS_AUTH_USER

@@ -2,14 +2,13 @@ package packd
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 
+	"github.com/gobuffalo/syncx"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +22,7 @@ var _ Box = NewMemoryBox()
 
 // MemoryBox is a thread-safe, in-memory, implementation of the Box interface.
 type MemoryBox struct {
-	files *sync.Map
+	files *syncx.ByteMap
 }
 
 func (m *MemoryBox) Has(path string) bool {
@@ -33,10 +32,8 @@ func (m *MemoryBox) Has(path string) bool {
 
 func (m *MemoryBox) List() []string {
 	var names []string
-	m.files.Range(func(key interface{}, value interface{}) bool {
-		if s, ok := key.(string); ok {
-			names = append(names, s)
-		}
+	m.files.Range(func(key string, value []byte) bool {
+		names = append(names, key)
 		return true
 	})
 
@@ -75,7 +72,7 @@ func (m *MemoryBox) FindString(path string) (string, error) {
 	return string(bb), err
 }
 
-func (m *MemoryBox) Find(path string) ([]byte, error) {
+func (m *MemoryBox) Find(path string) (ret []byte, e error) {
 	res, ok := m.files.Load(path)
 	if !ok {
 
@@ -100,11 +97,7 @@ func (m *MemoryBox) Find(path string) ([]byte, error) {
 		}
 		return b, nil
 	}
-	b, ok := res.([]byte)
-	if !ok {
-		return nil, fmt.Errorf("expected []byte got %T", res)
-	}
-	return b, nil
+	return res, nil
 }
 
 func (m *MemoryBox) AddString(path string, t string) error {
@@ -118,20 +111,7 @@ func (m *MemoryBox) AddBytes(path string, t []byte) error {
 
 func (m *MemoryBox) Walk(wf WalkFunc) error {
 	var err error
-	m.files.Range(func(key interface{}, res interface{}) bool {
-
-		path, ok := key.(string)
-		if !ok {
-			err = fmt.Errorf("expected string got %T", key)
-			return false
-		}
-
-		b, ok := res.([]byte)
-		if !ok {
-			err = fmt.Errorf("expected []byte got %T", res)
-			return false
-		}
-
+	m.files.Range(func(path string, b []byte) bool {
 		var f File
 		f, err = NewFile(path, bytes.NewReader(b))
 		if err != nil {
@@ -173,6 +153,6 @@ func (m *MemoryBox) Remove(path string) {
 // NewMemoryBox returns a configured *MemoryBox
 func NewMemoryBox() *MemoryBox {
 	return &MemoryBox{
-		files: &sync.Map{},
+		files: &syncx.ByteMap{},
 	}
 }

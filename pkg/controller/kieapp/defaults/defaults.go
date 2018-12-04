@@ -19,10 +19,57 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/sirupsen/logrus"
 )
 
+func GetLiteEnvironment(cr *v1.KieApp) (v1.Environment, error) {
+	envTemplate := getEnvTemplate(cr)
+
+	var servers v1.CustomObject
+	yamlBytes, err := loadYaml(fake.NewFakeClient(), "common/server.yaml", cr.Namespace, envTemplate)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+	err = yaml.Unmarshal(yamlBytes, &servers)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+
+	var console v1.CustomObject
+	yamlBytes, err = loadYaml(fake.NewFakeClient(), "common/console.yaml", cr.Namespace, envTemplate)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+	err = yaml.Unmarshal(yamlBytes, &console)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+
+	var env v1.Environment
+	yamlBytes, err = loadYaml(fake.NewFakeClient(), fmt.Sprintf("envs/%s-lite.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
+	logrus.Infof("Trial env is %v", string(yamlBytes))
+	if err != nil {
+		return v1.Environment{}, err
+	}
+	err = yaml.Unmarshal(yamlBytes, &env)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+
+	merge(&console, &env.Console)
+	env.Console = console
+	for index := range env.Servers {
+		merge(&servers, &env.Servers[index])
+		env.Servers[index] = servers
+	}
+
+	return env, nil
+}
+
+// GetEnvironment Loads the commonConfigs.yaml file and then overrides the values
+// with the provided env yaml file. e.g. envs/production-lite.yaml
 func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, v1.KieAppSpec, error) {
 	var env v1.Environment
 	envTemplate := getEnvTemplate(cr)

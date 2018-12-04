@@ -5,11 +5,20 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+var bigString = func() string {
+	bb := &bytes.Buffer{}
+	for i := 0; i < 100; i++ {
+		bb.WriteString("xxxxx")
+	}
+	return bb.String()
+}()
 
 func Test_MemoryBox(t *testing.T) {
 	r := require.New(t)
@@ -53,6 +62,7 @@ var httpBox = func() *MemoryBox {
 	box := NewMemoryBox()
 	box.AddString("hello.txt", "hello world!")
 	box.AddString("index.html", "<h1>Index!</h1>")
+	box.AddString("bigger.txt", bigString)
 	return box
 }()
 
@@ -62,7 +72,7 @@ func Test_HTTPBox(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(httpBox))
 
-	req, err := http.NewRequest("GET", "/hello.txt", nil)
+	req, err := http.NewRequest("GET", "/bigger.txt", nil)
 	r.NoError(err)
 
 	res := httptest.NewRecorder()
@@ -70,7 +80,9 @@ func Test_HTTPBox(t *testing.T) {
 	mux.ServeHTTP(res, req)
 
 	r.Equal(200, res.Code)
-	r.Equal("hello world!", strings.TrimSpace(res.Body.String()))
+	r.Equal(bigString, strings.TrimSpace(res.Body.String()))
+	l := res.Header().Get("Content-Length")
+	r.Equal(strconv.Itoa(len(bigString)), l)
 }
 
 func Test_HTTPBox_NotFound(t *testing.T) {
