@@ -91,7 +91,7 @@ func loadYaml(client client.Client, filename, namespace string, t v1.EnvTemplate
 	configMap := &corev1.ConfigMap{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
 	if err != nil {
-		logrus.Warnf("'%s - %s' ConfigMap does not exist, environment not deployed", cmName, file)
+		logrus.Warnf("'%s - %s' ConfigMap does not exist, using embedded '%s'", cmName, file, filename)
 		box := packr.NewBox("../../../../config")
 		if box.Has(filename) {
 			// important to parse template first, before unmarshalling into object

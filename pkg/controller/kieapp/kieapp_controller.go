@@ -148,7 +148,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	logrus.Debugf("Reconciling %s/%s\n", request.Namespace, request.Name)
 
 	// Fetch/Create critical ConfigMaps
-	_, _ = reconciler.initConfigMaps(request)
+	reconciler.initConfigMaps(request.Namespace)
 
 	// Fetch the KieApp instance
 	instance := &v1.KieApp{}
@@ -554,15 +554,15 @@ func (reconciler *ReconcileKieApp) getRouteHost(route routev1.Route, cr *v1.KieA
 	return found.Spec.Host
 }
 
-func (reconciler *ReconcileKieApp) initConfigMaps(request reconcile.Request) (reconcile.Result, error) {
-	configMaps := defaults.ConfigMapsFromFile(request.Namespace)
+func (reconciler *ReconcileKieApp) initConfigMaps(namespace string) {
+	configMaps := defaults.ConfigMapsFromFile(namespace)
 
 	for _, configMap := range configMaps {
 		name := configMap.Name
-		namespace := configMap.Namespace
+		ns := configMap.Namespace
 
 		emptyObj := &corev1.ConfigMap{}
-		err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj)
+		err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, emptyObj)
 		if err != nil {
 			logrus.Error(err)
 		}
@@ -572,10 +572,9 @@ func (reconciler *ReconcileKieApp) initConfigMaps(request reconcile.Request) (re
 		emptyObj = &corev1.ConfigMap{}
 		_, _ = reconciler.createObj(
 			name,
-			namespace,
+			ns,
 			deepCopyObj,
-			reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
+			reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: ns}, emptyObj),
 		)
 	}
-	return reconcile.Result{}, nil
 }
