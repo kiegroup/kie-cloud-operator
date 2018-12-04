@@ -28,7 +28,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	}
 
 	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
-	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, environment not deployed", cr.Spec.Environment), err.Error())
+	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 
 	env = ConsolidateObjects(env, common, cr)
 	assert.NotNil(t, err)

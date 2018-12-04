@@ -42,7 +42,8 @@ func printVersion() {
 	logrus.Printf("Kie Operator Version: %v", version.Version)
 	logrus.Printf("Go Version: %s", runtime.Version())
 	logrus.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
-	logrus.Printf("operator-sdk Version: %v\n\n", sdkVersion.Version)
+	logrus.Printf("operator-sdk Version: %v", sdkVersion.Version)
+	logrus.Println()
 }
 
 func main() {

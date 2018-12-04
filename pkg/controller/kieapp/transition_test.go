@@ -19,7 +19,7 @@ func TestRetrieveNewEnvironments(t *testing.T) {
 		//
 		//bytes, err := yaml.Marshal(env)
 		//assert.Nil(t, err, "Error marshalling environment %v", env)
-		//_, _ = fmt.Printf("Environment %v:\n\n%v\n", envName, string(bytes))
+		//_, _ = fmt.Printf("Environment %v:\n\n%v", envName, string(bytes))
 	}
 }
 
@@ -34,7 +34,7 @@ func getNewEnvironment(name string) (v1.Environment, error) {
 		},
 	}
 
-	env, err := defaults.GetLiteEnvironment(cr)
+	env, err := defaults.GetLiteEnvironment(cr, fake.NewFakeClient())
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -50,7 +50,7 @@ func TestRetrieveOldEnvironments(t *testing.T) {
 		//
 		//bytes, err := yaml.Marshal(env)
 		//assert.Nil(t, err, "Error marshalling environment %v", env)
-		//_, _ = fmt.Printf("Environment %v:\n\n%v\n", envName, string(bytes))
+		//_, _ = fmt.Printf("Environment %v:\n\n%v", envName, string(bytes))
 	}
 }
 

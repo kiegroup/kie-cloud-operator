@@ -212,9 +212,9 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for baselineIndex, baselineItem := range baseline {
 		_, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
 		if found == (appsv1.DeploymentTriggerPolicy{}) {
-			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+			logrus.Debugf("Not found, adding %v to slice", baselineItem)
 		} else {
-			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			logrus.Debugf("Will merge %v on top of %v", found, baselineItem)
 			if baselineItem.ImageChangeParams != nil {
 				if found.ImageChangeParams == nil {
 					found.ImageChangeParams = baselineItem.ImageChangeParams
@@ -236,7 +236,7 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for overwriteIndex, overwriteItem := range overwrite {
 		_, found := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
 		if found == (appsv1.DeploymentTriggerPolicy{}) {
-			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			logrus.Debugf("Not found, appending %v to slice", overwriteItem)
 			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
 		}
 	}
@@ -413,7 +413,7 @@ func mergeObjects(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject,
 		if found == nil {
 			slice.Index(sliceIndex).Set(reflect.ValueOf(object).Elem())
 			sliceIndex++
-			logrus.Debugf("Not found, added %s to beginning of slice\n", object)
+			logrus.Debugf("Not found, added %s to beginning of slice", object)
 		} else if found.GetAnnotations()["delete"] != "true" {
 			err := mergo.Merge(object, found, mergo.WithOverride)
 			if err != nil {

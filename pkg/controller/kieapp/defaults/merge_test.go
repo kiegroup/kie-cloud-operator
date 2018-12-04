@@ -16,7 +16,7 @@ import (
 )
 
 func TestMergeServices(t *testing.T) {
-	baseline, err := getConsole("trial", "test", t)
+	baseline, err := getConsole("trial", "test")
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -64,7 +64,7 @@ func TestMergeServices(t *testing.T) {
 }
 
 func TestMergeRoutes(t *testing.T) {
-	baseline, err := getConsole("trial", "test", t)
+	baseline, err := getConsole("trial", "test")
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -111,7 +111,7 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr-2", finalRoute2.Name, "Second route name should end with -3")
 }
 
-func getConsole(environment string, name string, t *testing.T) (v1.CustomObject, error) {
+func getConsole(environment string, name string) (v1.CustomObject, error) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

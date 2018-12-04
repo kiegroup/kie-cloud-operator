@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -24,11 +25,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GetLiteEnvironment(cr *v1.KieApp) (v1.Environment, error) {
+func GetLiteEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
 	envTemplate := getEnvTemplate(cr)
 
 	var servers v1.CustomObject
-	yamlBytes, err := loadYaml(fake.NewFakeClient(), "common/server.yaml", cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(client, "common/server.yaml", cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -38,17 +39,18 @@ func GetLiteEnvironment(cr *v1.KieApp) (v1.Environment, error) {
 	}
 
 	var console v1.CustomObject
-	yamlBytes, err = loadYaml(fake.NewFakeClient(), "common/console.yaml", cr.Namespace, envTemplate)
+	yamlBytes, err = loadYaml(client, "common/console.yaml", cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
+
 	err = yaml.Unmarshal(yamlBytes, &console)
 	if err != nil {
 		return v1.Environment{}, err
 	}
 
 	var env v1.Environment
-	yamlBytes, err = loadYaml(fake.NewFakeClient(), fmt.Sprintf("envs/%s-lite.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
+	yamlBytes, err = loadYaml(client, fmt.Sprintf("envs/%s-lite.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
 	logrus.Infof("Trial env is %v", string(yamlBytes))
 	if err != nil {
 		return v1.Environment{}, err
@@ -132,26 +134,29 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	return envTemplate
 }
 
-func loadYaml(client client.Client, filename, namespace string, t v1.EnvTemplate) ([]byte, error) {
+// important to parse template first with this function, before unmarshalling into object
+func loadYaml(client client.Client, filename, namespace string, e v1.EnvTemplate) ([]byte, error) {
+	// use embedded files for tests, instead of ConfigMaps
+	if reflect.DeepEqual(client, fake.NewFakeClient()) {
+		box := packr.NewBox("../../../../config")
+		if box.Has(filename) {
+			yamlString, err := box.FindString(filename)
+			if err != nil {
+				return nil, err
+			}
+			return parseTemplate(e, yamlString), nil
+		}
+		return nil, fmt.Errorf("%s does not exist, '%s' KieApp not deployed", filename, e.ApplicationName)
+	}
+
 	cmName, file := convertToConfigMapName(filename)
-	logrus.Debugf("Loading contents from %s in ConfigMap '%s'", file, cmName)
 	configMap := &corev1.ConfigMap{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
 	if err != nil {
-		logrus.Warnf("'%s - %s' ConfigMap does not exist, using embedded '%s'", cmName, file, filename)
-		box := packr.NewBox("../../../../config")
-		if box.Has(filename) {
-			// important to parse template first, before unmarshalling into object
-			yamlString, err := box.FindString(filename)
-			if err != nil {
-				logrus.Error(err)
-				return nil, err
-			}
-			return parseTemplate(t, yamlString), nil
-		}
-		return nil, fmt.Errorf("%s does not exist, environment not deployed", filename)
+		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, e.ApplicationName)
 	}
-	return parseTemplate(t, configMap.Data[file]), nil
+	logrus.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName)
+	return parseTemplate(e, configMap.Data[file]), nil
 }
 
 func parseTemplate(e v1.EnvTemplate, objYaml string) []byte {
@@ -175,7 +180,9 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 	name := constants.ConfigMapPrefix
 	result := strings.Split(filename, "/")
 	if len(result) > 1 {
-		name = strings.Join([]string{name, result[0]}, "-")
+		for i := 0; i < len(result)-1; i++ {
+			name = strings.Join([]string{name, result[i]}, "-")
+		}
 	}
 	return name, result[len(result)-1]
 }
