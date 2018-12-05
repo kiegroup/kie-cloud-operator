@@ -1,11 +1,13 @@
 package kieapp
 
 import (
+	"testing"
+
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestRetrieveNewEnvironments(t *testing.T) {
@@ -17,7 +19,7 @@ func TestRetrieveNewEnvironments(t *testing.T) {
 		//
 		//bytes, err := yaml.Marshal(env)
 		//assert.Nil(t, err, "Error marshalling environment %v", env)
-		//_, _ = fmt.Printf("Environment %v:\n\n%v\n", envName, string(bytes))
+		//_, _ = fmt.Printf("Environment %v:\n\n%v", envName, string(bytes))
 	}
 }
 
@@ -32,7 +34,7 @@ func getNewEnvironment(name string) (v1.Environment, error) {
 		},
 	}
 
-	env, err := defaults.GetLiteEnvironment(cr)
+	env, err := defaults.GetLiteEnvironment(cr, fake.NewFakeClient())
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -48,7 +50,7 @@ func TestRetrieveOldEnvironments(t *testing.T) {
 		//
 		//bytes, err := yaml.Marshal(env)
 		//assert.Nil(t, err, "Error marshalling environment %v", env)
-		//_, _ = fmt.Printf("Environment %v:\n\n%v\n", envName, string(bytes))
+		//_, _ = fmt.Printf("Environment %v:\n\n%v", envName, string(bytes))
 	}
 }
 
@@ -63,7 +65,7 @@ func getOldEnvironment(name string) (v1.Environment, error) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr)
+	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if err != nil {
 		return v1.Environment{}, err
 	}

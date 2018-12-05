@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestUnknownEnvironmentObjects(t *testing.T) {
@@ -26,13 +27,14 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr)
-	assert.NotNil(t, err)
+	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
+
 	env = ConsolidateObjects(env, common, cr)
+	assert.NotNil(t, err)
 
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
 	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
-	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, environment not deployed", cr.Spec.Environment), err.Error())
 }
 
 func TestTrialConsoleEnv(t *testing.T) {
@@ -62,7 +64,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr)
+	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
 		logrus.Error(err)
 	}
@@ -111,7 +113,7 @@ func TestTrialServerEnv(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr)
+	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
 		logrus.Error(err)
 	}

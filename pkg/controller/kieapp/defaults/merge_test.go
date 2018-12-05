@@ -6,6 +6,7 @@ import (
 	"github.com/ghodss/yaml"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/stretchr/testify/assert"
@@ -121,7 +122,7 @@ func getConsole(environment string, name string) (v1.CustomObject, error) {
 		},
 	}
 
-	env, _, err := GetEnvironment(cr)
+	env, _, err := GetEnvironment(cr, fake.NewFakeClient())
 	if err != nil {
 		return v1.CustomObject{}, err
 	}
@@ -295,7 +296,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	envTemplate := getEnvTemplate(cr)
 
-	yamlBytes, err := loadYaml(filename, envTemplate)
+	yamlBytes, err := loadYaml(fake.NewFakeClient(), filename, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}

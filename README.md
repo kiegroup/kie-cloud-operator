@@ -28,12 +28,12 @@ oc create -f deploy/role_binding.yaml
 oc create -f deploy/operator.yaml
 ```
 
-# Trigger application deployment
+# Trigger a KieApp deployment
 ```shell
 oc create -f deploy/crs/kieapp_trial.yaml
 ```
 
-# Clean up an App deployment:
+# Clean up a KieApp deployment:
 ```shell
 oc delete KieApp trial
 ```

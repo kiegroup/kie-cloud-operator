@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
@@ -41,7 +42,8 @@ func printVersion() {
 	logrus.Printf("Kie Operator Version: %v", version.Version)
 	logrus.Printf("Go Version: %s", runtime.Version())
 	logrus.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
-	logrus.Printf("operator-sdk Version: %v\n\n", sdkVersion.Version)
+	logrus.Printf("operator-sdk Version: %v", sdkVersion.Version)
+	logrus.Println()
 }
 
 func main() {
@@ -60,7 +62,8 @@ func main() {
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
+	syncPeriod := time.Duration(2) * time.Hour
+	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace, SyncPeriod: &syncPeriod})
 	if err != nil {
 		logrus.Fatal(err)
 	}

@@ -8,4 +8,5 @@ const (
 	ImageStreamNamespace      = "openshift"
 	RhpamVersion              = "7.1"
 	ImageStreamTag            = "1.1"
+	ConfigMapPrefix           = "kieconfigs"
 )
