@@ -7,6 +7,8 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -100,6 +102,13 @@ type Template struct {
 	ControllerPassword string `json:"controllerPassword,omitempty"`
 	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
+}
+
+type PlatformService interface {
+	GetClient() client.Client
+	GetRouteHost(route routev1.Route, cr *KieApp) string
+	UpdateObj(obj runtime.Object) (reconcile.Result, error)
+	CreateCustomObjects(object CustomObject, cr *KieApp) (reconcile.Result, error)
 }
 
 func init() {
