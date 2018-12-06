@@ -1,6 +1,7 @@
 package defaults
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -107,8 +108,8 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the baseline label to be set")
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the overwrite label to be set")
 	assert.Equal(t, "overwrite", finalRoute4.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "test-rhpamcentr-https-2", finalRoute3.Name, "Second route name should end with -2")
-	assert.Equal(t, "test-rhpamcentr-https-3", finalRoute4.Name, "Second route name should end with -3")
+	assert.Equal(t, "test-rhpamcentr-2", finalRoute3.Name, "Second route name should end with -2")
+	assert.Equal(t, "test-rhpamcentr-3", finalRoute4.Name, "Second route name should end with -3")
 }
 
 func getEnvironment(environment string, name string) (v1.Environment, error) {
@@ -455,7 +456,8 @@ func TestTrialEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment:    "trial",
+			KieDeployments: 2,
 		},
 	}
 	env, err := GetEnvironment(cr, fake.NewFakeClient())
@@ -471,6 +473,7 @@ func TestTrialEnvironment(t *testing.T) {
 	assert.NotNil(t, pingService, "Ping service not found")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 }
 
 func getService(services []corev1.Service, name string) corev1.Service {
@@ -497,10 +500,12 @@ func TestAuthoringEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "authoring",
+			Environment:    "authoring",
+			KieDeployments: 3,
 		},
 	}
 	env, err := GetEnvironment(cr, fake.NewFakeClient())
-	assert.Nil(t, err, "Error getting trial environment")
+	assert.Nil(t, err, "Error getting authoring environment")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }

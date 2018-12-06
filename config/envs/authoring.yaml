@@ -35,7 +35,7 @@ console:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  {{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .ServerCount }}
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
@@ -43,11 +43,9 @@ servers:
         spec:
           replicas: 1
           template:
-            metadata:
-              name: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: MAVEN_REPOS
                       value: "RHPAMCENTR,EXTERNAL"
@@ -63,20 +61,15 @@ servers:
                       value: ""
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
                   volumeMounts:
-                    - name: kieserver-keystore-volume
-                      mountPath: "/etc/kieserver-secret-volume"
-                      readOnly: true
+                    - name: "{{.ApplicationName}}-h2-pvol"
+                      mountPath: "/opt/eap/standalone/data"
               volumes:
                 ## H2 volume settings BEGIN
                 - name: "{{.ApplicationName}}-h2-pvol"
                   persistentVolumeClaim:
                     claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
-    ## KIE server deployment config END
-    {{end}}
-## RANGE ends
-## KIE Servers END
+  ## KIE server deployment config END
+  #{{end}}
+  ## RANGE ends
+  ## KIE Servers END

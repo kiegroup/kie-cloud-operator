@@ -33,6 +33,7 @@ console:
             targetPort: 8001
       metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
+
   routes:
     - id: "{{.ApplicationName}}-rhpamcentr-http"
       metadata:
@@ -49,6 +50,7 @@ console:
           name: "{{.ApplicationName}}-rhpamcentr"
         port:
           targetPort: http
+
   persistentVolumeClaims:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -58,7 +60,7 @@ console:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  {{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .ServerCount }}
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
@@ -70,7 +72,7 @@ servers:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: MAVEN_REPOS
                       value: "RHPAMCENTR,EXTERNAL"
@@ -84,12 +86,6 @@ servers:
                       value: "{{.ApplicationName}}-rhpamcentr"
                     - name: KIE_SERVER_CONTROLLER_TOKEN
                       value: ""
-                    - name: KIE_SERVER_ID
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
                     - name: KIE_ADMIN_PWD
                       value: RedHat
                     - name: KIE_SERVER_CONTROLLER_PWD
@@ -98,12 +94,12 @@ servers:
                       value: RedHat
                     - name: EXECUTION_SERVER_ROUTE_NAME
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
-    ## KIE server deployment config END
+      ## KIE server deployment config END
     persistentVolumeClaims:
       - metadata:
           name: "{{.ApplicationName}}-h2-claim-{{$index}}"
           annotations:
             delete: "true"
-    {{end}}
-## RANGE ends
-## KIE Servers END
+  #{{end}}
+  ## RANGE ends
+  ## KIE Servers END

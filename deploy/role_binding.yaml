@@ -6,5 +6,5 @@ roleRef:
   kind: Role
   name: kie-cloud-operator
 subjects:
-- kind: ServiceAccount
-  name: kie-cloud-operator
+  - kind: ServiceAccount
+    name: kie-cloud-operator

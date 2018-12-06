@@ -52,6 +52,13 @@ func (in *CustomObject) DeepCopyInto(out *CustomObject) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Roles != nil {
+		in, out := &in.Roles, &out.Roles
+		*out = make([]rbacv1.Role, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.RoleBindings != nil {
 		in, out := &in.RoleBindings, &out.RoleBindings
 		*out = make([]rbacv1.RoleBinding, len(*in))

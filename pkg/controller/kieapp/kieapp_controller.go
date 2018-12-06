@@ -3,11 +3,11 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/ghodss/yaml"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/ghodss/yaml"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
@@ -85,6 +85,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &rbacv1.Role{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.KieApp{},
 	})
@@ -437,6 +445,10 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 		object.Secrets[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
 		allObjects = append(allObjects, &object.Secrets[index])
 	}
+	for index := range object.Roles {
+		object.Roles[index].SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("Role"))
+		allObjects = append(allObjects, &object.Roles[index])
+	}
 	for index := range object.RoleBindings {
 		object.RoleBindings[index].SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
 		allObjects = append(allObjects, &object.RoleBindings[index])
@@ -494,9 +506,9 @@ func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr
 	//TODO temp
 	bytes, err := yaml.Marshal(obj)
 	if err != nil {
-		fmt.Printf("Failed to marshall object %v", err)
+		logrus.Errorf("Failed to marshall object %v", err)
 	} else {
-		fmt.Printf("Will create\n\n%v\n\n", string(bytes))
+		logrus.Debugf("Will create\n\n%v\n\n", string(bytes))
 	}
 	deepCopyObj := obj.DeepCopyObject()
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)

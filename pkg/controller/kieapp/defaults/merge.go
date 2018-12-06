@@ -40,6 +40,7 @@ func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.C
 	object.PersistentVolumeClaims = mergePersistentVolumeClaims(baseline.PersistentVolumeClaims, overwrite.PersistentVolumeClaims)
 	object.ServiceAccounts = mergeServiceAccounts(baseline.ServiceAccounts, overwrite.ServiceAccounts)
 	object.Secrets = mergeSecrets(baseline.Secrets, overwrite.Secrets)
+	object.Roles = mergeRoles(baseline.Roles, overwrite.Roles)
 	object.RoleBindings = mergeRoleBindings(baseline.RoleBindings, overwrite.RoleBindings)
 	object.DeploymentConfigs = mergeDeploymentConfigs(baseline.DeploymentConfigs, overwrite.DeploymentConfigs)
 	object.Services = mergeServices(baseline.Services, overwrite.Services)
@@ -125,6 +126,24 @@ func getSecretReferenceSlice(objects []corev1.Secret) []v1.OpenShiftObject {
 	return slice
 }
 
+func mergeRoles(baseline []rbacv1.Role, overwrite []rbacv1.Role) []rbacv1.Role {
+	if len(overwrite) == 0 {
+		return baseline
+	} else if len(baseline) == 0 {
+		return overwrite
+	} else {
+		baselineRefs := getRoleReferenceSlice(baseline)
+		overwriteRefs := getRoleReferenceSlice(overwrite)
+		slice := make([]rbacv1.Role, combinedSize(baselineRefs, overwriteRefs))
+		err := mergeObjects(baselineRefs, overwriteRefs, slice)
+		if err != nil {
+			logrus.Errorf("%v", err)
+			return nil
+		}
+		return slice
+	}
+}
+
 func mergeRoleBindings(baseline []rbacv1.RoleBinding, overwrite []rbacv1.RoleBinding) []rbacv1.RoleBinding {
 	if len(overwrite) == 0 {
 		return baseline
@@ -141,6 +160,14 @@ func mergeRoleBindings(baseline []rbacv1.RoleBinding, overwrite []rbacv1.RoleBin
 		}
 		return slice
 	}
+}
+
+func getRoleReferenceSlice(objects []rbacv1.Role) []v1.OpenShiftObject {
+	slice := make([]v1.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
 }
 
 func getRoleBindingReferenceSlice(objects []rbacv1.RoleBinding) []v1.OpenShiftObject {
@@ -322,6 +349,12 @@ func mergeContainers(baseline []corev1.Container, overwrite []corev1.Container) 
 	}
 	overwrite[0].Ports = mergedPorts
 
+	mergedVolumeMounts, err := mergeVolumeMounts(baseline[0].VolumeMounts, overwrite[0].VolumeMounts)
+	if err != nil {
+		return []corev1.Container{}, err
+	}
+	overwrite[0].VolumeMounts = mergedVolumeMounts
+
 	err = mergo.Merge(&baseline[0], overwrite[0], mergo.WithOverride)
 	if err != nil {
 		return nil, err
@@ -384,6 +417,31 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 	return mergedVolumes, nil
 }
 
+func mergeVolumeMounts(baseline []corev1.VolumeMount, overwrite []corev1.VolumeMount) ([]corev1.VolumeMount, error) {
+	var mergedVolumeMounts []corev1.VolumeMount
+	for baselineIndex, baselineItem := range baseline {
+		idx, found := findVolumeMount(baselineItem, overwrite)
+		if idx == -1 {
+			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+		} else {
+			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
+			if err != nil {
+				return nil, err
+			}
+		}
+		mergedVolumeMounts = append(mergedVolumeMounts, baseline[baselineIndex])
+	}
+	for overwriteIndex, overwriteItem := range overwrite {
+		idx, _ := findVolumeMount(overwriteItem, mergedVolumeMounts)
+		if idx == -1 {
+			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			mergedVolumeMounts = append(mergedVolumeMounts, overwrite[overwriteIndex])
+		}
+	}
+	return mergedVolumeMounts, nil
+}
+
 func findVolume(object corev1.Volume, slice []corev1.Volume) (int, corev1.Volume) {
 	for index, candidate := range slice {
 		if candidate.Name == object.Name {
@@ -391,6 +449,15 @@ func findVolume(object corev1.Volume, slice []corev1.Volume) (int, corev1.Volume
 		}
 	}
 	return -1, corev1.Volume{}
+}
+
+func findVolumeMount(object corev1.VolumeMount, slice []corev1.VolumeMount) (int, corev1.VolumeMount) {
+	for index, candidate := range slice {
+		if candidate.Name == object.Name {
+			return index, candidate
+		}
+	}
+	return -1, corev1.VolumeMount{}
 }
 
 func getDeploymentConfigReferenceSlice(objects []appsv1.DeploymentConfig) []v1.OpenShiftObject {

@@ -4,6 +4,29 @@ console:
         name: "{{.ApplicationName}}-rhpamsvc"
         labels:
           app: "{{.ApplicationName}}"
+  roles:
+    - metadata:
+        name: "{{.ApplicationName}}-rhpamsvc-view"
+      rules:
+        - apiGroups:
+            - ""
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
+        - apiGroups:
+            - app.kiegroup.org
+            - apps.openshift.io
+            - image.openshift.io
+            - route.openshift.io
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
   rolebindings:
     - metadata:
         name: "{{.ApplicationName}}-rhpamsvc-view"
@@ -12,7 +35,7 @@ console:
           name: "{{.ApplicationName}}-rhpamsvc"
       roleRef:
         kind: Role
-        name: view
+        name: "{{.ApplicationName}}-rhpamsvc-view"
   deploymentConfigs:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
@@ -50,12 +73,12 @@ console:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "{{.ApplicationName}}-rhpamcentr"
-                image: rhpam{{.Version}}-businesscentral-openshift
+                image: "rhpam{{.Version}}-businesscentral-openshift"
                 imagePullPolicy: Always
-                volumeMounts:
+                volumes:
                   - name: businesscentral-keystore-volume
-                    mountPath: "/etc/businesscentral-secret-volume"
-                    readOnly: true
+                    secret:
+                      secretName: "{{.ApplicationName}}-businesscentral-app-secret"
                 resources:
                   requests:
                     memory: 768Mi
@@ -188,10 +211,10 @@ console:
                     value: ""
                   - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
                     value: ""
-            volumes:
-              - name: businesscentral-keystore-volume
-                secret:
-                  secretName: "{{.ApplicationName}}-businesscentral-app-secret"
+                volumeMounts:
+                  - name: businesscentral-keystore-volume
+                    mountPath: "/etc/businesscentral-secret-volume"
+                    readOnly: true
   services:
     - spec:
         ports:
@@ -227,9 +250,9 @@ console:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
   routes:
-    - id: "{{.ApplicationName}}-rhpamcentr-https"
+    - id: "{{.ApplicationName}}-rhpamcentr"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-https"
+        name: "{{.ApplicationName}}-rhpamcentr"
         labels:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-rhpamcentr"
@@ -258,11 +281,10 @@ console:
           requests:
             storage: 1Gi
 
-
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  {{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .ServerCount }}
   - persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
@@ -277,14 +299,13 @@ servers:
             requests:
               storage: "1Gi"
       ## H2 persistent volume claim END
-    ## KIE server deployment config BEGIN
+      ## KIE server deployment config BEGIN
     deploymentConfigs:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             template.alpha.openshift.io/wait-for-ready: "true"
         spec:
@@ -295,7 +316,7 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-kieserver"
+                  - "{{.ApplicationName}}-kieserver-{{$index}}"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
@@ -308,15 +329,14 @@ servers:
             metadata:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
               labels:
-                app: "{{.ApplicationName}}-kieserver-{{$index}}"
-                application: "{{.ApplicationName}}"
-                service: "{{.ApplicationName}}-kieserver"
+                app: "{{.ApplicationName}}"
+                service: "{{.ApplicationName}}-kieserver-{{$index}}"
                 deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   image: "rhpam{{.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
@@ -340,6 +360,10 @@ servers:
                       value: ws
                     - name: KIE_MBEANS
                       value: enabled
+                    - name: KIE_SERVER_ROUTE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+                      value: "false"
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
                     - name: MAVEN_REPOS
@@ -383,7 +407,7 @@ servers:
                       value: "org.hibernate.dialect.H2Dialect"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
-                  ## H2 driver settings END
+                    ## H2 driver settings END
                   resources:
                     limits:
                       memory: 1Gi
@@ -392,7 +416,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u adminUser:KIE_ADMIN_PWD http://localhost:8080/services/rest/server/healthcheck
+                        - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
                     initialDelaySeconds: 180
                     timeoutSeconds: 2
                     periodSeconds: 15
@@ -402,7 +426,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u adminUser:$KIE_ADMIN_PWD http://localhost:8080/services/rest/server/readycheck
+                        - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
                     initialDelaySeconds: 60
                     timeoutSeconds: 2
                     periodSeconds: 30
@@ -425,9 +449,9 @@ servers:
                 - name: kieserver-keystore-volume
                   secret:
                     secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
-              ## H2 volume settings END
+            ## H2 volume settings END
       ## KIE server deployment config END
-    ## KIE server services BEGIN
+      ## KIE server services BEGIN
     services:
       - spec:
           ports:
@@ -442,9 +466,8 @@ servers:
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -458,22 +481,20 @@ servers:
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
-    ## KIE server routes BEGIN
+      ## KIE server routes BEGIN
     routes:
-      - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
+      - id: "{{.ApplicationName}}-kieserver-{{$index}}"
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's https service.
         spec:
@@ -485,6 +506,6 @@ servers:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
       ## KIE server routes END
-      {{end}}
-## RANGE ends
-## KIE Servers END
+  #{{end}}
+  ## RANGE ends
+  ## KIE Servers END
