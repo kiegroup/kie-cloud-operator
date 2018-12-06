@@ -192,7 +192,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	env, rResult, err := reconciler.NewEnv(instance)
+	env, rResult, err := NewEnv(reconciler, instance)
 	if err != nil {
 		return rResult, err
 	}
@@ -233,7 +233,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 		for _, uDc := range dcUpdates {
 			newDC := uDc.DeepCopyObject()
 			logrus.Infof("Updating %s %s/%s", uDc.Kind, uDc.Namespace, uDc.Name)
-			rResult, err := reconciler.updateObj(newDC)
+			rResult, err := reconciler.UpdateObj(newDC)
 			if err != nil {
 				return rResult, err
 			}
@@ -244,10 +244,14 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	// Update status.Deployments if needed
 	if !reflect.DeepEqual(dcNames, instance.Status.Deployments) {
 		instance.Status.Deployments = dcNames
-		return reconciler.updateObj(instance)
+		return reconciler.UpdateObj(instance)
 	}
 
 	return rResult, nil
+}
+
+func (reconciler *ReconcileKieApp) GetClient() client.Client {
+	return reconciler.client
 }
 
 // Check ImageStream
@@ -326,8 +330,8 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 	return dcUpdates
 }
 
-func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
-	env, err := defaults.GetEnvironment(cr, reconciler.client)
+func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
+	env, err := defaults.GetEnvironment(cr, reconciler.GetClient())
 	if err != nil {
 		return v1.Environment{}, reconcile.Result{Requeue: true}, err
 	}
@@ -337,7 +341,7 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 	for _, rt := range env.Console.Routes {
 		if checkTLS(rt.Spec.TLS) {
 			// use host of first tls route in env template
-			consoleCN = reconciler.getRouteHost(rt, cr)
+			consoleCN = reconciler.GetRouteHost(rt, cr)
 			break
 		}
 	}
@@ -363,7 +367,7 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 		for _, rt := range server.Routes {
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
-				serverCN = reconciler.getRouteHost(rt, cr)
+				serverCN = reconciler.GetRouteHost(rt, cr)
 				break
 			}
 		}
@@ -386,22 +390,22 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 		env.Servers[i] = server
 	}
 	env = ConsolidateObjects(env, cr)
-	rResult, err := reconciler.updateObj(cr)
+	rResult, err := reconciler.UpdateObj(cr)
 	if err != nil {
 		return env, rResult, err
 	}
-	rResult, err = reconciler.createCustomObjects(env.Console, cr)
+	rResult, err = reconciler.CreateCustomObjects(env.Console, cr)
 	if err != nil {
 		return env, rResult, err
 	}
 	for _, s := range env.Servers {
-		rResult, err = reconciler.createCustomObjects(s, cr)
+		rResult, err = reconciler.CreateCustomObjects(s, cr)
 		if err != nil {
 			return env, rResult, err
 		}
 	}
 	for _, o := range env.Others {
-		rResult, err = reconciler.createCustomObjects(o, cr)
+		rResult, err = reconciler.CreateCustomObjects(o, cr)
 		if err != nil {
 			return env, rResult, err
 		}
@@ -419,7 +423,7 @@ func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	return env
 }
 
-func (reconciler *ReconcileKieApp) createCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
 	var allObjects []v1.OpenShiftObject
 	for index := range object.PersistentVolumeClaims {
 		object.PersistentVolumeClaims[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
@@ -524,7 +528,7 @@ func (reconciler *ReconcileKieApp) createObj(name, namespace string, obj runtime
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *ReconcileKieApp) updateObj(obj runtime.Object) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) UpdateObj(obj runtime.Object) (reconcile.Result, error) {
 	err := reconciler.client.Update(context.TODO(), obj)
 	if err != nil {
 		logrus.Warnf("Failed to update %s: %v", obj.GetObjectKind().GroupVersionKind().Kind, err)
@@ -554,7 +558,7 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 	return dcNames
 }
 
-func (reconciler *ReconcileKieApp) getRouteHost(route routev1.Route, cr *v1.KieApp) string {
+func (reconciler *ReconcileKieApp) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 	err := controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
 	if err != nil {

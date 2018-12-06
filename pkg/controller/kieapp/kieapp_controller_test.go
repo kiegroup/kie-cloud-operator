@@ -2,6 +2,7 @@ package kieapp
 
 import (
 	"fmt"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"regexp"
 	"strings"
 	"testing"
@@ -131,4 +132,22 @@ func TestTrialServerEnv(t *testing.T) {
 		Value: "RedHat",
 	})
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+}
+
+func TestGenerateSecret(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+		},
+	}
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	assert.Nil(t, err, "Error getting a new environment")
+	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
+
+	env, _, err = NewEnv(test.MockPlatformService{}, cr)
+	assert.Nil(t, err, "Error creating a new environment")
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 }
