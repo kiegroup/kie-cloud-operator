@@ -43,12 +43,12 @@ func TestConstructServerObject(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	assert.Nil(t, err)
 
 	var objects []v1.CustomObject
-	for _, s := range env.Servers {
-		object := ConstructObject(s, common, cr)
+	for _, server := range env.Servers {
+		object := ConstructObject(server, cr)
 		objects = append(objects, object)
 	}
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))

@@ -27,10 +27,10 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 
-	env = ConsolidateObjects(env, common, cr)
+	env = ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
 	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
@@ -64,11 +64,11 @@ func TestTrialConsoleEnv(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
 		logrus.Error(err)
 	}
-	env = ConsolidateObjects(env, common, cr)
+	env = ConsolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", cr.Name), env.Console.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
@@ -113,12 +113,12 @@ func TestTrialServerEnv(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
 		logrus.Error(err)
 	}
-	common.Objects.Server.Env = append(common.Objects.Server.Env, commonAddition)
-	env = ConsolidateObjects(env, common, cr)
+	env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
+	env = ConsolidateObjects(env, cr)
 
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)

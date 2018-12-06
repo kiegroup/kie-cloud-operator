@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"reflect"
 	"strings"
 	"time"
@@ -326,7 +327,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 }
 
 func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
-	env, common, err := defaults.GetEnvironment(cr, reconciler.client)
+	env, err := defaults.GetEnvironment(cr, reconciler.client)
 	if err != nil {
 		return v1.Environment{}, reconcile.Result{Requeue: true}, err
 	}
@@ -384,7 +385,7 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 
 		env.Servers[i] = server
 	}
-	env = ConsolidateObjects(env, common, cr)
+	env = ConsolidateObjects(env, cr)
 	rResult, err := reconciler.updateObj(cr)
 	if err != nil {
 		return env, rResult, err
@@ -409,10 +410,10 @@ func (reconciler *ReconcileKieApp) NewEnv(cr *v1.KieApp) (v1.Environment, reconc
 	return env, rResult, nil
 }
 
-func ConsolidateObjects(env v1.Environment, common v1.KieAppSpec, cr *v1.KieApp) v1.Environment {
-	env.Console = rhpamcentr.ConstructObject(env.Console, common, cr)
+func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
+	env.Console = rhpamcentr.ConstructObject(env.Console, cr)
 	for i, s := range env.Servers {
-		s = kieserver.ConstructObject(s, common, cr)
+		s = kieserver.ConstructObject(s, cr)
 		env.Servers[i] = s
 	}
 	return env
@@ -486,6 +487,13 @@ func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr
 		return reconcile.Result{}, err
 	}
 	obj.SetNamespace(namespace)
+	//TODO temp
+	bytes, err := yaml.Marshal(obj)
+	if err != nil {
+		fmt.Printf("Failed to marshall object %v", err)
+	} else {
+		fmt.Printf("Will create\n\n%v\n\n", string(bytes))
+	}
 	deepCopyObj := obj.DeepCopyObject()
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(

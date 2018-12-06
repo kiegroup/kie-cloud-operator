@@ -1,233 +1,109 @@
 console:
   deploymentConfigs:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentr"
-      name: "{{.ApplicationName}}-rhpamcentr"
-    spec:
-      replicas: 1
-      selector:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentr"
-      strategy:
-        resources: {}
-        type: Recreate
-      template:
-        metadata:
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-rhpamcentr"
-          name: "{{.ApplicationName}}-rhpamcentr"
-        spec:
-          containers:
-          - env:
-            - name: KIE_ADMIN_PWD
-              value: RedHat
-            - name: KIE_SERVER_CONTROLLER_PWD
-              value: RedHat
-            - name: KIE_SERVER_PWD
-              value: RedHat
-            - name: KIE_MAVEN_USER
-              value: mavenUser
-            - name: KIE_MAVEN_PWD
-              value: RedHat
-            image: rhpam{{.Version}}-businesscentral-openshift
-            imagePullPolicy: Always
-            resources:
-              requests:
-                memory: 768Mi
-              limits:
-                memory: 1Gi
-            livenessProbe:
-              exec:
-                command:
-                - /bin/bash
-                - -c
-                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
-              initialDelaySeconds: 180
-              periodSeconds: 15
-              timeoutSeconds: 2
-            name: "{{.ApplicationName}}-rhpamcentr"
-            ports:
-            - containerPort: 8001
-              name: git-ssh
-              protocol: TCP
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-            - containerPort: 8778
-              name: jolokia
-              protocol: TCP
-            readinessProbe:
-              exec:
-                command:
-                - /bin/bash
-                - -c
-                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
-              failureThreshold: 6
-              initialDelaySeconds: 60
-              periodSeconds: 30
-              timeoutSeconds: 2
-          terminationGracePeriodSeconds: 60
-      test: false
-      triggers:
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - "{{.ApplicationName}}-rhpamcentr"
-          from:
-            kind: ImageStreamTag
-            name: rhpam{{.Version}}-businesscentral-openshift:{{.ImageTag}}
-            namespace: openshift
-        type: ImageChange
-      - type: ConfigChange
-  routes:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentr"
-      name: "{{.ApplicationName}}-rhpamcentr"
-    spec:
-      port:
-        targetPort: http
-      to:
+    - metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
+      spec:
+        template:
+          metadata:
+            name: "{{.ApplicationName}}-rhpamcentr"
+          spec:
+            containers:
+              - name: "{{.ApplicationName}}-rhpamcentr"
+                ports:
+                  - name: git-ssh
+                    containerPort: 8001
+                    protocol: TCP
+                env:
+                  - name: KIE_ADMIN_PWD
+                    value: RedHat
+                  - name: KIE_MAVEN_PWD
+                    value: RedHat
+                  - name: KIE_SERVER_CONTROLLER_PWD
+                    value: RedHat
+                  - name: KIE_SERVER_PWD
+                    value: RedHat
+                resources:
+                  limits:
+                    memory: 2Gi
   services:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentr"
-      name: "{{.ApplicationName}}-rhpamcentr"
-    spec:
-      ports:
-      - name: http
-        port: 8080
-        protocol: TCP
-        targetPort: 8080
-      - name: git-ssh
-        port: 8001
-        protocol: TCP
-        targetPort: 8001
-      selector:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-rhpamcentr"
+    - spec:
+        ports:
+          - name: git-ssh
+            port: 8001
+            targetPort: 8001
+      metadata:
+        name: "{{.ApplicationName}}-rhpamcentr"
+  routes:
+    - id: "{{.ApplicationName}}-rhpamcentr-http"
+      metadata:
+        name: "{{.ApplicationName}}-rhpamcentr-http"
+        labels:
+          app: "{{.ApplicationName}}"
+          service: "{{.ApplicationName}}-rhpamcentr"
+        annotations:
+          description: Route for Business Central's http service.
+          haproxy.router.openshift.io/timeout: 60s
+      spec:
+        host: ""
+        to:
+          name: "{{.ApplicationName}}-rhpamcentr"
+        port:
+          targetPort: http
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-rhpamcentr-claim"
+        annotations:
+          delete: "true"
 
 ## KIE Servers BEGIN
 servers:
-## RANGE BEGINS
-{{ range $index, $Map := .ServerCount }}
-
-- deploymentConfigs:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-    spec:
-      replicas: 1
-      selector:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      strategy:
-        resources: {}
-        type: Recreate
-      template:
-        metadata:
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+  ## RANGE BEGINS
+  {{ range $index, $Map := .ServerCount }}
+  - deploymentConfigs:
+      ## KIE server deployment config BEGIN
+      - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          containers:
-          - env:
-            - name: KIE_ADMIN_PWD
-              value: RedHat
-            - name: KIE_SERVER_CONTROLLER_PWD
-              value: RedHat
-            - name: KIE_SERVER_PWD
-              value: RedHat
-            - name: EXECUTION_SERVER_ROUTE_NAME
-              value: "{{.ApplicationName}}-kieserver-{{$index}}"
-            - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-              value: mavenUser
-            - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-              value: RedHat
-            - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-              value: "{{.ApplicationName}}-rhpamcentr"
-            image: rhpam{{.Version}}-kieserver-openshift
-            imagePullPolicy: Always
-            resources:
-              requests:
-                memory: 512Mi
-              limits:
-                memory: 1Gi
-            livenessProbe:
-              exec:
-                command:
-                - /bin/bash
-                - -c
-                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
-              initialDelaySeconds: 180
-              periodSeconds: 15
-              timeoutSeconds: 2
-            name: "{{.ApplicationName}}-kieserver-{{$index}}"
-            ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-            - containerPort: 8778
-              name: jolokia
-              protocol: TCP
-            readinessProbe:
-              exec:
-                command:
-                - /bin/bash
-                - -c
-                - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
-              failureThreshold: 6
-              initialDelaySeconds: 60
-              periodSeconds: 30
-              timeoutSeconds: 2
-          terminationGracePeriodSeconds: 60
-      test: false
-      triggers:
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - "{{.ApplicationName}}-kieserver-{{$index}}"
-          from:
-            kind: ImageStreamTag
-            name: rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}
-            namespace: openshift
-        type: ImageChange
-      - type: ConfigChange
-  services:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-    spec:
-      ports:
-      - name: http
-        port: 8080
-        protocol: TCP
-        targetPort: 8080
-      selector:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-  routes:
-  - metadata:
-      labels:
-        app: "{{.ApplicationName}}"
-        service: "{{.ApplicationName}}-kieserver-{{$index}}"
-      name: "{{.ApplicationName}}-kieserver-{{$index}}"
-    spec:
-      port:
-        targetPort: http
-      to:
-        name: "{{.ApplicationName}}-kieserver-{{$index}}"
-{{end}}
+          replicas: 1
+          template:
+            metadata:
+              name: "{{.ApplicationName}}-kieserver-{{$index}}"
+            spec:
+              containers:
+                - name: "{{.ApplicationName}}-kieserver"
+                  env:
+                    - name: MAVEN_REPOS
+                      value: "RHPAMCENTR,EXTERNAL"
+                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+                      value: mavenUser
+                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+                      value: "{{.MavenPassword}}"
+                    - name: RHPAMCENTR_MAVEN_REPO_PATH
+                      value: /maven2/
+                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+                      value: "{{.ApplicationName}}-rhpamcentr"
+                    - name: KIE_SERVER_CONTROLLER_TOKEN
+                      value: ""
+                    - name: KIE_SERVER_ID
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_ROUTE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+                      value: "false"
+                    - name: KIE_ADMIN_PWD
+                      value: RedHat
+                    - name: KIE_SERVER_CONTROLLER_PWD
+                      value: RedHat
+                    - name: KIE_SERVER_PWD
+                      value: RedHat
+                    - name: EXECUTION_SERVER_ROUTE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+    ## KIE server deployment config END
+    persistentVolumeClaims:
+      - metadata:
+          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
+          annotations:
+            delete: "true"
+    {{end}}
 ## RANGE ends
 ## KIE Servers END

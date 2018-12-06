@@ -42,10 +42,10 @@ func TestConstructConsoleObject(t *testing.T) {
 		},
 	}
 
-	env, common, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	assert.Nil(t, err)
 
-	object := ConstructObject(env.Console, common, cr)
+	object := ConstructObject(env.Console, cr)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
