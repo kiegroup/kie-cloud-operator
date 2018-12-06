@@ -25,33 +25,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GetLiteEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
+func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
 	envTemplate := getEnvTemplate(cr)
 
-	var servers v1.CustomObject
-	yamlBytes, err := loadYaml(client, "common/server.yaml", cr.Namespace, envTemplate)
+	var common v1.Environment
+	yamlBytes, err := loadYaml(client, "common.yaml", cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
-	err = yaml.Unmarshal(yamlBytes, &servers)
-	if err != nil {
-		return v1.Environment{}, err
-	}
-
-	var console v1.CustomObject
-	yamlBytes, err = loadYaml(client, "common/console.yaml", cr.Namespace, envTemplate)
-	if err != nil {
-		return v1.Environment{}, err
-	}
-
-	err = yaml.Unmarshal(yamlBytes, &console)
+	err = yaml.Unmarshal(yamlBytes, &common)
 	if err != nil {
 		return v1.Environment{}, err
 	}
 
 	var env v1.Environment
-	yamlBytes, err = loadYaml(client, fmt.Sprintf("envs/%s-lite.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
-	logrus.Infof("Trial env is %v", string(yamlBytes))
+	yamlBytes, err = loadYaml(client, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -60,42 +48,11 @@ func GetLiteEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, er
 		return v1.Environment{}, err
 	}
 
-	merge(&console, &env.Console)
-	env.Console = console
-	for index := range env.Servers {
-		merge(&servers, &env.Servers[index])
-		env.Servers[index] = servers
-	}
-
-	return env, nil
-}
-
-// GetEnvironment Loads the commonConfigs.yaml file and then overrides the values
-// with the provided env yaml file. e.g. envs/production-lite.yaml
-func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, v1.KieAppSpec, error) {
-	var env v1.Environment
-	envTemplate := getEnvTemplate(cr)
-
-	commonBytes, err := loadYaml(client, "commonConfigs.yaml", cr.Namespace, envTemplate)
+	mergedEnv, err := merge(common, env)
 	if err != nil {
-		return env, v1.KieAppSpec{}, err
+		return v1.Environment{}, err
 	}
-	var common v1.KieAppSpec
-	err = yaml.Unmarshal(commonBytes, &common)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	yamlBytes, err := loadYaml(client, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
-	if err != nil {
-		return env, common, err
-	}
-	err = yaml.Unmarshal(yamlBytes, &env)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	return env, common, nil
+	return mergedEnv, nil
 }
 
 func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {

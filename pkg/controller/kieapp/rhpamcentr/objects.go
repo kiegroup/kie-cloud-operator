@@ -7,10 +7,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func ConstructObject(object v1.CustomObject, common v1.KieAppSpec, cr *v1.KieApp) v1.CustomObject {
+func ConstructObject(object v1.CustomObject, cr *v1.KieApp) v1.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
 		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
-			c.Env = shared.EnvOverride(common.Objects.Console.Env, c.Env)
 			c.Env = shared.EnvOverride(c.Env, cr.Spec.Objects.Console.Env)
 
 			err := mergo.Merge(&c.Resources, cr.Spec.Objects.Console.Resources, mergo.WithOverride)
