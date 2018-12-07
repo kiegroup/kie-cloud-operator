@@ -12,5 +12,5 @@ spec:
           memory: 2Gi
     server:
       env:
-      - name: key1
-        value: value1
+        - name: key1
+          value: value1
