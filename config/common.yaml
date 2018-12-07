@@ -258,11 +258,10 @@ console:
           requests:
             storage: 1Gi
 
-
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  {{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .ServerCount }}
   - persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
@@ -485,6 +484,6 @@ servers:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
       ## KIE server routes END
-      {{end}}
+#{{end}}
 ## RANGE ends
 ## KIE Servers END

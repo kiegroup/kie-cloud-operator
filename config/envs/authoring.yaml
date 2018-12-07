@@ -35,7 +35,7 @@ console:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  {{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .ServerCount }}
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
@@ -77,6 +77,6 @@ servers:
                   persistentVolumeClaim:
                     claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
     ## KIE server deployment config END
-    {{end}}
+#{{end}}
 ## RANGE ends
 ## KIE Servers END
