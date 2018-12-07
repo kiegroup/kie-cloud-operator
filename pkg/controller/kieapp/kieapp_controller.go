@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
@@ -341,7 +340,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.GetClient())
 	if err != nil {
-		return v1.Environment{}, reconcile.Result{Requeue: true}, err
+		return env, reconcile.Result{Requeue: true}, err
 	}
 
 	// console keystore generation
@@ -503,13 +502,6 @@ func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr
 		return reconcile.Result{}, err
 	}
 	obj.SetNamespace(namespace)
-	//TODO temp
-	bytes, err := yaml.Marshal(obj)
-	if err != nil {
-		logrus.Errorf("Failed to marshall object %v", err)
-	} else {
-		logrus.Debugf("Will create\n\n%v\n\n", string(bytes))
-	}
 	deepCopyObj := obj.DeepCopyObject()
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(

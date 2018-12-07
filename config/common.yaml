@@ -73,12 +73,12 @@ console:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "{{.ApplicationName}}-rhpamcentr"
-                image: "rhpam{{.Version}}-businesscentral-openshift"
+                image: rhpam{{.Version}}-businesscentral-openshift
                 imagePullPolicy: Always
-                volumes:
+                volumeMounts:
                   - name: businesscentral-keystore-volume
-                    secret:
-                      secretName: "{{.ApplicationName}}-businesscentral-app-secret"
+                    mountPath: "/etc/businesscentral-secret-volume"
+                    readOnly: true
                 resources:
                   requests:
                     memory: 768Mi
@@ -89,7 +89,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
@@ -98,7 +98,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
                   initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 30
@@ -211,10 +211,10 @@ console:
                     value: ""
                   - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
                     value: ""
-                volumeMounts:
-                  - name: businesscentral-keystore-volume
-                    mountPath: "/etc/businesscentral-secret-volume"
-                    readOnly: true
+            volumes:
+              - name: businesscentral-keystore-volume
+                secret:
+                  secretName: "{{.ApplicationName}}-businesscentral-app-secret"
   services:
     - spec:
         ports:
@@ -250,7 +250,7 @@ console:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
   routes:
-    - id: "{{.ApplicationName}}-rhpamcentr"
+    - id: "{{.ApplicationName}}-rhpamcentr-https"
       metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
         labels:
@@ -285,22 +285,8 @@ console:
 servers:
   ## RANGE BEGINS
   #{{ range $index, $Map := .ServerCount }}
-  - persistentVolumeClaims:
-      ## H2 persistent volume claim BEGIN
-      - metadata:
-          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: "1Gi"
-      ## H2 persistent volume claim END
-      ## KIE server deployment config BEGIN
-    deploymentConfigs:
+  ## KIE server deployment config BEGIN
+  - deploymentConfigs:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
@@ -366,8 +352,16 @@ servers:
                       value: "false"
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+                      value: mavenUser
+                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+                      value: "{{.MavenPassword}}"
+                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+                      value: "{{.ApplicationName}}-rhpamcentr"
                     - name: MAVEN_REPOS
-                      value: EXTERNAL
+                      value: "RHPAMCENTR,EXTERNAL"
+                    - name: RHPAMCENTR_MAVEN_REPO_PATH
+                      value: /maven2/
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                       value: ROOT.war
                     - name: KIE_SERVER_BYPASS_AUTH_USER
@@ -380,34 +374,6 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "{{.KeyStorePassword}}"
-                    - name: DATASOURCES
-                      value: "RHPAM"
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
-                    - name: RHPAM_JNDI
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_JTA
-                      value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
-                    ## H2 driver settings BEGIN
-                    - name: RHPAM_DRIVER
-                      value: "h2"
-                    - name: RHPAM_USERNAME
-                      value: "sa"
-                    - name: RHPAM_PASSWORD
-                      value: "{{.AdminPassword}}"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
-                    - name: RHPAM_SERVICE_HOST
-                      value: "dummy_ignored"
-                    - name: RHPAM_SERVICE_PORT
-                      value: "12345"
-                    - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.H2Dialect"
-                    - name: DROOLS_SERVER_FILTER_CLASSES
-                      value: "true"
-                    ## H2 driver settings END
                   resources:
                     limits:
                       memory: 1Gi
@@ -416,7 +382,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/services/rest/server/healthcheck
                     initialDelaySeconds: 180
                     timeoutSeconds: 2
                     periodSeconds: 15
@@ -426,7 +392,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u "$KIE_ADMIN_USER":"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/services/rest/server/readycheck
                     initialDelaySeconds: 60
                     timeoutSeconds: 2
                     periodSeconds: 30
@@ -449,9 +415,8 @@ servers:
                 - name: kieserver-keystore-volume
                   secret:
                     secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
-            ## H2 volume settings END
       ## KIE server deployment config END
-      ## KIE server services BEGIN
+    ## KIE server services BEGIN
     services:
       - spec:
           ports:
@@ -487,9 +452,9 @@ servers:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
-      ## KIE server routes BEGIN
+    ## KIE server routes BEGIN
     routes:
-      - id: "{{.ApplicationName}}-kieserver-{{$index}}"
+      - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
@@ -506,6 +471,6 @@ servers:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
       ## KIE server routes END
-  #{{end}}
-  ## RANGE ends
-  ## KIE Servers END
+#{{end}}
+## RANGE ends
+## KIE Servers END

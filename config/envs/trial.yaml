@@ -33,7 +33,6 @@ console:
             targetPort: 8001
       metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
-
   routes:
     - id: "{{.ApplicationName}}-rhpamcentr-http"
       metadata:
@@ -50,7 +49,6 @@ console:
           name: "{{.ApplicationName}}-rhpamcentr"
         port:
           targetPort: http
-
   persistentVolumeClaims:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -74,16 +72,8 @@ servers:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
-                    - name: MAVEN_REPOS
-                      value: "RHPAMCENTR,EXTERNAL"
-                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-                      value: mavenUser
                     - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-                      value: "{{.MavenPassword}}"
-                    - name: RHPAMCENTR_MAVEN_REPO_PATH
-                      value: /maven2/
-                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
+                      value: RedHat
                     - name: KIE_SERVER_CONTROLLER_TOKEN
                       value: ""
                     - name: KIE_ADMIN_PWD
@@ -94,12 +84,7 @@ servers:
                       value: RedHat
                     - name: EXECUTION_SERVER_ROUTE_NAME
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
-      ## KIE server deployment config END
-    persistentVolumeClaims:
-      - metadata:
-          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
-          annotations:
-            delete: "true"
-  #{{end}}
-  ## RANGE ends
-  ## KIE Servers END
+    ## KIE server deployment config END
+#{{end}}
+## RANGE ends
+## KIE Servers END

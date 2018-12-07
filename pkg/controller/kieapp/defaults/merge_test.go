@@ -1,7 +1,6 @@
 package defaults
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -448,64 +447,4 @@ func buildProbe(name string, delay, timeout int32) *corev1.Probe {
 		InitialDelaySeconds: delay,
 		TimeoutSeconds:      timeout,
 	}
-}
-
-func TestTrialEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment:    "trial",
-			KieDeployments: 2,
-		},
-	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
-
-	assert.Nil(t, err, "Error getting trial environment")
-	wbServices := env.Console.Services
-	mainService := getService(wbServices, "test-rhpamcentr")
-	assert.NotNil(t, mainService, "rhpamcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 3, "The rhpamcentr service should have three ports")
-	assert.True(t, hasPort(mainService, 8001), "The rhpamcentr service should listen on port 8001")
-
-	pingService := getService(wbServices, "test-rhpamcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-}
-
-func getService(services []corev1.Service, name string) corev1.Service {
-	for _, service := range services {
-		if service.Name == name {
-			return service
-		}
-	}
-	return corev1.Service{}
-}
-
-func hasPort(service corev1.Service, portNum int32) bool {
-	for _, port := range service.Spec.Ports {
-		if port.Port == portNum {
-			return true
-		}
-	}
-	return false
-}
-
-func TestAuthoringEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment:    "authoring",
-			KieDeployments: 3,
-		},
-	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
-	assert.Nil(t, err, "Error getting authoring environment")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }

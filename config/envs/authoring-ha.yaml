@@ -1,19 +1,4 @@
 console:
-  serviceAccounts:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc"
-        labels:
-          app: "{{.ApplicationName}}"
-  rolebindings:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc-view"
-      subjects:
-        - kind: ServiceAccount
-          name: "{{.ApplicationName}}-rhpamsvc"
-      roleRef:
-        kind: Role
-        name: view
-
   persistentVolumeClaims:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -29,193 +14,32 @@ console:
   deploymentConfigs:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
-        labels:
-          app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
-        annotations:
-          template.alpha.openshift.io/wait-for-ready: "true"
       spec:
-        strategy:
-          type: Recreate
-        triggers:
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "{{.ApplicationName}}-rhpamcentr"
-              from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "rhpam{{.Version}}-businesscentral-openshift:{{.ImageTag}}"
-          - type: ConfigChange
         ## Replicas for Business Central
         replicas: 2
-        selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
         template:
           metadata:
             name: "{{.ApplicationName}}-rhpamcentr"
-            labels:
-              deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
-              app: "{{.ApplicationName}}"
-              service: "{{.ApplicationName}}-rhpamcentr"
           spec:
-            serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
-            terminationGracePeriodSeconds: 60
             containers:
               - name: "{{.ApplicationName}}-rhpamcentr"
-                image: rhpam{{.Version}}-businesscentral-openshift
-                imagePullPolicy: Always
-                resources:
-                  requests:
-                    memory: 768Mi
-                  limits:
-                    memory: 1Gi
                 volumeMounts:
-                  - name: businesscentral-keystore-volume
-                    mountPath: "/etc/businesscentral-secret-volume"
-                    readOnly: true
                   - name: "{{.ApplicationName}}-rhpamcentr-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
-                livenessProbe:
-                  exec:
-                    command:
-                      - "/bin/bash"
-                      - "-c"
-                      - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
-                  initialDelaySeconds: 180
-                  timeoutSeconds: 2
-                  periodSeconds: 15
-                readinessProbe:
-                  exec:
-                    command:
-                      - "/bin/bash"
-                      - "-c"
-                      - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/kie-wb.jsp
-                  initialDelaySeconds: 60
-                  timeoutSeconds: 2
-                  periodSeconds: 30
-                  failureThreshold: 6
                 ports:
-                  - name: jolokia
-                    containerPort: 8778
-                    protocol: TCP
-                  - name: http
-                    containerPort: 8080
-                    protocol: TCP
-                  - name: https
-                    containerPort: 8443
-                    protocol: TCP
-                  - name: ping
-                    containerPort: 8888
+                  - name: git-ssh
+                    containerPort: 8001
                     protocol: TCP
                 env:
-                  - name: KIE_MAVEN_USER
-                    value: mavenUser
-                  - name: KIE_MAVEN_PWD
-                    value: "{{.MavenPassword}}"
-                  - name: KIE_MBEANS
-                    value: enabled
-                  - name: HTTPS_KEYSTORE_DIR
-                    value: "/etc/businesscentral-secret-volume"
-                  - name: HTTPS_KEYSTORE
-                    value: "keystore.jks"
-                  - name: HTTPS_NAME
-                    value: "jboss"
-                  - name: HTTPS_PASSWORD
-                    value: "{{.KeyStorePassword}}"
-                  - name: WORKBENCH_ROUTE_NAME
-                    value: "{{.ApplicationName}}-rhpamcentr"
-                  - name: JGROUPS_PING_PROTOCOL
-                    value: "openshift.DNS_PING"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "{{.ApplicationName}}-ping"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                    value: "8888"
-                  - name: APPFORMER_ELASTIC_PORT
-                    value: ""
-                  - name: APPFORMER_ELASTIC_CLUSTER_NAME
-                    value: ""
-                  - name: APPFORMER_ELASTIC_RETRIES
-                    value: ""
                   - name: APPFORMER_ELASTIC_HOST
                     value: "{{.ApplicationName}}-rhpamindex"
                   - name: APPFORMER_JMS_BROKER_ADDRESS
                     value: "{{.ApplicationName}}-amq-tcp"
-                  - name: APPFORMER_JMS_BROKER_PORT
-                    value: ""
                   - name: APPFORMER_JMS_BROKER_USER
                     value: "jmsBrokserUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "{{.AdminPassword}}"
-                  - name: SSO_URL
-                    value: ""
-                  - name: SSO_OPENIDCONNECT_DEPLOYMENTS
-                    value: "ROOT.war"
-                  - name: SSO_REALM
-                    value: ""
-                  - name: SSO_SECRET
-                    value: ""
-                  - name: SSO_CLIENT
-                    value: ""
-                  - name: SSO_USERNAME
-                    value: ""
-                  - name: SSO_PASSWORD
-                    value: ""
-                  - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                    value: "false"
-                  - name: SSO_PRINCIPAL_ATTRIBUTE
-                    value: "preferred_username"
-                  - name: HOSTNAME_HTTP
-                    value: ""
-                  - name: HOSTNAME_HTTPS
-                    value: ""
-                  - name: AUTH_LDAP_URL
-                    value: ""
-                  - name: AUTH_LDAP_BIND_DN
-                    value: ""
-                  - name: AUTH_LDAP_BIND_CREDENTIAL
-                    value: ""
-                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: ""
-                  - name: AUTH_LDAP_BASE_CTX_DN
-                    value: ""
-                  - name: AUTH_LDAP_BASE_FILTER
-                    value: ""
-                  - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: ""
-                  - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-                    value: ""
-                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: ""
-                  - name: AUTH_LDAP_PARSE_USERNAME
-                    value: ""
-                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: ""
-                  - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-                    value: ""
-                  - name: AUTH_LDAP_ROLES_CTX_DN
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_FILTER
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_RECURSION
-                    value: ""
-                  - name: AUTH_LDAP_DEFAULT_ROLE
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: ""
-                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: ""
-                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: ""
             volumes:
-              - name: businesscentral-keystore-volume
-                secret:
-                  secretName: "{{.ApplicationName}}-businesscentral-app-secret"
               - name: "{{.ApplicationName}}-rhpamcentr-pvol"
                 persistentVolumeClaim:
                   claimName: "{{.ApplicationName}}-rhpamcentr-claim"
@@ -223,62 +47,13 @@ console:
   services:
     - spec:
         ports:
-          - name: http
-            port: 8080
-            targetPort: 8080
-          - name: https
-            port: 8443
-            targetPort: 8443
           - name: git-ssh
             port: 8001
             targetPort: 8001
-        selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
       metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
-        labels:
-          app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
-        annotations:
-          description: All the Business Central web server's ports.
 
-    - spec:
-        clusterIP: "None"
-        ports:
-          - name: "ping"
-            port: 8888
-            targetPort: 8888
-        selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
-      metadata:
-        name: "{{.ApplicationName}}-ping"
-        labels:
-          app: "{{.ApplicationName}}"
-        annotations:
-          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-          description: "The JGroups ping port for clustering."
-
-  routes:
-    - id: "{{.ApplicationName}}-rhpamcentr-https"
-      metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
-        labels:
-          app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
-        annotations:
-          description: Route for Business Central's https service.
-          haproxy.router.openshift.io/timeout: 60s
-      spec:
-        host: ""
-        to:
-          name: "{{.ApplicationName}}-rhpamcentr"
-        port:
-          targetPort: https
-        tls:
-          insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
-
-## MySQL/ES/AMQ BEGIN
+# MySQL/ES/AMQ BEGIN
 others:
   - persistentVolumeClaims:
       - metadata:
@@ -426,7 +201,7 @@ others:
                         - "/bin/sh"
                         - "-i"
                         - "-c"
-                        - 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e "SELECT 1"'
+                        - "MYSQL_PWD=$MYSQL_PASSWORD mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"
                       port: 3306
                     initialDelaySeconds: 5
                     timeoutSeconds: 1
@@ -450,7 +225,7 @@ others:
 
       - metadata:
           labels:
-            app: { { .ApplicationName } }
+            app: "{{.ApplicationName}}"
           name: "{{.ApplicationName}}-amq"
         spec:
           replicas: 1
@@ -463,7 +238,7 @@ others:
           template:
             metadata:
               labels:
-                app: { { .ApplicationName } }
+                app: "{{.ApplicationName}}"
                 deploymentConfig: "{{.ApplicationName}}-amq"
               name: "{{.ApplicationName}}-amq"
             spec:
@@ -481,7 +256,7 @@ others:
                       value: "openwire"
                     - name: AMQ_GLOBAL_MAX_SIZE
                       value: "100 gb"
-                  image: "amq-broker71-openshift"
+                  image: "amq-broker-72-openshift"
                   imagePullPolicy: Always
                   readinessProbe:
                     exec:
@@ -596,111 +371,18 @@ servers:
   - deploymentConfigs:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-          annotations:
-            template.alpha.openshift.io/wait-for-ready: "true"
         spec:
-          strategy:
-            type: Recreate
-          triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "{{.ApplicationName}}-kieserver-{{$index}}"
-                from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
-            - type: ConfigChange
           replicas: 2
-          selector:
-            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
           template:
             metadata:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
-              labels:
-                deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
-                app: "{{.ApplicationName}}"
-                service: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
-              serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
-              terminationGracePeriodSeconds: 60
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "rhpam{{.Version}}-kieserver-openshift"
-                  imagePullPolicy: Always
-                  resources:
-                    requests:
-                      memory: 512Mi
-                    limits:
-                      memory: 1Gi
-                  volumeMounts:
-                    - name: kieserver-keystore-volume
-                      mountPath: "/etc/kieserver-secret-volume"
-                      readOnly: true
-                  livenessProbe:
-                    exec:
-                      command:
-                        - "/bin/bash"
-                        - "-c"
-                        - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/healthcheck
-                    initialDelaySeconds: 180
-                    timeoutSeconds: 2
-                    periodSeconds: 15
-                    failureThreshold: 3
-                  readinessProbe:
-                    exec:
-                      command:
-                        - "/bin/bash"
-                        - "-c"
-                        - curl --fail --silent -u adminUser:"$KIE_ADMIN_PWD" http://localhost:8080/services/rest/server/readycheck
-                    initialDelaySeconds: 60
-                    timeoutSeconds: 2
-                    periodSeconds: 30
-                    failureThreshold: 6
-                  ports:
-                    - name: jolokia
-                      containerPort: 8778
-                      protocol: TCP
-                    - name: http
-                      containerPort: 8080
-                      protocol: TCP
-                    - name: https
-                      containerPort: 8443
-                      protocol: TCP
                   env:
-                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-                      value: mavenUser
-                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-                      value: "{{.MavenPassword}}"
-                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
                     - name: AUTO_CONFIGURE_EJB_TIMER
                       value: "true"
                     - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
-                    - name: KIE_SERVER_ID
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_HOST
-                      value: ""
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
-                    - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-                      value: ""
-                    - name: EXTERNAL_MAVEN_REPO_ID
-                      value: ""
-                    - name: EXTERNAL_MAVEN_REPO_URL
-                      value: ""
-                    - name: EXTERNAL_MAVEN_REPO_USERNAME
-                      value: ""
-                    - name: EXTERNAL_MAVEN_REPO_PASSWORD
-                      value: ""
-                    - name: KIE_SERVER_ROUTER_PROTOCOL
                       value: ""
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
@@ -728,119 +410,7 @@ servers:
                     ## MySQL driver settings END
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
-                    - name: HTTPS_KEYSTORE_DIR
-                      value: "/etc/kieserver-secret-volume"
-                    - name: HTTPS_KEYSTORE
-                      value: "keystore.jks"
-                    - name: HTTPS_NAME
-                      value: "jboss"
-                    - name: HTTPS_PASSWORD
-                      value: "{{.KeyStorePassword}}"
-                    - name: SSO_URL
-                      value: ""
-                    - name: SSO_REALM
-                      value: ""
-                    - name: SSO_SECRET
-                      value: ""
-                    - name: SSO_CLIENT
-                      value: ""
-                    - name: SSO_USERNAME
-                      value: ""
-                    - name: SSO_PASSWORD
-                      value: ""
-                    - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                      value: "false"
-                    - name: SSO_PRINCIPAL_ATTRIBUTE
-                      value: "preferred_username"
-                    - name: HOSTNAME_HTTP
-                      value: ""
-                    - name: HOSTNAME_HTTPS
-                      value: ""
-                    - name: AUTH_LDAP_URL
-                      value: ""
-                    - name: AUTH_LDAP_BIND_DN
-                      value: ""
-                    - name: AUTH_LDAP_BIND_CREDENTIAL
-                      value: ""
-                    - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                      value: ""
-                    - name: AUTH_LDAP_BASE_CTX_DN
-                      value: ""
-                    - name: AUTH_LDAP_BASE_FILTER
-                      value: ""
-                    - name: AUTH_LDAP_SEARCH_SCOPE
-                      value: ""
-                    - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-                      value: ""
-                    - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                      value: ""
-                    - name: AUTH_LDAP_PARSE_USERNAME
-                      value: ""
-                    - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                      value: ""
-                    - name: AUTH_LDAP_USERNAME_END_STRING
-                      value: ""
-                    - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-                      value: ""
-                    - name: AUTH_LDAP_ROLES_CTX_DN
-                      value: ""
-                    - name: AUTH_LDAP_ROLE_FILTER
-                      value: ""
-                    - name: AUTH_LDAP_ROLE_RECURSION
-                      value: ""
-                    - name: AUTH_LDAP_DEFAULT_ROLE
-                      value: ""
-                    - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                      value: ""
-                    - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                      value: ""
-                    - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                      value: ""
-                    - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                      value: ""
-              volumes:
-                - name: kieserver-keystore-volume
-                  secret:
-                    secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
       ## KIE server deployment config END
-      ## KIE server services BEGIN
-    services:
-      - spec:
-          ports:
-            - name: http
-              port: 8080
-              targetPort: 8080
-            - name: https
-              port: 8443
-              targetPort: 8443
-          selector:
-            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
-        metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-          annotations:
-            description: All the KIE server web server's ports.
-      ## KIE server routes BEGIN
-    routes:
-      - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
-        metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-          annotations:
-            description: Route for KIE server's https service.
-        spec:
-          host: ""
-          to:
-            name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          port:
-            targetPort: https
-          tls:
-            insecureEdgeTerminationPolicy: Redirect
-            termination: passthrough
   #{{end}}
   ## RANGE ends
   ## KIE Servers END

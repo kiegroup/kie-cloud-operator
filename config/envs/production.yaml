@@ -102,6 +102,10 @@ others:
                       value: "KIE Server Router"
                     - name: KIE_SERVER_ROUTER_PROTOCOL
                       value: ""
+                    - name: KIE_SERVER_CONTROLLER_USER
+                      value: controllerUser
+                    - name: KIE_SERVER_CONTROLLER_PWD
+                      value: "{{.ControllerPassword}}"
                     - name: KIE_SERVER_CONTROLLER_TOKEN
                       value: ""
                     - name: KIE_SERVER_CONTROLLER_SERVICE
@@ -168,6 +172,7 @@ servers:
           resources:
             requests:
               storage: "1Gi"
+
     ## PostgreSQL persistent volume claim END
     ## KIE server deployment config BEGIN
     deploymentConfigs:
