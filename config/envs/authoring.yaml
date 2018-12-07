@@ -69,7 +69,14 @@ servers:
                 - name: "{{.ApplicationName}}-h2-pvol"
                   persistentVolumeClaim:
                     claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
+<<<<<<< HEAD
   ## KIE server deployment config END
   #{{end}}
   ## RANGE ends
   ## KIE Servers END
+=======
+    ## KIE server deployment config END
+#{{end}}
+## RANGE ends
+## KIE Servers END
+>>>>>>> upstream/master
