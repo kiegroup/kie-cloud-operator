@@ -258,14 +258,20 @@ func TestMergeDeploymentconfigs_TemplateMetadata(t *testing.T) {
 	assert.Equal(t, "pong", results[0].Spec.Template.ObjectMeta.Annotations["ping"])
 }
 
-func TestMergeDeploymentconfigs_Spec(t *testing.T) {
+func TestMergeDeploymentconfigs_Spec_Triggers(t *testing.T) {
+	emptyImageChangeParams := &appsv1.DeploymentTriggerImageChangeParams{}
 	baseline := []appsv1.DeploymentConfig{
 		*buildDC("dc1"),
 	}
+	// Let's assume it has a build strategy=sourceStrategy
+	baseline[0].Spec.Triggers = append(baseline[0].Spec.Triggers, appsv1.DeploymentTriggerPolicy{
+		Type:              "ImageChange",
+		ImageChangeParams: emptyImageChangeParams,
+	})
 	overwrite := []appsv1.DeploymentConfig{
 		*buildDC("dc1"),
 	}
-	overwrite[0].Spec.Strategy.Type = "Other Strategy"
+
 	overwrite[0].Spec.Triggers[0] = appsv1.DeploymentTriggerPolicy{
 		Type: "ImageChange",
 		ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
@@ -280,11 +286,68 @@ func TestMergeDeploymentconfigs_Spec(t *testing.T) {
 
 	results := mergeDeploymentConfigs(baseline, overwrite)
 
-	assert.Equal(t, appsv1.DeploymentStrategyType("Other Strategy"), results[0].Spec.Strategy.Type)
-	assert.Equal(t, 2, len(results[0].Spec.Triggers))
+	assert.Equal(t, 3, len(results[0].Spec.Triggers))
+	assert.Equal(t, appsv1.DeploymentTriggerType("ImageChange"), results[0].Spec.Triggers[0].Type)
 	assert.Equal(t, "openshift", results[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, "other-image:future", results[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, appsv1.DeploymentTriggerType("ConfigChange"), results[0].Spec.Triggers[1].Type)
+	assert.Equal(t, appsv1.DeploymentTriggerType("ImageChange"), results[0].Spec.Triggers[1].Type)
+	assert.Equal(t, emptyImageChangeParams, results[0].Spec.Triggers[1].ImageChangeParams)
+	assert.Equal(t, appsv1.DeploymentTriggerType("ConfigChange"), results[0].Spec.Triggers[2].Type)
+}
+
+func TestMergeDeploymentconfigs_Spec_Other(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	baseline[0].Spec.Selector["foo"] = "replace me"
+	overwrite := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite[0].Spec.Strategy.Type = "Other Strategy"
+	overwrite[0].Spec.Selector["foo"] = "replaced"
+	overwrite[0].Spec.Selector["other"] = "bar"
+	overwrite[0].Spec.Paused = true
+	overwrite[0].Spec.Test = true
+	overwrite[0].Spec.Replicas = 2
+
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, appsv1.DeploymentStrategyType("Other Strategy"), results[0].Spec.Strategy.Type)
+	assert.Equal(t, 3, len(results[0].Spec.Selector))
+	assert.Equal(t, "dc1", results[0].Spec.Selector["deploymentConfig"])
+	assert.Equal(t, "replaced", results[0].Spec.Selector["foo"])
+	assert.Equal(t, "bar", results[0].Spec.Selector["other"])
+	assert.True(t, results[0].Spec.Paused)
+	assert.True(t, results[0].Spec.Test)
+	assert.Equal(t, int32(2), results[0].Spec.Replicas)
+}
+func TestMergeDeploymentconfigs_PodSpec_Volumes(t *testing.T) {
+	baseline := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite := []appsv1.DeploymentConfig{
+		*buildDC("dc1"),
+	}
+	overwrite[0].Spec.Template.Spec.Volumes[1] = corev1.Volume{
+		Name: "dc1-other-volume",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	}
+	overwrite[0].Spec.Template.Spec.Volumes = append(overwrite[0].Spec.Template.Spec.Volumes, corev1.Volume{
+		Name: "dc1-secret-volume",
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: "other-secret",
+			},
+		},
+	})
+
+	results := mergeDeploymentConfigs(baseline, overwrite)
+
+	assert.Equal(t, 3, len(results[0].Spec.Template.Spec.Volumes))
+	assert.Equal(t, "dc1-other-volume", results[0].Spec.Template.Spec.Volumes[2].Name)
+	assert.Equal(t, "other-secret", results[0].Spec.Template.Spec.Volumes[1].VolumeSource.Secret.SecretName)
 }
 
 func getParsedTemplate(filename string, name string, object interface{}) error {
