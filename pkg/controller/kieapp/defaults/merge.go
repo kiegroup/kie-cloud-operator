@@ -3,6 +3,7 @@ package defaults
 import (
 	"reflect"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -233,8 +234,8 @@ func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTempla
 func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.DeploymentTriggerPolicies) (appsv1.DeploymentTriggerPolicies, error) {
 	var mergedTriggers []appsv1.DeploymentTriggerPolicy
 	for baselineIndex, baselineItem := range baseline {
-		_, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
-		if found == (appsv1.DeploymentTriggerPolicy{}) {
+		idx, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
+		if idx == -1 {
 			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
 		} else {
 			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
@@ -257,8 +258,8 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 		mergedTriggers = append(mergedTriggers, baseline[baselineIndex])
 	}
 	for overwriteIndex, overwriteItem := range overwrite {
-		_, found := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
-		if found == (appsv1.DeploymentTriggerPolicy{}) {
+		idx, _ := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
+		if idx == -1 {
 			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
 			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
 		}
@@ -274,10 +275,19 @@ func mergeImageChangeParams(baseline appsv1.DeploymentTriggerImageChangeParams, 
 	return baseline, nil
 }
 
+// findDeploymentTriggerPolicy Find a deploymentTrigger by Type. In case type == ImageChange
+// the match will be returned if both are not empty
 func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []appsv1.DeploymentTriggerPolicy) (int, appsv1.DeploymentTriggerPolicy) {
+	emptyImageChangeParams := &appsv1.DeploymentTriggerImageChangeParams{}
 	for index, candidate := range slice {
 		if candidate.Type == object.Type {
-			return index, candidate
+			if object.Type == appsv1.DeploymentTriggerOnImageChange {
+				if !cmp.Equal(object.ImageChangeParams, emptyImageChangeParams) && !cmp.Equal(candidate.ImageChangeParams, emptyImageChangeParams) {
+					return index, candidate
+				}
+			} else {
+				return index, candidate
+			}
 		}
 	}
 	return -1, appsv1.DeploymentTriggerPolicy{}
