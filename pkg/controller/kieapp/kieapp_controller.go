@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -283,6 +284,19 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev
 	}
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	version := []byte(cr.Spec.Template.Version)
+	imageName := tagName
+	regContext := fmt.Sprintf("rhpam-%s", string(version[0]))
+	registryAddress := "registry.access.redhat.com"
+	if strings.Contains(result[0], "businesscentral-indexing-openshift") {
+		regContext = "rhpam-7-tech-preview"
+	} else if strings.Contains(result[0], "amq-broker-7") {
+		regContext = "amq-broker-7"
+	} else if result[0] == "postgresql" || result[0] == "mysql" {
+		regContext = "rhscl"
+		pattern := regexp.MustCompile("[0-9]+")
+		imageName = fmt.Sprintf("%s-%s-rhel7:%s", result[0], strings.Join(pattern.FindAllString(result[1], -1), ""), "latest")
+	}
+	registryURL := fmt.Sprintf("%s/%s/%s", registryAddress, regContext, imageName)
 
 	isnew := &oimagev1.ImageStreamTag{
 		ObjectMeta: metav1.ObjectMeta{
@@ -293,13 +307,13 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev
 			Name: result[1],
 			From: &corev1.ObjectReference{
 				Kind: "DockerImage",
-				Name: fmt.Sprintf("registry.access.redhat.com/rhpam-%s/%s", string(version[0]), tagName),
+				Name: registryURL,
 			},
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
 
-	logrus.Infof("Creating a new %s %s/%s", isnew.GetObjectKind().GroupVersionKind().Kind, isnew.Namespace, isnew.Name)
+	logrus.Infof("Creating a new %s %s/%s for %s", isnew.GetObjectKind().GroupVersionKind().Kind, isnew.Namespace, isnew.Name, registryURL)
 	_, err := reconciler.imageClient.ImageStreamTags(isnew.Namespace).Create(isnew)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Issue creating ImageStream %s/%s - %v", isnew.Namespace, isnew.Name, err)
