@@ -47,36 +47,63 @@ servers:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: MAVEN_REPOS
                       value: "RHPAMCENTR,EXTERNAL"
-                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-                      value: mavenUser
-                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-                      value: "{{.MavenPassword}}"
-                    - name: RHPAMCENTR_MAVEN_REPO_PATH
-                      value: /maven2/
-                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
                     - name: KIE_SERVER_CONTROLLER_TOKEN
                       value: ""
-                    - name: KIE_SERVER_ID
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
+                    ## H2 driver settings BEGIN
+                    - name: RHPAM_DRIVER
+                      value: "h2"
+                    - name: RHPAM_USERNAME
+                      value: "sa"
+                    - name: RHPAM_PASSWORD
+                      value: "{{.AdminPassword}}"
+                    - name: RHPAM_SERVICE_HOST
+                      value: "dummy_ignored"
+                    - name: RHPAM_SERVICE_PORT
+                      value: "12345"
+                    - name: KIE_SERVER_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.H2Dialect"
+                    - name: DROOLS_SERVER_FILTER_CLASSES
+                      value: "true"
+                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
+                  ## H2 driver settings END
                   volumeMounts:
-                    - name: kieserver-keystore-volume
-                      mountPath: "/etc/kieserver-secret-volume"
-                      readOnly: true
+                    - name: "{{.ApplicationName}}-h2-pvol"
+                      mountPath: "/opt/eap/standalone/data"
               volumes:
                 ## H2 volume settings BEGIN
                 - name: "{{.ApplicationName}}-h2-pvol"
                   persistentVolumeClaim:
                     claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
     ## KIE server deployment config END
+    persistentVolumeClaims:
+      ## H2 persistent volume claim BEGIN
+      - metadata:
+          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "1Gi"
+      ## H2 persistent volume claim END
 #{{end}}
 ## RANGE ends
 ## KIE Servers END

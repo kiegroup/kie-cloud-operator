@@ -3,7 +3,6 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/ghodss/yaml"
 	"reflect"
 	"strings"
 	"time"
@@ -85,6 +84,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &rbacv1.Role{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.KieApp{},
 	})
@@ -333,7 +340,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.GetClient())
 	if err != nil {
-		return v1.Environment{}, reconcile.Result{Requeue: true}, err
+		return env, reconcile.Result{Requeue: true}, err
 	}
 
 	// console keystore generation
@@ -437,6 +444,10 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 		object.Secrets[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
 		allObjects = append(allObjects, &object.Secrets[index])
 	}
+	for index := range object.Roles {
+		object.Roles[index].SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("Role"))
+		allObjects = append(allObjects, &object.Roles[index])
+	}
 	for index := range object.RoleBindings {
 		object.RoleBindings[index].SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
 		allObjects = append(allObjects, &object.RoleBindings[index])
@@ -491,13 +502,6 @@ func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr
 		return reconcile.Result{}, err
 	}
 	obj.SetNamespace(namespace)
-	//TODO temp
-	bytes, err := yaml.Marshal(obj)
-	if err != nil {
-		fmt.Printf("Failed to marshall object %v", err)
-	} else {
-		fmt.Printf("Will create\n\n%v\n\n", string(bytes))
-	}
 	deepCopyObj := obj.DeepCopyObject()
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(

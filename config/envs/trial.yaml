@@ -70,26 +70,12 @@ servers:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
-                    - name: MAVEN_REPOS
-                      value: "RHPAMCENTR,EXTERNAL"
-                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
-                      value: mavenUser
                     - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-                      value: "{{.MavenPassword}}"
-                    - name: RHPAMCENTR_MAVEN_REPO_PATH
-                      value: /maven2/
-                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
+                      value: RedHat
                     - name: KIE_SERVER_CONTROLLER_TOKEN
                       value: ""
-                    - name: KIE_SERVER_ID
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
                     - name: KIE_ADMIN_PWD
                       value: RedHat
                     - name: KIE_SERVER_CONTROLLER_PWD
@@ -99,11 +85,6 @@ servers:
                     - name: EXECUTION_SERVER_ROUTE_NAME
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
     ## KIE server deployment config END
-    persistentVolumeClaims:
-      - metadata:
-          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
-          annotations:
-            delete: "true"
 #{{end}}
 ## RANGE ends
 ## KIE Servers END

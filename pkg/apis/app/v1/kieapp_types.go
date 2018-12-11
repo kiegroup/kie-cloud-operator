@@ -77,6 +77,7 @@ type CustomObject struct {
 	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
 	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
+	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
 	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
 	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`

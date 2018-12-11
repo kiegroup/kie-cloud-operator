@@ -107,8 +107,8 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the baseline label to be set")
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the overwrite label to be set")
 	assert.Equal(t, "overwrite", finalRoute4.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "test-rhpamcentr-https-2", finalRoute3.Name, "Second route name should end with -2")
-	assert.Equal(t, "test-rhpamcentr-https-3", finalRoute4.Name, "Second route name should end with -3")
+	assert.Equal(t, "test-rhpamcentr-2", finalRoute3.Name, "Second route name should end with -2")
+	assert.Equal(t, "test-rhpamcentr-3", finalRoute4.Name, "Second route name should end with -3")
 }
 
 func getEnvironment(environment string, name string) (v1.Environment, error) {
@@ -510,60 +510,4 @@ func buildProbe(name string, delay, timeout int32) *corev1.Probe {
 		InitialDelaySeconds: delay,
 		TimeoutSeconds:      timeout,
 	}
-}
-
-func TestTrialEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: "trial",
-		},
-	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
-
-	assert.Nil(t, err, "Error getting trial environment")
-	wbServices := env.Console.Services
-	mainService := getService(wbServices, "test-rhpamcentr")
-	assert.NotNil(t, mainService, "rhpamcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 3, "The rhpamcentr service should have three ports")
-	assert.True(t, hasPort(mainService, 8001), "The rhpamcentr service should listen on port 8001")
-
-	pingService := getService(wbServices, "test-rhpamcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-}
-
-func getService(services []corev1.Service, name string) corev1.Service {
-	for _, service := range services {
-		if service.Name == name {
-			return service
-		}
-	}
-	return corev1.Service{}
-}
-
-func hasPort(service corev1.Service, portNum int32) bool {
-	for _, port := range service.Spec.Ports {
-		if port.Port == portNum {
-			return true
-		}
-	}
-	return false
-}
-
-func TestAuthoringEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: "authoring",
-		},
-	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }

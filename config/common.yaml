@@ -4,6 +4,29 @@ console:
         name: "{{.ApplicationName}}-rhpamsvc"
         labels:
           app: "{{.ApplicationName}}"
+  roles:
+    - metadata:
+        name: "{{.ApplicationName}}-rhpamsvc-view"
+      rules:
+        - apiGroups:
+            - ""
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
+        - apiGroups:
+            - app.kiegroup.org
+            - apps.openshift.io
+            - image.openshift.io
+            - route.openshift.io
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
   rolebindings:
     - metadata:
         name: "{{.ApplicationName}}-rhpamsvc-view"
@@ -12,7 +35,7 @@ console:
           name: "{{.ApplicationName}}-rhpamsvc"
       roleRef:
         kind: Role
-        name: view
+        name: "{{.ApplicationName}}-rhpamsvc-view"
   deploymentConfigs:
     - metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
@@ -66,7 +89,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
@@ -75,7 +98,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
                   initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 30
@@ -229,7 +252,7 @@ console:
   routes:
     - id: "{{.ApplicationName}}-rhpamcentr-https"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-https"
+        name: "{{.ApplicationName}}-rhpamcentr"
         labels:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-rhpamcentr"
@@ -262,28 +285,13 @@ console:
 servers:
   ## RANGE BEGINS
   #{{ range $index, $Map := .ServerCount }}
-  - persistentVolumeClaims:
-      ## H2 persistent volume claim BEGIN
-      - metadata:
-          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: "1Gi"
-      ## H2 persistent volume claim END
-    ## KIE server deployment config BEGIN
-    deploymentConfigs:
+  ## KIE server deployment config BEGIN
+  - deploymentConfigs:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             template.alpha.openshift.io/wait-for-ready: "true"
         spec:
@@ -294,7 +302,7 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-kieserver"
+                  - "{{.ApplicationName}}-kieserver-{{$index}}"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
@@ -307,15 +315,14 @@ servers:
             metadata:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
               labels:
-                app: "{{.ApplicationName}}-kieserver-{{$index}}"
-                application: "{{.ApplicationName}}"
-                service: "{{.ApplicationName}}-kieserver"
+                app: "{{.ApplicationName}}"
+                service: "{{.ApplicationName}}-kieserver-{{$index}}"
                 deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-kieserver"
+                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   image: "rhpam{{.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
@@ -339,10 +346,22 @@ servers:
                       value: ws
                     - name: KIE_MBEANS
                       value: enabled
+                    - name: KIE_SERVER_ROUTE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+                      value: "false"
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+                      value: mavenUser
+                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+                      value: "{{.MavenPassword}}"
+                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+                      value: "{{.ApplicationName}}-rhpamcentr"
                     - name: MAVEN_REPOS
-                      value: EXTERNAL
+                      value: "RHPAMCENTR,EXTERNAL"
+                    - name: RHPAMCENTR_MAVEN_REPO_PATH
+                      value: /maven2/
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                       value: ROOT.war
                     - name: KIE_SERVER_BYPASS_AUTH_USER
@@ -355,34 +374,6 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "{{.KeyStorePassword}}"
-                    - name: DATASOURCES
-                      value: "RHPAM"
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
-                    - name: RHPAM_JNDI
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_JTA
-                      value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
-                    ## H2 driver settings BEGIN
-                    - name: RHPAM_DRIVER
-                      value: "h2"
-                    - name: RHPAM_USERNAME
-                      value: "sa"
-                    - name: RHPAM_PASSWORD
-                      value: "{{.AdminPassword}}"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
-                    - name: RHPAM_SERVICE_HOST
-                      value: "dummy_ignored"
-                    - name: RHPAM_SERVICE_PORT
-                      value: "12345"
-                    - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.H2Dialect"
-                    - name: DROOLS_SERVER_FILTER_CLASSES
-                      value: "true"
-                  ## H2 driver settings END
                   resources:
                     limits:
                       memory: 1Gi
@@ -391,7 +382,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u adminUser:KIE_ADMIN_PWD http://localhost:8080/services/rest/server/healthcheck
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/services/rest/server/healthcheck
                     initialDelaySeconds: 180
                     timeoutSeconds: 2
                     periodSeconds: 15
@@ -401,7 +392,7 @@ servers:
                       command:
                         - "/bin/bash"
                         - "-c"
-                        - curl --fail --silent -u adminUser:$KIE_ADMIN_PWD http://localhost:8080/services/rest/server/readycheck
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/services/rest/server/readycheck
                     initialDelaySeconds: 60
                     timeoutSeconds: 2
                     periodSeconds: 30
@@ -424,7 +415,6 @@ servers:
                 - name: kieserver-keystore-volume
                   secret:
                     secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
-              ## H2 volume settings END
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:
@@ -441,9 +431,8 @@ servers:
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -457,9 +446,8 @@ servers:
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
@@ -470,9 +458,8 @@ servers:
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}-kieserver-{{$index}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver"
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's https service.
         spec:
