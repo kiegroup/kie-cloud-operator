@@ -51,8 +51,6 @@ servers:
                   env:
                     - name: MAVEN_REPOS
                       value: "RHPAMCENTR,EXTERNAL"
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: DATASOURCES
                       value: "RHPAM"
                     - name: RHPAM_DATABASE

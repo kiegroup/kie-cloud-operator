@@ -106,8 +106,6 @@ others:
                       value: controllerUser
                     - name: KIE_SERVER_CONTROLLER_PWD
                       value: "{{.ControllerPassword}}"
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: KIE_SERVER_CONTROLLER_SERVICE
                       value: "{{.ApplicationName}}-rhpamcentr"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -207,8 +205,6 @@ servers:
                       containerPort: 8888
                       protocol: TCP
                   env:
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
                     - name: KIE_SERVER_ROUTE_NAME
@@ -354,7 +350,7 @@ servers:
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "postgresql:9.6"
+                  name: "postgresql:10"
             - type: ConfigChange
           replicas: 1
           selector:

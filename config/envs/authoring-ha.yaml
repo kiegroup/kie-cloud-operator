@@ -84,8 +84,6 @@ others:
           labels:
             app: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-rhpamindex"
-          annotations:
-            template.alpha.openshift.io/wait-for-ready: "true"
         spec:
           strategy:
             type: Recreate
@@ -382,8 +380,6 @@ servers:
                   env:
                     - name: AUTO_CONFIGURE_EJB_TIMER
                       value: "true"
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
                     - name: DATASOURCES

@@ -1,7 +1,5 @@
 deploymentConfigs:
   - metadata:
-      annotations:
-        template.alpha.openshift.io/wait-for-ready: "true"
       creationTimestamp: null
       labels:
         app: prod-kieserver-0
@@ -102,7 +100,7 @@ deploymentConfigs:
                   value: /maven2/
                 - name: RHPAMCENTR_MAVEN_REPO_USERNAME
                   value: mavenUser
-              image: rhpam71-kieserver-openshift
+              image: rhpam72-kieserver-openshift
               imagePullPolicy: Always
               livenessProbe:
                 exec:
@@ -161,7 +159,7 @@ deploymentConfigs:
               - prod-kieserver
             from:
               kind: ImageStreamTag
-              name: rhpam71-kieserver-openshift:1.1
+              name: rhpam72-kieserver-openshift:1.0
               namespace: openshift
           type: ImageChange
         - type: ConfigChange

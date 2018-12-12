@@ -42,8 +42,6 @@ console:
         labels:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-rhpamcentr"
-        annotations:
-          template.alpha.openshift.io/wait-for-ready: "true"
       spec:
         strategy:
           type: Recreate
@@ -147,70 +145,12 @@ console:
                     value: "{{.ApplicationName}}-rhpamcentr-ping"
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
-                  - name: SSO_URL
-                    value: ""
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                     value: "ROOT.war"
-                  - name: SSO_REALM
-                    value: ""
-                  - name: SSO_SECRET
-                    value: ""
-                  - name: SSO_CLIENT
-                    value: ""
-                  - name: SSO_USERNAME
-                    value: ""
-                  - name: SSO_PASSWORD
-                    value: ""
                   - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
                     value: "false"
                   - name: SSO_PRINCIPAL_ATTRIBUTE
                     value: "preferred_username"
-                  - name: HOSTNAME_HTTP
-                    value: ""
-                  - name: HOSTNAME_HTTPS
-                    value: ""
-                  - name: AUTH_LDAP_URL
-                    value: ""
-                  - name: AUTH_LDAP_BIND_DN
-                    value: ""
-                  - name: AUTH_LDAP_BIND_CREDENTIAL
-                    value: ""
-                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: ""
-                  - name: AUTH_LDAP_BASE_CTX_DN
-                    value: ""
-                  - name: AUTH_LDAP_BASE_FILTER
-                    value: ""
-                  - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: ""
-                  - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-                    value: ""
-                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: ""
-                  - name: AUTH_LDAP_PARSE_USERNAME
-                    value: ""
-                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: ""
-                  - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-                    value: ""
-                  - name: AUTH_LDAP_ROLES_CTX_DN
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_FILTER
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_RECURSION
-                    value: ""
-                  - name: AUTH_LDAP_DEFAULT_ROLE
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: ""
-                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: ""
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: ""
-                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: ""
             volumes:
               - name: businesscentral-keystore-volume
                 secret:
@@ -292,8 +232,6 @@ servers:
           labels:
             app: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
-          annotations:
-            template.alpha.openshift.io/wait-for-ready: "true"
         spec:
           strategy:
             type: Recreate
@@ -364,6 +302,10 @@ servers:
                       value: /maven2/
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                       value: ROOT.war
+                    - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+                      value: "false"
+                    - name: SSO_PRINCIPAL_ATTRIBUTE
+                      value: preferred_username
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
                     - name: HTTPS_KEYSTORE_DIR
@@ -374,6 +316,28 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "{{.KeyStorePassword}}"
+                    - name: FILTERS
+                      value: "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Origin"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                      value: "*"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Methods"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "GET, POST, OPTIONS, PUT"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Headers"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "Accept, Authorization, Content-Type, X-Requested-With"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Credentials"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "true"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Max-Age"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                      value: "1"
                   resources:
                     limits:
                       memory: 1Gi
