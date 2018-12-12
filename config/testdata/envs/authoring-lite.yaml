@@ -35,8 +35,6 @@ console:
           app: "{{.ApplicationName}}-rhpamcentr"
           application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-rhpamcentr"
-        annotations:
-          template.alpha.openshift.io/wait-for-ready: "true"
       spec:
         strategy:
           type: Recreate

@@ -74,8 +74,6 @@ servers:
                   env:
                     - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
                       value: RedHat
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: KIE_ADMIN_PWD
                       value: RedHat
                     - name: KIE_SERVER_CONTROLLER_PWD
