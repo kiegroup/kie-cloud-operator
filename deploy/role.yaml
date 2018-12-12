@@ -6,6 +6,14 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - view
+  - apiGroups:
+      - ""
+    resources:
       - pods
       - services
       - endpoints
