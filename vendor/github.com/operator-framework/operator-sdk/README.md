@@ -23,14 +23,26 @@ The Operator SDK is a framework that uses the [controller-runtime][controller_ru
 
 ## Workflow
 
-The SDK provides workflows to develop operators in Go or Ansible.
+The SDK provides workflows to develop operators in Go, Ansible, or Helm.
 
-The following workflow is for a new Go operator:
+The following workflow is for a new **Go** operator:
 1. Create a new operator project using the SDK Command Line Interface(CLI)
 2. Define new resource APIs by adding Custom Resource Definitions(CRD)
 3. Define Controllers to watch and reconcile resources
 4. Write the reconciling logic for your Controller using the SDK and controller-runtime APIs
 5. Use the SDK CLI to build and generate the operator deployment manifests
+
+The following workflow is for a new **Ansible** operator:
+1. Create a new operator project using the SDK Command Line Interface(CLI)
+2. Write the reconciling logic for your object using ansible playbooks and roles
+3. Use the SDK CLI to build and generate the operator deployment manifests
+4. Optionally add additional CRD's using the SDK CLI and repeat steps 2 and 3
+
+The following workflow is for a new **Helm** operator:
+1. Create a new operator project using the SDK Command Line Interface(CLI)
+2. Create a new (or add your existing) Helm chart for use by the operator's reconciling logic
+3. Use the SDK CLI to build and generate the operator deployment manifests
+4. Optionally add additional CRD's using the SDK CLI and repeat steps 2 and 3
 
 ## Prerequisites
 
@@ -75,8 +87,10 @@ $ operator-sdk add controller --api-version=app.example.com/v1alpha1 --kind=AppS
 $ operator-sdk build quay.io/example/app-operator
 $ docker push quay.io/example/app-operator
 
-# Update the operator manifest to use the built image name
+# Update the operator manifest to use the built image name (if you are performing these steps on OSX, see note below)
 $ sed -i 's|REPLACE_IMAGE|quay.io/example/app-operator|g' deploy/operator.yaml
+# On OSX use:
+$ sed -i "" 's|REPLACE_IMAGE|quay.io/example/app-operator|g' deploy/operator.yaml
 
 # Setup Service Account
 $ kubectl create -f deploy/service_account.yaml
@@ -98,7 +112,7 @@ NAME                     READY     STATUS    RESTARTS   AGE
 example-appservice-pod   1/1       Running   0          1m
 
 # Cleanup
-$ kubectl delete -f deploy/app_v1alpha1_appservice_cr.yaml
+$ kubectl delete -f deploy/crds/app_v1alpha1_appservice_cr.yaml
 $ kubectl delete -f deploy/operator.yaml
 $ kubectl delete -f deploy/role.yaml
 $ kubectl delete -f deploy/role_binding.yaml
@@ -110,7 +124,7 @@ $ kubectl delete -f deploy/crds/app_v1alpha1_appservice_crd.yaml
 
 To learn more about the writing an operator in Go, see the [user guide][guide].
 
-The SDK also supports developing an operator using Ansible. See the [Ansible operator user guide][ansible_user_guide].
+The SDK also supports developing an operator using Ansible or Helm. See the [Ansible][ansible_user_guide] and [Helm][helm_user_guide] operator user guides.
 
 ## Samples
 
@@ -144,3 +158,4 @@ Operator SDK is under Apache 2.0 license. See the [LICENSE][license_file] file f
 [kubectl_tool]:https://kubernetes.io/docs/tasks/tools/install-kubectl/
 [controller_runtime]: https://github.com/kubernetes-sigs/controller-runtime
 [ansible_user_guide]:./doc/ansible/user-guide.md
+[helm_user_guide]:./doc/helm/user-guide.md

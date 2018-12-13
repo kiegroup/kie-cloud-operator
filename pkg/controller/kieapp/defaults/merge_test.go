@@ -4,15 +4,13 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	appsv1 "github.com/openshift/api/apps/v1"
-	"github.com/sirupsen/logrus"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestMergeServices(t *testing.T) {
@@ -365,7 +363,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	err = yaml.Unmarshal(yamlBytes, object)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error unmarshalling yaml")
 	}
 	return nil
 }

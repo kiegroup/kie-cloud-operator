@@ -18,7 +18,6 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,8 +31,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
+
+var log = logf.Log.WithName("kieapp.controller")
 
 // Add creates a new KieApp Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -45,7 +47,7 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	imageClient, err := imagev1.NewForConfig(mgr.GetConfig())
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error getting image client")
 	}
 	return &ReconcileKieApp{client: mgr.GetClient(), cache: mgr.GetCache(), imageClient: imageClient, scheme: mgr.GetScheme()}
 }
@@ -155,8 +157,6 @@ type ReconcileKieApp struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logrus.Debugf("Reconciling %s/%s", request.Namespace, request.Name)
-
 	// Create critical ConfigMaps if don't exist
 	configMaps := defaults.ConfigMapsFromFile(request.Namespace)
 	for _, configMap := range configMaps {
@@ -170,14 +170,11 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 		// don't create configmaps for test directories
 		if !testDir {
 			configMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
-			deepCopyObj := configMap.DeepCopyObject()
 			emptyObj := &corev1.ConfigMap{}
 			err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, emptyObj)
 			if err != nil {
 				_, err := reconciler.createObj(
-					configMap.Name,
-					configMap.Namespace,
-					deepCopyObj,
+					&configMap,
 					err,
 				)
 				if err != nil && !errors.IsAlreadyExists(err) {
@@ -201,6 +198,8 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
+	log := log.WithValues("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
+
 	env, rResult, err := NewEnv(reconciler, instance)
 	if err != nil {
 		return rResult, err
@@ -210,7 +209,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	dcList := &oappsv1.DeploymentConfigList{}
 	err = reconciler.client.List(context.TODO(), listOps, dcList)
 	if err != nil {
-		logrus.Warnf("Failed to list dc's: %v", err)
+		log.Error(err, "Failed to list dc's")
 		return reconcile.Result{}, err
 	}
 	dcNames := getDcNames(dcList.Items, instance)
@@ -240,9 +239,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	}
 	if len(dcUpdates) > 0 {
 		for _, uDc := range dcUpdates {
-			newDC := uDc.DeepCopyObject()
-			logrus.Infof("Updating %s %s/%s", uDc.Kind, uDc.Namespace, uDc.Name)
-			rResult, err := reconciler.UpdateObj(newDC)
+			rResult, err := reconciler.UpdateObj(&uDc)
 			if err != nil {
 				return rResult, err
 			}
@@ -250,13 +247,27 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 		return rResult, nil
 	}
 
-	// Update status.Deployments if needed
-	if !reflect.DeepEqual(dcNames, instance.Status.Deployments) {
-		instance.Status.Deployments = dcNames
+	// Fetch the cached KieApp instance
+	cachedInstance := &v1.KieApp{}
+	err = reconciler.cache.Get(context.TODO(), request.NamespacedName, cachedInstance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	instance.Status.Deployments = dcNames
+	// Update CR if needed
+	if !reflect.DeepEqual(instance, cachedInstance) {
 		return reconciler.UpdateObj(instance)
 	}
 
-	return rResult, nil
+	return reconcile.Result{}, nil
 }
 
 func (reconciler *ReconcileKieApp) GetClient() client.Client {
@@ -265,6 +276,7 @@ func (reconciler *ReconcileKieApp) GetClient() client.Client {
 
 // Check ImageStream
 func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) bool {
+	log := log.WithValues("kind", "ImageStreamTag", "name", name, "namespace", namespace)
 	result := strings.Split(name, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
@@ -272,6 +284,7 @@ func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) b
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	_, err := reconciler.imageClient.ImageStreamTags(namespace).Get(tagName, metav1.GetOptions{})
 	if err != nil {
+		log.V(1).Info("Object does not exist")
 		return false
 	}
 	return true
@@ -321,27 +334,28 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev
 			Insecure: true,
 		}
 	}
-
-	logrus.Infof("Creating a new %s %s/%s for %s", isnew.GetObjectKind().GroupVersionKind().Kind, isnew.Namespace, isnew.Name, registryURL)
+	log := log.WithValues("kind", isnew.GetObjectKind().GroupVersionKind().Kind, "name", isnew.Name, "from", isnew.Tag.From.Name, "namespace", isnew.Namespace)
+	log.Info("Creating")
 	_, err := reconciler.imageClient.ImageStreamTags(isnew.Namespace).Create(isnew)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		logrus.Errorf("Issue creating ImageStream %s/%s - %v", isnew.Namespace, isnew.Name, err)
+		log.Error(err, "Issue creating object")
 		return err
 	}
 	return nil
 }
 
 func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
+	log := log.WithValues("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
 	cContainer := current.Spec.Template.Spec.Containers[0]
 	nContainer := new.Spec.Template.Spec.Containers[0]
 
 	if !shared.EnvVarCheck(cContainer.Env, nContainer.Env) {
-		logrus.Debugf("Changes detected in %s/%s DeploymentConfig 'Env' config -\nOLD - %v\nNEW - %v", current.Namespace, current.Name, cContainer.Env, nContainer.Env)
+		log.V(1).Info("Changes detected in 'Env' config", "OLD", cContainer.Env, "NEW", nContainer.Env)
 		update = true
 	}
 	if !reflect.DeepEqual(cContainer.Resources, nContainer.Resources) {
-		logrus.Debugf("Changes detected in %s/%s DeploymentConfig 'Resource' config -\nOLD - %v\nNEW - %v", current.Namespace, current.Name, cContainer.Resources, nContainer.Resources)
+		log.V(1).Info("Changes detected in 'Resource' config", "OLD", cContainer.Resources, "NEW", nContainer.Resources)
 		update = true
 	}
 
@@ -349,7 +363,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 		dcnew := new
 		err := controllerutil.SetControllerReference(cr, &dcnew, reconciler.scheme)
 		if err != nil {
-			logrus.Errorf("Error setting controller reference for dc %s - %v", dcnew.Name, err)
+			log.Error(err, "Error setting controller reference for dc")
 		}
 		dcnew.SetNamespace(current.Namespace)
 		dcnew.SetResourceVersion(current.ResourceVersion)
@@ -420,11 +434,8 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 		env.Servers[i] = server
 	}
 	env = ConsolidateObjects(env, cr)
-	rResult, err := reconciler.UpdateObj(cr)
-	if err != nil {
-		return env, rResult, err
-	}
-	rResult, err = reconciler.CreateCustomObjects(env.Console, cr)
+
+	rResult, err := reconciler.CreateCustomObjects(env.Console, cr)
 	if err != nil {
 		return env, rResult, err
 	}
@@ -481,16 +492,14 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 			if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
 				if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace) {
 					if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, cr.Namespace) {
-						logrus.Warnf("ImageStreamTag %s/%s doesn't exist", trigger.ImageChangeParams.From.Namespace, trigger.ImageChangeParams.From.Name)
+						log := log.WithValues("kind", "ImageStreamTag", "name", trigger.ImageChangeParams.From.Name, "namespace", cr.Namespace)
+						log.Info("Missing object")
 						err := reconciler.createLocalImageTag(trigger.ImageChangeParams.From, cr)
 						if err != nil {
-							logrus.Error(err)
-						} else {
-							trigger.ImageChangeParams.From.Namespace = cr.Namespace
+							log.Error(err, "Failed to create object")
 						}
-					} else {
-						trigger.ImageChangeParams.From.Namespace = cr.Namespace
 					}
+					trigger.ImageChangeParams.From.Namespace = cr.Namespace
 				}
 				object.DeploymentConfigs[index].Spec.Triggers[ti] = trigger
 			}
@@ -519,46 +528,49 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
 	name := obj.GetName()
 	namespace := cr.GetNamespace()
+	log := log.WithValues("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", name, "namespace", namespace)
+
 	err := controllerutil.SetControllerReference(cr, obj, reconciler.scheme)
 	if err != nil {
-		logrus.Errorf("Failed to create new %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
+		log.Error(err, "Failed to create")
 		return reconcile.Result{}, err
 	}
 	obj.SetNamespace(namespace)
-	deepCopyObj := obj.DeepCopyObject()
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(
-		name,
-		namespace,
-		deepCopyObj,
+		obj,
 		reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
 	)
 }
 
 // createObj creates an object based on the error passed in from a `client.Get`
-func (reconciler *ReconcileKieApp) createObj(name, namespace string, obj runtime.Object, err error) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
+	log := log.WithValues("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
+
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Object
-		logrus.Infof("Creating a new %s %s/%s", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name)
+		log.Info("Creating")
 		err = reconciler.client.Create(context.TODO(), obj)
 		if err != nil {
-			logrus.Warnf("Failed to create new %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
+			log.Error(err, "Failed to create object")
 			return reconcile.Result{}, err
 		}
 		// Object created successfully - return and requeue
 		return reconcile.Result{RequeueAfter: time.Duration(200) * time.Millisecond}, nil
 	} else if err != nil {
-		logrus.Infof("Failed to get %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name, err)
+		log.Error(err, "Failed to get object")
 		return reconcile.Result{}, err
 	}
-	logrus.Debugf("Skip reconcile: %s %s/%s already exists", obj.GetObjectKind().GroupVersionKind().Kind, namespace, name)
+	log.V(1).Info("Skip reconcile - object already exists")
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *ReconcileKieApp) UpdateObj(obj runtime.Object) (reconcile.Result, error) {
+func (reconciler *ReconcileKieApp) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
+	log := log.WithValues("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
+	log.Info("Updating")
 	err := reconciler.client.Update(context.TODO(), obj)
 	if err != nil {
-		logrus.Warnf("Failed to update %s: %v", obj.GetObjectKind().GroupVersionKind().Kind, err)
+		log.Error(err, "Failed to update object")
 		return reconcile.Result{}, err
 	}
 	// Spec updated - return and requeue
@@ -587,23 +599,21 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 
 func (reconciler *ReconcileKieApp) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+	log := log.WithValues("kind", route.GetObjectKind().GroupVersionKind().Kind, "name", route.Name, "namespace", route.Namespace)
 	err := controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
 	if err != nil {
-		logrus.Errorf("Error setting controller reference for route %s - %v", route.Name, err)
+		log.Error(err, "Error setting controller reference")
 	}
 	route.SetNamespace(cr.Namespace)
-	dRoute := route.DeepCopyObject()
 	found := &routev1.Route{}
 	err = reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		_, err = reconciler.createObj(
-			route.Name,
-			route.Namespace,
-			dRoute,
+			&route,
 			err,
 		)
 		if err != nil {
-			logrus.Error(err)
+			log.Error(err, "Error creating Route")
 		}
 	}
 
@@ -616,7 +626,7 @@ func (reconciler *ReconcileKieApp) GetRouteHost(route routev1.Route, cr *v1.KieA
 		}
 	}
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error getting Route")
 	}
 
 	return found.Spec.Host

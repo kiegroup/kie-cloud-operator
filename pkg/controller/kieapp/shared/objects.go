@@ -9,7 +9,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var log = logf.Log.WithName("kieapp.utils")
 
 func GetDeploymentTypeMeta() metav1.TypeMeta {
 	kind := "DeploymentConfig"

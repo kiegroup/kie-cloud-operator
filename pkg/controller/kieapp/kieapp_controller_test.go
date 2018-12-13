@@ -11,7 +11,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +34,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
-	logrus.Debugf("Testing with environment %v", cr.Spec.Environment)
+	log.V(1).Info(fmt.Sprintf("Testing with environment %v", cr.Spec.Environment))
 	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
 }
 
@@ -68,7 +67,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 
 	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		logrus.Error(err)
+		log.Error(err, "Error getting environment")
 	}
 	env = ConsolidateObjects(env, cr)
 
@@ -117,7 +116,7 @@ func TestTrialServerEnv(t *testing.T) {
 
 	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		logrus.Error(err)
+		log.Error(err, "Error getting environment")
 	}
 	env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
 	env = ConsolidateObjects(env, cr)
@@ -151,7 +150,7 @@ func TestRhpamRegistry(t *testing.T) {
 	}
 	_, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		logrus.Error(err)
+		log.Error(err, "Error getting environment")
 	}
 	assert.Equal(t, registry1, cr.Spec.RhpamRegistry.Registry)
 	assert.Equal(t, true, cr.Spec.RhpamRegistry.Insecure)
@@ -170,7 +169,7 @@ func TestRhpamRegistry(t *testing.T) {
 	}
 	_, err = defaults.GetEnvironment(cr2, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		logrus.Error(err)
+		log.Error(err, "Error getting environment")
 	}
 	assert.Equal(t, registry2, cr2.Spec.RhpamRegistry.Registry)
 	assert.Equal(t, false, cr2.Spec.RhpamRegistry.Insecure)

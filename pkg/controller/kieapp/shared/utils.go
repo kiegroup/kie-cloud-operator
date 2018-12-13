@@ -15,7 +15,6 @@ import (
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/pavel-v-chernykh/keystore-go"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -52,7 +51,7 @@ func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVa
 func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	cert, derPK, err := genCert(commonName)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error generating certificate")
 	}
 
 	var chain []keystore.Certificate
@@ -72,7 +71,7 @@ func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	var b bytes.Buffer
 	err = keystore.Encode(&b, keyStore, password)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error encryting and signing keystore")
 	}
 
 	return b.Bytes()
@@ -92,7 +91,7 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 
 	serialNumber, err := crand.Int(crand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error getting serial number")
 		return nil, nil, err
 	}
 
@@ -113,19 +112,19 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 
 	priv, err := rsa.GenerateKey(crand.Reader, 2048)
 	if err != nil {
-		logrus.Errorln("create key failed")
+		log.Error(err, "create key failed")
 		return nil, nil, err
 	}
 
 	cert, err = x509.CreateCertificate(crand.Reader, ca, ca, &priv.PublicKey, priv)
 	if err != nil {
-		logrus.Errorln("create cert failed")
+		log.Error(err, "create cert failed")
 		return nil, nil, err
 	}
 
 	derPK, err = x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		logrus.Errorln("Marshal to PKCS8 key failed")
+		log.Error(err, "Marshal to PKCS8 key failed")
 		return nil, nil, err
 	}
 

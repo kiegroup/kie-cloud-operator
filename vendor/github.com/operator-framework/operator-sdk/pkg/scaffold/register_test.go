@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestRegister(t *testing.T) {
@@ -30,7 +32,7 @@ func TestRegister(t *testing.T) {
 	}
 
 	if registerExp != buf.String() {
-		diffs := diff(registerExp, buf.String())
+		diffs := diffutil.Diff(registerExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }

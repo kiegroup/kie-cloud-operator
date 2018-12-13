@@ -114,7 +114,7 @@ type Template struct {
 type PlatformService interface {
 	GetClient() client.Client
 	GetRouteHost(route routev1.Route, cr *KieApp) string
-	UpdateObj(obj runtime.Object) (reconcile.Result, error)
+	UpdateObj(obj OpenShiftObject) (reconcile.Result, error)
 	CreateCustomObjects(object CustomObject, cr *KieApp) (reconcile.Result, error)
 }
 

@@ -1,35 +1,6 @@
 #!/usr/bin/env bash
 
-#===================================================================
-# FUNCTION trap_add ()
-#
-# Purpose:  prepends a command to a trap
-#
-# - 1st arg:  code to add
-# - remaining args:  names of traps to modify
-#
-# Example:  trap_add 'echo "in trap DEBUG"' DEBUG
-#
-# See: http://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
-#===================================================================
-trap_add() {
-    trap_add_cmd=$1; shift || fatal "${FUNCNAME} usage error"
-    new_cmd=
-    for trap_add_name in "$@"; do
-        # Grab the currently defined trap commands for this trap
-        existing_cmd=`trap -p "${trap_add_name}" |  awk -F"'" '{print $2}'`
-
-        # Define default command
-        [ -z "${existing_cmd}" ] && existing_cmd="echo exiting @ `date`"
-
-        # Generate the new command
-        new_cmd="${trap_add_cmd};${existing_cmd}"
-
-        # Assign the test
-         trap   "${new_cmd}" "${trap_add_name}" || \
-                fatal "unable to add to trap ${trap_add_name}"
-    done
-}
+source hack/lib/test_lib.sh
 
 DEST_IMAGE="quay.io/example/memcached-operator:v0.0.2"
 
@@ -40,14 +11,20 @@ if which oc 2>/dev/null; then oc project default; fi
 
 # build operator binary and base image
 go build -o test/ansible-operator/ansible-operator test/ansible-operator/cmd/ansible-operator/main.go
-pushd test
-pushd ansible-operator
+pushd test/ansible-operator
 docker build -t quay.io/water-hole/ansible-operator .
 popd
 
-# get current directory so we can delete project on exit
-DIR1=$(pwd)
-trap_add 'rm -rf ${DIR1}/memcached-operator' EXIT
+# Make a test directory for Ansible tests so we avoid using default GOPATH.
+# Save test directory so we can delete it on exit.
+ANSIBLE_TEST_DIR="$(mktemp -d)"
+trap_add 'rm -rf $ANSIBLE_TEST_DIR' EXIT
+cp -a test/ansible-* "$ANSIBLE_TEST_DIR"
+pushd "$ANSIBLE_TEST_DIR"
+
+# Ansible tests should not run in a Golang environment.
+unset GOPATH GOROOT
+
 # create and build the operator
 operator-sdk new memcached-operator --api-version=ansible.example.com/v1alpha1 --kind=Memcached --type=ansible
 cp ansible-memcached/tasks.yml memcached-operator/roles/Memcached/tasks/main.yml
@@ -56,11 +33,11 @@ cp -a ansible-memcached/memfin memcached-operator/roles/
 cat ansible-memcached/watches-finalizer.yaml >> memcached-operator/watches.yaml
 
 pushd memcached-operator
-operator-sdk build $DEST_IMAGE
+operator-sdk build "$DEST_IMAGE"
 sed -i "s|REPLACE_IMAGE|$DEST_IMAGE|g" deploy/operator.yaml
 sed -i 's|Always|Never|g' deploy/operator.yaml
 
-DIR2=$(pwd)
+DIR2="$(pwd)"
 # deploy the operator
 kubectl create -f deploy/service_account.yaml
 trap_add 'kubectl delete -f ${DIR2}/deploy/service_account.yaml' EXIT
@@ -95,8 +72,34 @@ then
     exit 1
 fi
 
+# make a configmap that the finalizer should remove
+kubectl create configmap deleteme
+trap_add 'kubectl delete --ignore-not-found configmap deleteme' EXIT
+
 kubectl delete -f ${DIR2}/deploy/crds/ansible_v1alpha1_memcached_cr.yaml --wait=true
-kubectl logs deployment/memcached-operator | grep "this is a finalizer"
+# if the finalizer did not delete the configmap...
+if kubectl get configmap deleteme;
+then
+    echo FAIL: the finalizer did not delete the configmap
+    kubectl logs deployment/memcached-operator
+    exit 1
+fi
+
+# The deployment should get garbage collected, so we expect to fail getting the deployment.
+if ! timeout 20s bash -c -- "while kubectl get deployment ${memcached_deployment}; do sleep 1; done";
+then
+    kubectl logs deployment/memcached-operator
+    exit 1
+fi
+
+
+## TODO enable when this is fixed: https://github.com/operator-framework/operator-sdk/issues/818
+# if kubectl logs deployment/memcached-operator | grep -i error;
+# then
+    # echo FAIL: the operator log includes errors
+    # kubectl logs deployment/memcached-operator
+    # exit 1
+# fi
 
 popd
 popd

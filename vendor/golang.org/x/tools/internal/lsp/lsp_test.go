@@ -17,6 +17,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/packages/packagestest"
+	"golang.org/x/tools/internal/lsp/cache"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 )
@@ -38,6 +39,7 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 	const expectedDiagnosticsCount = 14
 	const expectedFormatCount = 3
 	const expectedDefinitionsCount = 16
+	const expectedTypeDefinitionsCount = 2
 
 	files := packagestest.MustCopyFileTree(dir)
 	for fragment, operation := range files {
@@ -56,7 +58,7 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 	defer exported.Cleanup()
 
 	s := &server{
-		view: source.NewView(),
+		view: cache.NewView(exported.Config.Dir),
 	}
 	// Merge the exported.Config with the view.Config.
 	cfg := *exported.Config
@@ -78,6 +80,7 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 	expectedCompletions := make(completions)
 	expectedFormat := make(formats)
 	expectedDefinitions := make(definitions)
+	expectedTypeDefinitions := make(definitions)
 
 	// Collect any data that needs to be used by subsequent tests.
 	if err := exported.Expect(map[string]interface{}{
@@ -86,6 +89,7 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 		"complete": expectedCompletions.collect,
 		"format":   expectedFormat.collect,
 		"godef":    expectedDefinitions.collect,
+		"typdef":   expectedTypeDefinitions.collect,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +131,17 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 				t.Errorf("got %v definitions expected %v", len(expectedDefinitions), expectedDefinitionsCount)
 			}
 		}
-		expectedDefinitions.test(t, s)
+		expectedDefinitions.test(t, s, false)
+	})
+
+	t.Run("TypeDefinitions", func(t *testing.T) {
+		t.Helper()
+		if goVersion111 { // TODO(rstambler): Remove this when we no longer support Go 1.10.
+			if len(expectedTypeDefinitions) != expectedTypeDefinitionsCount {
+				t.Errorf("got %v type definitions expected %v", len(expectedTypeDefinitions), expectedTypeDefinitionsCount)
+			}
+		}
+		expectedTypeDefinitions.test(t, s, true)
 	})
 }
 
@@ -137,11 +151,11 @@ type completions map[token.Position][]token.Pos
 type formats map[string]string
 type definitions map[protocol.Location]protocol.Location
 
-func (d diagnostics) test(t *testing.T, exported *packagestest.Exported, v *source.View) int {
+func (d diagnostics) test(t *testing.T, exported *packagestest.Exported, v *cache.View) int {
 	count := 0
 	for filename, want := range d {
 		f := v.GetFile(source.ToURI(filename))
-		sourceDiagnostics, err := source.Diagnostics(context.Background(), v, f)
+		sourceDiagnostics, err := source.Diagnostics(context.Background(), f)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -290,14 +304,21 @@ func (f formats) collect(pos token.Position) {
 	f[pos.Filename] = stdout.String()
 }
 
-func (d definitions) test(t *testing.T, s *server) {
+func (d definitions) test(t *testing.T, s *server, typ bool) {
 	for src, target := range d {
-		locs, err := s.Definition(context.Background(), &protocol.TextDocumentPositionParams{
+		params := &protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: src.URI,
 			},
 			Position: src.Range.Start,
-		})
+		}
+		var locs []protocol.Location
+		var err error
+		if typ {
+			locs, err = s.TypeDefinition(context.Background(), params)
+		} else {
+			locs, err = s.Definition(context.Background(), params)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}

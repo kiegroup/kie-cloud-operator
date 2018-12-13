@@ -15,7 +15,6 @@ spec:
       serviceAccountName: kie-cloud-operator
       containers:
         - name: kie-cloud-operator
-          # Replace this with the built image name
           image: quay.io/kiegroup/kie-cloud-operator
           ports:
             - containerPort: 60000
@@ -23,6 +22,14 @@ spec:
           command:
             - kie-cloud-operator
           imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
               valueFrom:

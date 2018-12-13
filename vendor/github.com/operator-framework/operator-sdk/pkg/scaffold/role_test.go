@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestRole(t *testing.T) {
@@ -26,7 +28,20 @@ func TestRole(t *testing.T) {
 	}
 
 	if roleExp != buf.String() {
-		diffs := diff(roleExp, buf.String())
+		diffs := diffutil.Diff(roleExp, buf.String())
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
+	}
+}
+
+func TestRoleClusterScoped(t *testing.T) {
+	s, buf := setupScaffoldAndWriter()
+	err := s.Execute(appConfig, &Role{IsClusterScoped: true})
+	if err != nil {
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
+	}
+
+	if clusterroleExp != buf.String() {
+		diffs := diffutil.Diff(clusterroleExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
@@ -48,6 +63,53 @@ rules:
   - secrets
   verbs:
   - "*"
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - "*"
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - "get"
+  - "create"
+`
+
+const clusterroleExp = `kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: app-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
 - apiGroups:
   - apps
   resources:

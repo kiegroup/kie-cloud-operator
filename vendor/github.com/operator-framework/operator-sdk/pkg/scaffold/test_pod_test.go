@@ -17,7 +17,7 @@ package scaffold
 import (
 	"testing"
 
-	"github.com/operator-framework/operator-sdk/pkg/test"
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestPodTest(t *testing.T) {
@@ -25,14 +25,14 @@ func TestPodTest(t *testing.T) {
 	err := s.Execute(appConfig,
 		&TestPod{
 			Image:            "quay.io/app/operator:v1.0.0",
-			TestNamespaceEnv: test.TestNamespaceEnv,
+			TestNamespaceEnv: "TEST_NAMESPACE",
 		})
 	if err != nil {
 		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if testPodExp != buf.String() {
-		diffs := diff(testPodExp, buf.String())
+		diffs := diffutil.Diff(testPodExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }

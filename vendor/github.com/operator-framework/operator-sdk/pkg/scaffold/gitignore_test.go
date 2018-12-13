@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestGitignore(t *testing.T) {
@@ -26,7 +28,7 @@ func TestGitignore(t *testing.T) {
 	}
 
 	if gitignoreExp != buf.String() {
-		diffs := diff(gitignoreExp, buf.String())
+		diffs := diffutil.Diff(gitignoreExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }

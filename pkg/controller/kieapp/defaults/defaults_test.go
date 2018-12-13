@@ -7,7 +7,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +17,7 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logrus.Error(err.(error))
+			log.Error(err.(error), "")
 		}
 	}()
 
@@ -65,7 +64,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logrus.Error(err.(error))
+			log.Error(err.(error), "")
 		}
 	}()
 

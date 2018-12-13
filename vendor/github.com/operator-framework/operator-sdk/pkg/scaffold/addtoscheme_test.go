@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestAddToScheme(t *testing.T) {
@@ -30,7 +32,7 @@ func TestAddToScheme(t *testing.T) {
 	}
 
 	if addtoschemeExp != buf.String() {
-		diffs := diff(addtoschemeExp, buf.String())
+		diffs := diffutil.Diff(addtoschemeExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }

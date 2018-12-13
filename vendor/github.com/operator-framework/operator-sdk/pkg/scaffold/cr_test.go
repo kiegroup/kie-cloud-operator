@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestCr(t *testing.T) {
@@ -30,7 +32,7 @@ func TestCr(t *testing.T) {
 	}
 
 	if crExp != buf.String() {
-		diffs := diff(crExp, buf.String())
+		diffs := diffutil.Diff(crExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
