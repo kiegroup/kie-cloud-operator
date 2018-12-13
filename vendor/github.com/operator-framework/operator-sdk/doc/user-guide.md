@@ -1,9 +1,9 @@
 # User Guide
 
-This guide walks through an example of building a simple memcached-operator using the operator-sdk CLI tool and controller-runtime library API.
-To learn how to use Ansible to create a Memcached operator, see [Ansible
-Operator User Guide][ansible_user_guide]. The rest of this document will show
-how to program an operator in Go.
+This guide walks through an example of building a simple memcached-operator using the operator-sdk
+CLI tool and controller-runtime library API. To learn how to use Ansible or Helm to create an
+operator, see the [Ansible Operator User Guide][ansible_user_guide] or the [Helm Operator User
+Guide][helm_user_guide]. The rest of this document will show how to program an operator in Go.
 
 ## Prerequisites
 
@@ -46,6 +46,22 @@ $ cd memcached-operator
 ```
 
 To learn about the project directory structure, see [project layout][layout_doc] doc.
+
+#### Operator scope
+
+A namespace-scoped operator (the default) watches and manages resources in a single namespace, whereas a cluster-scoped operator watches and manages resources cluster-wide. Namespace-scoped operators are preferred because of their flexibility. They enable decoupled upgrades, namespace isolation for failures and monitoring, and differing API definitions. However, there are use cases where a cluster-scoped operator may make sense. For example, the [cert-manager](https://github.com/jetstack/cert-manager) operator is often deployed with cluster-scoped permissions and watches so that it can manage issuing certificates for an entire cluster.
+
+If you'd like to create your memcached-operator project to be cluster-scoped use the following `operator-sdk new` command instead:
+```
+$ operator-sdk new memcached-operator --cluster-scoped
+```
+
+Using `--cluster-scoped` will scaffold the new operator with the following modifications:
+* `deploy/operator.yaml` - Set `WATCH_NAMESPACE=""` instead of setting it to the pod's namespace
+* `deploy/role.yaml` - Use `ClusterRole` instead of `Role`
+* `deploy/role_binding.yaml`:
+  * Use `ClusterRoleBinding` instead of `RoleBinding`
+  * Set the subject namespace to `REPLACE_NAMESPACE`. This must be changed to the namespace in which the operator is deployed.
 
 ### Manager
 The main program for the operator `cmd/manager/main.go` initializes and runs the [Manager][manager_go_doc].
@@ -107,7 +123,7 @@ For this example replace the generated Controller file `pkg/controller/memcached
 The example Controller executes the following reconciliation logic for each `Memcached` CR:
 - Create a memcached Deployment if it doesn't exist
 - Ensure that the Deployment size is the same as specified by the `Memcached` CR spec
-- Update the `Memcached` CR status with the names of the memcached pods
+- Update the `Memcached` CR status using the status writer with the names of the memcached pods
 
 The next two subsections explain how the Controller watches resources and how the reconcile loop is triggered. Skip to the [Build](#build-and-run-the-operator) section to see how to build and run the operator.
 
@@ -191,6 +207,19 @@ Build the memcached-operator image and push it to a registry:
 $ operator-sdk build quay.io/example/memcached-operator:v0.0.1
 $ sed -i 's|REPLACE_IMAGE|quay.io/example/memcached-operator:v0.0.1|g' deploy/operator.yaml
 $ docker push quay.io/example/memcached-operator:v0.0.1
+```
+
+If you created your operator using `--cluster-scoped=true`, update the service account namespace in the generated `ClusterRoleBinding` to match where you are deploying your operator.
+```
+$ export OPERATOR_NAMESPACE=$(kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}')
+$ sed -i "s|REPLACE_NAMESPACE|$OPERATOR_NAMESPACE|g" deploy/role_binding.yaml
+```
+
+**Note**  
+If you are performing these steps on OSX, use the following commands instead:
+```
+$ sed -i "" 's|REPLACE_IMAGE|quay.io/example/memcached-operator:v0.0.1|g' deploy/operator.yaml
+$ sed -i "" "s|REPLACE_NAMESPACE|$OPERATOR_NAMESPACE|g" deploy/role_binding.yaml
 ```
 
 The Deployment manifest is generated at `deploy/operator.yaml`. Be sure to update the deployment image as shown above since the default is just a placeholder.
@@ -333,7 +362,7 @@ $ kubectl delete -f deploy/service_account.yaml
 
 ### Adding 3rd Party Resources To Your Operator
 
-By default the operator's Manager will register all custom resource types defined in your project under `pkg/apis` with its scheme.
+The operator's Manager supports the Core Kubernetes resource types as found in the client-go [scheme][scheme_package] package and will also register the schemes of all custom resource types defined in your project under `pkg/apis`.
 ```Go
 import (
   "github.com/example-inc/memcached-operator/pkg/apis"
@@ -355,28 +384,32 @@ Example:
 ```go
 import (
     ....
-    appsv1 "k8s.io/api/apps/v1"
+    routev1 "github.com/openshift/api/route/v1"
 )
 
 func main() {
     ....
-    if err := appsv1.AddToScheme(mgr.GetScheme()); err != nil {
+    if err := routev1.AddToScheme(mgr.GetScheme()); err != nil {
         log.Fatal(err)
     }
     ....
 }
 ```
 
+After adding new import paths to your operator project, run `dep ensure` in the root of your project directory to fulfill these dependencies.
+
 [memcached_handler]: ../example/memcached-operator/handler.go.tmpl
 [memcached_controller]: ../example/memcached-operator/memcached_controller.go.tmpl
 [layout_doc]:./project_layout.md
 [ansible_user_guide]:./ansible/user-guide.md
+[helm_user_guide]:./helm/user-guide.md
 [dep_tool]:https://golang.github.io/dep/docs/installation.html
 [git_tool]:https://git-scm.com/downloads
 [go_tool]:https://golang.org/dl/
 [docker_tool]:https://docs.docker.com/install/
 [kubectl_tool]:https://kubernetes.io/docs/tasks/tools/install-kubectl/
 [minikube_tool]:https://github.com/kubernetes/minikube#installation
+[scheme_package]:https://github.com/kubernetes/client-go/blob/master/kubernetes/scheme/register.go
 [deployments_register]: https://github.com/kubernetes/api/blob/master/apps/v1/register.go#L41
 [doc_client_api]:./user/client.md
 [runtime_package]: https://godoc.org/k8s.io/apimachinery/pkg/runtime

@@ -147,79 +147,6 @@ trigger this Ansible logic when a custom resource changes. In the above
 example, we want to map a role to a specific Kubernetes resource that the
 operator will watch. This mapping is done in a file called `watches.yaml`.
 
-### Watches file
-
-The Operator expects a mapping file, which lists each GVK to watch and the
-corresponding path to an Ansible role or playbook, to be copied into the
-container at a predefined location: /opt/ansible/watches.yaml
-
-Dockerfile example:
-```Dockerfile
-COPY watches.yaml /opt/ansible/watches.yaml
-```
-
-The Watches file format is yaml and is an array of objects. The object has
-mandatory fields:
-
-**version**:  The version of the Custom Resource that you will be watching.
-
-**group**:  The group of the Custom Resource that you will be watching.
-
-**kind**:  The kind of the Custom Resource that you will be watching.
-
-**playbook**:  This is the path to the playbook that you have added to the
-container. This playbook is expected to be simply a way to call roles. This
-field is mutually exclusive with the "role" field.
-
-**role**:  This is the path to the role that you have added to the container.
-For example if your roles directory is at `/opt/ansible/roles/` and your role
-is named `busybox`, this value will be `/opt/ansible/roles/busybox`. This field
-is mutually exclusive with the "playbook" field.
-
-Example specifying a role:
-
-```yaml
----
-- version: v1alpha1
-  group: foo.example.com
-  kind: Foo
-  role: /opt/ansible/roles/Foo
-```
-
-#### Using playbooks in watches.yaml
-
-By default, `operator-sdk new --type ansible` sets `watches.yaml` to execute a
-role directly on a resource event. This works well for new projects, but with a
-lot of Ansible code this can be hard to scale if we are putting everything
-inside of one role. Using a playbook allows the developer to have more
-flexibility in consuming other roles and enabling more customized deployments
-of their application. To do this, modify `watches.yaml` to use a playbook
-instead of the role:
-```yaml
----
-- version: v1alpha1
-  group: foo.example.com
-  kind: Foo
-  playbook: /opt/ansible/playbook.yml
-```
-
-Modify `tmp/build/Dockerfile` to put `playbook.yml` in `/opt/ansible` in the
-container in addition to the role (`/opt/ansible` is the `HOME` environment
-variable inside of the Ansible Operator base image):
-```Dockerfile
-FROM quay.io/water-hole/ansible-operator
-
-COPY roles/ ${HOME}/roles
-COPY playbook.yaml ${HOME}/playbook.yaml
-COPY watches.yaml ${HOME}/watches.yaml
-```
-
-Alternatively, to generate a skeleton project with the above changes, a
-developer can also do:
-```bash
-$ operator-sdk new --type ansible --kind Foo --api-version foo.example.com/v1alpha1 foo-operator --generate-playbook
-```
-
 ### Custom Resource file
 
 The Custom Resource file format is Kubernetes resource file. The object has
@@ -370,6 +297,12 @@ deployment image in this file needs to be modified from the placeholder
 $ sed -i 's|REPLACE_IMAGE|quay.io/example/foo-operator:v0.0.1|g' deploy/operator.yaml
 ```
 
+**Note**  
+If you are performing these steps on OSX, use the following command:
+```
+$ sed -i "" 's|REPLACE_IMAGE|quay.io/example/foo-operator:v0.0.1|g' deploy/operator.yaml
+```
+
 Deploy the foo-operator:
 
 ```sh
@@ -386,6 +319,84 @@ Verify that the foo-operator is up and running:
 $ kubectl get deployment
 NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 foo-operator       1         1         1            1           1m
+```
+
+## Custom Resource Status Management
+The operator will automatically update the CR's `status` subresource with
+generic information about the previous Ansible run. This includes the number of
+successful and failed tasks and relevant error messages as seen below:
+
+```yaml
+status:
+  conditions:
+    - ansibleResult:
+      changed: 3
+      completion: 2018-12-03T13:45:57.13329
+      failures: 1
+      ok: 6
+      skipped: 0
+    lastTransitionTime: 2018-12-03T13:45:57Z
+    message: 'Status code was -1 and not [200]: Request failed: <urlopen error [Errno
+      113] No route to host>'
+    reason: Failed
+    status: "True"
+    type: Failure
+  - lastTransitionTime: 2018-12-03T13:46:13Z
+    message: Running reconciliation
+    reason: Running
+    status: "True"
+    type: Running
+```
+
+Ansible Operator also allows you as the developer to supply custom status
+values with the [k8s_status][k8s_status_module] Ansible Module. This allows the
+developer to update the `status` from within Ansible with any key/value pair as
+desired. By default, Ansible Operator will always include the generic Ansible
+run output as shown above. If you would prefer your application *not* update
+the status with Ansible output and would prefer to track the status manually
+from your application, then simply update the watches file with `manageStatus`:
+```yaml
+- version: v1
+  group: api.example.com
+  kind: Foo
+  role: /opt/ansible/roles/Foo
+  manageStatus: false
+```
+
+To update the `status` subresource with key `foo` and value `bar`, `k8s_status`
+can be used as shown:
+```yaml
+- k8s_status:
+    api_version: app.example.com/v1
+    kind: Foo
+    name: "{{ meta.name }}"
+    namespace: "{{ meta.namespace }}"
+    status:
+      foo: bar
+```
+
+### Using k8s_status Ansible module with `up local`
+This section covers the required steps to using the `k8s_status` Ansible module
+with `operator-sdk up local`. If you are unfamiliar with managing status from
+the Ansible Operator, see the [proposal for user-driven status
+management][manage_status_proposal].
+
+If your operator takes advantage of the `k8s_status` Ansible module and you are
+interested in testing the operator with `operator-sdk up local`, then it is
+imperative that the module is installed in a location that Ansible expects.
+This is done with the `library` configuration option for Ansible. For our
+example, we will assume the user is placing third-party Ansible modules in
+`/usr/share/ansible/library`.
+
+To install the `k8s_status` module, first set `ansible.cfg` to search in
+`/usr/share/ansible/library` for installed Ansible modules:
+```bash
+$ echo "library=/usr/share/ansible/library/" >> /etc/ansible/ansible.cfg
+```
+
+Add `k8s_status.py` to `/usr/share/ansible/library/`:
+```bash
+$ wget https://raw.githubusercontent.com/fabianvf/ansible-k8s-status-module/master/k8s_status.py -O /usr/share/ansible/library/k8s_status.py
 ```
 
 ## Extra vars sent to Ansible
@@ -431,7 +442,9 @@ operator. The `meta` fields can be accesses via dot notation in Ansible as so:
 ```
 
 [k8s_ansible_module]:https://docs.ansible.com/ansible/2.6/modules/k8s_module.html
+[k8s_status_module]:https://github.com/fabianvf/ansible-k8s-status-module
 [openshift_restclient_python]:https://github.com/openshift/openshift-restclient-python
 [ansible_operator_user_guide]:../user-guide.md
+[manage_status_proposal]:../../proposals/ansible-operator-status.md
 [time_pkg]:https://golang.org/pkg/time/
 [time_parse_duration]:https://golang.org/pkg/time/#ParseDuration

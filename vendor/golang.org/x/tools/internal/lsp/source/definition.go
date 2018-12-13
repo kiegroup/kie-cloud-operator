@@ -16,7 +16,7 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-func Definition(ctx context.Context, f *File, pos token.Pos) (Range, error) {
+func Definition(ctx context.Context, f File, pos token.Pos) (Range, error) {
 	fAST, err := f.GetAST()
 	if err != nil {
 		return Range{}, err
@@ -30,7 +30,7 @@ func Definition(ctx context.Context, f *File, pos token.Pos) (Range, error) {
 		return Range{}, err
 	}
 	if i.ident == nil {
-		return Range{}, fmt.Errorf("definition was not a valid identifier")
+		return Range{}, fmt.Errorf("not a valid identifier")
 	}
 	obj := pkg.TypesInfo.ObjectOf(i.ident)
 	if obj == nil {
@@ -45,7 +45,52 @@ func Definition(ctx context.Context, f *File, pos token.Pos) (Range, error) {
 			}
 		}
 	}
-	return objToRange(f.view.Config.Fset, obj), nil
+	fset, err := f.GetFileSet()
+	if err != nil {
+		return Range{}, err
+	}
+	return objToRange(fset, obj), nil
+}
+
+func TypeDefinition(ctx context.Context, f File, pos token.Pos) (Range, error) {
+	fAST, err := f.GetAST()
+	if err != nil {
+		return Range{}, err
+	}
+	pkg, err := f.GetPackage()
+	if err != nil {
+		return Range{}, err
+	}
+	i, err := findIdentifier(fAST, pos)
+	if err != nil {
+		return Range{}, err
+	}
+	if i.ident == nil {
+		return Range{}, fmt.Errorf("not a valid identifier")
+	}
+	typ := pkg.TypesInfo.TypeOf(i.ident)
+	if typ == nil {
+		return Range{}, fmt.Errorf("no type for %s", i.ident.Name)
+	}
+	obj := typeToObject(typ)
+	if obj == nil {
+		return Range{}, fmt.Errorf("no object for type %s", typ.String())
+	}
+	fset, err := f.GetFileSet()
+	if err != nil {
+		return Range{}, err
+	}
+	return objToRange(fset, obj), nil
+}
+
+func typeToObject(typ types.Type) (obj types.Object) {
+	switch typ := typ.(type) {
+	case *types.Named:
+		obj = typ.Obj()
+	case *types.Pointer:
+		obj = typeToObject(typ.Elem())
+	}
+	return obj
 }
 
 // ident returns the ident plus any extra information needed
@@ -117,5 +162,35 @@ func objToRange(fSet *token.FileSet, obj types.Object) Range {
 	return Range{
 		Start: p,
 		End:   p + token.Pos(len([]byte(obj.Name()))), // TODO: use real range of obj
+	}
+}
+
+// this functionality was borrowed from the analysisutil package
+func lineStart(f *token.File, line int) token.Pos {
+	// Use binary search to find the start offset of this line.
+	//
+	// TODO(adonovan): eventually replace this function with the
+	// simpler and more efficient (*go/token.File).LineStart, added
+	// in go1.12.
+
+	min := 0        // inclusive
+	max := f.Size() // exclusive
+	for {
+		offset := (min + max) / 2
+		pos := f.Pos(offset)
+		posn := f.Position(pos)
+		if posn.Line == line {
+			return pos - (token.Pos(posn.Column) - 1)
+		}
+
+		if min+1 >= max {
+			return token.NoPos
+		}
+
+		if posn.Line < line {
+			min = offset
+		} else {
+			max = offset
+		}
 	}
 }

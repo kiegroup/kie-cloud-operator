@@ -1,6 +1,7 @@
 package defaults
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,7 +11,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
@@ -60,7 +60,7 @@ func mergePersistentVolumeClaims(baseline []corev1.PersistentVolumeClaim, overwr
 		slice := make([]corev1.PersistentVolumeClaim, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -86,7 +86,7 @@ func mergeServiceAccounts(baseline []corev1.ServiceAccount, overwrite []corev1.S
 		slice := make([]corev1.ServiceAccount, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -112,7 +112,7 @@ func mergeSecrets(baseline []corev1.Secret, overwrite []corev1.Secret) []corev1.
 		slice := make([]corev1.Secret, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -138,7 +138,7 @@ func mergeRoles(baseline []rbacv1.Role, overwrite []rbacv1.Role) []rbacv1.Role {
 		slice := make([]rbacv1.Role, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -156,7 +156,7 @@ func mergeRoleBindings(baseline []rbacv1.RoleBinding, overwrite []rbacv1.RoleBin
 		slice := make([]rbacv1.RoleBinding, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -195,12 +195,12 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 			baselineItem := baseline[baselineIndex]
 			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
 			if err != nil {
-				logrus.Errorf("%v", err)
+				log.Error(err, "Error merging interfaces")
 				return nil
 			}
 			mergedSpec, err := mergeSpec(baselineItem.Spec, overwriteItem.Spec)
 			if err != nil {
-				logrus.Errorf("%v", err)
+				log.Error(err, "Error merging DeploymentConfig Specs")
 				return nil
 			}
 			overwriteItem.Spec = mergedSpec
@@ -209,7 +209,7 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 	slice := make([]appsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
 	err := mergeObjects(baselineRefs, overwriteRefs, slice)
 	if err != nil {
-		logrus.Errorf("%v", err)
+		log.Error(err, "Error merging objects")
 		return nil
 	}
 	return slice
@@ -242,7 +242,7 @@ func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTempla
 	}
 	err := mergo.Merge(&overwrite.ObjectMeta, baseline.ObjectMeta)
 	if err != nil {
-		logrus.Errorf("%v", err)
+		log.Error(err, "Error merging interfaces")
 		return nil, nil
 	}
 	mergedPodSpec, err := mergePodSpecs(baseline.Spec, overwrite.Spec)
@@ -263,9 +263,9 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
 		if idx == -1 {
-			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
 		} else {
-			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
 			if baselineItem.ImageChangeParams != nil {
 				if found.ImageChangeParams == nil {
 					found.ImageChangeParams = baselineItem.ImageChangeParams
@@ -287,7 +287,7 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
 		if idx == -1 {
-			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
 			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
 		}
 	}
@@ -407,9 +407,9 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findVolume(baselineItem, overwrite)
 		if idx == -1 {
-			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
 		} else {
-			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
 			if err != nil {
 				return nil, err
@@ -420,7 +420,7 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findVolume(overwriteItem, mergedVolumes)
 		if idx == -1 {
-			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
 			mergedVolumes = append(mergedVolumes, overwrite[overwriteIndex])
 		}
 	}
@@ -432,9 +432,9 @@ func mergeVolumeMounts(baseline []corev1.VolumeMount, overwrite []corev1.VolumeM
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findVolumeMount(baselineItem, overwrite)
 		if idx == -1 {
-			logrus.Debugf("Not found, adding %v to slice\n", baselineItem)
+			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
 		} else {
-			logrus.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
 			if err != nil {
 				return nil, err
@@ -445,7 +445,7 @@ func mergeVolumeMounts(baseline []corev1.VolumeMount, overwrite []corev1.VolumeM
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findVolumeMount(overwriteItem, mergedVolumeMounts)
 		if idx == -1 {
-			logrus.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
 			mergedVolumeMounts = append(mergedVolumeMounts, overwrite[overwriteIndex])
 		}
 	}
@@ -493,7 +493,7 @@ func mergeServices(baseline []corev1.Service, overwrite []corev1.Service) []core
 				baselineItem := baseline[baselineIndex]
 				err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
 				if err != nil {
-					logrus.Errorf("%v", err)
+					log.Error(err, "Error merging interfaces")
 					return nil
 				}
 				overwriteItem.Spec.Ports = mergeServicePorts(baselineItem.Spec.Ports, overwriteItem.Spec.Ports)
@@ -502,7 +502,7 @@ func mergeServices(baseline []corev1.Service, overwrite []corev1.Service) []core
 		slice := make([]corev1.Service, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -562,7 +562,7 @@ func mergeRoutes(baseline []routev1.Route, overwrite []routev1.Route) []routev1.
 		slice := make([]routev1.Route, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			logrus.Errorf("%v", err)
+			log.Error(err, "Error merging objects")
 			return nil
 		}
 		return slice
@@ -601,7 +601,7 @@ func mergeObjects(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject,
 		if found == nil {
 			slice.Index(sliceIndex).Set(reflect.ValueOf(object).Elem())
 			sliceIndex++
-			logrus.Debugf("Not found, added %s to beginning of slice\n", object)
+			log.V(1).Info(fmt.Sprintf("Not found, added %s to beginning of slice\n", object))
 		} else if found.GetAnnotations()["delete"] != "true" {
 			err := mergo.Merge(object, found, mergo.WithOverride)
 			if err != nil {

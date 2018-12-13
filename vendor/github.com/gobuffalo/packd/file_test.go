@@ -37,6 +37,14 @@ func Test_File_Reader(t *testing.T) {
 	r.Equal(int64(2), i)
 	r.Equal(input, bb.String())
 	r.Equal(input, f.String())
+
+	// read again
+	bb2 := &bytes.Buffer{}
+	i, err = io.Copy(bb2, f)
+	r.NoError(err)
+	r.Equal(int64(2), i)
+	r.Equal(input, bb2.String())
+	r.Equal(input, f.String())
 }
 
 func Test_File_Writer(t *testing.T) {
@@ -79,12 +87,20 @@ func Test_File_Seek(t *testing.T) {
 	r.Equal(6, n)
 	r.Equal("Aliqua", string(buf))
 
-	// Check that unsupported arguments return an error
-	i, err = f.Seek(-12, io.SeekCurrent)
-	r.Error(err)
-	r.Equal(int64(-1), i)
+	i, err = f.Seek(-3, io.SeekCurrent)
+	r.NoError(err)
+	r.Equal(int64(3), i)
 
 	i, err = f.Seek(12, io.SeekCurrent)
+	r.NoError(err)
+	r.Equal(int64(15), i)
+}
+
+func Test_File_BadWrite(t *testing.T) {
+	r := require.New(t)
+	f, err := NewFile("foo.txt", nil)
+	r.NoError(err)
+	c, err := f.(*virtualFile).write("string")
 	r.Error(err)
-	r.Equal(int64(-1), i)
+	r.Equal(0, c)
 }

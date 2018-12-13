@@ -4,8 +4,10 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	"github.com/sirupsen/logrus"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var log = logf.Log.WithName("kieapp.rhpamcentr")
 
 func ConstructObject(object v1.CustomObject, cr *v1.KieApp) v1.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
@@ -14,7 +16,7 @@ func ConstructObject(object v1.CustomObject, cr *v1.KieApp) v1.CustomObject {
 
 			err := mergo.Merge(&c.Resources, cr.Spec.Objects.Console.Resources, mergo.WithOverride)
 			if err != nil {
-				logrus.Error(err)
+				log.Error(err, "Error merging interfaces")
 			}
 			dc.Spec.Template.Spec.Containers[containerIndex] = c
 		}

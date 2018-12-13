@@ -21,9 +21,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	"github.com/sirupsen/logrus"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var log = logf.Log.WithName("kieapp.defaults")
 
 func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
 	envTemplate := getEnvTemplate(cr)
@@ -116,7 +117,7 @@ func loadYaml(client client.Client, filename, namespace string, e v1.EnvTemplate
 	if err != nil {
 		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, e.ApplicationName)
 	}
-	logrus.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName)
+	log.V(1).Info(fmt.Sprintf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName))
 	return parseTemplate(e, configMap.Data[file]), nil
 }
 
@@ -125,13 +126,13 @@ func parseTemplate(e v1.EnvTemplate, objYaml string) []byte {
 
 	tmpl, err := template.New(e.ApplicationName).Parse(objYaml)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error creating new Go template")
 	}
 
 	// template replacement
 	err = tmpl.Execute(&b, e)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "Error applying Go template")
 	}
 
 	return b.Bytes()
@@ -154,7 +155,7 @@ func ConfigMapsFromFile(namespace string) []corev1.ConfigMap {
 	for _, filename := range box.List() {
 		s, err := box.FindString(filename)
 		if err != nil {
-			logrus.Error(err)
+			log.Error(err, "Error finding file with packr")
 		}
 		cmData := map[string]string{}
 		cmName, file := convertToConfigMapName(filename)

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -56,6 +57,27 @@ func Test_MemoryBox(t *testing.T) {
 
 	_, err = box.Find("b/b.txt")
 	r.Error(err)
+}
+
+func Test_MemoryBox_Caps(t *testing.T) {
+	r := require.New(t)
+
+	box := NewMemoryBox()
+	r.NoError(box.AddString("Makefile", "make"))
+	r.NoError(box.AddString("LICENSE", "MIT"))
+	r.NoError(box.AddString("main.go", "package main"))
+
+	var names []string
+	box.Walk(func(path string, f File) error {
+		names = append(names, path)
+		return nil
+	})
+	sort.Strings(names)
+
+	exp := []string{"main.go", "LICENSE", "Makefile"}
+	sort.Strings(exp)
+
+	r.Equal(exp, names)
 }
 
 var httpBox = func() *MemoryBox {

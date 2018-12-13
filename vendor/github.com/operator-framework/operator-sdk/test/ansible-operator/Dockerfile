@@ -1,21 +1,24 @@
 FROM ansible/ansible-runner
 
-RUN pip install --upgrade setuptools
-RUN pip install urllib3==1.23
-RUN pip install openshift ansible-runner-http
+RUN yum remove -y ansible python-idna
+RUN pip uninstall ansible-runner -y
 
-RUN echo "localhost ansible_connection=local" > /etc/ansible/hosts \
+RUN pip install --upgrade setuptools
+RUN pip install ansible ansible-runner openshift kubernetes ansible-runner-http idna==2.7
+
+RUN mkdir -p /etc/ansible \
+    && echo "localhost ansible_connection=local" > /etc/ansible/hosts \
     && echo '[defaults]' > /etc/ansible/ansible.cfg \
     && echo 'roles_path = /opt/ansible/roles' >> /etc/ansible/ansible.cfg \
     && echo 'library = /usr/share/ansible/openshift' >> /etc/ansible/ansible.cfg
 
 ENV OPERATOR=/usr/local/bin/ansible-operator \
     USER_UID=1001 \
-    USER_NAME=ansible-operator\
+    USER_NAME=ansible-operator \
     HOME=/opt/ansible
 
 # install operator binary
-ADD ansible-operator ${OPERATOR}
+COPY ansible-operator ${OPERATOR}
 
 COPY bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

@@ -19,7 +19,7 @@ package dataproc_test
 import (
 	"context"
 
-	"cloud.google.com/go/dataproc/apiv1beta2"
+	dataproc "cloud.google.com/go/dataproc/apiv1beta2"
 	"google.golang.org/api/iterator"
 	dataprocpb "google.golang.org/genproto/googleapis/cloud/dataproc/v1beta2"
 )
@@ -81,6 +81,25 @@ func ExampleWorkflowTemplateClient_InstantiateWorkflowTemplate() {
 		// TODO: Fill request struct fields.
 	}
 	op, err := c.InstantiateWorkflowTemplate(ctx, req)
+	if err != nil {
+		// TODO: Handle error.
+	}
+
+	err = op.Wait(ctx)
+	// TODO: Handle error.
+}
+
+func ExampleWorkflowTemplateClient_InstantiateInlineWorkflowTemplate() {
+	ctx := context.Background()
+	c, err := dataproc.NewWorkflowTemplateClient(ctx)
+	if err != nil {
+		// TODO: Handle error.
+	}
+
+	req := &dataprocpb.InstantiateInlineWorkflowTemplateRequest{
+		// TODO: Fill request struct fields.
+	}
+	op, err := c.InstantiateInlineWorkflowTemplate(ctx, req)
 	if err != nil {
 		// TODO: Handle error.
 	}

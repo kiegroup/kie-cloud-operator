@@ -16,6 +16,8 @@ package scaffold
 
 import (
 	"testing"
+
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestAddController(t *testing.T) {
@@ -30,7 +32,7 @@ func TestAddController(t *testing.T) {
 	}
 
 	if addControllerExp != buf.String() {
-		diffs := diff(addControllerExp, buf.String())
+		diffs := diffutil.Diff(addControllerExp, buf.String())
 		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }

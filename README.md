@@ -1,7 +1,7 @@
 # Requirements
- - go v1.10.x
- - operator-sdk v0.1.1
- - dep v0.5.x
+ - go v1.10+
+ - dep v0.5.0+
+ - operator-sdk v0.3.0
 
 # Build
 ```shell
@@ -40,12 +40,12 @@ oc delete KieApp trial
 
 # Development
 
-Change log level at runtime w/ the `LOG_LEVEL` environment variable. e.g. -
+Change log level at runtime w/ the `DEBUG` environment variable. e.g. -
 
 ```shell
 make dep
 make clean
-LOG_LEVEL="debug" operator-sdk up local --namespace=<namespace>
+DEBUG="true" operator-sdk up local --namespace=<namespace>
 ```
 Also at runtime, change registry for rhpam ImageStreamTags -
 ```shell

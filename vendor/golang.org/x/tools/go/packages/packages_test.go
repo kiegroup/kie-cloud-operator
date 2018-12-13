@@ -872,7 +872,8 @@ func TestLoadAllSyntaxImportErrors(t *testing.T) {
 	packagestest.TestAll(t, testLoadAllSyntaxImportErrors)
 }
 func testLoadAllSyntaxImportErrors(t *testing.T, exporter packagestest.Exporter) {
-	// TODO(matloob): Remove this once go list -e -compiled is fixed. See golang.org/issue/26755
+	// TODO(matloob): Remove this once go list -e -compiled is fixed.
+	// See https://golang.org/issue/26755
 	t.Skip("go list -compiled -e fails with non-zero exit status for empty packages")
 
 	exported := packagestest.Export(t, exporter, []packagestest.Module{{
@@ -1042,6 +1043,35 @@ func testContains(t *testing.T, exporter packagestest.Exporter) {
 	bFile := exported.File("golang.org/fake", "b/b.go")
 	exported.Config.Mode = packages.LoadImports
 	initial, err := packages.Load(exported.Config, "file="+bFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	graph, _ := importGraph(initial)
+	wantGraph := `
+* golang.org/fake/b
+  golang.org/fake/c
+  golang.org/fake/b -> golang.org/fake/c
+`[1:]
+	if graph != wantGraph {
+		t.Errorf("wrong import graph: got <<%s>>, want <<%s>>", graph, wantGraph)
+	}
+}
+
+func TestContainsOverlay(t *testing.T) { packagestest.TestAll(t, testContainsOverlay) }
+func testContainsOverlay(t *testing.T, exporter packagestest.Exporter) {
+	exported := packagestest.Export(t, exporter, []packagestest.Module{{
+		Name: "golang.org/fake",
+		Files: map[string]interface{}{
+			"a/a.go": `package a; import "golang.org/fake/b"`,
+			"b/b.go": `package b; import "golang.org/fake/c"`,
+			"c/c.go": `package c`,
+		}}})
+	defer exported.Cleanup()
+	bOverlayFile := filepath.Join(filepath.Dir(exported.File("golang.org/fake", "b/b.go")), "b_overlay.go")
+	exported.Config.Mode = packages.LoadImports
+	exported.Config.Overlay = map[string][]byte{bOverlayFile: []byte(`package b;`)}
+	initial, err := packages.Load(exported.Config, "file="+bOverlayFile)
 	if err != nil {
 		t.Fatal(err)
 	}

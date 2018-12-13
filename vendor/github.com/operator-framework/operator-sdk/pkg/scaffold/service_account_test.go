@@ -17,7 +17,7 @@ package scaffold
 import (
 	"testing"
 
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
 func TestServiceAccount(t *testing.T) {
@@ -28,9 +28,8 @@ func TestServiceAccount(t *testing.T) {
 	}
 
 	if serviceAccountExp != buf.String() {
-		dmp := diffmatchpatch.New()
-		diffs := diffmatchpatch.New().DiffMain(serviceAccountExp, buf.String(), false)
-		t.Fatalf("expected vs actual differs. Red text is missing and green text is extra.\n%v", dmp.DiffPrettyText(diffs))
+		diffs := diffutil.Diff(serviceAccountExp, buf.String())
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
