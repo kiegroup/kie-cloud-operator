@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"os"
 	"runtime"
 	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
@@ -20,10 +20,7 @@ import (
 
 func init() {
 	// Set log level... override default w/ command-line variable if set.
-	levelString := os.Getenv("LOG_LEVEL") // panic, fatal, error, warn, info, debug
-	if levelString == "" {
-		levelString = "info"
-	}
+	levelString := shared.GetEnv("LOG_LEVEL", "info") // panic, fatal, error, warn, info, debug
 	lev, err := logrus.ParseLevel(levelString)
 	if err != nil {
 		lev = logrus.InfoLevel

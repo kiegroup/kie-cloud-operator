@@ -66,6 +66,10 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	if len(cr.Spec.Objects.Server.Env) == 0 {
 		cr.Spec.Objects.Server.Env = []corev1.EnvVar{{Name: "empty"}}
 	}
+	if cr.Spec.RhpamRegistry == (v1.KieAppRegistry{}) {
+		cr.Spec.RhpamRegistry.Registry = shared.GetEnv("REGISTRY", constants.RhpamRegistry) // default to red hat registry
+		cr.Spec.RhpamRegistry.Insecure = shared.GetBoolEnv("INSECURE")
+	}
 
 	pattern := regexp.MustCompile("[0-9]+")
 	// create go template if does not exist

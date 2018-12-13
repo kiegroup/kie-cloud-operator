@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/rhpamcentr"
@@ -276,7 +277,7 @@ func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) b
 	return true
 }
 
-// Create ImageStreamTag
+// Create local ImageStreamTag
 func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev1.ObjectReference, cr *v1.KieApp) error {
 	result := strings.Split(currentTagReference.Name, ":")
 	if len(result) == 1 {
@@ -286,12 +287,15 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev
 	version := []byte(cr.Spec.Template.Version)
 	imageName := tagName
 	regContext := fmt.Sprintf("rhpam-%s", string(version[0]))
-	registryAddress := "registry.access.redhat.com"
+
+	registryAddress := cr.Spec.RhpamRegistry.Registry
 	if strings.Contains(result[0], "businesscentral-indexing-openshift") {
 		regContext = "rhpam-7-tech-preview"
 	} else if strings.Contains(result[0], "amq-broker-7") {
+		registryAddress = constants.RhpamRegistry
 		regContext = "amq-broker-7"
 	} else if result[0] == "postgresql" || result[0] == "mysql" {
+		registryAddress = constants.RhpamRegistry
 		regContext = "rhscl"
 		pattern := regexp.MustCompile("[0-9]+")
 		imageName = fmt.Sprintf("%s-%s-rhel7:%s", result[0], strings.Join(pattern.FindAllString(result[1], -1), ""), "latest")
@@ -312,6 +316,11 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
+	if cr.Spec.RhpamRegistry.Insecure {
+		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
+			Insecure: true,
+		}
+	}
 
 	logrus.Infof("Creating a new %s %s/%s for %s", isnew.GetObjectKind().GroupVersionKind().Kind, isnew.Namespace, isnew.Name, registryURL)
 	_, err := reconciler.imageClient.ImageStreamTags(isnew.Namespace).Create(isnew)

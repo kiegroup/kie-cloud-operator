@@ -47,8 +47,12 @@ make dep
 make clean
 LOG_LEVEL="debug" operator-sdk up local --namespace=<namespace>
 ```
+Also at runtime, change registry for rhpam ImageStreamTags -
+```shell
+INSECURE=true REGISTRY=<registry url> operator-sdk up local --namespace=<namespace>
+```
 
-Before submitting PR, please be sure to vet, generate, format, and test your code. This can all be done with one command.
+Before submitting PR, please be sure to generate, vet, format, and test your code. This all can be done with one command.
 ```shell
 make test
 ```
