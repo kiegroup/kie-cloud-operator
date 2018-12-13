@@ -2,7 +2,7 @@ package kieapp
 
 import (
 	"fmt"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -10,6 +10,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -132,6 +133,47 @@ func TestTrialServerEnv(t *testing.T) {
 		Value: "RedHat",
 	})
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+}
+
+func TestRhpamRegistry(t *testing.T) {
+	registry1 := "registry1.test.com"
+	os.Setenv("REGISTRY", registry1)
+	defer os.Unsetenv("REGISTRY")
+	os.Setenv("INSECURE", "true")
+	defer os.Unsetenv("INSECURE")
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+		},
+	}
+	_, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	if !assert.Nil(t, err, "error should be nil") {
+		logrus.Error(err)
+	}
+	assert.Equal(t, registry1, cr.Spec.RhpamRegistry.Registry)
+	assert.Equal(t, true, cr.Spec.RhpamRegistry.Insecure)
+
+	registry2 := "registry2.test.com:5000"
+	cr2 := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+			RhpamRegistry: v1.KieAppRegistry{
+				Registry: registry2,
+			},
+		},
+	}
+	_, err = defaults.GetEnvironment(cr2, fake.NewFakeClient())
+	if !assert.Nil(t, err, "error should be nil") {
+		logrus.Error(err)
+	}
+	assert.Equal(t, registry2, cr2.Spec.RhpamRegistry.Registry)
+	assert.Equal(t, false, cr2.Spec.RhpamRegistry.Insecure)
 }
 
 func TestGenerateSecret(t *testing.T) {

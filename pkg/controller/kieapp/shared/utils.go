@@ -9,6 +9,8 @@ import (
 	"crypto/x509/pkix"
 	"math/big"
 	"math/rand"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
@@ -204,4 +206,21 @@ func EnvVarCheck(dst, src []corev1.EnvVar) bool {
 		}
 	}
 	return match
+}
+
+func GetEnv(key, fallback string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		value = fallback
+	}
+	return value
+}
+
+func GetBoolEnv(key string) bool {
+	val := GetEnv(key, "false")
+	ret, err := strconv.ParseBool(val)
+	if err != nil {
+		return false
+	}
+	return ret
 }

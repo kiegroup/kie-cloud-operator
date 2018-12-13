@@ -19,11 +19,17 @@ type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment string `json:"environment,omitempty"`
-	// Number of KieServer DeploymentConfigs (defaults to 1)
-	KieDeployments int           `json:"kieDeployments"`
-	Objects        KieAppObjects `json:"objects,omitempty"`
-	Template       Template      `json:"template,omitempty"`
+	Environment    string         `json:"environment,omitempty"`
+	KieDeployments int            `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	RhpamRegistry  KieAppRegistry `json:"rhpamRegistry,omitempty"`
+	Objects        KieAppObjects  `json:"objects,omitempty"`
+	Template       Template       `json:"template,omitempty"`
+}
+
+// KieAppRegistry defines the registry that should be used for rhpam images
+type KieAppRegistry struct {
+	Registry string `json:"registry,omitempty"` // Registry to use, can also be set w/ "REGISTRY" env variable
+	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
 }
 
 // KieAppStatus defines the observed state of KieApp
