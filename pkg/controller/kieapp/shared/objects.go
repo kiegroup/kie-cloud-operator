@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -9,10 +10,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("kieapp.utils")
+var log = logs.GetLogger("kieapp.utils")
 
 func GetDeploymentTypeMeta() metav1.TypeMeta {
 	kind := "DeploymentConfig"

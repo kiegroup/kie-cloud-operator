@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

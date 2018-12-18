@@ -34,7 +34,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
-	log.V(1).Info(fmt.Sprintf("Testing with environment %v", cr.Spec.Environment))
+	log.Debug(fmt.Sprintf("Testing with environment %v", cr.Spec.Environment))
 	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
 }
 

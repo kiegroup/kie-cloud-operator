@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/gobuffalo/packr/builder"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 )
 
-var log = logf.Log.WithName("kieapp.packr")
+var log = logs.GetLogger("kieapp.packr")
 
 func main() {
 	b := builder.New(context.Background(), os.Args[1])
@@ -19,7 +19,6 @@ func main() {
 
 	err := b.Run()
 	if err != nil {
-		log.Error(err, "Error running packr builder")
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
