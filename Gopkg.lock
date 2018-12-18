@@ -934,6 +934,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/ghodss/yaml",
+    "github.com/go-logr/logr",
     "github.com/gobuffalo/packr",
     "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
@@ -948,6 +949,8 @@
     "github.com/pavel-v-chernykh/keystore-go",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
+    "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/api/errors",

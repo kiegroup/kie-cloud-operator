@@ -1,7 +1,6 @@
 package defaults
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
@@ -263,9 +262,9 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
+			log.Debugf("Not found, adding %v to slice\n", baselineItem)
 		} else {
-			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
+			log.Debugf("Will merge %v on top of %v\n", found, baselineItem)
 			if baselineItem.ImageChangeParams != nil {
 				if found.ImageChangeParams == nil {
 					found.ImageChangeParams = baselineItem.ImageChangeParams
@@ -287,7 +286,7 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findDeploymentTriggerPolicy(overwriteItem, mergedTriggers)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
+			log.Debugf("Not found, appending %v to slice\n", overwriteItem)
 			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
 		}
 	}
@@ -407,9 +406,9 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findVolume(baselineItem, overwrite)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
+			log.Debugf("Not found, adding %v to slice\n", baselineItem)
 		} else {
-			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
+			log.Debugf("Will merge %v on top of %v\n", found, baselineItem)
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
 			if err != nil {
 				return nil, err
@@ -420,7 +419,7 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findVolume(overwriteItem, mergedVolumes)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
+			log.Debugf("Not found, appending %v to slice\n", overwriteItem)
 			mergedVolumes = append(mergedVolumes, overwrite[overwriteIndex])
 		}
 	}
@@ -432,9 +431,9 @@ func mergeVolumeMounts(baseline []corev1.VolumeMount, overwrite []corev1.VolumeM
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findVolumeMount(baselineItem, overwrite)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, adding %v to slice\n", baselineItem))
+			log.Debugf("Not found, adding %v to slice\n", baselineItem)
 		} else {
-			log.V(1).Info(fmt.Sprintf("Will merge %v on top of %v\n", found, baselineItem))
+			log.Debugf("Will merge %v on top of %v\n", found, baselineItem)
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
 			if err != nil {
 				return nil, err
@@ -445,7 +444,7 @@ func mergeVolumeMounts(baseline []corev1.VolumeMount, overwrite []corev1.VolumeM
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findVolumeMount(overwriteItem, mergedVolumeMounts)
 		if idx == -1 {
-			log.V(1).Info(fmt.Sprintf("Not found, appending %v to slice\n", overwriteItem))
+			log.Debugf("Not found, appending %v to slice\n", overwriteItem)
 			mergedVolumeMounts = append(mergedVolumeMounts, overwrite[overwriteIndex])
 		}
 	}
@@ -601,7 +600,7 @@ func mergeObjects(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject,
 		if found == nil {
 			slice.Index(sliceIndex).Set(reflect.ValueOf(object).Elem())
 			sliceIndex++
-			log.V(1).Info(fmt.Sprintf("Not found, added %s to beginning of slice\n", object))
+			log.Debugf("Not found, added %s to beginning of slice\n", object)
 		} else if found.GetAnnotations()["delete"] != "true" {
 			err := mergo.Merge(object, found, mergo.WithOverride)
 			if err != nil {

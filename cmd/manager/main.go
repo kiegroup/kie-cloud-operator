@@ -10,7 +10,7 @@ import (
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -19,26 +19,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
-var log = logf.Log.WithName("cmd")
-
-func init() {
-	// Set log level... override default w/ command-line variable if set.
-	debugBool := shared.GetBoolEnv("DEBUG") // info, debug
-
-	// The logger instantiated here can be changed to any logger
-	// implementing the logr.Logger interface. This logger will
-	// be propagated through the whole operator, generating
-	// uniform and structured logs.
-	if debugBool {
-		logf.SetLogger(logf.ZapLogger(true))
-	} else {
-		logf.SetLogger(logf.ZapLogger(false))
-	}
-}
+var log = logs.GetLogger("cmd")
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))

@@ -15,16 +15,16 @@ import (
 	"github.com/gobuffalo/packr"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("kieapp.defaults")
+var log = logs.GetLogger("kieapp.defaults")
 
 func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
 	envTemplate := getEnvTemplate(cr)
@@ -68,8 +68,8 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 		cr.Spec.Objects.Server.Env = []corev1.EnvVar{{Name: "empty"}}
 	}
 	if cr.Spec.RhpamRegistry == (v1.KieAppRegistry{}) {
-		cr.Spec.RhpamRegistry.Registry = shared.GetEnv("REGISTRY", constants.RhpamRegistry) // default to red hat registry
-		cr.Spec.RhpamRegistry.Insecure = shared.GetBoolEnv("INSECURE")
+		cr.Spec.RhpamRegistry.Registry = logs.GetEnv("REGISTRY", constants.RhpamRegistry) // default to red hat registry
+		cr.Spec.RhpamRegistry.Insecure = logs.GetBoolEnv("INSECURE")
 	}
 
 	pattern := regexp.MustCompile("[0-9]+")
@@ -117,7 +117,7 @@ func loadYaml(client client.Client, filename, namespace string, e v1.EnvTemplate
 	if err != nil {
 		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, e.ApplicationName)
 	}
-	log.V(1).Info(fmt.Sprintf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName))
+	log.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName)
 	return parseTemplate(e, configMap.Data[file]), nil
 }
 

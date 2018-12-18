@@ -3,11 +3,11 @@ package kieserver
 import (
 	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("kieapp.kieserver")
+var log = logs.GetLogger("kieapp.kieserver")
 
 func ConstructObject(object v1.CustomObject, cr *v1.KieApp) v1.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
