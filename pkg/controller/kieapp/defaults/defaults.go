@@ -126,13 +126,13 @@ func parseTemplate(e v1.EnvTemplate, objYaml string) []byte {
 
 	tmpl, err := template.New(e.ApplicationName).Parse(objYaml)
 	if err != nil {
-		log.Error(err, "Error creating new Go template")
+		log.Error("Error creating new Go template. ", err)
 	}
 
 	// template replacement
 	err = tmpl.Execute(&b, e)
 	if err != nil {
-		log.Error(err, "Error applying Go template")
+		log.Error("Error applying Go template. ", err)
 	}
 
 	return b.Bytes()
@@ -155,7 +155,7 @@ func ConfigMapsFromFile(namespace string) []corev1.ConfigMap {
 	for _, filename := range box.List() {
 		s, err := box.FindString(filename)
 		if err != nil {
-			log.Error(err, "Error finding file with packr")
+			log.Error("Error finding file with packr. ", err)
 		}
 		cmData := map[string]string{}
 		cmName, file := convertToConfigMapName(filename)

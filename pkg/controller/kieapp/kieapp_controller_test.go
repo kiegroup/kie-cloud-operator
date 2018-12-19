@@ -34,7 +34,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
-	log.Debug(fmt.Sprintf("Testing with environment %v", cr.Spec.Environment))
+	log.Debug("Testing with environment ", cr.Spec.Environment)
 	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
 }
 
@@ -67,7 +67,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 
 	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		log.Error(err, "Error getting environment")
+		log.Error("Error getting environment. ", err)
 	}
 	env = ConsolidateObjects(env, cr)
 
@@ -116,7 +116,7 @@ func TestTrialServerEnv(t *testing.T) {
 
 	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		log.Error(err, "Error getting environment")
+		log.Error("Error getting environment. ", err)
 	}
 	env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
 	env = ConsolidateObjects(env, cr)
@@ -150,7 +150,7 @@ func TestRhpamRegistry(t *testing.T) {
 	}
 	_, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		log.Error(err, "Error getting environment")
+		log.Error("Error getting environment. ", err)
 	}
 	assert.Equal(t, registry1, cr.Spec.RhpamRegistry.Registry)
 	assert.Equal(t, true, cr.Spec.RhpamRegistry.Insecure)
@@ -169,7 +169,7 @@ func TestRhpamRegistry(t *testing.T) {
 	}
 	_, err = defaults.GetEnvironment(cr2, fake.NewFakeClient())
 	if !assert.Nil(t, err, "error should be nil") {
-		log.Error(err, "Error getting environment")
+		log.Error("Error getting environment. ", err)
 	}
 	assert.Equal(t, registry2, cr2.Spec.RhpamRegistry.Registry)
 	assert.Equal(t, false, cr2.Spec.RhpamRegistry.Insecure)
