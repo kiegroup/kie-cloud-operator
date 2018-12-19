@@ -59,7 +59,7 @@ func mergePersistentVolumeClaims(baseline []corev1.PersistentVolumeClaim, overwr
 		slice := make([]corev1.PersistentVolumeClaim, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -85,7 +85,7 @@ func mergeServiceAccounts(baseline []corev1.ServiceAccount, overwrite []corev1.S
 		slice := make([]corev1.ServiceAccount, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -111,7 +111,7 @@ func mergeSecrets(baseline []corev1.Secret, overwrite []corev1.Secret) []corev1.
 		slice := make([]corev1.Secret, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -137,7 +137,7 @@ func mergeRoles(baseline []rbacv1.Role, overwrite []rbacv1.Role) []rbacv1.Role {
 		slice := make([]rbacv1.Role, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -155,7 +155,7 @@ func mergeRoleBindings(baseline []rbacv1.RoleBinding, overwrite []rbacv1.RoleBin
 		slice := make([]rbacv1.RoleBinding, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -194,12 +194,12 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 			baselineItem := baseline[baselineIndex]
 			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
 			if err != nil {
-				log.Error(err, "Error merging interfaces")
+				log.Error("Error merging interfaces. ", err)
 				return nil
 			}
 			mergedSpec, err := mergeSpec(baselineItem.Spec, overwriteItem.Spec)
 			if err != nil {
-				log.Error(err, "Error merging DeploymentConfig Specs")
+				log.Error("Error merging DeploymentConfig Specs. ", err)
 				return nil
 			}
 			overwriteItem.Spec = mergedSpec
@@ -208,7 +208,7 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 	slice := make([]appsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
 	err := mergeObjects(baselineRefs, overwriteRefs, slice)
 	if err != nil {
-		log.Error(err, "Error merging objects")
+		log.Error("Error merging objects. ", err)
 		return nil
 	}
 	return slice
@@ -241,7 +241,7 @@ func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTempla
 	}
 	err := mergo.Merge(&overwrite.ObjectMeta, baseline.ObjectMeta)
 	if err != nil {
-		log.Error(err, "Error merging interfaces")
+		log.Error("Error merging interfaces. ", err)
 		return nil, nil
 	}
 	mergedPodSpec, err := mergePodSpecs(baseline.Spec, overwrite.Spec)
@@ -492,7 +492,7 @@ func mergeServices(baseline []corev1.Service, overwrite []corev1.Service) []core
 				baselineItem := baseline[baselineIndex]
 				err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
 				if err != nil {
-					log.Error(err, "Error merging interfaces")
+					log.Error("Error merging interfaces. ", err)
 					return nil
 				}
 				overwriteItem.Spec.Ports = mergeServicePorts(baselineItem.Spec.Ports, overwriteItem.Spec.Ports)
@@ -501,7 +501,7 @@ func mergeServices(baseline []corev1.Service, overwrite []corev1.Service) []core
 		slice := make([]corev1.Service, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice
@@ -561,7 +561,7 @@ func mergeRoutes(baseline []routev1.Route, overwrite []routev1.Route) []routev1.
 		slice := make([]routev1.Route, combinedSize(baselineRefs, overwriteRefs))
 		err := mergeObjects(baselineRefs, overwriteRefs, slice)
 		if err != nil {
-			log.Error(err, "Error merging objects")
+			log.Error("Error merging objects. ", err)
 			return nil
 		}
 		return slice

@@ -39,14 +39,14 @@ func main() {
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		log.Error(err, "failed to get watch namespace")
+		log.Error("Failed to get watch namespace. ", err)
 		os.Exit(1)
 	}
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Error(err, "Error while getting config")
+		log.Error("Error while getting config. ", err)
 		os.Exit(1)
 	}
 
@@ -56,7 +56,7 @@ func main() {
 	r := ready.NewFileReady()
 	err = r.Set()
 	if err != nil {
-		log.Error(err, "Error on NewFileReady()")
+		log.Error("Error on NewFileReady(). ", err)
 		os.Exit(1)
 	}
 	defer r.Unset()
@@ -65,7 +65,7 @@ func main() {
 	syncPeriod := time.Duration(2) * time.Hour
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace, SyncPeriod: &syncPeriod})
 	if err != nil {
-		log.Error(err, "Error getting Manager")
+		log.Error("Error getting Manager. ", err)
 		os.Exit(1)
 	}
 
@@ -73,13 +73,13 @@ func main() {
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "Error on AddToScheme")
+		log.Error("Error on AddToScheme. ", err)
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		log.Error(err, "Error adding controllers to Manager")
+		log.Error("Error adding controllers to Manager. ", err)
 		os.Exit(1)
 	}
 
@@ -87,7 +87,7 @@ func main() {
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "manager exited non-zero")
+		log.Error("Manager exited non-zero. ", err)
 		os.Exit(1)
 	}
 }

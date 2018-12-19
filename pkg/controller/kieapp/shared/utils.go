@@ -49,7 +49,7 @@ func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVa
 func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	cert, derPK, err := genCert(commonName)
 	if err != nil {
-		log.Error(err, "Error generating certificate")
+		log.Error("Error generating certificate. ", err)
 	}
 
 	var chain []keystore.Certificate
@@ -69,7 +69,7 @@ func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	var b bytes.Buffer
 	err = keystore.Encode(&b, keyStore, password)
 	if err != nil {
-		log.Error(err, "Error encryting and signing keystore")
+		log.Error("Error encryting and signing keystore. ", err)
 	}
 
 	return b.Bytes()
@@ -89,7 +89,7 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 
 	serialNumber, err := crand.Int(crand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
-		log.Error(err, "Error getting serial number")
+		log.Error("Error getting serial number. ", err)
 		return nil, nil, err
 	}
 
@@ -110,19 +110,19 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 
 	priv, err := rsa.GenerateKey(crand.Reader, 2048)
 	if err != nil {
-		log.Error(err, "create key failed")
+		log.Error("create key failed. ", err)
 		return nil, nil, err
 	}
 
 	cert, err = x509.CreateCertificate(crand.Reader, ca, ca, &priv.PublicKey, priv)
 	if err != nil {
-		log.Error(err, "create cert failed")
+		log.Error("create cert failed. ", err)
 		return nil, nil, err
 	}
 
 	derPK, err = x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		log.Error(err, "Marshal to PKCS8 key failed")
+		log.Error("Marshal to PKCS8 key failed. ", err)
 		return nil, nil, err
 	}
 

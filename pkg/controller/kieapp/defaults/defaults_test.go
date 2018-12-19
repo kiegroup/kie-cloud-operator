@@ -16,7 +16,7 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Error(err.(error), "")
+			log.Error(err)
 		}
 	}()
 
@@ -63,7 +63,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Error(err.(error), "")
+			log.Error(err)
 		}
 	}()
 

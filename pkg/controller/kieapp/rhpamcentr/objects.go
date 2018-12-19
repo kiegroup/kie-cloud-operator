@@ -16,7 +16,7 @@ func ConstructObject(object v1.CustomObject, cr *v1.KieApp) v1.CustomObject {
 
 			err := mergo.Merge(&c.Resources, cr.Spec.Objects.Console.Resources, mergo.WithOverride)
 			if err != nil {
-				log.Error(err, "Error merging interfaces")
+				log.Error("Error merging interfaces. ", err)
 			}
 			dc.Spec.Template.Spec.Containers[containerIndex] = c
 		}

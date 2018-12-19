@@ -363,7 +363,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	err = yaml.Unmarshal(yamlBytes, object)
 	if err != nil {
-		log.Error(err, "Error unmarshalling yaml")
+		log.Error("Error unmarshalling yaml. ", err)
 	}
 	return nil
 }
