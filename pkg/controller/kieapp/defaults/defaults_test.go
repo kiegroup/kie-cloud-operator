@@ -108,6 +108,27 @@ func TestTrialEnvironment(t *testing.T) {
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhpam72-businesscentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    "trial",
+			KieConsoleType: v1.KieConsoleTypeMonitoring,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, fake.NewFakeClient())
+
+	assert.Nil(t, err, "Error getting trial environment")
+
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhpam72-businesscentral-monitoring-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func getService(services []corev1.Service, name string) corev1.Service {

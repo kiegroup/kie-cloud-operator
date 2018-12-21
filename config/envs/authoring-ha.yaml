@@ -1,7 +1,7 @@
 console:
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-claim"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
         labels:
           app: "{{.ApplicationName}}"
       spec:
@@ -13,18 +13,18 @@ console:
 
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
       spec:
         ## Replicas for Business Central
         replicas: 2
         template:
           metadata:
-            name: "{{.ApplicationName}}-rhpamcentr"
+            name: "{{.ApplicationName}}-{{.ConsoleName}}"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-rhpamcentr"
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-rhpamcentr-pvol"
+                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
                 ports:
                   - name: git-ssh
@@ -40,9 +40,9 @@ console:
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "{{.AdminPassword}}"
             volumes:
-              - name: "{{.ApplicationName}}-rhpamcentr-pvol"
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-rhpamcentr-claim"
+                  claimName: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
 
   services:
     - spec:
@@ -51,7 +51,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
 
 # MySQL/ES/AMQ BEGIN
 others:

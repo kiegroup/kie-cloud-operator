@@ -38,10 +38,10 @@ console:
         name: "{{.ApplicationName}}-rhpamsvc-view"
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
+          service: "{{.ApplicationName}}-{{.ConsoleName}}"
       spec:
         strategy:
           type: Recreate
@@ -50,38 +50,36 @@ console:
             imageChangeParams:
               automatic: true
               containerNames:
-                - "{{.ApplicationName}}-rhpamcentr"
+                - "{{.ApplicationName}}-{{.ConsoleName}}"
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "rhpam{{.Version}}-businesscentral-openshift:{{.ImageTag}}"
+                name: "rhpam{{.Version}}-{{.ConsoleImage}}-openshift:{{.ImageTag}}"
           - type: ConfigChange
         replicas: 1
         selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
         template:
           metadata:
-            name: "{{.ApplicationName}}-rhpamcentr"
+            name: "{{.ApplicationName}}-{{.ConsoleName}}"
             labels:
-              deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+              deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
               app: "{{.ApplicationName}}"
-              service: "{{.ApplicationName}}-rhpamcentr"
+              service: "{{.ApplicationName}}-{{.ConsoleName}}"
           spec:
             serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
             terminationGracePeriodSeconds: 60
             containers:
-              - name: "{{.ApplicationName}}-rhpamcentr"
-                image: rhpam{{.Version}}-businesscentral-openshift
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+                image: rhpam{{.Version}}-{{.ConsoleImage}}-openshift
                 imagePullPolicy: Always
                 volumeMounts:
                   - name: businesscentral-keystore-volume
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
                 resources:
-                  requests:
-                    memory: 768Mi
                   limits:
-                    memory: 1Gi
+                    memory: 2Gi
                 livenessProbe:
                   exec:
                     command:
@@ -127,6 +125,10 @@ console:
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
                     value: "{{.ControllerPassword}}"
+                  - name: KIE_SERVER_USER
+                    value: executionUser
+                  - name: KIE_SERVER_PWD
+                    value: "{{.ServerPassword}}"
                   - name: KIE_MBEANS
                     value: enabled
                   - name: HTTPS_KEYSTORE_DIR
@@ -138,11 +140,11 @@ console:
                   - name: HTTPS_PASSWORD
                     value: "{{.KeyStorePassword}}"
                   - name: WORKBENCH_ROUTE_NAME
-                    value: "{{.ApplicationName}}-rhpamcentr"
+                    value: "{{.ApplicationName}}-{{.ConsoleName}}"
                   - name: JGROUPS_PING_PROTOCOL
                     value: "openshift.DNS_PING"
                   - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "{{.ApplicationName}}-rhpamcentr-ping"
+                    value: "{{.ApplicationName}}-{{.ConsoleName}}-ping"
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
@@ -151,10 +153,28 @@ console:
                     value: "false"
                   - name: SSO_PRINCIPAL_ATTRIBUTE
                     value: "preferred_username"
+                volumeMounts:
+                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-keystore-volume"
+                    mountPath: "/etc/businesscentral-secret-volume"
+                    readOnly: true
+                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                    mountPath: "/opt/eap/standalone/data/kie"
             volumes:
-              - name: businesscentral-keystore-volume
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}-keystore-volume"
                 secret:
                   secretName: "{{.ApplicationName}}-businesscentral-app-secret"
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                persistentVolumeClaim:
+                  claimName: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+      spec:
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: "64Mi"
   services:
     - spec:
         ports:
@@ -165,12 +185,12 @@ console:
             port: 8443
             targetPort: 8443
         selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
+          service: "{{.ApplicationName}}-{{.ConsoleName}}"
         annotations:
           description: All the Business Central web server's ports.
     - spec:
@@ -180,46 +200,34 @@ console:
             port: 8888
             targetPort: 8888
         selector:
-          deploymentConfig: "{{.ApplicationName}}-rhpamcentr"
+          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-ping"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-ping"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
+          service: "{{.ApplicationName}}-{{.ConsoleName}}"
         annotations:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
   routes:
-    - id: "{{.ApplicationName}}-rhpamcentr-https"
+    - id: "{{.ApplicationName}}-{{.ConsoleName}}-https"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
+          service: "{{.ApplicationName}}-{{.ConsoleName}}"
         annotations:
           description: Route for Business Central's https service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
         host: ""
         to:
-          name: "{{.ApplicationName}}-rhpamcentr"
+          name: "{{.ApplicationName}}-{{.ConsoleName}}"
         port:
           targetPort: https
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
-  persistentVolumeClaims:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-claim"
-        labels:
-          app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
 
 ## KIE Servers BEGIN
 servers:
@@ -246,7 +254,7 @@ servers:
                   namespace: "openshift"
                   name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
             - type: ConfigChange
-          replicas: 3
+          replicas: 1
           selector:
             deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
           template:
@@ -279,7 +287,7 @@ servers:
                     - name: KIE_SERVER_CONTROLLER_PWD
                       value: "{{.ControllerPassword}}"
                     - name: KIE_SERVER_CONTROLLER_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
+                      value: "{{.ApplicationName}}-{{.ConsoleName}}"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
                       value: ws
                     - name: KIE_MBEANS
@@ -288,14 +296,46 @@ servers:
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
                     - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
                       value: "false"
+                    - name: KIE_SERVER_PROTOCOL
+                      value: https
+                    - name: KIE_SERVER_PORT
+                      value: "443"
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+                      value: ""
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
+                  ## H2 driver settings BEGIN
+                    - name: RHPAM_DRIVER
+                      value: "h2"
+                    - name: RHPAM_USERNAME
+                      value: "sa"
+                    - name: RHPAM_PASSWORD
+                      value: "{{.AdminPassword}}"
+                    - name: RHPAM_SERVICE_HOST
+                      value: "dummy_ignored"
+                    - name: RHPAM_SERVICE_PORT
+                      value: "12345"
+                    - name: KIE_SERVER_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.H2Dialect"
+                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
+                  ## H2 driver settings END
                     - name: RHPAMCENTR_MAVEN_REPO_USERNAME
                       value: mavenUser
                     - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
                       value: "{{.MavenPassword}}"
                     - name: RHPAMCENTR_MAVEN_REPO_SERVICE
-                      value: "{{.ApplicationName}}-rhpamcentr"
+                      value: "{{.ApplicationName}}-{{.ConsoleName}}"
                     - name: MAVEN_REPOS
                       value: "RHPAMCENTR,EXTERNAL"
                     - name: RHPAMCENTR_MAVEN_REPO_PATH
@@ -316,28 +356,12 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "{{.KeyStorePassword}}"
-                    - name: FILTERS
-                      value: "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
-                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Origin"
-                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
-                      value: "*"
-                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Methods"
-                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "GET, POST, OPTIONS, PUT"
-                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Headers"
-                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "Accept, Authorization, Content-Type, X-Requested-With"
-                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Credentials"
-                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "true"
-                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Max-Age"
-                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
-                      value: "1"
+                    - name: JGROUPS_PING_PROTOCOL
+                      value: "openshift.DNS_PING"
+                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
+                    - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+                      value: "8888"
                   resources:
                     limits:
                       memory: 1Gi
@@ -370,6 +394,9 @@ servers:
                       protocol: TCP
                     - name: https
                       containerPort: 8443
+                      protocol: TCP
+                    - name: ping
+                      containerPort: 8888
                       protocol: TCP
                   volumeMounts:
                     - mountPath: /etc/kieserver-secret-volume
@@ -426,6 +453,7 @@ servers:
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's https service.
+            haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
             name: "{{.ApplicationName}}-kieserver-{{$index}}"

@@ -17,6 +17,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+func TestKieAppDefaults(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+			Objects: v1.KieAppObjects{
+				Server: v1.KieAppObject{},
+			},
+		},
+	}
+	assert.Nil(t, cr.Spec.Objects.Server.Env)
+	assert.NotContains(t, cr.Spec.Objects.Console.Env, corev1.EnvVar{
+		Name: "empty",
+	})
+}
+
 func TestUnknownEnvironmentObjects(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -191,4 +210,49 @@ func TestGenerateSecret(t *testing.T) {
 	env, _, err = NewEnv(test.MockPlatformService{}, cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+}
+
+func TestMergeTrialAndCommonConfig(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+		},
+	}
+	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	assert.Nil(t, err)
+
+	// HTTP Routes are added
+	assert.Equal(t, 2, len(env.Console.Routes), "Expected 2 routes. rhpamcentr (http + https)")
+	assert.Equal(t, 2, len(env.Servers[0].Routes), "Expected 2 routes. kieserver[0] (http + https)")
+
+	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
+	assert.Equal(t, "test-rhpamcentr-http", env.Console.Routes[1].Name)
+
+	assert.Equal(t, "test-kieserver-0", env.Servers[0].Routes[0].Name)
+	assert.Equal(t, "test-kieserver-0-http", env.Servers[0].Routes[1].Name)
+
+	// Env vars overrides
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "RedHat",
+	})
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  "KIE_SERVER_PROTOCOL",
+		Value: "",
+	})
+
+	// H2 Volumes are mounted
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      "test-h2-pvol",
+		MountPath: "/opt/eap/standalone/data",
+	})
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, corev1.Volume{
+		Name: "test-h2-pvol",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
 }

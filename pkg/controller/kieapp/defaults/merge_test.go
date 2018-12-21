@@ -93,7 +93,7 @@ func TestMergeRoutes(t *testing.T) {
 
 	mergedEnv, err := merge(baseline, *overwrite)
 	assert.Nil(t, err, "Error while merging environments")
-	assert.Equal(t, 4, len(mergedEnv.Console.Routes), "Expected 4 routes")
+	assert.Equal(t, 4, len(mergedEnv.Console.Routes), "Expected 4 routes.")
 	finalRoute1 := mergedEnv.Console.Routes[0]
 	finalRoute3 := mergedEnv.Console.Routes[2]
 	finalRoute4 := mergedEnv.Console.Routes[3]
@@ -150,37 +150,6 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
-
-//func TestMergeAuthoringServer(t *testing.T) {
-//	var prodEnv v1.Environment
-//	err := getParsedTemplate("testdata/envs/authoring-lite.yaml", "prod", &prodEnv)
-//	assert.Nil(t, err, "Error: %v", err)
-//	var servers, expected v1.Environment
-//	err = getParsedTemplate("common.yaml", "prod", &servers)
-//	assert.Nil(t, err, "Error: %v", err)
-//
-//	mergedObject, _ := merge(servers, prodEnv)
-//
-//	err = getParsedTemplate("testdata/expected/authoring.yaml", "fake", &expected)
-//	assert.Nil(t, err, "Error: %v", err)
-//	assert.Equal(t, &expected, &mergedObject)
-//}
-
-//func TestMergeAuthoringPostgresServer(t *testing.T) {
-//	var prodEnv v1.Environment
-//	err := getParsedTemplate("testdata/envs/authoring-postgres-lite.yaml", "prod", &prodEnv)
-//	assert.Nil(t, err, "Error: %v", err)
-//	var servers, expected v1.Environment
-//	err = getParsedTemplate("common/server.yaml", "prod", &servers)
-//	assert.Nil(t, err, "Error: %v", err)
-//
-//	mergedObject, _ := merge(servers, prodEnv)
-//
-//	err = getParsedTemplate("testdata/expected/authoring-postgres.yaml", "fake", &expected)
-//
-//	assert.Nil(t, err, "Error: %v", err)
-//	assert.Equal(t, &expected, &mergedObject)
-//}
 
 func TestMergeDeploymentconfigs(t *testing.T) {
 	baseline := []appsv1.DeploymentConfig{
@@ -326,6 +295,12 @@ func TestMergeDeploymentconfigs_PodSpec_Volumes(t *testing.T) {
 	overwrite := []appsv1.DeploymentConfig{
 		*buildDC("dc1"),
 	}
+	overwrite[0].Spec.Template.Spec.Volumes[0] = corev1.Volume{
+		Name: "dc1-some-volume",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	}
 	overwrite[0].Spec.Template.Spec.Volumes[1] = corev1.Volume{
 		Name: "dc1-other-volume",
 		VolumeSource: corev1.VolumeSource{
@@ -341,11 +316,28 @@ func TestMergeDeploymentconfigs_PodSpec_Volumes(t *testing.T) {
 		},
 	})
 
+	overwrite[0].Spec.Template.Spec.Containers[0].VolumeMounts[0] = corev1.VolumeMount{
+		Name:      "dc1-volume-mount-1",
+		MountPath: "/etc/kieserver/dc1/pathX",
+		ReadOnly:  true,
+	}
+	overwrite[0].Spec.Template.Spec.Containers[0].VolumeMounts = append(overwrite[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      "dc1-volume-mount-2",
+		MountPath: "/etc/kieserver/dc1/path2",
+		ReadOnly:  true,
+	})
+
 	results := mergeDeploymentConfigs(baseline, overwrite)
 
 	assert.Equal(t, 3, len(results[0].Spec.Template.Spec.Volumes))
-	assert.Equal(t, "dc1-other-volume", results[0].Spec.Template.Spec.Volumes[2].Name)
+	assert.Equal(t, "dc1-some-volume", results[0].Spec.Template.Spec.Volumes[0].Name)
+	assert.Nil(t, results[0].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim)
+	assert.Equal(t, &corev1.EmptyDirVolumeSource{}, results[0].Spec.Template.Spec.Volumes[0].EmptyDir)
 	assert.Equal(t, "other-secret", results[0].Spec.Template.Spec.Volumes[1].VolumeSource.Secret.SecretName)
+	assert.Equal(t, "dc1-other-volume", results[0].Spec.Template.Spec.Volumes[2].Name)
+	assert.Equal(t, 2, len(results[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+	assert.Equal(t, "/etc/kieserver/dc1/pathX", results[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
+	assert.Equal(t, "/etc/kieserver/dc1/path2", results[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
 }
 
 func getParsedTemplate(filename string, name string, object interface{}) error {
@@ -459,9 +451,11 @@ func buildDC(name string) *appsv1.DeploymentConfig {
 					},
 					Volumes: []corev1.Volume{
 						{
-							Name: name + "-emptydir-volume",
+							Name: name + "-some-volume",
 							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "test-claim",
+								},
 							},
 						},
 						{
