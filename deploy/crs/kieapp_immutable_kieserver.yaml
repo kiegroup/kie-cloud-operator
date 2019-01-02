@@ -1,0 +1,15 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: immutablekie
+spec:
+  environment: immutable-kieserver
+  build:
+    kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+    gitSource:
+      uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
+      reference: master
+      contextDir: quickstarts/library-process/library
+    webhooks:
+      - type: GitHub
+        secret: secret123!

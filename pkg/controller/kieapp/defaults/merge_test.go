@@ -151,6 +151,21 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
 
+func TestMergeSmartRouterOmitted(t *testing.T) {
+	var trialEnv v1.Environment
+	err := getParsedTemplate("envs/trial.yaml", "test", &trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "test", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	mergedEnv, err := merge(common, trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+	assert.True(t, mergedEnv.Smartrouter.Omit, "Smartrouter deployment must be omitted")
+	assert.False(t, mergedEnv.Console.Omit, "Console deployment must not be omitted")
+}
+
 func TestMergeDeploymentconfigs(t *testing.T) {
 	baseline := []appsv1.DeploymentConfig{
 		*buildDC("dc1"),

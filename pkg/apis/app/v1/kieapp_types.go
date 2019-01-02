@@ -2,6 +2,7 @@ package v1
 
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -66,6 +67,10 @@ type KieAppObjects struct {
 	Console KieAppObject `json:"console,omitempty"`
 	// KIE Server container configs
 	Server KieAppObject `json:"server,omitempty"`
+	// Smartrouter container configs
+	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
+	// S2I Build configuration
+	Build KieAppBuildObject `json:"build,omitempty"`
 }
 
 type KieAppObject struct {
@@ -74,20 +79,47 @@ type KieAppObject struct {
 }
 
 type Environment struct {
-	Console CustomObject   `json:"console,omitempty"`
-	Others  []CustomObject `json:"others,omitempty"`
-	Servers []CustomObject `json:"servers,omitempty"`
+	Console     CustomObject   `json:"console,omitempty"`
+	Smartrouter CustomObject   `json:"smartrouter,omitempty"`
+	Servers     []CustomObject `json:"servers,omitempty"`
+	Others      []CustomObject `json:"others,omitempty"`
 }
 
 type CustomObject struct {
+	Omit                   bool                           `json:"omit,omitempty"`
 	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
 	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
 	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
 	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
 	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
+	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
+}
+
+type KieAppBuildObject struct {
+	KieServerContainerDeployment string          `json:"kieServerContainerDeployment,omitempty"`
+	GitSource                    GitSource       `json:"gitSource,omitempty"`
+	Webhooks                     []WebhookSecret `json:"webhooks,omitempty"`
+}
+
+type GitSource struct {
+	URI        string `json:"uri,omitempty"`
+	Reference  string `json:"reference,omitempty"`
+	ContextDir string `json:"contextDir,omitempty"`
+}
+
+type WebhookType string
+
+const (
+	Github  WebhookType = "GitHub"
+	Generic WebhookType = "Generic"
+)
+
+type WebhookSecret struct {
+	Type   WebhookType `json:"type,omitempty"`
+	Secret string      `json:"secret,omitempty"`
 }
 
 type OpenShiftObject interface {
@@ -101,16 +133,20 @@ type EnvTemplate struct {
 }
 
 type Template struct {
-	ApplicationName    string `json:"applicationName,omitempty"`
-	Version            string `json:"version,omitempty"`
-	ImageTag           string `json:"imageTag,omitempty"`
-	ConsoleName        string `json:"consoleName,omitempty"`
-	ConsoleImage       string `json:"consoleImage,omitempty"`
-	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
-	AdminPassword      string `json:"adminPassword,omitempty"`
-	ControllerPassword string `json:"controllerPassword,omitempty"`
-	ServerPassword     string `json:"serverPassword,omitempty"`
-	MavenPassword      string `json:"mavenPassword,omitempty"`
+	ApplicationName              string    `json:"applicationName,omitempty"`
+	Version                      string    `json:"version,omitempty"`
+	ImageTag                     string    `json:"imageTag,omitempty"`
+	ConsoleName                  string    `json:"consoleName,omitempty"`
+	ConsoleImage                 string    `json:"consoleImage,omitempty"`
+	KeyStorePassword             string    `json:"keyStorePassword,omitempty"`
+	AdminPassword                string    `json:"adminPassword,omitempty"`
+	ControllerPassword           string    `json:"controllerPassword,omitempty"`
+	ServerPassword               string    `json:"serverPassword,omitempty"`
+	MavenPassword                string    `json:"mavenPassword,omitempty"`
+	GitSource                    GitSource `json:"gitSource,omitempty"`
+	GithubWebhookSecret          string    `json:"githubWebhookSecret,omitempty"`
+	GenericWebhookSecret         string    `json:"genericWebhookSecret,omitempty"`
+	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
 }
 
 type PlatformService interface {

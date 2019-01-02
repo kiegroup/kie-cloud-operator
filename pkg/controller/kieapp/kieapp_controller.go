@@ -11,11 +11,10 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/rhpamcentr"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -381,32 +380,37 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 	}
 
 	// console keystore generation
-	consoleCN := ""
-	for _, rt := range env.Console.Routes {
-		if checkTLS(rt.Spec.TLS) {
-			// use host of first tls route in env template
-			consoleCN = reconciler.GetRouteHost(rt, cr)
-			break
+	if !env.Console.Omit {
+		consoleCN := ""
+		for _, rt := range env.Console.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, cr)
+				break
+			}
 		}
-	}
-	if consoleCN == "" {
-		consoleCN = cr.Name
-	}
-	env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
-			Labels: map[string]string{
-				"app": cr.Name,
+		if consoleCN == "" {
+			consoleCN = cr.Name
+		}
+		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
+				Labels: map[string]string{
+					"app": cr.Name,
+				},
 			},
-		},
-		Data: map[string][]byte{
-			"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
-		},
-	})
+			Data: map[string][]byte{
+				"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
+			},
+		})
+	}
 
 	// server(s) keystore generation
 	for i, server := range env.Servers {
+		if server.Omit {
+			break
+		}
 		serverCN := ""
 		for _, rt := range server.Routes {
 			if checkTLS(rt.Spec.TLS) {
@@ -439,6 +443,10 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 	if err != nil {
 		return env, rResult, err
 	}
+	rResult, err = reconciler.CreateCustomObjects(env.Smartrouter, cr)
+	if err != nil {
+		return env, rResult, err
+	}
 	for _, s := range env.Servers {
 		rResult, err = reconciler.CreateCustomObjects(s, cr)
 		if err != nil {
@@ -456,15 +464,19 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 }
 
 func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
-	env.Console = rhpamcentr.ConstructObject(env.Console, cr)
+	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
+	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	for i, s := range env.Servers {
-		s = kieserver.ConstructObject(s, cr)
+		s = shared.ConstructObject(s, &cr.Spec.Objects.Server)
 		env.Servers[i] = s
 	}
 	return env
 }
 
 func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+	if object.Omit {
+		return reconcile.Result{}, nil
+	}
 	var allObjects []v1.OpenShiftObject
 	for index := range object.PersistentVolumeClaims {
 		object.PersistentVolumeClaims[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
@@ -512,6 +524,10 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	for index := range object.Routes {
 		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 		allObjects = append(allObjects, &object.Routes[index])
+	}
+	for index := range object.BuildConfigs {
+		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
+		allObjects = append(allObjects, &object.BuildConfigs[index])
 	}
 
 	for _, obj := range allObjects {

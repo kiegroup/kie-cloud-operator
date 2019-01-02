@@ -228,7 +228,126 @@ console:
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
-
+## KIE smartrouter BEGIN
+smartrouter:
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-smartrouter-claim"
+        labels:
+          app: "{{.ApplicationName}}"
+          service: "{{.ApplicationName}}-smartrouter"
+      spec:
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: "64Mi"
+  deploymentConfigs:
+    - metadata:
+        name: "{{.ApplicationName}}-smartrouter"
+        labels:
+          app: "{{.ApplicationName}}"
+          service: "{{.ApplicationName}}-smartrouter"
+      spec:
+        strategy:
+          type: Recreate
+        triggers:
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - "{{.ApplicationName}}-smartrouter"
+              from:
+                kind: ImageStreamTag
+                namespace: "openshift"
+                name: "rhpam{{.Version}}-smartrouter-openshift:{{.ImageTag}}"
+          - type: ConfigChange
+        replicas: 2
+        selector:
+          deploymentConfig: "{{.ApplicationName}}-smartrouter"
+        template:
+          metadata:
+            name: "{{.ApplicationName}}-smartrouter"
+            labels:
+              app: "{{.ApplicationName}}"
+              deploymentConfig: "{{.ApplicationName}}-smartrouter"
+              service: "{{.ApplicationName}}-smartrouter"
+          spec:
+            terminationGracePeriodSeconds: 60
+            containers:
+              - name: "{{.ApplicationName}}-smartrouter"
+                image: rhpam{{.Version}}-smartrouter-openshift
+                imagePullPolicy: Always
+                resources:
+                  limits:
+                    memory: "512Mi"
+                ports:
+                  - name: http
+                    containerPort: 9000
+                    protocol: TCP
+                env:
+                  - name: KIE_SERVER_ROUTER_HOST
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: status.podIP
+                  - name: KIE_SERVER_ROUTER_PORT
+                    value: "9000"
+                  - name: KIE_SERVER_ROUTER_ID
+                    value: "kie-server-router"
+                  - name: KIE_SERVER_ROUTER_NAME
+                    value: "KIE Server Router"
+                  - name: KIE_SERVER_ROUTER_PROTOCOL
+                    value: ""
+                  - name: KIE_SERVER_CONTROLLER_USER
+                    value: controllerUser
+                  - name: KIE_SERVER_CONTROLLER_PWD
+                    value: "{{.ControllerPassword}}"
+                  - name: KIE_SERVER_CONTROLLER_SERVICE
+                    value: "{{.ApplicationName}}-{{.ConsoleName}}"
+                  - name: KIE_SERVER_CONTROLLER_PROTOCOL
+                    value: "http"
+                  - name: KIE_SERVER_ROUTER_REPO
+                    value: "/opt/rhpam-smartrouter/data"
+                  - name: KIE_SERVER_ROUTER_CONFIG_WATCHER_ENABLED
+                    value: "true"
+                volumeMounts:
+                  - name: "{{.ApplicationName}}-smartrouter"
+                    mountPath: "/opt/rhpam-smartrouter/data"
+            volumes:
+              - name: "{{.ApplicationName}}-smartrouter"
+                persistentVolumeClaim:
+                  claimName: "{{.ApplicationName}}-smartrouter-claim"
+  services:
+    - spec:
+        ports:
+          - port: 9000
+            targetPort: 9000
+        selector:
+          deploymentConfig: "{{.ApplicationName}}-smartrouter"
+      metadata:
+        name: "{{.ApplicationName}}-smartrouter"
+        labels:
+          app: "{{.ApplicationName}}"
+          service: "{{.ApplicationName}}-smartrouter"
+        annotations:
+          description: The smart router server http port.
+  routes:
+    - id: "{{.ApplicationName}}-smartrouter-https"
+      metadata:
+        name: "{{.ApplicationName}}-smartrouter"
+        labels:
+          app: "{{.ApplicationName}}"
+          service: "{{.ApplicationName}}-smartrouter"
+        annotations:
+          description: Route for Smart Router's http service.
+      spec:
+        host: ""
+        to:
+          name: "{{.ApplicationName}}-smartrouter"
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: passthrough
+## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
