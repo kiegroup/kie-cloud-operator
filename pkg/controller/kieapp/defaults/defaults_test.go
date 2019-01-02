@@ -118,14 +118,13 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
-			KieConsoleType: v1.KieConsoleTypeMonitoring,
+			Environment:    "production",
 			KieDeployments: 2,
 		},
 	}
 	env, err := GetEnvironment(cr, fake.NewFakeClient())
 
-	assert.Nil(t, err, "Error getting trial environment")
+	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "rhpam72-businesscentral-monitoring-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)

@@ -68,7 +68,7 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 
 	consoleName := constants.RhpamcentrServicePrefix
 	consoleImage := constants.RhpamcentrImageName
-	if cr.Spec.KieConsoleType == v1.KieConsoleTypeMonitoring {
+	if _, isMonitoring := constants.MonitoringEnvs[cr.Spec.Environment]; isMonitoring {
 		consoleName = constants.RhpamcentrMonitoringServicePrefix
 		consoleImage = constants.RhpamcentrMonitoringImageName
 	}

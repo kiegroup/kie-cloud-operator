@@ -14,23 +14,12 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// KieConsoleType defines the type of Console to deploy or None
-type KieConsoleType string
-
-const (
-	// KieConsoleTypeAuthoring Authoring version of the workbench
-	KieConsoleTypeAuthoring KieConsoleType = "Authoring"
-	// KieConsoleTypeMonitoring Monitoring version of the workbench
-	KieConsoleTypeMonitoring KieConsoleType = "Monitoring"
-)
-
 // KieAppSpec defines the desired state of KieApp
 type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
 	Environment    string         `json:"environment,omitempty"`
-	KieConsoleType KieConsoleType `json:"consoleType,omitempty"`
 	KieDeployments int            `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
 	RhpamRegistry  KieAppRegistry `json:"rhpamRegistry,omitempty"`
 	Objects        KieAppObjects  `json:"objects,omitempty"`

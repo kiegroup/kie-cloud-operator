@@ -4,5 +4,3 @@ metadata:
   name: production
 spec:
   environment: production
-  kieDeployments: 2
-  consoleType: "Monitoring"
