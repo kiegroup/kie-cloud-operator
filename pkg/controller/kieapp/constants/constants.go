@@ -15,7 +15,7 @@ const (
 
 // MonitoringEnvs Type of environments that will deploy the Monitoring console.
 // The console resources will be suffixed as -monitoring as well
-var MonitoringEnvs = map[string]struct{}{
-	"production":           struct{}{},
-	"immutable-monitoring": struct{}{},
+var MonitoringEnvs = map[string]bool{
+	"production":           true,
+	"immutable-monitoring": true,
 }
