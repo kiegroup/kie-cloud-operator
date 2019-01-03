@@ -4,13 +4,3 @@ metadata:
   name: production
 spec:
   environment: production
-  kieDeployments: 2
-  objects:
-    console:
-      resources:
-        limits:
-          memory: 2Gi
-    server:
-      env:
-        - name: key1
-          value: value1

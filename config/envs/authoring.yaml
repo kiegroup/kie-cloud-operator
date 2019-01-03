@@ -1,28 +1,27 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
       spec:
         template:
           metadata:
-            name: "{{.ApplicationName}}-rhpamcentr"
+            name: "{{.ApplicationName}}-{{.ConsoleName}}"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-rhpamcentr"
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
-                volumeMounts:
-                  - name: "{{.ApplicationName}}-rhpamcentr-pvol"
-                    mountPath: "/opt/eap/standalone/data/kie"
-                resources:
-                  limits:
-                    memory: 2Gi
-            volumes:
-              - name: "{{.ApplicationName}}-rhpamcentr-pvol"
-                persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-rhpamcentr-claim"
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
   services:
     - spec:
         ports:
@@ -31,7 +30,6 @@ console:
             targetPort: 8001
       metadata:
         name: "{{.ApplicationName}}-rhpamcentr"
-
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
@@ -41,44 +39,12 @@ servers:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          replicas: 1
           template:
             metadata:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  env:
-                    - name: MAVEN_REPOS
-                      value: "RHPAMCENTR,EXTERNAL"
-                    - name: DATASOURCES
-                      value: "RHPAM"
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
-                    - name: RHPAM_JNDI
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_JTA
-                      value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
-                    ## H2 driver settings BEGIN
-                    - name: RHPAM_DRIVER
-                      value: "h2"
-                    - name: RHPAM_USERNAME
-                      value: "sa"
-                    - name: RHPAM_PASSWORD
-                      value: "{{.AdminPassword}}"
-                    - name: RHPAM_SERVICE_HOST
-                      value: "dummy_ignored"
-                    - name: RHPAM_SERVICE_PORT
-                      value: "12345"
-                    - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.H2Dialect"
-                    - name: DROOLS_SERVER_FILTER_CLASSES
-                      value: "true"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
-                  ## H2 driver settings END
                   volumeMounts:
                     - name: "{{.ApplicationName}}-h2-pvol"
                       mountPath: "/opt/eap/standalone/data"

@@ -1,14 +1,12 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
       spec:
         template:
-          metadata:
-            name: "{{.ApplicationName}}-rhpamcentr"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-rhpamcentr"
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
@@ -22,38 +20,37 @@ console:
                     value: RedHat
                   - name: KIE_SERVER_PWD
                     value: RedHat
-                resources:
-                  limits:
-                    memory: 2Gi
+            volumes:
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                emptyDir: {}
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        annotations:
+          delete: "true"
   services:
-    - spec:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+      spec:
         ports:
           - name: git-ssh
             port: 8001
             targetPort: 8001
-      metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
   routes:
-    - id: "{{.ApplicationName}}-rhpamcentr-http"
+    - id: "{{.ApplicationName}}-{{.ConsoleName}}-http"
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-http"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-http"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-rhpamcentr"
+          service: "{{.ApplicationName}}-{{.ConsoleName}}"
         annotations:
           description: Route for Business Central's http service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
-        host: ""
         to:
-          name: "{{.ApplicationName}}-rhpamcentr"
+          name: "{{.ApplicationName}}-{{.ConsoleName}}"
         port:
           targetPort: http
-  persistentVolumeClaims:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamcentr-claim"
-        annotations:
-          delete: "true"
 
 ## KIE Servers BEGIN
 servers:
@@ -64,7 +61,6 @@ servers:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          replicas: 1
           template:
             metadata:
               name: "{{.ApplicationName}}-kieserver-{{$index}}"
@@ -80,9 +76,57 @@ servers:
                       value: RedHat
                     - name: KIE_SERVER_PWD
                       value: RedHat
-                    - name: EXECUTION_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                    - name: KIE_SERVER_ROUTE_NAME
+                      value: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+                    - name: KIE_SERVER_PROTOCOL
+                    - name: KIE_SERVER_PORT
+                    - name: FILTERS
+                      value: "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Origin"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                      value: "*"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Methods"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "GET, POST, OPTIONS, PUT"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Headers"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "Accept, Authorization, Content-Type, X-Requested-With"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Allow-Credentials"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "true"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                      value: "Access-Control-Max-Age"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                      value: "1"
+                  volumeMounts:
+                    - name: "{{.ApplicationName}}-h2-pvol"
+                      mountPath: "/opt/eap/standalone/data"
+              volumes:
+                ## H2 volume settings BEGIN
+                - name: "{{.ApplicationName}}-h2-pvol"
+                  emptyDir: {}
     ## KIE server deployment config END
+    ## KIE server route BEGIN
+    routes:
+      - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+        metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+          annotations:
+            description: Route for KIE server's http service.
+            haproxy.router.openshift.io/timeout: 60s
+        spec:
+          to:
+            name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          port:
+            targetPort: http
+    ## KIE server route END
 #{{end}}
 ## RANGE ends
 ## KIE Servers END

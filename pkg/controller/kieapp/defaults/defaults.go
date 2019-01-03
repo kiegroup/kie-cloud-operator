@@ -61,15 +61,16 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	if cr.Spec.KieDeployments == 0 {
 		cr.Spec.KieDeployments = 1
 	}
-	if len(cr.Spec.Objects.Console.Env) == 0 {
-		cr.Spec.Objects.Console.Env = []corev1.EnvVar{{Name: "empty"}}
-	}
-	if len(cr.Spec.Objects.Server.Env) == 0 {
-		cr.Spec.Objects.Server.Env = []corev1.EnvVar{{Name: "empty"}}
-	}
 	if cr.Spec.RhpamRegistry == (v1.KieAppRegistry{}) {
 		cr.Spec.RhpamRegistry.Registry = logs.GetEnv("REGISTRY", constants.RhpamRegistry) // default to red hat registry
 		cr.Spec.RhpamRegistry.Insecure = logs.GetBoolEnv("INSECURE")
+	}
+
+	consoleName := constants.RhpamcentrServicePrefix
+	consoleImage := constants.RhpamcentrImageName
+	if _, isMonitoring := constants.MonitoringEnvs[cr.Spec.Environment]; isMonitoring {
+		consoleName = constants.RhpamcentrMonitoringServicePrefix
+		consoleImage = constants.RhpamcentrMonitoringImageName
 	}
 
 	pattern := regexp.MustCompile("[0-9]+")
@@ -79,6 +80,8 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 			ApplicationName:    cr.Name,
 			Version:            strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""),
 			ImageTag:           constants.ImageStreamTag,
+			ConsoleName:        consoleName,
+			ConsoleImage:       consoleImage,
 			KeyStorePassword:   string(shared.GeneratePassword(8)),
 			AdminPassword:      string(shared.GeneratePassword(8)),
 			ControllerPassword: string(shared.GeneratePassword(8)),

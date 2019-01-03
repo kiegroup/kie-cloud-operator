@@ -407,14 +407,11 @@ func mergeVolumes(baseline []corev1.Volume, overwrite []corev1.Volume) ([]corev1
 		idx, found := findVolume(baselineItem, overwrite)
 		if idx == -1 {
 			log.Debugf("Not found, adding %v to slice\n", baselineItem)
+			mergedVolumes = append(mergedVolumes, baseline[baselineIndex])
 		} else {
-			log.Debugf("Will merge %v on top of %v\n", found, baselineItem)
-			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
-			if err != nil {
-				return nil, err
-			}
+			log.Debugf("Will replace %v on top of %v\n", found, baselineItem)
+			mergedVolumes = append(mergedVolumes, found)
 		}
-		mergedVolumes = append(mergedVolumes, baseline[baselineIndex])
 	}
 	for overwriteIndex, overwriteItem := range overwrite {
 		idx, _ := findVolume(overwriteItem, mergedVolumes)

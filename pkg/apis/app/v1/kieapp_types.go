@@ -62,14 +62,14 @@ type KieAppList struct {
 }
 
 type KieAppObjects struct {
-	// KIE Server container configs
-	Console KieAppObject `json:"console,omitempty"`
 	// Business Central container configs
+	Console KieAppObject `json:"console,omitempty"`
+	// KIE Server container configs
 	Server KieAppObject `json:"server,omitempty"`
 }
 
 type KieAppObject struct {
-	Env       []corev1.EnvVar             `json:"env"`
+	Env       []corev1.EnvVar             `json:"env,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources"`
 }
 
@@ -104,6 +104,8 @@ type Template struct {
 	ApplicationName    string `json:"applicationName,omitempty"`
 	Version            string `json:"version,omitempty"`
 	ImageTag           string `json:"imageTag,omitempty"`
+	ConsoleName        string `json:"consoleName,omitempty"`
+	ConsoleImage       string `json:"consoleImage,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
 	ControllerPassword string `json:"controllerPassword,omitempty"`
