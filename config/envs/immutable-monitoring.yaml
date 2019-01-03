@@ -2,5 +2,5 @@
 servers:
   #{{ range $index, $Map := .ServerCount }}
   - omit: true
-  #{{end}}
+#{{end}}
 ## KIE Servers END

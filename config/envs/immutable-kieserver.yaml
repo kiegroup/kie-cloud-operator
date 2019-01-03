@@ -51,7 +51,7 @@ servers:
           triggers:
             - type: GitHub
               github:
-                secret: "{{.GithubWebhookSecret}}"
+                secret: "{{.GitHubWebhookSecret}}"
             - type: Generic
               generic:
                 secret: "{{.GenericWebhookSecret}}"
@@ -75,6 +75,7 @@ servers:
                   - "{{.ApplicationName}}-kieserver-{{$index}}"
                 from:
                   kind: ImageStreamTag
+                  namespace: ""
                   name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
           template:
             spec:
@@ -208,6 +209,6 @@ servers:
           selector:
             deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
     ## PostgreSQL service END
-  #{{end}}
-  ## RANGE ends
-  ## KIE Servers END
+#{{end}}
+## RANGE ends
+## KIE Servers END

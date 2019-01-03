@@ -290,8 +290,8 @@ func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) b
 }
 
 // Create local ImageStreamTag
-func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev1.ObjectReference, cr *v1.KieApp) error {
-	result := strings.Split(currentTagReference.Name, ":")
+func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
+	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
@@ -500,19 +500,14 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	}
 	for index := range object.DeploymentConfigs {
 		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
-		for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
-			if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
-				if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace) {
-					if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, cr.Namespace) {
-						log.Warnf("ImageStreamTag %s/%s doesn't exist.", trigger.ImageChangeParams.From.Namespace, trigger.ImageChangeParams.From.Name)
-						err := reconciler.createLocalImageTag(trigger.ImageChangeParams.From, cr)
-						if err != nil {
-							log.Error(err)
-						}
+		if len(object.BuildConfigs) == 0 {
+			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
+				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+					namespace, err := reconciler.ensureImageStream(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace, cr)
+					if err == nil {
+						object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace = namespace
 					}
-					trigger.ImageChangeParams.From.Namespace = cr.Namespace
 				}
-				object.DeploymentConfigs[index].Spec.Triggers[ti] = trigger
 			}
 		}
 		allObjects = append(allObjects, &object.DeploymentConfigs[index])
@@ -527,6 +522,13 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	}
 	for index := range object.BuildConfigs {
 		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
+		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
+			from := object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From
+			namespace, err := reconciler.ensureImageStream(from.Name, from.Namespace, cr)
+			if err == nil {
+				from.Namespace = namespace
+			}
+		}
 		allObjects = append(allObjects, &object.BuildConfigs[index])
 	}
 
@@ -537,6 +539,21 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 		}
 	}
 	return reconcile.Result{}, nil
+}
+
+func (reconciler *ReconcileKieApp) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+	if !reconciler.checkImageStreamTag(name, namespace) {
+		if !reconciler.checkImageStreamTag(name, cr.Namespace) {
+			log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
+			err := reconciler.createLocalImageTag(name, cr)
+			if err != nil {
+				log.Error(err)
+			}
+			return namespace, err
+		}
+		return cr.Namespace, nil
+	}
+	return namespace, nil
 }
 
 // createCustomObject checks for an object's existence before creating it

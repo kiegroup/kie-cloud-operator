@@ -113,8 +113,8 @@ type GitSource struct {
 type WebhookType string
 
 const (
-	Github  WebhookType = "GitHub"
-	Generic WebhookType = "Generic"
+	GitHubWebhook  WebhookType = "GitHub"
+	GenericWebhook WebhookType = "Generic"
 )
 
 type WebhookSecret struct {
@@ -144,7 +144,7 @@ type Template struct {
 	ServerPassword               string    `json:"serverPassword,omitempty"`
 	MavenPassword                string    `json:"mavenPassword,omitempty"`
 	GitSource                    GitSource `json:"gitSource,omitempty"`
-	GithubWebhookSecret          string    `json:"githubWebhookSecret,omitempty"`
+	GitHubWebhookSecret          string    `json:"githubWebhookSecret,omitempty"`
 	GenericWebhookSecret         string    `json:"genericWebhookSecret,omitempty"`
 	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	buildv1 "github.com/openshift/api/build/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -132,6 +133,47 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "rhpam72-businesscentral-monitoring-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestBuildConfiguration(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "immutable-kieserver",
+			Objects: v1.KieAppObjects{
+				Build: v1.KieAppBuildObject{
+					KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+					GitSource: v1.GitSource{
+						URI:        "http://git.example.com",
+						Reference:  "somebranch",
+						ContextDir: "test",
+					},
+					Webhooks: []v1.WebhookSecret{
+						v1.WebhookSecret{
+							Type:   v1.GitHubWebhook,
+							Secret: "s3cr3t",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, fake.NewFakeClient())
+
+	assert.Nil(t, err, "Error getting prod environment")
+	for _, server := range env.Servers {
+		assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
+		assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
+		assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
+		assert.Equal(t, "test", server.BuildConfigs[0].Spec.Source.ContextDir)
+
+		assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+
+		assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
+		assert.Empty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
+	}
 }
 
 func getService(services []corev1.Service, name string) corev1.Service {
