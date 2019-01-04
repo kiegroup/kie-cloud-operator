@@ -201,7 +201,7 @@ func TestMergeBuildConfigs(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.BuildConfigs[0].ObjectMeta.Name)
 		assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v:latest", i), server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-		assert.Empty(t, server.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	}
 }
 

@@ -351,6 +351,7 @@ servers:
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                  image: "rhpam{{.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
@@ -551,28 +552,28 @@ servers:
 ## Other required resources BEGIN
 others:
   - roles:
-      - metadata:
-          name: "{{.ApplicationName}}-rhpamsvc-view"
-        rules:
-          - apiGroups:
-              - ""
-            resources:
-              - "*"
-            verbs:
-              - get
-              - list
-              - view
-          - apiGroups:
-              - app.kiegroup.org
-              - apps.openshift.io
-              - image.openshift.io
-              - route.openshift.io
-            resources:
-              - "*"
-            verbs:
-              - get
-              - list
-              - view
+    - metadata:
+        name: "{{.ApplicationName}}-rhpamsvc-view"
+      rules:
+        - apiGroups:
+            - ""
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
+        - apiGroups:
+            - app.kiegroup.org
+            - apps.openshift.io
+            - image.openshift.io
+            - route.openshift.io
+          resources:
+            - "*"
+          verbs:
+            - get
+            - list
+            - view
     rolebindings:
       - metadata:
           name: "{{.ApplicationName}}-rhpamsvc-view"
