@@ -88,8 +88,8 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 			ServerPassword:               string(shared.GeneratePassword(8)),
 			MavenPassword:                string(shared.GeneratePassword(8)),
 			GitSource:                    cr.Spec.Objects.Build.GitSource,
-			GitHubWebhookSecret:          findWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
-			GenericWebhookSecret:         findWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
+			GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
+			GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
 			KieServerContainerDeployment: cr.Spec.Objects.Build.KieServerContainerDeployment,
 		}
 	}
@@ -103,13 +103,13 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	return envTemplate
 }
 
-func findWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) string {
+func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) string {
 	for _, webhook := range webhooks {
 		if webhook.Type == webhookType {
 			return webhook.Secret
 		}
 	}
-	return ""
+	return string(shared.GeneratePassword(8))
 }
 
 // important to parse template first with this function, before unmarshalling into object

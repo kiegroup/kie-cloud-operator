@@ -23,6 +23,7 @@ package v1
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -77,6 +78,13 @@ func (in *CustomObject) DeepCopyInto(out *CustomObject) {
 	if in.BuildConfigs != nil {
 		in, out := &in.BuildConfigs, &out.BuildConfigs
 		*out = make([]buildv1.BuildConfig, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ImageStreams != nil {
+		in, out := &in.ImageStreams, &out.ImageStreams
+		*out = make([]imagev1.ImageStream, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

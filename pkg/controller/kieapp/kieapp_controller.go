@@ -134,6 +134,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &buildv1.BuildConfig{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &oimagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -519,6 +535,10 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	for index := range object.Routes {
 		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 		allObjects = append(allObjects, &object.Routes[index])
+	}
+	for index := range object.ImageStreams {
+		object.ImageStreams[index].SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStream"))
+		allObjects = append(allObjects, &object.ImageStreams[index])
 	}
 	for index := range object.BuildConfigs {
 		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))

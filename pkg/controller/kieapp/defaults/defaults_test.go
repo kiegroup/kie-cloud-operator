@@ -172,7 +172,7 @@ func TestBuildConfiguration(t *testing.T) {
 		assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 
 		assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
-		assert.Empty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
+		assert.NotEmpty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
 	}
 }
 

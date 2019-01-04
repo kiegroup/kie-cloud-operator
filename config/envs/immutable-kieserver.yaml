@@ -20,6 +20,12 @@ servers:
               storage: "1Gi"
     ## PostgreSQL persistent volume claim END
     ## KIE server build config BEGIN
+    imageStreams:
+      - metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
     buildConfigs:
       - metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
@@ -81,6 +87,7 @@ servers:
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                  image: ""
                   env:
                     - name: KIE_SERVER_CONTROLLER_USER
                       value: ""

@@ -3,6 +3,7 @@ package v1
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -94,6 +95,7 @@ type CustomObject struct {
 	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
 	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
 	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
+	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
 }
