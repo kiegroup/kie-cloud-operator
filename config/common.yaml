@@ -1,41 +1,4 @@
 console:
-  serviceAccounts:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc"
-        labels:
-          app: "{{.ApplicationName}}"
-  roles:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc-view"
-      rules:
-        - apiGroups:
-            - ""
-          resources:
-            - "*"
-          verbs:
-            - get
-            - list
-            - view
-        - apiGroups:
-            - app.kiegroup.org
-            - apps.openshift.io
-            - image.openshift.io
-            - route.openshift.io
-          resources:
-            - "*"
-          verbs:
-            - get
-            - list
-            - view
-  rolebindings:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc-view"
-      subjects:
-        - kind: ServiceAccount
-          name: "{{.ApplicationName}}-rhpamsvc"
-      roleRef:
-        kind: Role
-        name: "{{.ApplicationName}}-rhpamsvc-view"
   deploymentConfigs:
     - metadata:
         name: "{{.ApplicationName}}-{{.ConsoleName}}"
@@ -584,3 +547,45 @@ servers:
 #{{end}}
 ## RANGE ends
 ## KIE Servers END
+
+## Other required resources BEGIN
+others:
+  - roles:
+      - metadata:
+          name: "{{.ApplicationName}}-rhpamsvc-view"
+        rules:
+          - apiGroups:
+              - ""
+            resources:
+              - "*"
+            verbs:
+              - get
+              - list
+              - view
+          - apiGroups:
+              - app.kiegroup.org
+              - apps.openshift.io
+              - image.openshift.io
+              - route.openshift.io
+            resources:
+              - "*"
+            verbs:
+              - get
+              - list
+              - view
+    rolebindings:
+      - metadata:
+          name: "{{.ApplicationName}}-rhpamsvc-view"
+        subjects:
+          - kind: ServiceAccount
+            name: "{{.ApplicationName}}-rhpamsvc"
+        roleRef:
+          kind: Role
+          name: "{{.ApplicationName}}-rhpamsvc-view"
+
+    serviceAccounts:
+      - metadata:
+          name: "{{.ApplicationName}}-rhpamsvc"
+          labels:
+            app: "{{.ApplicationName}}"
+# Other required resources END

@@ -20,7 +20,9 @@ func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, e
 	var env v1.Environment
 	env.Console = mergeCustomObject(baseline.Console, overwrite.Console)
 	env.Smartrouter = mergeCustomObject(baseline.Smartrouter, overwrite.Smartrouter)
-	if len(baseline.Others) == 0 {
+	if len(overwrite.Others) == 0 {
+		env.Others = baseline.Others
+	} else if len(baseline.Others) == 0 {
 		env.Others = overwrite.Others
 	} else {
 		for index := range baseline.Others {
@@ -395,14 +397,6 @@ func mergeBuildTriggers(baseline []buildv1.BuildTriggerPolicy, overwrite []build
 		}
 	}
 	return mergedTriggers, nil
-}
-
-func mergeImageChangeParams(baseline appsv1.DeploymentTriggerImageChangeParams, overwrite appsv1.DeploymentTriggerImageChangeParams) (appsv1.DeploymentTriggerImageChangeParams, error) {
-	err := mergo.Merge(&baseline, overwrite, mergo.WithOverride)
-	if err != nil {
-		return appsv1.DeploymentTriggerImageChangeParams{}, err
-	}
-	return baseline, nil
 }
 
 // findDeploymentTriggerPolicy Finds a deploymentTrigger by Type. In case type == ImageChange
