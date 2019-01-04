@@ -388,7 +388,6 @@ servers:
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "rhpam{{.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER

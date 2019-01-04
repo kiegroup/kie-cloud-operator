@@ -9,6 +9,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -48,6 +49,7 @@ func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.C
 	object.Roles = mergeRoles(baseline.Roles, overwrite.Roles)
 	object.RoleBindings = mergeRoleBindings(baseline.RoleBindings, overwrite.RoleBindings)
 	object.DeploymentConfigs = mergeDeploymentConfigs(baseline.DeploymentConfigs, overwrite.DeploymentConfigs)
+	object.ImageStreams = mergeImageStreams(baseline.ImageStreams, overwrite.ImageStreams)
 	object.BuildConfigs = mergeBuildConfigs(baseline.BuildConfigs, overwrite.BuildConfigs)
 	object.Services = mergeServices(baseline.Services, overwrite.Services)
 	object.Routes = mergeRoutes(baseline.Routes, overwrite.Routes)
@@ -221,7 +223,33 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 
 }
 
-func mergeBuildConfigs(baseline []buildv1.BuildConfig, overwrite []buildv1.BuildConfig) []buildv1.BuildConfig {
+func mergeImageStreams(baseline, overwrite []oimagev1.ImageStream) []oimagev1.ImageStream {
+	if len(overwrite) == 0 {
+		return baseline
+	} else if len(baseline) == 0 {
+		return overwrite
+	} else {
+		baselineRefs := getImageStreamReferenceSlice(baseline)
+		overwriteRefs := getImageStreamReferenceSlice(overwrite)
+		slice := make([]oimagev1.ImageStream, combinedSize(baselineRefs, overwriteRefs))
+		err := mergeObjects(baselineRefs, overwriteRefs, slice)
+		if err != nil {
+			log.Error("Error merging objects. ", err)
+			return nil
+		}
+		return slice
+	}
+}
+
+func getImageStreamReferenceSlice(objects []oimagev1.ImageStream) []v1.OpenShiftObject {
+	slice := make([]v1.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
+}
+
+func mergeBuildConfigs(baseline, overwrite []buildv1.BuildConfig) []buildv1.BuildConfig {
 	if len(overwrite) == 0 {
 		return baseline
 	}
@@ -325,12 +353,6 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 			if baselineItem.ImageChangeParams != nil {
 				if found.ImageChangeParams == nil {
 					found.ImageChangeParams = baselineItem.ImageChangeParams
-				} else {
-					mergedImageChangeParams, err := mergeImageChangeParams(*baselineItem.ImageChangeParams, *found.ImageChangeParams)
-					if err != nil {
-						return nil, err
-					}
-					found.ImageChangeParams = &mergedImageChangeParams
 				}
 			}
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)

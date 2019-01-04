@@ -87,7 +87,6 @@ servers:
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: ""
                   env:
                     - name: KIE_SERVER_CONTROLLER_USER
                       value: ""

@@ -1,6 +1,7 @@
 package defaults
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -166,6 +167,44 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 	assert.False(t, mergedEnv.Console.Omit, "Console deployment must not be omitted")
 }
 
+func TestMergeImageStreams(t *testing.T) {
+	var trialEnv v1.Environment
+	err := getParsedTemplate("envs/immutable-kieserver.yaml", "test", &trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "test", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	mergedEnv, err := merge(common, trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+	assert.True(t, mergedEnv.Console.Omit, "Console deployment must be omitted")
+	for i, server := range mergedEnv.Servers {
+		assert.Equal(t, 1, len(server.ImageStreams))
+		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.ImageStreams[0].ObjectMeta.Name)
+	}
+}
+
+func TestMergeBuildConfigs(t *testing.T) {
+	var trialEnv v1.Environment
+	err := getParsedTemplate("envs/immutable-kieserver.yaml", "test", &trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "test", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	mergedEnv, err := merge(common, trialEnv)
+	assert.Nil(t, err, "Error: %v", err)
+	for i, server := range mergedEnv.Servers {
+		assert.Equal(t, 1, len(server.BuildConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.BuildConfigs[0].ObjectMeta.Name)
+		assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+		assert.Equal(t, fmt.Sprintf("test-kieserver-%v:latest", i), server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Empty(t, server.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	}
+}
+
 func TestMergeDeploymentconfigs(t *testing.T) {
 	baseline := []appsv1.DeploymentConfig{
 		*buildDC("dc1"),
@@ -270,7 +309,7 @@ func TestMergeDeploymentconfigs_Spec_Triggers(t *testing.T) {
 
 	assert.Equal(t, 3, len(results[0].Spec.Triggers))
 	assert.Equal(t, appsv1.DeploymentTriggerType("ImageChange"), results[0].Spec.Triggers[0].Type)
-	assert.Equal(t, "openshift", results[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Empty(t, results[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, "other-image:future", results[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, appsv1.DeploymentTriggerType("ImageChange"), results[0].Spec.Triggers[1].Type)
 	assert.Equal(t, emptyImageChangeParams, results[0].Spec.Triggers[1].ImageChangeParams)
