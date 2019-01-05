@@ -36,10 +36,6 @@ console:
               - name: "{{.ApplicationName}}-{{.ConsoleName}}"
                 image: rhpam{{.Version}}-{{.ConsoleImage}}-openshift
                 imagePullPolicy: Always
-                volumeMounts:
-                  - name: businesscentral-keystore-volume
-                    mountPath: "/etc/businesscentral-secret-volume"
-                    readOnly: true
                 resources:
                   limits:
                     memory: 2Gi

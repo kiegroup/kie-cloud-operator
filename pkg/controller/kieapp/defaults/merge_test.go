@@ -169,7 +169,7 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 
 func TestMergeImageStreams(t *testing.T) {
 	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/immutable-kieserver.yaml", "test", &trialEnv)
+	err := getParsedTemplate("envs/production-immutable.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
@@ -178,7 +178,6 @@ func TestMergeImageStreams(t *testing.T) {
 
 	mergedEnv, err := merge(common, trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	assert.True(t, mergedEnv.Console.Omit, "Console deployment must be omitted")
 	for i, server := range mergedEnv.Servers {
 		assert.Equal(t, 1, len(server.ImageStreams))
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.ImageStreams[0].ObjectMeta.Name)
@@ -187,7 +186,7 @@ func TestMergeImageStreams(t *testing.T) {
 
 func TestMergeBuildConfigs(t *testing.T) {
 	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/immutable-kieserver.yaml", "test", &trialEnv)
+	err := getParsedTemplate("envs/production-immutable.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment

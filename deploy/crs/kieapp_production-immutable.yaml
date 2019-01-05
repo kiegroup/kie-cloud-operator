@@ -1,9 +1,9 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: immutablekie
+  name: production-immutable
 spec:
-  environment: immutable-kieserver
+  environment: production-immutable
   objects:
     build:
       kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
