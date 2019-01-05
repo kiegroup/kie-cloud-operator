@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -13,6 +14,21 @@ import (
 )
 
 var log = logs.GetLogger("kieapp.utils")
+
+func ConstructObject(object v1.CustomObject, cr *v1.KieAppObject) v1.CustomObject {
+	for dcIndex, dc := range object.DeploymentConfigs {
+		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
+			c.Env = EnvOverride(c.Env, cr.Env)
+			err := mergo.Merge(&c.Resources, cr.Resources, mergo.WithOverride)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+			}
+			dc.Spec.Template.Spec.Containers[containerIndex] = c
+		}
+		object.DeploymentConfigs[dcIndex] = dc
+	}
+	return object
+}
 
 func GetDeploymentTypeMeta() metav1.TypeMeta {
 	kind := "DeploymentConfig"

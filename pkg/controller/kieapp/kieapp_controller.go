@@ -11,11 +11,10 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/kieserver"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/rhpamcentr"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -128,6 +127,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &buildv1.BuildConfig{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.KieApp{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &oimagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.KieApp{},
 	})
@@ -291,8 +306,8 @@ func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) b
 }
 
 // Create local ImageStreamTag
-func (reconciler *ReconcileKieApp) createLocalImageTag(currentTagReference corev1.ObjectReference, cr *v1.KieApp) error {
-	result := strings.Split(currentTagReference.Name, ":")
+func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
+	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
@@ -381,32 +396,37 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 	}
 
 	// console keystore generation
-	consoleCN := ""
-	for _, rt := range env.Console.Routes {
-		if checkTLS(rt.Spec.TLS) {
-			// use host of first tls route in env template
-			consoleCN = reconciler.GetRouteHost(rt, cr)
-			break
+	if !env.Console.Omit {
+		consoleCN := ""
+		for _, rt := range env.Console.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, cr)
+				break
+			}
 		}
-	}
-	if consoleCN == "" {
-		consoleCN = cr.Name
-	}
-	env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
-			Labels: map[string]string{
-				"app": cr.Name,
+		if consoleCN == "" {
+			consoleCN = cr.Name
+		}
+		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
+				Labels: map[string]string{
+					"app": cr.Name,
+				},
 			},
-		},
-		Data: map[string][]byte{
-			"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
-		},
-	})
+			Data: map[string][]byte{
+				"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
+			},
+		})
+	}
 
 	// server(s) keystore generation
 	for i, server := range env.Servers {
+		if server.Omit {
+			break
+		}
 		serverCN := ""
 		for _, rt := range server.Routes {
 			if checkTLS(rt.Spec.TLS) {
@@ -439,6 +459,10 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 	if err != nil {
 		return env, rResult, err
 	}
+	rResult, err = reconciler.CreateCustomObjects(env.Smartrouter, cr)
+	if err != nil {
+		return env, rResult, err
+	}
 	for _, s := range env.Servers {
 		rResult, err = reconciler.CreateCustomObjects(s, cr)
 		if err != nil {
@@ -456,15 +480,19 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 }
 
 func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
-	env.Console = rhpamcentr.ConstructObject(env.Console, cr)
+	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
+	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	for i, s := range env.Servers {
-		s = kieserver.ConstructObject(s, cr)
+		s = shared.ConstructObject(s, &cr.Spec.Objects.Server)
 		env.Servers[i] = s
 	}
 	return env
 }
 
 func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+	if object.Omit {
+		return reconcile.Result{}, nil
+	}
 	var allObjects []v1.OpenShiftObject
 	for index := range object.PersistentVolumeClaims {
 		object.PersistentVolumeClaims[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
@@ -488,19 +516,14 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	}
 	for index := range object.DeploymentConfigs {
 		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
-		for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
-			if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
-				if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace) {
-					if !reconciler.checkImageStreamTag(trigger.ImageChangeParams.From.Name, cr.Namespace) {
-						log.Warnf("ImageStreamTag %s/%s doesn't exist.", trigger.ImageChangeParams.From.Namespace, trigger.ImageChangeParams.From.Name)
-						err := reconciler.createLocalImageTag(trigger.ImageChangeParams.From, cr)
-						if err != nil {
-							log.Error(err)
-						}
+		if len(object.BuildConfigs) == 0 {
+			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
+				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+					namespace, err := reconciler.ensureImageStream(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace, cr)
+					if err == nil {
+						object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace = namespace
 					}
-					trigger.ImageChangeParams.From.Namespace = cr.Namespace
 				}
-				object.DeploymentConfigs[index].Spec.Triggers[ti] = trigger
 			}
 		}
 		allObjects = append(allObjects, &object.DeploymentConfigs[index])
@@ -513,6 +536,21 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 		allObjects = append(allObjects, &object.Routes[index])
 	}
+	for index := range object.ImageStreams {
+		object.ImageStreams[index].SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStream"))
+		allObjects = append(allObjects, &object.ImageStreams[index])
+	}
+	for index := range object.BuildConfigs {
+		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
+		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
+			from := object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From
+			namespace, err := reconciler.ensureImageStream(from.Name, from.Namespace, cr)
+			if err == nil {
+				from.Namespace = namespace
+			}
+		}
+		allObjects = append(allObjects, &object.BuildConfigs[index])
+	}
 
 	for _, obj := range allObjects {
 		_, err := reconciler.createCustomObject(obj, cr)
@@ -521,6 +559,21 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 		}
 	}
 	return reconcile.Result{}, nil
+}
+
+func (reconciler *ReconcileKieApp) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+	if !reconciler.checkImageStreamTag(name, namespace) {
+		if !reconciler.checkImageStreamTag(name, cr.Namespace) {
+			log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
+			err := reconciler.createLocalImageTag(name, cr)
+			if err != nil {
+				log.Error(err)
+			}
+			return namespace, err
+		}
+		return cr.Namespace, nil
+	}
+	return namespace, nil
 }
 
 // createCustomObject checks for an object's existence before creating it

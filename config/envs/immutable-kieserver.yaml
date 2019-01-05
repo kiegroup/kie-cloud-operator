@@ -1,18 +1,5 @@
 console:
-  deploymentConfigs:
-    - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
-      spec:
-        replicas: 3
-        containers:
-          - name: "{{.ApplicationName}}-{{.ConsoleName}}"
-            env:
-              - name: MAVEN_REPO_URL
-                value: ""
-              - name: MAVEN_REPO_USERNAME
-                value: ""
-              - name: MAVEN_REPO_PASSWORD
-                value: ""
+  omit: true
 
 ## KIE Servers BEGIN
 servers:
@@ -31,8 +18,53 @@ servers:
           resources:
             requests:
               storage: "1Gi"
-
     ## PostgreSQL persistent volume claim END
+    ## KIE server build config BEGIN
+    imageStreams:
+      - metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+    buildConfigs:
+      - metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          source:
+            type: Git
+            git:
+              uri: "{{.GitSource.URI}}"
+              ref: "{{.GitSource.Reference}}"
+            contextDir: "{{.GitSource.ContextDir}}"
+          strategy:
+            type: Source
+            sourceStrategy:
+              env:
+              - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+                value: "{{.KieServerContainerDeployment}}"
+              forcePull: true
+              from:
+                kind: ImageStreamTag
+                namespace: "openshift"
+                name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
+          output:
+            to:
+              kind: ImageStreamTag
+              name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
+          triggers:
+            - type: GitHub
+              github:
+                secret: "{{.GitHubWebhookSecret}}"
+            - type: Generic
+              generic:
+                secret: "{{.GenericWebhookSecret}}"
+            - type: ImageChange
+              imageChange: {}
+            - type: ConfigChange
+    ## KIE server build config END
     ## KIE server deployment config BEGIN
     deploymentConfigs:
       - metadata:
@@ -41,12 +73,30 @@ servers:
             app: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          replicas: 3
+          triggers:
+            - type: ImageChange
+              imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "{{.ApplicationName}}-kieserver-{{$index}}"
+                from:
+                  kind: ImageStreamTag
+                  namespace: ""
+                  name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
           template:
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                  image: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
+                    - name: KIE_SERVER_CONTROLLER_USER
+                      value: ""
+                    - name: KIE_SERVER_CONTROLLER_PWD
+                      value: ""
+                    - name: KIE_SERVER_CONTROLLER_SERVICE
+                      value: ""
+                    - name: KIE_SERVER_CONTROLLER_TOKEN
+                      value: ""
                     - name: EXTERNAL_MAVEN_REPO_ID
                       value: ""
                     - name: EXTERNAL_MAVEN_REPO_URL
@@ -56,9 +106,11 @@ servers:
                     - name: EXTERNAL_MAVEN_REPO_PASSWORD
                       value: ""
                     - name: KIE_SERVER_ROUTER_SERVICE
-                      value: "{{.ApplicationName}}-smartrouter"
+                      value: ""
+                    - name: KIE_SERVER_ROUTER_HOST
+                      value: ""
                     - name: KIE_SERVER_ROUTER_PORT
-                      value: "9000"
+                      value: ""
                     - name: KIE_SERVER_ROUTER_PROTOCOL
                       value: "http"
                     ## PostgreSQL driver settings BEGIN
@@ -164,6 +216,6 @@ servers:
           selector:
             deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
     ## PostgreSQL service END
-  #{{end}}
-  ## RANGE ends
-  ## KIE Servers END
+#{{end}}
+## RANGE ends
+## KIE Servers END

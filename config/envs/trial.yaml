@@ -51,7 +51,10 @@ console:
           name: "{{.ApplicationName}}-{{.ConsoleName}}"
         port:
           targetPort: http
-
+## KIE smartrouter BEGIN
+smartrouter:
+  omit: true
+## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS

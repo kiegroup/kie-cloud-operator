@@ -8,6 +8,8 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	appsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
+	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -17,7 +19,10 @@ import (
 func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, error) {
 	var env v1.Environment
 	env.Console = mergeCustomObject(baseline.Console, overwrite.Console)
-	if len(baseline.Others) == 0 {
+	env.Smartrouter = mergeCustomObject(baseline.Smartrouter, overwrite.Smartrouter)
+	if len(overwrite.Others) == 0 {
+		env.Others = baseline.Others
+	} else if len(baseline.Others) == 0 {
 		env.Others = overwrite.Others
 	} else {
 		for index := range baseline.Others {
@@ -37,12 +42,17 @@ func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, e
 
 func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.CustomObject {
 	var object v1.CustomObject
+	if overwrite.Omit {
+		object.Omit = overwrite.Omit
+	}
 	object.PersistentVolumeClaims = mergePersistentVolumeClaims(baseline.PersistentVolumeClaims, overwrite.PersistentVolumeClaims)
 	object.ServiceAccounts = mergeServiceAccounts(baseline.ServiceAccounts, overwrite.ServiceAccounts)
 	object.Secrets = mergeSecrets(baseline.Secrets, overwrite.Secrets)
 	object.Roles = mergeRoles(baseline.Roles, overwrite.Roles)
 	object.RoleBindings = mergeRoleBindings(baseline.RoleBindings, overwrite.RoleBindings)
 	object.DeploymentConfigs = mergeDeploymentConfigs(baseline.DeploymentConfigs, overwrite.DeploymentConfigs)
+	object.ImageStreams = mergeImageStreams(baseline.ImageStreams, overwrite.ImageStreams)
+	object.BuildConfigs = mergeBuildConfigs(baseline.BuildConfigs, overwrite.BuildConfigs)
 	object.Services = mergeServices(baseline.Services, overwrite.Services)
 	object.Routes = mergeRoutes(baseline.Routes, overwrite.Routes)
 	return object
@@ -215,6 +225,68 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 
 }
 
+func mergeImageStreams(baseline, overwrite []oimagev1.ImageStream) []oimagev1.ImageStream {
+	if len(overwrite) == 0 {
+		return baseline
+	} else if len(baseline) == 0 {
+		return overwrite
+	} else {
+		baselineRefs := getImageStreamReferenceSlice(baseline)
+		overwriteRefs := getImageStreamReferenceSlice(overwrite)
+		slice := make([]oimagev1.ImageStream, combinedSize(baselineRefs, overwriteRefs))
+		err := mergeObjects(baselineRefs, overwriteRefs, slice)
+		if err != nil {
+			log.Error("Error merging objects. ", err)
+			return nil
+		}
+		return slice
+	}
+}
+
+func getImageStreamReferenceSlice(objects []oimagev1.ImageStream) []v1.OpenShiftObject {
+	slice := make([]v1.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
+}
+
+func mergeBuildConfigs(baseline, overwrite []buildv1.BuildConfig) []buildv1.BuildConfig {
+	if len(overwrite) == 0 {
+		return baseline
+	}
+	if len(baseline) == 0 {
+		return overwrite
+	}
+	baselineRefs := getBuildConfigReferenceSlice(baseline)
+	overwriteRefs := getBuildConfigReferenceSlice(overwrite)
+	for overwriteIndex := range overwrite {
+		overwriteItem := &overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(overwriteItem, baselineRefs)
+		if baselineIndex >= 0 {
+			baselineItem := baseline[baselineIndex]
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+				return nil
+			}
+			mergedSpec, err := mergeBuildSpec(baselineItem.Spec, overwriteItem.Spec)
+			if err != nil {
+				log.Error("Error merging BuildConfig Specs. ", err)
+				return nil
+			}
+			overwriteItem.Spec = mergedSpec
+		}
+	}
+	slice := make([]buildv1.BuildConfig, combinedSize(baselineRefs, overwriteRefs))
+	err := mergeObjects(baselineRefs, overwriteRefs, slice)
+	if err != nil {
+		log.Error("Error merging objects. ", err)
+		return nil
+	}
+	return slice
+}
+
 func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.DeploymentConfigSpec) (appsv1.DeploymentConfigSpec, error) {
 	mergedTemplate, err := mergeTemplate(baseline.Template, overwrite.Template)
 	if err != nil {
@@ -231,6 +303,21 @@ func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.Deployment
 	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
 	if err != nil {
 		return appsv1.DeploymentConfigSpec{}, nil
+	}
+	return baseline, nil
+}
+
+func mergeBuildSpec(baseline buildv1.BuildConfigSpec, overwrite buildv1.BuildConfigSpec) (buildv1.BuildConfigSpec, error) {
+	mergedTriggers, err := mergeBuildTriggers(baseline.Triggers, overwrite.Triggers)
+	if err != nil {
+		return buildv1.BuildConfigSpec{}, err
+	}
+	overwrite.Triggers = mergedTriggers
+	overwrite.Strategy.SourceStrategy.Env = shared.EnvOverride(baseline.Strategy.SourceStrategy.Env, overwrite.Strategy.SourceStrategy.Env)
+
+	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
+	if err != nil {
+		return buildv1.BuildConfigSpec{}, nil
 	}
 	return baseline, nil
 }
@@ -268,12 +355,6 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 			if baselineItem.ImageChangeParams != nil {
 				if found.ImageChangeParams == nil {
 					found.ImageChangeParams = baselineItem.ImageChangeParams
-				} else {
-					mergedImageChangeParams, err := mergeImageChangeParams(*baselineItem.ImageChangeParams, *found.ImageChangeParams)
-					if err != nil {
-						return nil, err
-					}
-					found.ImageChangeParams = &mergedImageChangeParams
 				}
 			}
 			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
@@ -293,15 +374,32 @@ func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.D
 	return mergedTriggers, nil
 }
 
-func mergeImageChangeParams(baseline appsv1.DeploymentTriggerImageChangeParams, overwrite appsv1.DeploymentTriggerImageChangeParams) (appsv1.DeploymentTriggerImageChangeParams, error) {
-	err := mergo.Merge(&baseline, overwrite, mergo.WithOverride)
-	if err != nil {
-		return appsv1.DeploymentTriggerImageChangeParams{}, err
+func mergeBuildTriggers(baseline []buildv1.BuildTriggerPolicy, overwrite []buildv1.BuildTriggerPolicy) ([]buildv1.BuildTriggerPolicy, error) {
+	var mergedTriggers []buildv1.BuildTriggerPolicy
+	for baselineIndex, baselineItem := range baseline {
+		idx, found := findBuildTriggerPolicy(baselineItem, overwrite)
+		if idx == -1 {
+			log.Debugf("Not found, adding %v to slice\n", baselineItem)
+		} else {
+			log.Debugf("Will merge %v on top of %v\n", found, baselineItem)
+			err := mergo.Merge(&baseline[baselineIndex], found, mergo.WithOverride)
+			if err != nil {
+				return nil, err
+			}
+		}
+		mergedTriggers = append(mergedTriggers, baseline[baselineIndex])
 	}
-	return baseline, nil
+	for overwriteIndex, overwriteItem := range overwrite {
+		idx, _ := findBuildTriggerPolicy(overwriteItem, mergedTriggers)
+		if idx == -1 {
+			log.Debugf("Not found, appending %v to slice\n", overwriteItem)
+			mergedTriggers = append(mergedTriggers, overwrite[overwriteIndex])
+		}
+	}
+	return mergedTriggers, nil
 }
 
-// findDeploymentTriggerPolicy Find a deploymentTrigger by Type. In case type == ImageChange
+// findDeploymentTriggerPolicy Finds a deploymentTrigger by Type. In case type == ImageChange
 // the match will be returned if both are not empty
 func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []appsv1.DeploymentTriggerPolicy) (int, appsv1.DeploymentTriggerPolicy) {
 	emptyImageChangeParams := &appsv1.DeploymentTriggerImageChangeParams{}
@@ -317,6 +415,16 @@ func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []
 		}
 	}
 	return -1, appsv1.DeploymentTriggerPolicy{}
+}
+
+// findBuildTriggerPolicy Finds a buildTrigger by Type
+func findBuildTriggerPolicy(object buildv1.BuildTriggerPolicy, slice []buildv1.BuildTriggerPolicy) (int, buildv1.BuildTriggerPolicy) {
+	for index, candidate := range slice {
+		if candidate.Type == object.Type {
+			return index, candidate
+		}
+	}
+	return -1, buildv1.BuildTriggerPolicy{}
 }
 
 func mergePodSpecs(baseline corev1.PodSpec, overwrite corev1.PodSpec) (corev1.PodSpec, error) {
@@ -467,6 +575,14 @@ func findVolumeMount(object corev1.VolumeMount, slice []corev1.VolumeMount) (int
 }
 
 func getDeploymentConfigReferenceSlice(objects []appsv1.DeploymentConfig) []v1.OpenShiftObject {
+	slice := make([]v1.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
+}
+
+func getBuildConfigReferenceSlice(objects []buildv1.BuildConfig) []v1.OpenShiftObject {
 	slice := make([]v1.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]

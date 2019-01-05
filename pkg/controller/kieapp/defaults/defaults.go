@@ -68,7 +68,7 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 
 	consoleName := constants.RhpamcentrServicePrefix
 	consoleImage := constants.RhpamcentrImageName
-	if _, isMonitoring := constants.MonitoringEnvs[cr.Spec.Environment]; isMonitoring {
+	if constants.MonitoringEnvs[cr.Spec.Environment] {
 		consoleName = constants.RhpamcentrMonitoringServicePrefix
 		consoleImage = constants.RhpamcentrMonitoringImageName
 	}
@@ -77,16 +77,20 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	// create go template if does not exist
 	if cr.Spec.Template.ApplicationName == "" {
 		cr.Spec.Template = v1.Template{
-			ApplicationName:    cr.Name,
-			Version:            strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""),
-			ImageTag:           constants.ImageStreamTag,
-			ConsoleName:        consoleName,
-			ConsoleImage:       consoleImage,
-			KeyStorePassword:   string(shared.GeneratePassword(8)),
-			AdminPassword:      string(shared.GeneratePassword(8)),
-			ControllerPassword: string(shared.GeneratePassword(8)),
-			ServerPassword:     string(shared.GeneratePassword(8)),
-			MavenPassword:      string(shared.GeneratePassword(8)),
+			ApplicationName:              cr.Name,
+			Version:                      strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""),
+			ImageTag:                     constants.ImageStreamTag,
+			ConsoleName:                  consoleName,
+			ConsoleImage:                 consoleImage,
+			KeyStorePassword:             string(shared.GeneratePassword(8)),
+			AdminPassword:                string(shared.GeneratePassword(8)),
+			ControllerPassword:           string(shared.GeneratePassword(8)),
+			ServerPassword:               string(shared.GeneratePassword(8)),
+			MavenPassword:                string(shared.GeneratePassword(8)),
+			GitSource:                    cr.Spec.Objects.Build.GitSource,
+			GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
+			GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
+			KieServerContainerDeployment: cr.Spec.Objects.Build.KieServerContainerDeployment,
 		}
 	}
 	envTemplate := v1.EnvTemplate{
@@ -97,6 +101,15 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	}
 
 	return envTemplate
+}
+
+func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) string {
+	for _, webhook := range webhooks {
+		if webhook.Type == webhookType {
+			return webhook.Secret
+		}
+	}
+	return string(shared.GeneratePassword(8))
 }
 
 // important to parse template first with this function, before unmarshalling into object
