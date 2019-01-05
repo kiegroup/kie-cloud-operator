@@ -17,5 +17,5 @@ const (
 // The console resources will be suffixed as -monitoring as well
 var MonitoringEnvs = map[string]bool{
 	"production":           true,
-	"immutable-monitoring": true,
+	"production-immutable": true,
 }

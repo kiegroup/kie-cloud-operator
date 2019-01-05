@@ -141,7 +141,7 @@ func TestBuildConfiguration(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "immutable-kieserver",
+			Environment: "production-immutable",
 			Objects: v1.KieAppObjects{
 				Build: v1.KieAppBuildObject{
 					KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
