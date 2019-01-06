@@ -25,7 +25,7 @@ type KieAppSpec struct {
 	KieDeployments int            `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
 	RhpamRegistry  KieAppRegistry `json:"rhpamRegistry,omitempty"`
 	Objects        KieAppObjects  `json:"objects,omitempty"`
-	Template       Template       `json:"template,omitempty"`
+	CommonConfig   CommonConfig   `json:"commonConfig,omitempty"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
@@ -135,20 +135,24 @@ type EnvTemplate struct {
 }
 
 type Template struct {
+	*CommonConfig
 	ApplicationName              string    `json:"applicationName,omitempty"`
-	Version                      string    `json:"version,omitempty"`
-	ImageTag                     string    `json:"imageTag,omitempty"`
-	ConsoleName                  string    `json:"consoleName,omitempty"`
-	ConsoleImage                 string    `json:"consoleImage,omitempty"`
-	KeyStorePassword             string    `json:"keyStorePassword,omitempty"`
-	AdminPassword                string    `json:"adminPassword,omitempty"`
-	ControllerPassword           string    `json:"controllerPassword,omitempty"`
-	ServerPassword               string    `json:"serverPassword,omitempty"`
-	MavenPassword                string    `json:"mavenPassword,omitempty"`
 	GitSource                    GitSource `json:"gitSource,omitempty"`
 	GitHubWebhookSecret          string    `json:"githubWebhookSecret,omitempty"`
 	GenericWebhookSecret         string    `json:"genericWebhookSecret,omitempty"`
 	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
+}
+
+type CommonConfig struct {
+	Version            string `json:"version,omitempty"`
+	ImageTag           string `json:"imageTag,omitempty"`
+	ConsoleName        string `json:"consoleName,omitempty"`
+	ConsoleImage       string `json:"consoleImage,omitempty"`
+	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
+	AdminPassword      string `json:"adminPassword,omitempty"`
+	ControllerPassword string `json:"controllerPassword,omitempty"`
+	ServerPassword     string `json:"serverPassword,omitempty"`
+	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
 type PlatformService interface {

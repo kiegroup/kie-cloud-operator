@@ -11,6 +11,7 @@ const (
 	RhpamVersion                      = "7.2"
 	ImageStreamTag                    = "1.0"
 	ConfigMapPrefix                   = "kieconfigs"
+	DefaultPassword                   = "RedHat"
 )
 
 // MonitoringEnvs Type of environments that will deploy the Monitoring console.

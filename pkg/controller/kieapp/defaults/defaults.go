@@ -66,38 +66,79 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 		cr.Spec.RhpamRegistry.Insecure = logs.GetBoolEnv("INSECURE")
 	}
 
-	consoleName := constants.RhpamcentrServicePrefix
-	consoleImage := constants.RhpamcentrImageName
-	if constants.MonitoringEnvs[cr.Spec.Environment] {
-		consoleName = constants.RhpamcentrMonitoringServicePrefix
-		consoleImage = constants.RhpamcentrMonitoringImageName
+	// set default values for go template where not provided
+	config := &cr.Spec.CommonConfig
+	isTrialEnv := (cr.Spec.Environment == "trial")
+	if len(config.Version) == 0 {
+		pattern := regexp.MustCompile("[0-9]+")
+		config.Version = strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), "")
 	}
-
-	pattern := regexp.MustCompile("[0-9]+")
-	// create go template if does not exist
-	if cr.Spec.Template.ApplicationName == "" {
-		cr.Spec.Template = v1.Template{
-			ApplicationName:              cr.Name,
-			Version:                      strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""),
-			ImageTag:                     constants.ImageStreamTag,
-			ConsoleName:                  consoleName,
-			ConsoleImage:                 consoleImage,
-			KeyStorePassword:             string(shared.GeneratePassword(8)),
-			AdminPassword:                string(shared.GeneratePassword(8)),
-			ControllerPassword:           string(shared.GeneratePassword(8)),
-			ServerPassword:               string(shared.GeneratePassword(8)),
-			MavenPassword:                string(shared.GeneratePassword(8)),
-			GitSource:                    cr.Spec.Objects.Build.GitSource,
-			GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
-			GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
-			KieServerContainerDeployment: cr.Spec.Objects.Build.KieServerContainerDeployment,
+	if len(config.ImageTag) == 0 {
+		config.ImageTag = constants.ImageStreamTag
+	}
+	if len(config.ConsoleName) == 0 {
+		if constants.MonitoringEnvs[cr.Spec.Environment] {
+			config.ConsoleName = constants.RhpamcentrMonitoringServicePrefix
+		} else {
+			config.ConsoleName = constants.RhpamcentrServicePrefix
 		}
 	}
+	if len(config.ConsoleImage) == 0 {
+		if constants.MonitoringEnvs[cr.Spec.Environment] {
+			config.ConsoleImage = constants.RhpamcentrMonitoringImageName
+		} else {
+			config.ConsoleImage = constants.RhpamcentrImageName
+		}
+	}
+	if len(config.KeyStorePassword) == 0 {
+		if isTrialEnv {
+			config.KeyStorePassword = constants.DefaultPassword
+		} else {
+			config.KeyStorePassword = string(shared.GeneratePassword(8))
+		}
+	}
+	if len(config.AdminPassword) == 0 {
+		if isTrialEnv {
+			config.AdminPassword = constants.DefaultPassword
+		} else {
+			config.AdminPassword = string(shared.GeneratePassword(8))
+		}
+	}
+	if len(config.ControllerPassword) == 0 {
+		if isTrialEnv {
+			config.ControllerPassword = constants.DefaultPassword
+		} else {
+			config.ControllerPassword = string(shared.GeneratePassword(8))
+		}
+	}
+	if len(config.ServerPassword) == 0 {
+		if isTrialEnv {
+			config.ServerPassword = constants.DefaultPassword
+		} else {
+			config.ServerPassword = string(shared.GeneratePassword(8))
+		}
+	}
+	if len(config.MavenPassword) == 0 {
+		if isTrialEnv {
+			config.MavenPassword = constants.DefaultPassword
+		} else {
+			config.MavenPassword = string(shared.GeneratePassword(8))
+		}
+	}
+
+	crTemplate := v1.Template{
+		CommonConfig:                 config,
+		ApplicationName:              cr.Name,
+		GitSource:                    cr.Spec.Objects.Build.GitSource,
+		GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
+		GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
+		KieServerContainerDeployment: cr.Spec.Objects.Build.KieServerContainerDeployment,
+	}
 	envTemplate := v1.EnvTemplate{
-		Template: cr.Spec.Template,
+		Template: crTemplate,
 	}
 	for i := 0; i < cr.Spec.KieDeployments; i++ {
-		envTemplate.ServerCount = append(envTemplate.ServerCount, cr.Spec.Template)
+		envTemplate.ServerCount = append(envTemplate.ServerCount, crTemplate)
 	}
 
 	return envTemplate

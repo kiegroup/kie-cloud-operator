@@ -11,15 +11,6 @@ console:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
-                env:
-                  - name: KIE_ADMIN_PWD
-                    value: RedHat
-                  - name: KIE_MAVEN_PWD
-                    value: RedHat
-                  - name: KIE_SERVER_CONTROLLER_PWD
-                    value: RedHat
-                  - name: KIE_SERVER_PWD
-                    value: RedHat
             volumes:
               - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
                 emptyDir: {}
@@ -71,14 +62,6 @@ servers:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
-                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
-                      value: RedHat
-                    - name: KIE_ADMIN_PWD
-                      value: RedHat
-                    - name: KIE_SERVER_CONTROLLER_PWD
-                      value: RedHat
-                    - name: KIE_SERVER_PWD
-                      value: RedHat
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "{{.ApplicationName}}-kieserver-{{$index}}-http"
                     - name: KIE_SERVER_PROTOCOL

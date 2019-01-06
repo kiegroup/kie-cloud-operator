@@ -316,3 +316,54 @@ func buildKieApp(name string) *v1.KieApp {
 	}
 	return cr
 }
+
+func TestPartialTemplateConfig(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "authoring",
+			CommonConfig: v1.CommonConfig{
+				AdminPassword: "MyPassword",
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, fake.NewFakeClient())
+
+	assert.Nil(t, err, "Error getting authoring environment")
+	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
+	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAMCENTR_MAVEN_REPO_PASSWORD")
+	assert.Len(t, mavenPassword, 8, "Expected a password with length of 8 to be generated, but got %v", mavenPassword)
+}
+
+func getEnvVariable(container corev1.Container, name string) string {
+	for _, env := range container.Env {
+		if env.Name == name {
+			return env.Value
+		}
+	}
+	return ""
+}
+
+func TestOverwritePartialTrialPasswords(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+			CommonConfig: v1.CommonConfig{
+				AdminPassword: "MyPassword",
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, fake.NewFakeClient())
+
+	assert.Nil(t, err, "Error getting trial environment")
+	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
+	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAMCENTR_MAVEN_REPO_PASSWORD")
+	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+}
