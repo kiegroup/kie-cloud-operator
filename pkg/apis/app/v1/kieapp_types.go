@@ -71,7 +71,7 @@ type KieAppObjects struct {
 	// Smartrouter container configs
 	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
 	// S2I Build configuration
-	Build KieAppBuildObject `json:"build,omitempty"`
+	Builds []KieAppBuildObject `json:"builds,omitempty"`
 }
 
 type KieAppObject struct {
