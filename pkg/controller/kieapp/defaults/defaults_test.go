@@ -143,17 +143,19 @@ func TestBuildConfiguration(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: "production-immutable",
 			Objects: v1.KieAppObjects{
-				Build: v1.KieAppBuildObject{
-					KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
-					GitSource: v1.GitSource{
-						URI:        "http://git.example.com",
-						Reference:  "somebranch",
-						ContextDir: "test",
-					},
-					Webhooks: []v1.WebhookSecret{
-						v1.WebhookSecret{
-							Type:   v1.GitHubWebhook,
-							Secret: "s3cr3t",
+				Builds: []v1.KieAppBuildObject{
+					{
+						KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+						GitSource: v1.GitSource{
+							URI:        "http://git.example.com",
+							Reference:  "somebranch",
+							ContextDir: "test",
+						},
+						Webhooks: []v1.WebhookSecret{
+							v1.WebhookSecret{
+								Type:   v1.GitHubWebhook,
+								Secret: "s3cr3t",
+							},
 						},
 					},
 				},
@@ -366,4 +368,53 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+}
+
+func TestMultipleBuildConfigurations(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "production-immutable",
+			Objects: v1.KieAppObjects{
+				Builds: []v1.KieAppBuildObject{
+					{
+						KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+						GitSource: v1.GitSource{
+							URI:        "http://git.example.com",
+							Reference:  "somebranch",
+							ContextDir: "test",
+						},
+						Webhooks: []v1.WebhookSecret{
+							v1.WebhookSecret{
+								Type:   v1.GitHubWebhook,
+								Secret: "s3cr3t",
+							},
+						},
+					},
+					{
+						KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+						GitSource: v1.GitSource{
+							URI:        "http://git.example.com",
+							Reference:  "anotherbranch",
+							ContextDir: "test",
+						},
+						Webhooks: []v1.WebhookSecret{
+							v1.WebhookSecret{
+								Type:   v1.GitHubWebhook,
+								Secret: "s3cr3t",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, fake.NewFakeClient())
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
+	assert.Equal(t, "somebranch", env.Servers[0].BuildConfigs[0].Spec.Source.Git.Ref)
+	assert.Equal(t, "anotherbranch", env.Servers[1].BuildConfigs[0].Spec.Source.Git.Ref)
 }

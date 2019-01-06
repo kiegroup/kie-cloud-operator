@@ -127,18 +127,27 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	}
 
 	crTemplate := v1.Template{
-		CommonConfig:                 config,
-		ApplicationName:              cr.Name,
-		GitSource:                    cr.Spec.Objects.Build.GitSource,
-		GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, cr.Spec.Objects.Build.Webhooks),
-		GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, cr.Spec.Objects.Build.Webhooks),
-		KieServerContainerDeployment: cr.Spec.Objects.Build.KieServerContainerDeployment,
+		CommonConfig:    config,
+		ApplicationName: cr.Name,
 	}
 	envTemplate := v1.EnvTemplate{
 		Template: crTemplate,
 	}
-	for i := 0; i < cr.Spec.KieDeployments; i++ {
-		envTemplate.ServerCount = append(envTemplate.ServerCount, crTemplate)
+	//For s2i KIE servers, the build configs determine the number and content of each KIE server group
+	if len(cr.Spec.Objects.Builds) > 0 {
+		cr.Spec.KieDeployments = len(cr.Spec.Objects.Builds)
+		for _, build := range cr.Spec.Objects.Builds {
+			buildTemplate := crTemplate.DeepCopy()
+			buildTemplate.GitSource = build.GitSource
+			buildTemplate.GitHubWebhookSecret = getWebhookSecret(v1.GitHubWebhook, build.Webhooks)
+			buildTemplate.GenericWebhookSecret = getWebhookSecret(v1.GenericWebhook, build.Webhooks)
+			buildTemplate.KieServerContainerDeployment = build.KieServerContainerDeployment
+			envTemplate.ServerCount = append(envTemplate.ServerCount, *buildTemplate)
+		}
+	} else {
+		for i := 0; i < cr.Spec.KieDeployments; i++ {
+			envTemplate.ServerCount = append(envTemplate.ServerCount, crTemplate)
+		}
 	}
 
 	return envTemplate

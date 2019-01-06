@@ -317,7 +317,13 @@ func (in *KieAppObjects) DeepCopyInto(out *KieAppObjects) {
 	in.Console.DeepCopyInto(&out.Console)
 	in.Server.DeepCopyInto(&out.Server)
 	in.Smartrouter.DeepCopyInto(&out.Smartrouter)
-	in.Build.DeepCopyInto(&out.Build)
+	if in.Builds != nil {
+		in, out := &in.Builds, &out.Builds
+		*out = make([]KieAppBuildObject, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 

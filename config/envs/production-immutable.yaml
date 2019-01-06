@@ -86,14 +86,6 @@ servers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
                   image: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
-                    - name: KIE_SERVER_CONTROLLER_USER
-                      value: ""
-                    - name: KIE_SERVER_CONTROLLER_PWD
-                      value: ""
-                    - name: KIE_SERVER_CONTROLLER_SERVICE
-                      value: ""
-                    - name: KIE_SERVER_CONTROLLER_TOKEN
-                      value: ""
                     - name: EXTERNAL_MAVEN_REPO_ID
                       value: ""
                     - name: EXTERNAL_MAVEN_REPO_URL
