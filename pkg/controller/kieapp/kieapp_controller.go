@@ -312,7 +312,7 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1
 		result = append(result, "latest")
 	}
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
-	version := []byte(cr.Spec.Template.Version)
+	version := []byte(cr.Spec.CommonConfig.Version)
 	imageName := tagName
 	regContext := fmt.Sprintf("rhpam-%s", string(version[0]))
 
@@ -417,7 +417,7 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 				},
 			},
 			Data: map[string][]byte{
-				"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
+				"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
 			},
 		})
 	}
@@ -447,7 +447,7 @@ func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, recon
 				},
 			},
 			Data: map[string][]byte{
-				"keystore.jks": shared.GenerateKeystore(serverCN, "jboss", []byte(cr.Spec.Template.KeyStorePassword)),
+				"keystore.jks": shared.GenerateKeystore(serverCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
 			},
 		})
 
