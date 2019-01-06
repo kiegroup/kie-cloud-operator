@@ -562,18 +562,19 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 }
 
 func (reconciler *ReconcileKieApp) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
-	if !reconciler.checkImageStreamTag(name, namespace) {
-		if !reconciler.checkImageStreamTag(name, cr.Namespace) {
-			log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
-			err := reconciler.createLocalImageTag(name, cr)
-			if err != nil {
-				log.Error(err)
-			}
+	if reconciler.checkImageStreamTag(name, namespace) {
+		return namespace, nil
+	} else if reconciler.checkImageStreamTag(name, cr.Namespace) {
+		return cr.Namespace, nil
+	} else {
+		log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
+		err := reconciler.createLocalImageTag(name, cr)
+		if err != nil {
+			log.Error(err)
 			return namespace, err
 		}
 		return cr.Namespace, nil
 	}
-	return namespace, nil
 }
 
 // createCustomObject checks for an object's existence before creating it
