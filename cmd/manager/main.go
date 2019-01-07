@@ -51,7 +51,9 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	leader.Become(context.TODO(), "kie-cloud-operator-lock")
+	if err := leader.Become(context.TODO(), "kie-cloud-operator-lock"); err != nil {
+		log.Warnf("Error becoming leader: %v", err)
+	}
 
 	r := ready.NewFileReady()
 	err = r.Set()
@@ -59,7 +61,11 @@ func main() {
 		log.Error("Error on NewFileReady(). ", err)
 		os.Exit(1)
 	}
-	defer r.Unset()
+	defer func() {
+		if err := r.Unset(); err != nil {
+			log.Warnf("Error on unset: %v", err)
+		}
+	}()
 
 	// Create a new Cmd to provide shared dependencies and start components
 	syncPeriod := time.Duration(2) * time.Hour

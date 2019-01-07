@@ -2,6 +2,7 @@ package defaults
 
 import (
 	"fmt"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -11,7 +12,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestMergeServices(t *testing.T) {
@@ -121,7 +121,7 @@ func getEnvironment(environment string, name string) (v1.Environment, error) {
 		},
 	}
 
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -402,7 +402,7 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	}
 	envTemplate := getEnvTemplate(cr)
 
-	yamlBytes, err := loadYaml(fake.NewFakeClient(), filename, cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}

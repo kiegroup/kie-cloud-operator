@@ -1,32 +1,82 @@
 package test
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"context"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
-	routev1 "github.com/openshift/api/route/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var log = logs.GetLogger("kieapp.test")
 
-type MockPlatformService struct{}
-
-func (MockPlatformService) GetClient() client.Client {
-	return fake.NewFakeClient()
+type MockPlatformService struct {
+	CreateFunc          func(ctx context.Context, obj runtime.Object) error
+	GetFunc             func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
+	ListFunc            func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error
+	UpdateFunc          func(ctx context.Context, obj runtime.Object) error
+	GetCachedFunc       func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
+	ImageStreamTagsFunc func(namespace string) imagev1.ImageStreamTagInterface
+	GetSchemeFunc       func() *runtime.Scheme
 }
 
-func (MockPlatformService) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
-	return "www.example.com"
+func MockService() *MockPlatformService {
+	return &MockPlatformService{
+		CreateFunc: func(ctx context.Context, obj runtime.Object) error {
+			log.Debugf("Mock service will do no-op in lieu of creating %v", obj)
+			return nil
+		},
+		GetFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+			log.Debugf("Will return nil to request to get key %v and object %v")
+			return nil
+		},
+		ListFunc: func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
+			return nil
+		},
+		UpdateFunc: func(ctx context.Context, obj runtime.Object) error {
+			log.Debugf("Mock service will do no-op in lieu of updating %v", obj)
+			return nil
+		},
+		GetCachedFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+			return nil
+		},
+		ImageStreamTagsFunc: func(namespace string) imagev1.ImageStreamTagInterface {
+			return &MockImageStreamTag{}
+		},
+		GetSchemeFunc: func() *runtime.Scheme {
+			return nil
+		},
+	}
 }
 
-func (MockPlatformService) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
-	log.Debugf("Mock service will do no-op in lieu of updating %v", obj)
-	return reconcile.Result{}, nil
+func (service *MockPlatformService) Create(ctx context.Context, obj runtime.Object) error {
+	return service.CreateFunc(ctx, obj)
 }
 
-func (MockPlatformService) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
-	log.Debugf("Mock service will do no-op in lieu of creating %v with CR %v", object, cr)
-	return reconcile.Result{}, nil
+func (service *MockPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+	return service.GetFunc(ctx, key, obj)
+}
+
+func (service *MockPlatformService) List(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
+	return service.ListFunc(ctx, opts, list)
+}
+
+func (service *MockPlatformService) Update(ctx context.Context, obj runtime.Object) error {
+	return service.UpdateFunc(ctx, obj)
+}
+
+func (service *MockPlatformService) GetCached(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+	return service.GetCachedFunc(ctx, key, obj)
+}
+
+func (service *MockPlatformService) ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface {
+	return service.ImageStreamTagsFunc(namespace)
+}
+
+func (service *MockPlatformService) GetScheme() *runtime.Scheme {
+	return service.GetSchemeFunc()
+}
+
+func (service *MockPlatformService) IsMockService() bool {
+	return true
 }

@@ -1,16 +1,17 @@
 package v1
 
 import (
+	"context"
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -156,10 +157,14 @@ type CommonConfig struct {
 }
 
 type PlatformService interface {
-	GetClient() client.Client
-	GetRouteHost(route routev1.Route, cr *KieApp) string
-	UpdateObj(obj OpenShiftObject) (reconcile.Result, error)
-	CreateCustomObjects(object CustomObject, cr *KieApp) (reconcile.Result, error)
+	Create(ctx context.Context, obj runtime.Object) error
+	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
+	List(ctx context.Context, opts *client.ListOptions, list runtime.Object) error
+	Update(ctx context.Context, obj runtime.Object) error
+	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
+	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
+	GetScheme() *runtime.Scheme
+	IsMockService() bool
 }
 
 func init() {

@@ -2,6 +2,7 @@ package kieapp
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 	"regexp"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestKieAppDefaults(t *testing.T) {
@@ -47,7 +47,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 		},
 	}
 
-	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 
 	env = ConsolidateObjects(env, cr)
@@ -84,7 +84,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 		},
 	}
 
-	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, test.MockService())
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
@@ -133,7 +133,7 @@ func TestTrialServerEnv(t *testing.T) {
 		},
 	}
 
-	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, test.MockService())
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
@@ -167,7 +167,7 @@ func TestRhpamRegistry(t *testing.T) {
 			Environment: "trial",
 		},
 	}
-	_, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	_, err := defaults.GetEnvironment(cr, test.MockService())
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
@@ -186,7 +186,7 @@ func TestRhpamRegistry(t *testing.T) {
 			},
 		},
 	}
-	_, err = defaults.GetEnvironment(cr2, fake.NewFakeClient())
+	_, err = defaults.GetEnvironment(cr2, test.MockService())
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
@@ -203,11 +203,18 @@ func TestGenerateSecret(t *testing.T) {
 			Environment: "trial",
 		},
 	}
-	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
 
-	env, _, err = NewEnv(test.MockPlatformService{}, cr)
+	scheme, err := v1.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+	reconciler := &KieAppReconciler{mockService}
+	env, _, err = reconciler.NewEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 }
@@ -221,7 +228,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 			Environment: "trial",
 		},
 	}
-	env, err := defaults.GetEnvironment(cr, fake.NewFakeClient())
+	env, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
 	// HTTP Routes are added

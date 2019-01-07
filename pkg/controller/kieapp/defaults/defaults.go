@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -20,17 +19,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var log = logs.GetLogger("kieapp.defaults")
 
-func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error) {
+func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, error) {
 	envTemplate := getEnvTemplate(cr)
 
 	var common v1.Environment
-	yamlBytes, err := loadYaml(client, "common.yaml", cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(service, "common.yaml", cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -40,7 +37,7 @@ func GetEnvironment(cr *v1.KieApp, client client.Client) (v1.Environment, error)
 	}
 
 	var env v1.Environment
-	yamlBytes, err = loadYaml(client, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
+	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -163,9 +160,9 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 }
 
 // important to parse template first with this function, before unmarshalling into object
-func loadYaml(client client.Client, filename, namespace string, e v1.EnvTemplate) ([]byte, error) {
+func loadYaml(service v1.PlatformService, filename, namespace string, e v1.EnvTemplate) ([]byte, error) {
 	// use embedded files for tests, instead of ConfigMaps
-	if reflect.DeepEqual(client, fake.NewFakeClient()) {
+	if service.IsMockService() {
 		box := packr.NewBox("../../../../config")
 		if box.Has(filename) {
 			yamlString, err := box.FindString(filename)
@@ -179,7 +176,7 @@ func loadYaml(client client.Client, filename, namespace string, e v1.EnvTemplate
 
 	cmName, file := convertToConfigMapName(filename)
 	configMap := &corev1.ConfigMap{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
+	err := service.Get(context.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
 	if err != nil {
 		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, e.ApplicationName)
 	}
