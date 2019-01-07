@@ -17,153 +17,22 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var log = logs.GetLogger("kieapp.controller")
 
-// Add creates a new KieApp Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	imageClient, err := imagev1.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		log.Error("Error getting image client. ", err)
-	}
-	return &ReconcileKieApp{client: mgr.GetClient(), cache: mgr.GetCache(), imageClient: imageClient, scheme: mgr.GetScheme()}
-}
-
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("kieapp-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to primary resource KieApp
-	err = c.Watch(&source.Kind{Type: &v1.KieApp{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &oappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &rbacv1.Role{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &buildv1.BuildConfig{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &oimagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1.KieApp{},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var _ reconcile.Reconciler = &ReconcileKieApp{}
-
-// ReconcileKieApp reconciles a KieApp object
-type ReconcileKieApp struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	// can cache be leveraged instead in some locations?
-	cache       cache.Cache
-	imageClient *imagev1.ImageV1Client
-	scheme      *runtime.Scheme
+// KieAppReconciler reconciles a KieApp object
+type KieAppReconciler struct {
+	Service v1.PlatformService
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -171,37 +40,15 @@ type ReconcileKieApp struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (reconciler *KieAppReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Create critical ConfigMaps if don't exist
-	configMaps := defaults.ConfigMapsFromFile(request.Namespace)
-	for _, configMap := range configMaps {
-		var testDir bool
-		result := strings.Split(configMap.Name, "-")
-		if len(result) > 1 {
-			if result[1] == "testdata" {
-				testDir = true
-			}
-		}
-		// don't create configmaps for test directories
-		if !testDir {
-			configMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
-			emptyObj := &corev1.ConfigMap{}
-			err := reconciler.client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, emptyObj)
-			if err != nil {
-				_, err := reconciler.createObj(
-					&configMap,
-					err,
-				)
-				if err != nil && !errors.IsAlreadyExists(err) {
-					return reconcile.Result{RequeueAfter: time.Duration(1) * time.Second}, err
-				}
-			}
-		}
+	if result, err := reconciler.createConfigMaps(request.Namespace); err != nil {
+		return result, err
 	}
 
 	// Fetch the KieApp instance
 	instance := &v1.KieApp{}
-	err := reconciler.client.Get(context.TODO(), request.NamespacedName, instance)
+	err := reconciler.Service.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -215,14 +62,14 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 
-	env, rResult, err := NewEnv(reconciler, instance)
+	env, rResult, err := reconciler.NewEnv(instance)
 	if err != nil {
 		return rResult, err
 	}
 
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &oappsv1.DeploymentConfigList{}
-	err = reconciler.client.List(context.TODO(), listOps, dcList)
+	err = reconciler.Service.List(context.TODO(), listOps, dcList)
 	if err != nil {
 		log.Warn("Failed to list dc's. ", err)
 		return reconcile.Result{}, err
@@ -264,7 +111,7 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 
 	// Fetch the cached KieApp instance
 	cachedInstance := &v1.KieApp{}
-	err = reconciler.cache.Get(context.TODO(), request.NamespacedName, cachedInstance)
+	err = reconciler.Service.GetCached(context.TODO(), request.NamespacedName, cachedInstance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -285,19 +132,44 @@ func (reconciler *ReconcileKieApp) Reconcile(request reconcile.Request) (reconci
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *ReconcileKieApp) GetClient() client.Client {
-	return reconciler.client
+func (reconciler *KieAppReconciler) createConfigMaps(namespace string) (reconcile.Result, error) {
+	configMaps := defaults.ConfigMapsFromFile(namespace)
+	for _, configMap := range configMaps {
+		var testDir bool
+		result := strings.Split(configMap.Name, "-")
+		if len(result) > 1 {
+			if result[1] == "testdata" {
+				testDir = true
+			}
+		}
+		// don't create configmaps for test directories
+		if !testDir {
+			configMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
+			emptyObj := &corev1.ConfigMap{}
+			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, emptyObj)
+			if err != nil {
+				_, err := reconciler.createObj(
+					&configMap,
+					err,
+				)
+				if err != nil && !errors.IsAlreadyExists(err) {
+					return reconcile.Result{RequeueAfter: time.Duration(1) * time.Second}, err
+				}
+			}
+		}
+	}
+	return reconcile.Result{}, nil
 }
 
 // Check ImageStream
-func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) bool {
+func (reconciler *KieAppReconciler) checkImageStreamTag(name, namespace string) bool {
 	log := log.With("kind", "ImageStreamTag", "name", name, "namespace", namespace)
 	result := strings.Split(name, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
-	_, err := reconciler.imageClient.ImageStreamTags(namespace).Get(tagName, metav1.GetOptions{})
+	_, err := reconciler.Service.ImageStreamTags(namespace).Get(tagName, metav1.GetOptions{})
 	if err != nil {
 		log.Debug("Object does not exist")
 		return false
@@ -306,7 +178,7 @@ func (reconciler *ReconcileKieApp) checkImageStreamTag(name, namespace string) b
 }
 
 // Create local ImageStreamTag
-func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
+func (reconciler *KieAppReconciler) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
 	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
@@ -351,7 +223,7 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1
 	}
 	log := log.With("kind", isnew.GetObjectKind().GroupVersionKind().Kind, "name", isnew.Name, "from", isnew.Tag.From.Name, "namespace", isnew.Namespace)
 	log.Info("Creating")
-	_, err := reconciler.imageClient.ImageStreamTags(isnew.Namespace).Create(isnew)
+	_, err := reconciler.Service.ImageStreamTags(isnew.Namespace).Create(isnew)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		log.Error("Issue creating object. ", err)
 		return err
@@ -359,7 +231,7 @@ func (reconciler *ReconcileKieApp) createLocalImageTag(tagRefName string, cr *v1
 	return nil
 }
 
-func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
+func (reconciler *KieAppReconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
 	cContainer := current.Spec.Template.Spec.Containers[0]
@@ -376,7 +248,7 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 
 	if update {
 		dcnew := new
-		err := controllerutil.SetControllerReference(cr, &dcnew, reconciler.scheme)
+		err := controllerutil.SetControllerReference(cr, &dcnew, reconciler.Service.GetScheme())
 		if err != nil {
 			log.Error("Error setting controller reference for dc. ", err)
 		}
@@ -389,8 +261,8 @@ func (reconciler *ReconcileKieApp) dcUpdateCheck(current, new oappsv1.Deployment
 	return dcUpdates
 }
 
-func NewEnv(reconciler v1.PlatformService, cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
-	env, err := defaults.GetEnvironment(cr, reconciler.GetClient())
+func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
+	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
 		return env, reconcile.Result{Requeue: true}, err
 	}
@@ -489,7 +361,7 @@ func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	return env
 }
 
-func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *KieAppReconciler) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
 	if object.Omit {
 		return reconcile.Result{}, nil
 	}
@@ -561,7 +433,7 @@ func (reconciler *ReconcileKieApp) CreateCustomObjects(object v1.CustomObject, c
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *ReconcileKieApp) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+func (reconciler *KieAppReconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
 	if reconciler.checkImageStreamTag(name, namespace) {
 		return namespace, nil
 	} else if reconciler.checkImageStreamTag(name, cr.Namespace) {
@@ -578,12 +450,12 @@ func (reconciler *ReconcileKieApp) ensureImageStream(name string, namespace stri
 }
 
 // createCustomObject checks for an object's existence before creating it
-func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *KieAppReconciler) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
 	name := obj.GetName()
 	namespace := cr.GetNamespace()
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", name, "namespace", namespace)
 
-	err := controllerutil.SetControllerReference(cr, obj, reconciler.scheme)
+	err := controllerutil.SetControllerReference(cr, obj, reconciler.Service.GetScheme())
 	if err != nil {
 		log.Error("Failed to create. ", err)
 		return reconcile.Result{}, err
@@ -592,18 +464,18 @@ func (reconciler *ReconcileKieApp) createCustomObject(obj v1.OpenShiftObject, cr
 	emptyObj := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
 	return reconciler.createObj(
 		obj,
-		reconciler.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
+		reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, emptyObj),
 	)
 }
 
 // createObj creates an object based on the error passed in from a `client.Get`
-func (reconciler *ReconcileKieApp) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
+func (reconciler *KieAppReconciler) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Object
 		log.Info("Creating")
-		err = reconciler.client.Create(context.TODO(), obj)
+		err = reconciler.Service.Create(context.TODO(), obj)
 		if err != nil {
 			log.Warn("Failed to create object. ", err)
 			return reconcile.Result{}, err
@@ -618,10 +490,10 @@ func (reconciler *ReconcileKieApp) createObj(obj v1.OpenShiftObject, err error) 
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *ReconcileKieApp) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
+func (reconciler *KieAppReconciler) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 	log.Info("Updating")
-	err := reconciler.client.Update(context.TODO(), obj)
+	err := reconciler.Service.Update(context.TODO(), obj)
 	if err != nil {
 		log.Warn("Failed to update object. ", err)
 		return reconcile.Result{}, err
@@ -650,16 +522,16 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 	return dcNames
 }
 
-func (reconciler *ReconcileKieApp) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
+func (reconciler *KieAppReconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 	log := log.With("kind", route.GetObjectKind().GroupVersionKind().Kind, "name", route.Name, "namespace", route.Namespace)
-	err := controllerutil.SetControllerReference(cr, &route, reconciler.scheme)
+	err := controllerutil.SetControllerReference(cr, &route, reconciler.Service.GetScheme())
 	if err != nil {
 		log.Error("Error setting controller reference. ", err)
 	}
 	route.SetNamespace(cr.Namespace)
 	found := &routev1.Route{}
-	err = reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		_, err = reconciler.createObj(
 			&route,
@@ -673,7 +545,7 @@ func (reconciler *ReconcileKieApp) GetRouteHost(route routev1.Route, cr *v1.KieA
 	found = &routev1.Route{}
 	for i := 1; i < 60; i++ {
 		time.Sleep(time.Duration(100) * time.Millisecond)
-		err = reconciler.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+		err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
 		if err == nil {
 			break
 		}

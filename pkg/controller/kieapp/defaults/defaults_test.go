@@ -1,8 +1,12 @@
 package defaults
 
 import (
+	"context"
 	"fmt"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	"k8s.io/apimachinery/pkg/runtime"
 	"regexp"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"strings"
 	"testing"
 
@@ -14,7 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -34,7 +38,7 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 		},
 	}
 
-	_, err := GetEnvironment(cr, fake.NewFakeClient())
+	_, err := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 }
 
@@ -59,9 +63,13 @@ func TestInaccessibleConfigMap(t *testing.T) {
 		},
 	}
 
+	mockService := test.MockService()
 	client := fake.NewFakeClient(cm)
-	_, err := GetEnvironment(cr, client)
-	assert.Equal(t, fmt.Sprintf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", cr.Namespace, constants.ConfigMapPrefix, cr.Name), err.Error())
+	mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+		return client.Get(ctx, key, obj)
+	}
+	_, err := GetEnvironment(cr, mockService)
+	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 }
 
 func TestMultipleServerDeployment(t *testing.T) {
@@ -83,7 +91,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 		},
 	}
 
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
@@ -99,7 +107,7 @@ func TestTrialEnvironment(t *testing.T) {
 			KieDeployments: 2,
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
 	wbServices := env.Console.Services
@@ -127,7 +135,7 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 			KieDeployments: 2,
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
 
@@ -162,7 +170,7 @@ func TestBuildConfiguration(t *testing.T) {
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
 	for _, server := range env.Servers {
@@ -206,7 +214,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 			KieDeployments: 3,
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting authoring environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
@@ -222,7 +230,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 			KieDeployments: 3,
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
@@ -231,7 +239,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 func TestConstructConsoleObject(t *testing.T) {
 	name := "test"
 	cr := buildKieApp(name)
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
 	object := shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
@@ -246,7 +254,7 @@ func TestConstructConsoleObject(t *testing.T) {
 func TestConstructSmartrouterObject(t *testing.T) {
 	name := "test"
 	cr := buildKieApp(name)
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
 	object := shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
@@ -261,7 +269,7 @@ func TestConstructSmartrouterObject(t *testing.T) {
 func TestConstructServerObject(t *testing.T) {
 	name := "test"
 	cr := buildKieApp(name)
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
 	for i := range env.Servers {
@@ -331,7 +339,7 @@ func TestPartialTemplateConfig(t *testing.T) {
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting authoring environment")
 	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
@@ -361,7 +369,7 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
 	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
@@ -411,7 +419,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, fake.NewFakeClient())
+	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
