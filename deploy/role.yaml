@@ -37,6 +37,7 @@ rules:
       - app.kiegroup.org
       - apps.openshift.io
       - image.openshift.io
+      - build.openshift.io
       - route.openshift.io
     resources:
       - "*"

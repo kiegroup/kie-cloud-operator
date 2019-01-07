@@ -407,6 +407,8 @@ servers:
                       value: "{{.ApplicationName}}-mysql"
                     - name: RHPAM_SERVICE_PORT
                       value: "3306"
+                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+                      value: ""
                     ## MySQL driver settings END
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
