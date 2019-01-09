@@ -88,11 +88,7 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 		}
 	}
 
-	setPassword(&config.KeyStorePassword, isTrialEnv)
-	setPassword(&config.AdminPassword, isTrialEnv)
-	setPassword(&config.ControllerPassword, isTrialEnv)
-	setPassword(&config.ServerPassword, isTrialEnv)
-	setPassword(&config.MavenPassword, isTrialEnv)
+	setPasswords(config, isTrialEnv)
 
 	crTemplate := v1.Template{
 		CommonConfig:    config,
@@ -121,14 +117,23 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	return envTemplate
 }
 
-func setPassword(password *string, isTrialEnv bool) {
-	if len(*password) != 0 {
-		return
-	}
-	if isTrialEnv {
-		*password = constants.DefaultPassword
-	} else {
-		*password = string(shared.GeneratePassword(8))
+func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
+	passwords := []*string{
+		&config.KeyStorePassword,
+		&config.AdminPassword,
+		&config.ConsoleImage,
+		&config.MavenPassword,
+		&config.ServerPassword}
+
+	for i := range passwords {
+		if len(*passwords[i]) != 0 {
+			continue
+		}
+		if isTrialEnv {
+			*passwords[i] = constants.DefaultPassword
+		} else {
+			*passwords[i] = string(shared.GeneratePassword(8))
+		}
 	}
 }
 
