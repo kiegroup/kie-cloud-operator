@@ -87,41 +87,8 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 			config.ConsoleImage = constants.RhpamcentrImageName
 		}
 	}
-	if len(config.KeyStorePassword) == 0 {
-		if isTrialEnv {
-			config.KeyStorePassword = constants.DefaultPassword
-		} else {
-			config.KeyStorePassword = string(shared.GeneratePassword(8))
-		}
-	}
-	if len(config.AdminPassword) == 0 {
-		if isTrialEnv {
-			config.AdminPassword = constants.DefaultPassword
-		} else {
-			config.AdminPassword = string(shared.GeneratePassword(8))
-		}
-	}
-	if len(config.ControllerPassword) == 0 {
-		if isTrialEnv {
-			config.ControllerPassword = constants.DefaultPassword
-		} else {
-			config.ControllerPassword = string(shared.GeneratePassword(8))
-		}
-	}
-	if len(config.ServerPassword) == 0 {
-		if isTrialEnv {
-			config.ServerPassword = constants.DefaultPassword
-		} else {
-			config.ServerPassword = string(shared.GeneratePassword(8))
-		}
-	}
-	if len(config.MavenPassword) == 0 {
-		if isTrialEnv {
-			config.MavenPassword = constants.DefaultPassword
-		} else {
-			config.MavenPassword = string(shared.GeneratePassword(8))
-		}
-	}
+
+	setPasswords(config, isTrialEnv)
 
 	crTemplate := v1.Template{
 		CommonConfig:    config,
@@ -148,6 +115,26 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 	}
 
 	return envTemplate
+}
+
+func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
+	passwords := []*string{
+		&config.KeyStorePassword,
+		&config.AdminPassword,
+		&config.ConsoleImage,
+		&config.MavenPassword,
+		&config.ServerPassword}
+
+	for i := range passwords {
+		if len(*passwords[i]) != 0 {
+			continue
+		}
+		if isTrialEnv {
+			*passwords[i] = constants.DefaultPassword
+		} else {
+			*passwords[i] = string(shared.GeneratePassword(8))
+		}
+	}
 }
 
 func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) string {

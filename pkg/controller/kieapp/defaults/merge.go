@@ -31,7 +31,7 @@ func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, e
 		}
 	}
 	if len(baseline.Servers) != len(overwrite.Servers) {
-		return v1.Environment{}, errors.New("Incompatible objects with different array lengths cannot be merged")
+		return v1.Environment{}, errors.New("incompatible objects with different array lengths cannot be merged")
 	}
 	for index := range baseline.Servers {
 		mergedObject := mergeCustomObject(baseline.Servers[index], overwrite.Servers[index])
