@@ -11,3 +11,198 @@ spec:
     singular: kieapp
   scope: Namespaced
   version: v1
+  validation:
+    openAPIV3Schema:
+      required:
+      - spec
+      properties:
+        spec:
+          type: object
+          required:
+          - environment
+          properties:
+            environment:
+              type: string
+              description: The name of the environment used as a baseline
+              enum:
+              - authoring-ha
+              - authoring
+              - production-immutable
+              - production
+              - trial
+            kieDeployments:
+              type: integer
+              description: The number of distinct KIE server deployments
+              minimum: 1
+            objects:
+              type: object
+              description: Configuration of the RHPAM components
+#              anyOf:
+#              - required:
+#                - console
+#              - required:
+#                - server
+#              - required:
+#                - smartrouter
+#              - required:
+#                - builds
+              properties:
+                console:
+                  type: object
+                  description: Configuration of the RHPAM workbench
+                  properties:
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        oneOf:
+                        - required:
+                          - value
+                        - required:
+                          - valueFrom
+                        properties:
+                          name:
+                            type: string
+                            description: Name of an environment variable
+                          value:
+                            type: string
+                            description: Value for that environment variable
+                          valueFrom:
+                            type: object
+                            description: Source for the environment variable's value
+                    resources:
+                      type: object
+                      anyOf:
+                      - required:
+                        - limits
+                      - required:
+                        - requests
+                      properties:
+                        limits:
+                          type: object
+                        requests:
+                          type: object
+                server:
+                  type: object
+                  description: Configuration of the RHPAM KIE server
+                  properties:
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        oneOf:
+                        - required:
+                          - value
+                        - required:
+                          - valueFrom
+                        properties:
+                          name:
+                            type: string
+                            description: Name of an environment variable
+                          value:
+                            type: string
+                            description: Value for that environment variable
+                          valueFrom:
+                            type: object
+                            description: Source for the environment variable's value
+                    resources:
+                      type: object
+                      anyOf:
+                      - required:
+                        - limits
+                      - required:
+                        - requests
+                      properties:
+                        limits:
+                          type: object
+                        requests:
+                          type: object
+                smartrouter:
+                  type: object
+                  description: Configuration of the RHPAM smart router
+                  properties:
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        oneOf:
+                        - required:
+                          - value
+                        - required:
+                          - valueFrom
+                        properties:
+                          name:
+                            type: string
+                            description: Name of an environment variable
+                          value:
+                            type: string
+                            description: Value for that environment variable
+                          valueFrom:
+                            type: object
+                            description: Source for the environment variable's value
+                    resources:
+                      type: object
+                      anyOf:
+                      - required:
+                        - limits
+                      - required:
+                        - requests
+                      properties:
+                        limits:
+                          type: object
+                        requests:
+                          type: object
+                builds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    description: Configuration of build configs for immutable KIE servers
+                    required:
+                    - kieServerContainerDeployment
+                    - gitSource
+                    properties:
+                      kieServerContainerDeployment:
+                        type: string
+                        description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+                      gitSource:
+                        type: object
+                        required:
+                        - uri
+                        - reference
+                        - contextDir
+                        properties:
+                          uri:
+                            type: string
+                            description: Git URI for the s2i source
+                          reference:
+                            type: string
+                            description: Branch to use in the git repository
+                          contextDir:
+                            type: string
+                            description: Context/subdirectory where the code is located, relatively to repo root
+                      webhooks:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          description: WebHook secretes for build configs
+                          required:
+                          - type
+                          - secret
+                          properties:
+                            type:
+                              type: string
+                              description: WebHook type, either GitHub or Generic
+                              enum:
+                              - GitHub
+                              - Generic
+                            secret:
+                              type: string
+                              description: Secret value for webhook
