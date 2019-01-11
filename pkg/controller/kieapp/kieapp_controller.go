@@ -280,6 +280,7 @@ func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, recon
 		if consoleCN == "" {
 			consoleCN = cr.Name
 		}
+		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
@@ -310,6 +311,7 @@ func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, recon
 		if serverCN == "" {
 			serverCN = cr.Name
 		}
+		defaults.ConfigureHostname(&server, cr, serverCN)
 		server.Secrets = append(server.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
