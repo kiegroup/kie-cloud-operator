@@ -24,7 +24,10 @@ import (
 var log = logs.GetLogger("kieapp.defaults")
 
 func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, error) {
-	envTemplate := getEnvTemplate(cr)
+	envTemplate, err := getEnvTemplate(cr)
+	if err != nil {
+		return v1.Environment{}, err
+	}
 
 	var common v1.Environment
 	yamlBytes, err := loadYaml(service, "common.yaml", cr.Namespace, envTemplate)
@@ -53,7 +56,7 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	return mergedEnv, nil
 }
 
-func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
+func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	// default to '1' Kie DC
 	if cr.Spec.KieDeployments == 0 {
 		cr.Spec.KieDeployments = 1
@@ -113,15 +116,19 @@ func getEnvTemplate(cr *v1.KieApp) v1.EnvTemplate {
 			envTemplate.ServerCount = append(envTemplate.ServerCount, crTemplate)
 		}
 	}
+	if err := configureAuth(cr.Spec, &envTemplate); err != nil {
+		log.Error("unable to setup authentication: ", err)
+		return envTemplate, err
+	}
 
-	return envTemplate
+	return envTemplate, nil
 }
 
 func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
 	passwords := []*string{
 		&config.KeyStorePassword,
 		&config.AdminPassword,
-		&config.ConsoleImage,
+		&config.ControllerPassword,
 		&config.MavenPassword,
 		&config.ServerPassword}
 

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -22,11 +23,12 @@ type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment    string         `json:"environment,omitempty"`
-	KieDeployments int            `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	RhpamRegistry  KieAppRegistry `json:"rhpamRegistry,omitempty"`
-	Objects        KieAppObjects  `json:"objects,omitempty"`
-	CommonConfig   CommonConfig   `json:"commonConfig,omitempty"`
+	Environment    string           `json:"environment,omitempty"`
+	KieDeployments int              `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	RhpamRegistry  KieAppRegistry   `json:"rhpamRegistry,omitempty"`
+	Objects        KieAppObjects    `json:"objects,omitempty"`
+	CommonConfig   CommonConfig     `json:"commonConfig,omitempty"`
+	Auth           KieAppAuthObject `json:"auth,omitempty"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
@@ -125,6 +127,71 @@ type WebhookSecret struct {
 	Secret string      `json:"secret,omitempty"`
 }
 
+type KieAppAuthObject struct {
+	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+}
+
+type SSOAuthConfig struct {
+	URL                      string         `json:"url,omitempty"`
+	Realm                    string         `json:"realm,omitempty"`
+	AdminUser                string         `json:"adminUser,omitempty"`
+	AdminPassword            string         `json:"adminPassword,omitempty"`
+	DisableSSLCertValidation bool           `json:"disableSSLCertValication,omitempty"`
+	PrincipalAttribute       string         `json:"principalAttribute,omitempty"`
+	Clients                  SSOAuthClients `json:"clients,omitempty"`
+}
+
+type SSOAuthClients struct {
+	Console SSOAuthClient   `json:"console,omitempty"`
+	Servers []SSOAuthClient `json:"servers,omitempty"`
+}
+
+type SSOAuthClient struct {
+	Name          string `json:"name,omitempty"`
+	Secret        string `json:"secret,omitempty"`
+	HostnameHTTP  string `json:"hostnameHTTP,omitempty"`
+	HostnameHTTPS string `json:"hostnameHTTPS,omitempty"`
+}
+
+type LDAPAuthConfig struct {
+	URL                            string          `json:"url,omitempty"`
+	BindDN                         string          `json:"bindDN,omitempty"`
+	BindCredential                 string          `json:"bindCredential,omitempty"`
+	JAASSecurityDomain             string          `json:"jaasSecurityDomain,omitempty"`
+	BaseCtxDN                      string          `json:"baseCtxDN,omitempty"`
+	BaseFilter                     string          `json:"baseFilter,omitempty"`
+	SearchScope                    SearchScopeType `json:"searchScope,omitempty"`
+	SearchTimeLimit                int32           `json:"searchTimeLimit,omitempty"`
+	DistinguishedNameAttribute     string          `json:"distinguishedNameAttribute,omitempty"`
+	ParseUsername                  bool            `json:"parseUsername,omitempty"`
+	UsernameBeginString            string          `json:"usernameBeginString,omitempty"`
+	UsernameEndString              string          `json:"usernameEndString,omitempty"`
+	RoleAttributeID                string          `json:"roleAttributeID,omitempty"`
+	RolesCtxDN                     string          `json:"rolesCtxDN,omitempty"`
+	RoleFilter                     string          `json:"roleFilter,omitempty"`
+	RoleRecursion                  int16           `json:"roleRecursion,omitempty"`
+	DefaultRole                    string          `json:"defaultRole,omitempty"`
+	RoleNameAttributeID            string          `json:"roleNameAttributeID,omitempty"`
+	ParseRoleNameFromDN            bool            `json:"parseRoleNameFromDN,omitempty"`
+	RoleAttributeIsDN              bool            `json:"roleAttributeIsDN,omitempty"`
+	ReferralUserAttributeIDToCheck string          `json:"referralUserAttributeIDToCheck,omitempty"`
+}
+
+type SearchScopeType string
+
+const (
+	SubtreeSearchScope  SearchScopeType = "SUBTREE_SCOPE"
+	ObjectSearchScope   SearchScopeType = "OBJECT_SCOPE"
+	OneLevelSearchScope SearchScopeType = "ONELEVEL_SCOPE"
+)
+
+type RoleMapperAuthConfig struct {
+	RolesProperties string `json:"rolesProperties,omitempty"`
+	ReplaceRole     string `json:"replaceRole,omitempty"`
+}
+
 type OpenShiftObject interface {
 	metav1.Object
 	runtime.Object
@@ -137,11 +204,12 @@ type EnvTemplate struct {
 
 type Template struct {
 	*CommonConfig
-	ApplicationName              string    `json:"applicationName,omitempty"`
-	GitSource                    GitSource `json:"gitSource,omitempty"`
-	GitHubWebhookSecret          string    `json:"githubWebhookSecret,omitempty"`
-	GenericWebhookSecret         string    `json:"genericWebhookSecret,omitempty"`
-	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
+	ApplicationName              string       `json:"applicationName,omitempty"`
+	GitSource                    GitSource    `json:"gitSource,omitempty"`
+	GitHubWebhookSecret          string       `json:"githubWebhookSecret,omitempty"`
+	GenericWebhookSecret         string       `json:"genericWebhookSecret,omitempty"`
+	KieServerContainerDeployment string       `json:"kieServerContainerDeployment,omitempty"`
+	Auth                         AuthTemplate `json:"auth,omitempty"`
 }
 
 type CommonConfig struct {
@@ -154,6 +222,12 @@ type CommonConfig struct {
 	ControllerPassword string `json:"controllerPassword,omitempty"`
 	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
+}
+
+type AuthTemplate struct {
+	SSO        SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 type PlatformService interface {

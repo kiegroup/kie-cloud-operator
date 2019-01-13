@@ -2,8 +2,9 @@ package defaults
 
 import (
 	"fmt"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"testing"
+
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 
 	"github.com/ghodss/yaml"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
@@ -400,7 +401,10 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 			Namespace: "test-ns",
 		},
 	}
-	envTemplate := getEnvTemplate(cr)
+	envTemplate, err := getEnvTemplate(cr)
+	if err != nil {
+		log.Error("Error getting environment template", err)
+	}
 
 	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Namespace, envTemplate)
 	if err != nil {

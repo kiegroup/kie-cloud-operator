@@ -12,6 +12,7 @@ const (
 	ImageStreamTag                    = "1.0"
 	ConfigMapPrefix                   = "kieconfigs"
 	DefaultPassword                   = "RedHat"
+	SSODefaultPrincipalAttribute      = "preferred_username"
 )
 
 // MonitoringEnvs Type of environments that will deploy the Monitoring console.

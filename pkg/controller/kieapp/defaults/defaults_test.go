@@ -3,12 +3,13 @@ package defaults
 import (
 	"context"
 	"fmt"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	"k8s.io/apimachinery/pkg/runtime"
 	"regexp"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"strings"
 	"testing"
+
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"

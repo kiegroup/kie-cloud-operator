@@ -106,12 +106,88 @@ console:
                     value: "{{.ApplicationName}}-{{.ConsoleName}}-ping"
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
+                  # Auth config BEGIN
+                  ## SSO config BEGIN
+                  #{{if .Auth.SSO.URL}}
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
-                    value: "ROOT.war"
+                    value: ROOT.war
+                  - name: SSO_URL
+                    value: "{{.Auth.SSO.URL}}"
+                  - name: SSO_REALM
+                    value: "{{.Auth.SSO.Realm}}"
+                  - name: SSO_USERNAME
+                    value: "{{.Auth.SSO.AdminUser}}"
+                  - name: SSO_PASSWORD
+                    value: "{{.Auth.SSO.AdminPassword}}"
                   - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                    value: "false"
+                    value: "{{.Auth.SSO.DisableSSLCertValidation}}"
                   - name: SSO_PRINCIPAL_ATTRIBUTE
-                    value: "preferred_username"
+                    value: "{{.Auth.SSO.PrincipalAttribute}}"
+                  - name: SSO_SECRET
+                    value: "{{.Auth.SSO.Clients.Console.Secret}}"
+                  - name: SSO_CLIENT
+                    value: "{{.Auth.SSO.Clients.Console.Name}}"
+                  - name: HOSTNAME_HTTP
+                    value: "{{.Auth.SSO.Clients.Console.HostnameHTTP}}"
+                  - name: HOSTNAME_HTTPS
+                    value: "{{.Auth.SSO.Clients.Console.HostnameHTTPS}}"
+                  #{{end}}
+                  ## SSO config END
+                  ## LDAP config BEGIN
+                  #{{if .Auth.LDAP.URL}}
+                  - name: AUTH_LDAP_URL
+                    value: "{{.Auth.LDAP.URL}}"
+                  - name: AUTH_LDAP_BIND_DN
+                    value: "{{.Auth.LDAP.BindDN}}"
+                  - name: AUTH_LDAP_BIND_CREDENTIAL
+                    value: "{{.Auth.LDAP.BindCredential}}"
+                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
+                    value: "{{.Auth.LDAP.JAASSecurityDomain}}"
+                  - name: AUTH_LDAP_BASE_CTX_DN
+                    value: "{{.Auth.LDAP.BaseCtxDN}}"
+                  - name: AUTH_LDAP_BASE_FILTER
+                    value: "{{.Auth.LDAP.BaseFilter}}"
+                  - name: AUTH_LDAP_SEARCH_SCOPE
+                    value: "{{.Auth.LDAP.SearchScope}}"
+                  - name: AUTH_LDAP_SEARCH_TIME_LIMIT
+                    value: "{{.Auth.LDAP.SearchTimeLimit}}"
+                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
+                    value: "{{.Auth.LDAP.DistinguishedNameAttribute}}"
+                  - name: AUTH_LDAP_PARSE_USERNAME
+                    value: "{{.Auth.LDAP.ParseUsername}}"
+                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
+                    value: "{{.Auth.LDAP.UsernameBeginString}}"
+                  - name: AUTH_LDAP_USERNAME_END_STRING
+                    value: "{{.Auth.LDAP.UsernameEndString}}"
+                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
+                    value: "{{.Auth.LDAP.RoleAttributeID}}"
+                  - name: AUTH_LDAP_ROLES_CTX_DN
+                    value: "{{.Auth.LDAP.RolesCtxDN}}"
+                  - name: AUTH_LDAP_ROLE_FILTER
+                    value: "{{.Auth.LDAP.RoleFilter}}"
+                  - name: AUTH_LDAP_ROLE_RECURSION
+                    value: "{{.Auth.LDAP.RoleRecursion}}"
+                  - name: AUTH_LDAP_DEFAULT_ROLE
+                    value: "{{.Auth.LDAP.DefaultRole}}"
+                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
+                    value: "{{.Auth.LDAP.RoleNameAttributeID}}"
+                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
+                    value: "{{.Auth.LDAP.ParseRoleNameFromDN}}"
+                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
+                    value: "{{.Auth.LDAP.RoleAttributeIsDN}}"
+                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
+                    value: "{{.Auth.LDAP.ReferralUserAttributeIDToCheck}}"
+                  #{{end}}
+                  ## LDAP config END
+                  ## RoleMapping config BEGIN
+                  #{{if .Auth.RoleMapper.RolesProperties}}
+                  - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
+                    value: "{{.Auth.RoleMapper.RolesProperties}}"
+                  - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
+                    value: "{{.Auth.RoleMapper.ReplaceRole}}"
+                  #{{end}}
+                  ## RoleMapping config END
+                  # Auth config END
                 volumeMounts:
                   - name: "{{.ApplicationName}}-{{.ConsoleName}}-keystore-volume"
                     mountPath: "/etc/businesscentral-secret-volume"
@@ -418,12 +494,6 @@ servers:
                       value: "RHPAMCENTR,EXTERNAL"
                     - name: RHPAMCENTR_MAVEN_REPO_PATH
                       value: /maven2/
-                    - name: SSO_OPENIDCONNECT_DEPLOYMENTS
-                      value: ROOT.war
-                    - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                      value: "false"
-                    - name: SSO_PRINCIPAL_ATTRIBUTE
-                      value: preferred_username
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
                     - name: HTTPS_KEYSTORE_DIR
@@ -440,6 +510,91 @@ servers:
                       value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
+                    # Auth config BEGIN
+                    ## SSO config BEGIN
+                    #{{if $.Auth.SSO.URL}}
+                    - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+                      value: ROOT.war
+                    - name: SSO_URL
+                      value: "{{$.Auth.SSO.URL}}"
+                    - name: SSO_REALM
+                      value: "{{$.Auth.SSO.Realm}}"
+                    - name: SSO_USERNAME
+                      value: "{{$.Auth.SSO.AdminUser}}"
+                    - name: SSO_PASSWORD
+                      value: "{{$.Auth.SSO.AdminPassword}}"
+                    - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+                      value: "{{$.Auth.SSO.DisableSSLCertValidation}}"
+                    - name: SSO_PRINCIPAL_ATTRIBUTE
+                      value: "{{$.Auth.SSO.PrincipalAttribute}}"
+                    #{{if eq (len $.Auth.SSO.Clients.Servers) (len $.ServerCount)}}
+                    #{{$serverClient := index $.Auth.SSO.Clients.Servers $index}}
+                    - name: SSO_SECRET
+                      value: "{{$serverClient.Secret}}"
+                    - name: SSO_CLIENT
+                      value: "{{$serverClient.Name}}"
+                    - name: HOSTNAME_HTTP
+                      value: "{{$serverClient.HostnameHTTP}}"
+                    - name: HOSTNAME_HTTPS
+                      value: "{{$serverClient.HostnameHTTPS}}"
+                    #{{end}}
+                    #{{end}}
+                    ## SSO config END
+                    ## LDAP config BEGIN
+                    #{{if $.Auth.LDAP.URL}}
+                    - name: AUTH_LDAP_URL
+                      value: "{{$.Auth.LDAP.URL}}"
+                    - name: AUTH_LDAP_BIND_DN
+                      value: "{{$.Auth.LDAP.BindDN}}"
+                    - name: AUTH_LDAP_BIND_CREDENTIAL
+                      value: "{{$.Auth.LDAP.BindCredential}}"
+                    - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
+                      value: "{{$.Auth.LDAP.JAASSecurityDomain}}"
+                    - name: AUTH_LDAP_BASE_CTX_DN
+                      value: "{{$.Auth.LDAP.BaseCtxDN}}"
+                    - name: AUTH_LDAP_BASE_FILTER
+                      value: "{{$.Auth.LDAP.BaseFilter}}"
+                    - name: AUTH_LDAP_SEARCH_SCOPE
+                      value: "{{$.Auth.LDAP.SearchScope}}"
+                    - name: AUTH_LDAP_SEARCH_TIME_LIMIT
+                      value: "{{$.Auth.LDAP.SearchTimeLimit}}"
+                    - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
+                      value: "{{$.Auth.LDAP.DistinguishedNameAttribute}}"
+                    - name: AUTH_LDAP_PARSE_USERNAME
+                      value: "{{$.Auth.LDAP.ParseUsername}}"
+                    - name: AUTH_LDAP_USERNAME_BEGIN_STRING
+                      value: "{{$.Auth.LDAP.UsernameBeginString}}"
+                    - name: AUTH_LDAP_USERNAME_END_STRING
+                      value: "{{$.Auth.LDAP.UsernameEndString}}"
+                    - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
+                      value: "{{$.Auth.LDAP.RoleAttributeID}}"
+                    - name: AUTH_LDAP_ROLES_CTX_DN
+                      value: "{{$.Auth.LDAP.RolesCtxDN}}"
+                    - name: AUTH_LDAP_ROLE_FILTER
+                      value: "{{$.Auth.LDAP.RoleFilter}}"
+                    - name: AUTH_LDAP_ROLE_RECURSION
+                      value: "{{$.Auth.LDAP.RoleRecursion}}"
+                    - name: AUTH_LDAP_DEFAULT_ROLE
+                      value: "{{$.Auth.LDAP.DefaultRole}}"
+                    - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
+                      value: "{{$.Auth.LDAP.RoleNameAttributeID}}"
+                    - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
+                      value: "{{$.Auth.LDAP.ParseRoleNameFromDN}}"
+                    - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
+                      value: "{{$.Auth.LDAP.RoleAttributeIsDN}}"
+                    - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
+                      value: "{{$.Auth.LDAP.ReferralUserAttributeIDToCheck}}"
+                    #{{end}}
+                    ## LDAP config END
+                    ## RoleMapping config BEGIN
+                    #{{if $.Auth.RoleMapper.RolesProperties}}
+                    - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
+                      value: "{{$.Auth.RoleMapper.RolesProperties}}"
+                    - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
+                      value: "{{$.Auth.RoleMapper.ReplaceRole}}"
+                    #{{end}}
+                    ## RoleMapping config END
+                    # Auth config END
                   resources:
                     limits:
                       memory: 1Gi

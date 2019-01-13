@@ -46,9 +46,9 @@ func TestGetEnvVar(t *testing.T) {
 			Value: "value2",
 		},
 	}
-	pos := getEnvVar("test1", vars)
+	pos := GetEnvVar("test1", vars)
 	assert.Equal(t, 0, pos)
 
-	pos = getEnvVar("other", vars)
+	pos = GetEnvVar("other", vars)
 	assert.Equal(t, -1, pos)
 }
