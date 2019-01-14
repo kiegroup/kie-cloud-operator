@@ -26,6 +26,14 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  digest = "1:d8a2bb36a048d1571bcc1aee208b61f39dc16c6c53823feffd37449dde162507"
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  pruneopts = ""
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
+
+[[projects]]
   branch = "master"
   digest = "1:c0bec5f9b98d0bc872ff5e834fac186b807b656683bd29cb82fb207a1513fabb"
   name = "github.com/beorn7/perks"
@@ -77,6 +85,25 @@
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:48f9a43c330434d61098a65bdf4d8cbfbdc0eecf30ab35b1b88405868df6a42b"
+  name = "github.com/go-openapi/analysis"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = ""
+  revision = "e2f3fdbb7ed0e56e070ccbfb6fc75b288a33c014"
+  version = "v0.18.0"
+
+[[projects]]
+  digest = "1:90d75a4ad18e82be220162df5f551537c917ef2c0bfa4f04b3bde61130b6286a"
+  name = "github.com/go-openapi/errors"
+  packages = ["."]
+  pruneopts = ""
+  revision = "7a7ff1b7b8020f22574411a32f28b4d168d69237"
+  version = "v0.18.0"
+
+[[projects]]
   digest = "1:c8052dcf3ec378a9a6bc4f00ecc10d6d5eb3cc1f8faaf6b2f70f047e8881d446"
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
@@ -93,12 +120,34 @@
   version = "v0.17.2"
 
 [[projects]]
-  digest = "1:d4680b89600466e543754c838cbc987ed58b962417a88600881cd0ed88d6b4cc"
+  digest = "1:e6529722d1b6bb2e80126d20a03bc05ab4409ace3f006cfa8717c74a8b5ad075"
+  name = "github.com/go-openapi/loads"
+  packages = ["."]
+  pruneopts = ""
+  revision = "74628589c3b94e3526a842d24f46589980f5ab22"
+  version = "v0.18.0"
+
+[[projects]]
+  digest = "1:708923386755f46d63d254e484c77c70ceb1706bf3cb58a45426b3e1469376a1"
+  name = "github.com/go-openapi/runtime"
+  packages = ["."]
+  pruneopts = ""
+  revision = "41e24cc66d7af6af39eb9b5a6418e901bcdd333c"
+  version = "v0.18.0"
+
+[[projects]]
+  digest = "1:fd4008f8283b993180f0626d0c7b2f48880e9dbb6bd92a91cac7ded30dc66777"
   name = "github.com/go-openapi/spec"
   packages = ["."]
   pruneopts = ""
-  revision = "5bae59e25b21498baea7f9d46e9c147ec106a42e"
-  version = "v0.17.2"
+  revision = "1de3e0542de65ad8d75452a595886fdd0befb363"
+
+[[projects]]
+  digest = "1:e0bf4a3b61a580c954a1850bc5bdb1eb8d3e93e31d301a8d2934b747dda95694"
+  name = "github.com/go-openapi/strfmt"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d65c7fdb29eca313476e529628176fe17e58c488"
 
 [[projects]]
   digest = "1:062de20b7d299ae95c902a5c472c4bc87a2f3ae707751fe155ecf640d99074b4"
@@ -107,6 +156,13 @@
   pruneopts = ""
   revision = "5899d5c5e619fda5fa86e14795a835f473ca284c"
   version = "v0.17.2"
+
+[[projects]]
+  digest = "1:f9384762512d6ffb86fdc0e83afe22c188f8bbe05e94fc088931534b6959f4c8"
+  name = "github.com/go-openapi/validate"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
 
 [[projects]]
   digest = "1:b0989e1ceaa5fb28ad7dcb6f21da9386124942f24e5d8e5807f967f6f56ae2b0"
@@ -936,6 +992,9 @@
   input-imports = [
     "github.com/ghodss/yaml",
     "github.com/go-logr/logr",
+    "github.com/go-openapi/spec",
+    "github.com/go-openapi/strfmt",
+    "github.com/go-openapi/validate",
     "github.com/gobuffalo/packr",
     "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
