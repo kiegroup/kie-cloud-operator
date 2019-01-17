@@ -1,7 +1,7 @@
 # Temporary Build Files
 build/_output
 build/_test
-*-packr.go
+*_*-packr.go
 
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Emacs ###
@@ -59,10 +59,10 @@ anaconda-mode/
 *.dll
 *.so
 *.dylib
-# Test binary, build with 'go test -c'
-*.test
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+## Test binary, build with 'go test -c'
+#*.test
+## Output of the go coverage tool, specifically when used with LiteIDE
+#*.out
 ### Vim ###
 # swap
 .sw[a-p]
@@ -71,8 +71,8 @@ anaconda-mode/
 Session.vim
 # temporary
 .netrwhist
-# auto-generated tag files
-tags
+## auto-generated tag files
+#tags
 ### VisualStudioCode ###
 .vscode/*
 .history
