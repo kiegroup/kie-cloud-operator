@@ -5,6 +5,7 @@
 package lsp
 
 import (
+	"context"
 	"go/token"
 
 	"golang.org/x/tools/internal/lsp/cache"
@@ -12,11 +13,20 @@ import (
 	"golang.org/x/tools/internal/lsp/source"
 )
 
+// fromProtocolURI converts a protocol.DocumentURI to a source.URI.
+// TODO(rstambler): Add logic here to support Windows.
+func fromProtocolURI(uri protocol.DocumentURI) source.URI {
+	return source.URI(uri)
+}
+
 // fromProtocolLocation converts from a protocol location to a source range.
 // It will return an error if the file of the location was not valid.
 // It uses fromProtocolRange to convert the start and end positions.
-func fromProtocolLocation(v *cache.View, loc protocol.Location) (source.Range, error) {
-	f := v.GetFile(source.URI(loc.URI))
+func fromProtocolLocation(ctx context.Context, v *cache.View, loc protocol.Location) (source.Range, error) {
+	f, err := v.GetFile(ctx, fromProtocolURI(loc.URI))
+	if err != nil {
+		return source.Range{}, err
+	}
 	tok, err := f.GetToken()
 	if err != nil {
 		return source.Range{}, err
@@ -26,11 +36,11 @@ func fromProtocolLocation(v *cache.View, loc protocol.Location) (source.Range, e
 
 // toProtocolLocation converts from a source range back to a protocol location.
 func toProtocolLocation(fset *token.FileSet, r source.Range) protocol.Location {
-	tokFile := fset.File(r.Start)
-	uri := source.ToURI(tokFile.Name())
+	tok := fset.File(r.Start)
+	uri := source.ToURI(tok.Name())
 	return protocol.Location{
 		URI:   protocol.DocumentURI(uri),
-		Range: toProtocolRange(tokFile, r),
+		Range: toProtocolRange(tok, r),
 	}
 }
 

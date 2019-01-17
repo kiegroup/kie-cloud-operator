@@ -11,12 +11,11 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"io/ioutil"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-func Definition(ctx context.Context, f File, pos token.Pos) (Range, error) {
+func Definition(ctx context.Context, v View, f File, pos token.Pos) (Range, error) {
 	fAST, err := f.GetAST()
 	if err != nil {
 		return Range{}, err
@@ -37,22 +36,18 @@ func Definition(ctx context.Context, f File, pos token.Pos) (Range, error) {
 		return Range{}, fmt.Errorf("no object")
 	}
 	if i.wasEmbeddedField {
-		// the original position was on the embedded field declaration
-		// so we try to dig out the type and jump to that instead
+		// The original position was on the embedded field declaration, so we
+		// try to dig out the type and jump to that instead.
 		if v, ok := obj.(*types.Var); ok {
 			if n, ok := v.Type().(*types.Named); ok {
 				obj = n.Obj()
 			}
 		}
 	}
-	fset, err := f.GetFileSet()
-	if err != nil {
-		return Range{}, err
-	}
-	return objToRange(fset, obj), nil
+	return objToRange(ctx, v, obj)
 }
 
-func TypeDefinition(ctx context.Context, f File, pos token.Pos) (Range, error) {
+func TypeDefinition(ctx context.Context, v View, f File, pos token.Pos) (Range, error) {
 	fAST, err := f.GetAST()
 	if err != nil {
 		return Range{}, err
@@ -76,11 +71,7 @@ func TypeDefinition(ctx context.Context, f File, pos token.Pos) (Range, error) {
 	if obj == nil {
 		return Range{}, fmt.Errorf("no object for type %s", typ.String())
 	}
-	fset, err := f.GetFileSet()
-	if err != nil {
-		return Range{}, err
-	}
-	return objToRange(fset, obj), nil
+	return objToRange(ctx, v, obj)
 }
 
 func typeToObject(typ types.Type) (obj types.Object) {
@@ -138,31 +129,47 @@ func checkIdentifier(f *ast.File, pos token.Pos) (ident, error) {
 	return result, nil
 }
 
-func objToRange(fSet *token.FileSet, obj types.Object) Range {
+func objToRange(ctx context.Context, v View, obj types.Object) (Range, error) {
 	p := obj.Pos()
-	f := fSet.File(p)
-	pos := f.Position(p)
-	if pos.Column == 1 {
-		// Column is 1, so we probably do not have full position information
-		// Currently exportdata does not store the column.
-		// For now we attempt to read the original source and  find the identifier
-		// within the line. If we find it we patch the column to match its offset.
-		// TODO: we have probably already added the full data for the file to the
-		// fileset, we ought to track it rather than adding it over and over again
-		// TODO: if we parse from source, we will never need this hack
-		if src, err := ioutil.ReadFile(pos.Filename); err == nil {
-			newF := fSet.AddFile(pos.Filename, -1, len(src))
-			newF.SetLinesForContent(src)
-			lineStart := lineStart(newF, pos.Line)
-			offset := newF.Offset(lineStart)
-			col := bytes.Index(src[offset:], []byte(obj.Name()))
-			p = newF.Pos(offset + col)
-		}
+	if !p.IsValid() {
+		return Range{}, fmt.Errorf("invalid position for %v", obj.Name())
 	}
+	tok := v.FileSet().File(p)
+	pos := tok.Position(p)
+	if pos.Column == 1 {
+		// We do not have full position information because exportdata does not
+		// store the column. For now, we attempt to read the original source
+		// and find the identifier within the line. If we find it, we patch the
+		// column to match its offset.
+		//
+		// TODO: If we parse from source, we will never need this hack.
+		f, err := v.GetFile(ctx, ToURI(pos.Filename))
+		if err != nil {
+			goto Return
+		}
+		src, err := f.Read()
+		if err != nil {
+			goto Return
+		}
+		tok, err := f.GetToken()
+		if err != nil {
+			goto Return
+		}
+		start := lineStart(tok, pos.Line)
+		offset := tok.Offset(start)
+		col := bytes.Index(src[offset:], []byte(obj.Name()))
+		p = tok.Pos(offset + col)
+	}
+Return:
 	return Range{
 		Start: p,
-		End:   p + token.Pos(len([]byte(obj.Name()))), // TODO: use real range of obj
-	}
+		End:   p + token.Pos(identifierLen(obj.Name())),
+	}, nil
+}
+
+// TODO: This needs to be fixed to address golang.org/issue/29149.
+func identifierLen(ident string) int {
+	return len([]byte(ident))
 }
 
 // this functionality was borrowed from the analysisutil package
