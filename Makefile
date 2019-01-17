@@ -52,7 +52,7 @@ test-ci:
 
 build-ci:
 	$(Q)go generate ./...
-	$(Q)CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o build/_output/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
+	$(Q)CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o build/_output/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
 
 .PHONY: all dep vet go-generate sdk-generate format test build clean test-ci build-ci
 
