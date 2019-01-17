@@ -1,4 +1,4 @@
-FROM fedora-minimal:30
+FROM registry.fedoraproject.org/fedora-minimal:30
 
 USER nobody
 
