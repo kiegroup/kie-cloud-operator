@@ -14,12 +14,12 @@ import (
 func TestConfigureHostnameNoAuth(t *testing.T) {
 	object := &v1.CustomObject{
 		DeploymentConfigs: []appsv1.DeploymentConfig{
-			appsv1.DeploymentConfig{
+			{
 				Spec: appsv1.DeploymentConfigSpec{
 					Template: &corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								corev1.Container{},
+								{},
 							},
 						},
 					},
@@ -43,34 +43,34 @@ func TestConfigureHostname(t *testing.T) {
 	testHostname := "test-hostname.example.com"
 	object := &v1.CustomObject{
 		DeploymentConfigs: []appsv1.DeploymentConfig{
-			appsv1.DeploymentConfig{
+			{
 				Spec: appsv1.DeploymentConfigSpec{
 					Template: &corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								corev1.Container{
+								{
 									Env: []corev1.EnvVar{},
 								},
-								corev1.Container{
-									Env: []corev1.EnvVar{corev1.EnvVar{
+								{
+									Env: []corev1.EnvVar{{
 										Name:  ssoClientVar,
 										Value: "test-client",
 									}},
 								},
-								corev1.Container{
-									Env: []corev1.EnvVar{corev1.EnvVar{
+								{
+									Env: []corev1.EnvVar{{
 										Name:  ssoClientVar,
 										Value: "test-client",
-									}, corev1.EnvVar{
+									}, {
 										Name:  ssoHostnameVar,
 										Value: "",
 									}},
 								},
-								corev1.Container{
-									Env: []corev1.EnvVar{corev1.EnvVar{
+								{
+									Env: []corev1.EnvVar{{
 										Name:  ssoClientVar,
 										Value: "test-client",
-									}, corev1.EnvVar{
+									}, {
 										Name:  ssoHostnameVar,
 										Value: testHostname,
 									}},
@@ -192,14 +192,14 @@ func TestAuthSSOConfig(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	expectedEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
-		corev1.EnvVar{Name: "SSO_REALM", Value: "rhpam-test"},
-		corev1.EnvVar{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
-		corev1.EnvVar{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
-		corev1.EnvVar{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
-		corev1.EnvVar{Name: "SSO_USERNAME"},
-		corev1.EnvVar{Name: "SSO_PASSWORD"},
-		corev1.EnvVar{Name: "SSO_PASSWORD"},
+		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
+		{Name: "SSO_REALM", Value: "rhpam-test"},
+		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
+		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
+		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
+		{Name: "SSO_USERNAME"},
+		{Name: "SSO_PASSWORD"},
+		{Name: "SSO_PASSWORD"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -209,10 +209,10 @@ func TestAuthSSOConfig(t *testing.T) {
 	}
 
 	expectedClientEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_SECRET"},
-		corev1.EnvVar{Name: "SSO_CLIENT"},
-		corev1.EnvVar{Name: "HOSTNAME_HTTP"},
-		corev1.EnvVar{Name: "HOSTNAME_HTTPS"},
+		{Name: "SSO_SECRET"},
+		{Name: "SSO_CLIENT"},
+		{Name: "HOSTNAME_HTTP"},
+		{Name: "HOSTNAME_HTTPS"},
 	}
 	for _, expectedEnv := range expectedClientEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -242,11 +242,11 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 							HostnameHTTPS: "secure-test-rhpamcentr.example.com",
 						},
 						Servers: []v1.SSOAuthClient{
-							v1.SSOAuthClient{
+							{
 								Name:   "test-kieserver-a-client",
 								Secret: "supersecret-a",
 							},
-							v1.SSOAuthClient{
+							{
 								Name:          "test-kieserver-b-client",
 								Secret:        "supersecret-b",
 								HostnameHTTPS: "test-kieserver-b.example.com",
@@ -261,13 +261,13 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	expectedEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
-		corev1.EnvVar{Name: "SSO_REALM", Value: "rhpam-test"},
-		corev1.EnvVar{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
-		corev1.EnvVar{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
-		corev1.EnvVar{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
-		corev1.EnvVar{Name: "SSO_USERNAME"},
-		corev1.EnvVar{Name: "SSO_PASSWORD"},
+		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
+		{Name: "SSO_REALM", Value: "rhpam-test"},
+		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
+		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
+		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
+		{Name: "SSO_USERNAME"},
+		{Name: "SSO_PASSWORD"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -277,26 +277,26 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 	}
 
 	expectedConsoleClientEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_SECRET", Value: "supersecret"},
-		corev1.EnvVar{Name: "SSO_CLIENT", Value: "test-rhpamcentr-client"},
-		corev1.EnvVar{Name: "HOSTNAME_HTTP", Value: "test-rhpamcentr.example.com"},
-		corev1.EnvVar{Name: "HOSTNAME_HTTPS", Value: "secure-test-rhpamcentr.example.com"},
+		{Name: "SSO_SECRET", Value: "supersecret"},
+		{Name: "SSO_CLIENT", Value: "test-rhpamcentr-client"},
+		{Name: "HOSTNAME_HTTP", Value: "test-rhpamcentr.example.com"},
+		{Name: "HOSTNAME_HTTPS", Value: "secure-test-rhpamcentr.example.com"},
 	}
 	for _, expectedEnv := range expectedConsoleClientEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 	}
 
 	expectedServerClientEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_SECRET", Value: "supersecret-a"},
-		corev1.EnvVar{Name: "SSO_CLIENT", Value: "test-kieserver-a-client"},
+		{Name: "SSO_SECRET", Value: "supersecret-a"},
+		{Name: "SSO_CLIENT", Value: "test-kieserver-a-client"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
 		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 	}
 	expectedServerClientEnvs = []corev1.EnvVar{
-		corev1.EnvVar{Name: "SSO_SECRET", Value: "supersecret-b"},
-		corev1.EnvVar{Name: "SSO_CLIENT", Value: "test-kieserver-b-client"},
-		corev1.EnvVar{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
+		{Name: "SSO_SECRET", Value: "supersecret-b"},
+		{Name: "SSO_CLIENT", Value: "test-kieserver-b-client"},
+		{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
 		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -340,9 +340,9 @@ func TestAuthLDAPConfig(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	expectedEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
-		corev1.EnvVar{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
-		corev1.EnvVar{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
+		{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
+		{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
+		{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -376,11 +376,11 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	expectedEnvs := []corev1.EnvVar{
-		corev1.EnvVar{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
-		corev1.EnvVar{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
-		corev1.EnvVar{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
-		corev1.EnvVar{Name: "AUTH_ROLE_MAPPER_ROLES_PROPERTIES", Value: "mapping.properties"},
-		corev1.EnvVar{Name: "AUTH_ROLE_MAPPER_REPLACE_ROLE", Value: "true"},
+		{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
+		{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
+		{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
+		{Name: "AUTH_ROLE_MAPPER_ROLES_PROPERTIES", Value: "mapping.properties"},
+		{Name: "AUTH_ROLE_MAPPER_REPLACE_ROLE", Value: "true"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)

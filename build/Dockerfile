@@ -1,6 +1,4 @@
-FROM alpine:3.8
-
-RUN apk upgrade --update --no-cache
+FROM registry.fedoraproject.org/fedora-minimal:30
 
 USER nobody
 

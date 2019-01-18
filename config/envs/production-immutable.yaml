@@ -40,8 +40,8 @@ servers:
             type: Source
             sourceStrategy:
               env:
-              - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-                value: "{{.KieServerContainerDeployment}}"
+                - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+                  value: "{{.KieServerContainerDeployment}}"
               forcePull: true
               from:
                 kind: ImageStreamTag

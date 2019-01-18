@@ -363,9 +363,9 @@ others:
           port:
             targetPort: rest
 
-  ## MySQL/ES/AMQ END
+## MySQL/ES/AMQ END
 
-  ## KIE Servers BEGIN
+## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
   #{{ range $index, $Map := .ServerCount }}
@@ -412,7 +412,7 @@ servers:
                     ## MySQL driver settings END
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
-      ## KIE server deployment config END
+  ## KIE server deployment config END
   #{{end}}
   ## RANGE ends
-  ## KIE Servers END
+## KIE Servers END
