@@ -14,22 +14,22 @@ spec:
   validation:
     openAPIV3Schema:
       required:
-      - spec
+        - spec
       properties:
         spec:
           type: object
           required:
-          - environment
+            - environment
           properties:
             environment:
               type: string
               description: The name of the environment used as a baseline
               enum:
-              - authoring-ha
-              - authoring
-              - production-immutable
-              - production
-              - trial
+                - authoring-ha
+                - authoring
+                - production-immutable
+                - production
+                - trial
             kieDeployments:
               type: integer
               description: The number of distinct KIE server deployments
@@ -61,12 +61,12 @@ spec:
                       items:
                         type: object
                         required:
-                        - name
+                          - name
                         oneOf:
-                        - required:
-                          - value
-                        - required:
-                          - valueFrom
+                          - required:
+                              - value
+                          - required:
+                              - valueFrom
                         properties:
                           name:
                             type: string
@@ -103,12 +103,12 @@ spec:
                       items:
                         type: object
                         required:
-                        - name
+                          - name
                         oneOf:
-                        - required:
-                          - value
-                        - required:
-                          - valueFrom
+                          - required:
+                              - value
+                          - required:
+                              - valueFrom
                         properties:
                           name:
                             type: string
@@ -145,12 +145,12 @@ spec:
                       items:
                         type: object
                         required:
-                        - name
+                          - name
                         oneOf:
-                        - required:
-                          - value
-                        - required:
-                          - valueFrom
+                          - required:
+                              - value
+                          - required:
+                              - valueFrom
                         properties:
                           name:
                             type: string
@@ -180,8 +180,8 @@ spec:
                     type: object
                     description: Configuration of build configs for immutable KIE servers
                     required:
-                    - kieServerContainerDeployment
-                    - gitSource
+                      - kieServerContainerDeployment
+                      - gitSource
                     properties:
                       kieServerContainerDeployment:
                         type: string
@@ -189,9 +189,9 @@ spec:
                       gitSource:
                         type: object
                         required:
-                        - uri
-                        - reference
-                        - contextDir
+                          - uri
+                          - reference
+                          - contextDir
                         properties:
                           uri:
                             type: string
@@ -209,15 +209,15 @@ spec:
                           type: object
                           description: WebHook secretes for build configs
                           required:
-                          - type
-                          - secret
+                            - type
+                            - secret
                           properties:
                             type:
                               type: string
                               description: WebHook type, either GitHub or Generic
                               enum:
-                              - GitHub
-                              - Generic
+                                - GitHub
+                                - Generic
                             secret:
                               type: string
                               description: Secret value for webhook
@@ -234,8 +234,8 @@ spec:
                   type: object
                   description: RH-SSO integration configuration
                   required:
-                  - url
-                  - realm
+                    - url
+                    - realm
                   properties:
                     url:
                       type: string
@@ -311,7 +311,7 @@ spec:
                   type: object
                   description: LDAP integration configuration
                   required:
-                  - url
+                    - url
                   properties:
                     url:
                       type: string
@@ -335,9 +335,9 @@ spec:
                     searchScope:
                       type: string
                       enum:
-                      - SUBTREE_SCOPE
-                      - OBJECT_SCOPE
-                      - ONELEVEL_SCOPE
+                        - SUBTREE_SCOPE
+                        - OBJECT_SCOPE
+                        - ONELEVEL_SCOPE
                       description: The search scope to use.
                     searchTimeLimit:
                       type: integer
@@ -387,7 +387,7 @@ spec:
                   type: object
                   description: RoleMapper configuration
                   required:
-                  - rolesProperties
+                    - rolesProperties
                   properties:
                     rolesProperties:
                       type: string

@@ -703,28 +703,28 @@ servers:
 ## Other required resources BEGIN
 others:
   - roles:
-    - metadata:
-        name: "{{.ApplicationName}}-rhpamsvc-view"
-      rules:
-        - apiGroups:
-            - ""
-          resources:
-            - "*"
-          verbs:
-            - get
-            - list
-            - view
-        - apiGroups:
-            - app.kiegroup.org
-            - apps.openshift.io
-            - image.openshift.io
-            - route.openshift.io
-          resources:
-            - "*"
-          verbs:
-            - get
-            - list
-            - view
+      - metadata:
+          name: "{{.ApplicationName}}-rhpamsvc-view"
+        rules:
+          - apiGroups:
+              - ""
+            resources:
+              - "*"
+            verbs:
+              - get
+              - list
+              - view
+          - apiGroups:
+              - app.kiegroup.org
+              - apps.openshift.io
+              - image.openshift.io
+              - route.openshift.io
+            resources:
+              - "*"
+            verbs:
+              - get
+              - list
+              - view
     rolebindings:
       - metadata:
           name: "{{.ApplicationName}}-rhpamsvc-view"

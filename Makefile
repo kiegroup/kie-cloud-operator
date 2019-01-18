@@ -9,40 +9,52 @@ else
        Q = @
 endif
 
-IMAGE = quay.io/kiegroup/kie-cloud-operator
 #VERSION = $(shell git describe --dirty --tags --always)
 #REPO = github.com/kiegroup/kie-cloud-operator
 #BUILD_PATH = $(REPO)/cmd/manager
 
 #export CGO_ENABLED:=0
 
+.PHONY: all
 all: build
 
+.PHONY: dep
 dep:
-	$(Q)dep ensure -v
+	./hack/go-dep.sh
 
+.PHONY: format
 format:
-	$(Q)go fmt ./...
+	./hack/go-fmt.sh
 
+.PHONY: go-generate
 go-generate: dep
 	$(Q)go generate ./...
 
+.PHONY: sdk-generate
 sdk-generate: dep
 	operator-sdk generate k8s
 
-vet: sdk-generate
-	$(Q)go vet ./...
+.PHONY: vet
+vet:
+	./hack/go-vet.sh
 
-test: vet format
-	$(Q)GOCACHE=off go test ./...
+.PHONY: test
+test:
+	./hack/go-test.sh
 
-build: go-generate test
-	operator-sdk build $(IMAGE)
+.PHONY: lint
+lint:
+	# Temporarily disabled
+	# ./hack/go-lint.sh
+	# ./hack/yaml-lint.sh
 
+.PHONY: build
+build:
+	./hack/go-build.sh
+
+.PHONY: clean
 clean:
 	rm -rf build/_output pkg/controller/kieapp/defaults/a_defaults-packr.go
-
-.PHONY: all dep vet go-generate sdk-generate format test build clean
 
 # test/ci-go: test/sanity test/unit test/subcommand test/e2e/go
 

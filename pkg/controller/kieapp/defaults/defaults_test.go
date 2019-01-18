@@ -161,7 +161,7 @@ func TestBuildConfiguration(t *testing.T) {
 							ContextDir: "test",
 						},
 						Webhooks: []v1.WebhookSecret{
-							v1.WebhookSecret{
+							{
 								Type:   v1.GitHubWebhook,
 								Secret: "s3cr3t",
 							},
@@ -286,11 +286,11 @@ func TestConstructServerObject(t *testing.T) {
 }
 
 var sampleEnv = []corev1.EnvVar{
-	corev1.EnvVar{
+	{
 		Name:  "KIE_ADMIN_PWD",
 		Value: "RedHat",
 	},
-	corev1.EnvVar{
+	{
 		Name:  "TEST_VAR",
 		Value: "test",
 	},
@@ -396,7 +396,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 							ContextDir: "test",
 						},
 						Webhooks: []v1.WebhookSecret{
-							v1.WebhookSecret{
+							{
 								Type:   v1.GitHubWebhook,
 								Secret: "s3cr3t",
 							},
@@ -410,7 +410,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 							ContextDir: "test",
 						},
 						Webhooks: []v1.WebhookSecret{
-							v1.WebhookSecret{
+							{
 								Type:   v1.GitHubWebhook,
 								Secret: "s3cr3t",
 							},
