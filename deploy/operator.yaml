@@ -13,6 +13,8 @@ spec:
         name: kie-cloud-operator
     spec:
       serviceAccountName: kie-cloud-operator
+      strategy:
+        type: Recreate
       containers:
         - name: kie-cloud-operator
           image: quay.io/kiegroup/kie-cloud-operator
@@ -41,3 +43,9 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "kie-cloud-operator"
+            #- name: DEBUG
+            #  value: ""
+            #- name: INSECURE
+            #  value: ""
+            #- name: REGISTRY
+            #  value: ""
