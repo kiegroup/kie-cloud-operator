@@ -274,12 +274,17 @@ func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, recon
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
 				consoleCN = reconciler.GetRouteHost(rt, cr)
+				// set consoleHost in CR status to console route host set above
+				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
 				break
 			}
 		}
 		if consoleCN == "" {
 			consoleCN = cr.Name
+			// set consoleHost in CR status to console route host set above
+			cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
 		}
+
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,

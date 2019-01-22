@@ -4,6 +4,8 @@ metadata:
   name: kie-cloud-operator
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       name: kie-cloud-operator
@@ -15,7 +17,7 @@ spec:
       serviceAccountName: kie-cloud-operator
       containers:
         - name: kie-cloud-operator
-          image: quay.io/kiegroup/kie-cloud-operator
+          image: quay.io/kiegroup/kie-cloud-operator:v0.1.0
           ports:
             - containerPort: 60000
               name: metrics
@@ -41,3 +43,9 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "kie-cloud-operator"
+            #- name: DEBUG
+            #  value: ""
+            #- name: INSECURE
+            #  value: ""
+            #- name: REGISTRY
+            #  value: ""

@@ -8,7 +8,7 @@
 
 ## Build
 
-```shell
+```bash
 make
 ```
 
@@ -16,21 +16,35 @@ make
 
 e.g.
 
-```shell
-docker push quay.io/kiegroup/kie-cloud-operator:latest
+```bash
+docker push quay.io/kiegroup/kie-cloud-operator:<version>
 ```
 
-## Deploy to OpenShift
+## Deploy to OpenShift using OLM
+
+As cluster-admin and an OCP 3.11+ cluster with OLM installed, issue the following command:
+
+```bash
+# If using the default OLM namespace "operator-lifecycle-manager"
+./hack/catalog.sh
+
+# If using a different namespace for OLM
+./hack/catalog.sh <namespace>
+```
+
+This will create a new `CatalogSource` and `ConfigMap`, allowing the OLM Catalog to see this Operator's `ClusterServiceVersion`.
+
+## Deploy to OpenShift Manually
 
 Globally and only once for the whole cluster:
 
-```shell
+```bash
 oc create -f deploy/crds/kieapp_crd.yaml
 ```
 
 In a project:
 
-```shell
+```bash
 oc create -f deploy/service_account.yaml
 oc create -f deploy/role.yaml
 oc create -f deploy/role_binding.yaml
@@ -39,27 +53,27 @@ oc create -f deploy/operator.yaml
 
 ## Trigger a KieApp deployment
 
-```shell
+```bash
 $ oc create -f deploy/crs/kieapp_trial.yaml
 kieapp.app.kiegroup.org/trial created
 ```
 
 ## Clean up a KieApp deployment
 
-```shell
+```bash
 # Using the KieApp name
-$ oc delete KieApp trial
+oc delete KieApp trial
 # Using the file name
-$ oc delete -f deploy/crs/kieapp_trial.yaml
+oc delete -f deploy/crs/kieapp_trial.yaml
 # Delete all the KieApp deployments
-$ oc delete KieApp --all
+oc delete KieApp --all
 ```
 
 ## Development
 
 Change log level at runtime w/ the `DEBUG` environment variable. e.g. -
 
-```shell
+```bash
 make dep
 make clean
 DEBUG="true" operator-sdk up local --namespace=<namespace>
@@ -67,13 +81,13 @@ DEBUG="true" operator-sdk up local --namespace=<namespace>
 
 Also at runtime, change registry for rhpam ImageStreamTags -
 
-```shell
+```bash
 INSECURE=true REGISTRY=<registry url> operator-sdk up local --namespace=<namespace>
 ```
 
 Before submitting PR, please be sure to generate, vet, format, and test your code. This all can be done with one command.
 
-```shell
+```bash
 make test
 ```
 
