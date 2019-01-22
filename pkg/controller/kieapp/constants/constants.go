@@ -6,7 +6,7 @@ const (
 	RhpamcentrImageName               = "businesscentral"
 	RhpamcentrMonitoringImageName     = "businesscentral-monitoring"
 	KieServerServicePrefix            = "kieserver"
-	RhpamRegistry                     = "registry.access.redhat.com"
+	RhpamRegistry                     = "registry.redhat.io"
 	ImageStreamNamespace              = "openshift"
 	RhpamVersion                      = "7.2"
 	ImageStreamTag                    = "1.0"

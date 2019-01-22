@@ -2,7 +2,6 @@ package kieapp
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 	"regexp"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func TestKieAppDefaults(t *testing.T) {
@@ -217,6 +217,28 @@ func TestGenerateSecret(t *testing.T) {
 	env, _, err = reconciler.NewEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+}
+
+func TestConsoleHost(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "trial",
+		},
+	}
+
+	scheme, err := v1.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+	reconciler := &KieAppReconciler{mockService}
+	_, _, err = reconciler.NewEnv(cr)
+	assert.Nil(t, err, "Error creating a new environment")
+	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
 
 func TestMergeTrialAndCommonConfig(t *testing.T) {

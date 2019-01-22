@@ -42,6 +42,7 @@ type KieAppStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	Status      string   `json:"status,omitempty"`
+	ConsoleHost string   `json:"consoleHost,omitempty"`
 	Deployments []string `json:"deployments,omitempty"`
 }
 
