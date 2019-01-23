@@ -169,7 +169,7 @@ func TestAuthSSOEmptyConfig(t *testing.T) {
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
-	assert.EqualError(t, err, "neither url nor realm can be emtpy")
+	assert.EqualError(t, err, "neither url nor realm can be empty")
 }
 
 func TestAuthSSOConfig(t *testing.T) {

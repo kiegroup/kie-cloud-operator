@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+// Add Creates a new controller and starts watching resources
 func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 	// Create a new controller
 	c, err := controller.New("kieapp-controller", mgr, controller.Options{Reconciler: reconciler})

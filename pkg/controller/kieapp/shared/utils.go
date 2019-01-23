@@ -11,41 +11,30 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/imdario/mergo"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/pavel-v-chernykh/keystore-go"
+	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func GetCommonLabels(app *v1.KieApp, service string) (string, string, map[string]string) {
-	appName := app.ObjectMeta.Name
-	serviceName := appName + "-" + service
-	labels := map[string]string{
-		"app":     appName,
-		"service": serviceName,
+// ConstructObject returns an object after merging the environment object and the one defined in the CR
+func ConstructObject(object v1.CustomObject, cr *v1.KieAppObject) v1.CustomObject {
+	for dcIndex, dc := range object.DeploymentConfigs {
+		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
+			c.Env = EnvOverride(c.Env, cr.Env)
+			err := mergo.Merge(&c.Resources, cr.Resources, mergo.WithOverride)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+			}
+			dc.Spec.Template.Spec.Containers[containerIndex] = c
+		}
+		object.DeploymentConfigs[dcIndex] = dc
 	}
-	return appName, serviceName, labels
+	return object
 }
 
-func GetImage(configuredString string, defaultString string) string {
-	if len(configuredString) > 0 {
-		return configuredString
-	}
-	return defaultString
-}
-
-func getEnvVars(defaults map[string]string, vars []corev1.EnvVar) []corev1.EnvVar {
-	for _, envVar := range vars {
-		defaults[envVar.Name] = envVar.Value
-	}
-	allVars := make([]corev1.EnvVar, len(defaults))
-	index := 0
-	for key, value := range defaults {
-		allVars[index] = corev1.EnvVar{Name: key, Value: value}
-		index++
-	}
-	return allVars
-}
-
+// GenerateKeystore returns a Java Keystore with a self-signed certificate
 func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	cert, derPK, err := genCert(commonName)
 	if err != nil {
@@ -129,12 +118,7 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 	return cert, derPK, nil
 }
 
-func Zeroing(s []byte) {
-	for i := 0; i < len(s); i++ {
-		s[i] = 0
-	}
-}
-
+// GeneratePassword returns an alphanumeric password of the length provided
 func GeneratePassword(length int) []byte {
 	rand.Seed(time.Now().UnixNano())
 	digits := "0123456789"
@@ -154,6 +138,7 @@ func GeneratePassword(length int) []byte {
 	return buf
 }
 
+// GetEnvVar returns the position of the EnvVar found by name
 func GetEnvVar(envName string, env []corev1.EnvVar) int {
 	for pos, v := range env {
 		if v.Name == envName {
@@ -176,6 +161,7 @@ func envVarEqual(env corev1.EnvVar, envList []corev1.EnvVar) bool {
 	return match
 }
 
+// EnvOverride replaces or appends the provided EnvVar to the collection
 func EnvOverride(dst, src []corev1.EnvVar) []corev1.EnvVar {
 	for _, cre := range src {
 		pos := GetEnvVar(cre.Name, dst)
@@ -188,19 +174,17 @@ func EnvOverride(dst, src []corev1.EnvVar) []corev1.EnvVar {
 	return dst
 }
 
+// EnvVarCheck checks whether the src and dst []EnvVar have the same values
 func EnvVarCheck(dst, src []corev1.EnvVar) bool {
-	match := true
 	for _, denv := range dst {
 		if !envVarEqual(denv, src) {
-			match = false
-			break
+			return false
 		}
 	}
 	for _, senv := range src {
 		if !envVarEqual(senv, dst) {
-			match = false
-			break
+			return false
 		}
 	}
-	return match
+	return true
 }

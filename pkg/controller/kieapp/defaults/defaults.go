@@ -23,6 +23,8 @@ import (
 
 var log = logs.GetLogger("kieapp.defaults")
 
+// GetEnvironment returns an Environment from merging the common config and the config
+// related to the environment set in the KieApp definition
 func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, error) {
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
@@ -206,6 +208,8 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 	return name, result[len(result)-1]
 }
 
+// ConfigMapsFromFile reads the files under the config folder and creates
+// configmaps in the given namespace
 func ConfigMapsFromFile(namespace string) []corev1.ConfigMap {
 	box := packr.NewBox("../../../../config")
 	cmList := map[string][]map[string]string{}
