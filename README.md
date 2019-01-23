@@ -39,7 +39,7 @@ This will create a new `CatalogSource` and `ConfigMap`, allowing the OLM Catalog
 Globally and only once for the whole cluster:
 
 ```bash
-oc create -f deploy/crds/kieapp_crd.yaml
+oc create -f deploy/crds/kieapp.crd.yaml
 ```
 
 In a project:

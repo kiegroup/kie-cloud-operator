@@ -4,11 +4,11 @@ metadata:
   name: kiecloud-operator.v0.1.0
   namespace: placeholder
   annotations:
-    categories: A list of comma separated categories that your operator falls under.
-    certified: The operator's certification. This field should be set to false until a process to get this value is defined at a later date.
+    categories: kieapp, rhpam, kie, cloud, pam, bpm, process, case, automation, operator
+    certified: "false"
     description: KieCloud can deploy RHPAM environments in the form of KieApp objects.
-    containerImage: quay.io/kiegroup/kie-cloud-operator:v0.1.0
-    createdAt: The date that the operator was created. The format should match yyyy-mm-ddThh:mm:ssZ
+    containerImage: quay.io/kiegroup/kie-cloud-operator:0.1
+    createdAt: 2019-01-23T17:30:36Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
@@ -18,9 +18,9 @@ metadata:
 spec:
   displayName: KieCloud
   description: KieCloud can deploy RHPAM environments in the form of KieApp objects.
-  keywords: [kieapp rhpam kie cloud pam kiecloud]
+  keywords: [kieapp rhpam kie cloud pam bpm process case automation operator]
   version: 0.1.0
-  maturity: alpha
+  maturity: beta
   maintainers:
     - name: Red Hat, Inc.
       email: bsig-cloud@redhat.com
@@ -85,11 +85,6 @@ spec:
             path: commonConfig.version
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:label"
-        #          - description: Credentials for Workbench.
-        #            displayName: adminUser Password
-        #            path: commonConfig.adminPassword
-        #            x-descriptors:
-        #              - "urn:alm:descriptor:com.tectonic.ui:label"
         statusDescriptors:
           - description: Deployments for the KieApp environment.
             displayName: Deployments
@@ -176,7 +171,7 @@ spec:
                 serviceAccountName: kie-cloud-operator
                 containers:
                   - name: kie-cloud-operator
-                    image: quay.io/kiegroup/kie-cloud-operator:v0.1.0
+                    image: quay.io/kiegroup/kie-cloud-operator:0.1
                     ports:
                       - containerPort: 60000
                         name: metrics
@@ -202,9 +197,3 @@ spec:
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
                         value: "kie-cloud-operator"
-                      #- name: DEBUG
-                      #  value: ""
-                      #- name: INSECURE
-                      #  value: ""
-                      #- name: REGISTRY
-                      #  value: ""

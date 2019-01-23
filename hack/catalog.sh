@@ -7,8 +7,8 @@ else
 fi
 
 CSV=`cat deploy/catalog_resources/kiecloud-operator.v0.1.0.clusterserviceversion.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
-CRD=`cat deploy/crds/kieapp_crd.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
-PKG=`cat deploy/catalog_resources/kiecloud-package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
+CRD=`cat deploy/crds/kieapp.crd.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
+PKG=`cat deploy/catalog_resources/kiecloud.package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
