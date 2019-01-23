@@ -1,13 +1,14 @@
 package test
 
 import (
+	"testing"
+
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 	"github.com/gobuffalo/packr"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type CustomResourceDefinition struct {
@@ -117,7 +118,7 @@ func deleteNestedMapEntry(object map[string]interface{}, keys ...string) {
 
 func getSchema(t *testing.T) *spec.Schema {
 	box := packr.NewBox("../../../../deploy/crds")
-	crdFile := "kieapp_crd.yaml"
+	crdFile := "kieapp.crd.yaml"
 	assert.True(t, box.Has(crdFile))
 	yamlString, err := box.FindString(crdFile)
 	assert.NoError(t, err, "Error reading CRD yaml %v", yamlString)
