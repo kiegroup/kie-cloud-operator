@@ -30,8 +30,8 @@ import (
 
 var log = logs.GetLogger("kieapp.controller")
 
-// KieAppReconciler reconciles a KieApp object
-type KieAppReconciler struct {
+// Reconciler reconciles a KieApp object
+type Reconciler struct {
 	Service v1.PlatformService
 }
 
@@ -40,7 +40,7 @@ type KieAppReconciler struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (reconciler *KieAppReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Create critical ConfigMaps if don't exist
 	if result, err := reconciler.createConfigMaps(request.Namespace); err != nil {
 		return result, err
@@ -91,6 +91,11 @@ func (reconciler *KieAppReconciler) Reconcile(request reconcile.Request) (reconc
 				}
 			}
 		}
+		for _, srDc := range env.Smartrouter.DeploymentConfigs {
+			if dc.Name == srDc.Name {
+				dcUpdates = reconciler.dcUpdateCheck(dc, srDc, dcUpdates, instance)
+			}
+		}
 		for _, other := range env.Others {
 			for _, oDc := range other.DeploymentConfigs {
 				if dc.Name == oDc.Name {
@@ -132,7 +137,7 @@ func (reconciler *KieAppReconciler) Reconcile(request reconcile.Request) (reconc
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *KieAppReconciler) createConfigMaps(namespace string) (reconcile.Result, error) {
+func (reconciler *Reconciler) createConfigMaps(namespace string) (reconcile.Result, error) {
 	configMaps := defaults.ConfigMapsFromFile(namespace)
 	for _, configMap := range configMaps {
 		var testDir bool
@@ -162,7 +167,7 @@ func (reconciler *KieAppReconciler) createConfigMaps(namespace string) (reconcil
 }
 
 // Check ImageStream
-func (reconciler *KieAppReconciler) checkImageStreamTag(name, namespace string) bool {
+func (reconciler *Reconciler) checkImageStreamTag(name, namespace string) bool {
 	log := log.With("kind", "ImageStreamTag", "name", name, "namespace", namespace)
 	result := strings.Split(name, ":")
 	if len(result) == 1 {
@@ -178,7 +183,7 @@ func (reconciler *KieAppReconciler) checkImageStreamTag(name, namespace string) 
 }
 
 // Create local ImageStreamTag
-func (reconciler *KieAppReconciler) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
+func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
 	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
@@ -231,7 +236,7 @@ func (reconciler *KieAppReconciler) createLocalImageTag(tagRefName string, cr *v
 	return nil
 }
 
-func (reconciler *KieAppReconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
+func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
 	cContainer := current.Spec.Template.Spec.Containers[0]
@@ -261,7 +266,8 @@ func (reconciler *KieAppReconciler) dcUpdateCheck(current, new oappsv1.Deploymen
 	return dcUpdates
 }
 
-func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
+// NewEnv creates an Environment generated from the given KieApp
+func (reconciler *Reconciler) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
 		return env, reconcile.Result{Requeue: true}, err
@@ -332,7 +338,7 @@ func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, recon
 
 		env.Servers[i] = server
 	}
-	env = ConsolidateObjects(env, cr)
+	env = consolidateObjects(env, cr)
 
 	rResult, err := reconciler.CreateCustomObjects(env.Console, cr)
 	if err != nil {
@@ -358,7 +364,7 @@ func (reconciler *KieAppReconciler) NewEnv(cr *v1.KieApp) (v1.Environment, recon
 	return env, rResult, nil
 }
 
-func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
+func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
 	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	for i, s := range env.Servers {
@@ -368,7 +374,8 @@ func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	return env
 }
 
-func (reconciler *KieAppReconciler) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+// CreateCustomObjects goes through all the different object types in the given CustomObject and creates them, if necessary
+func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
 	if object.Omit {
 		return reconcile.Result{}, nil
 	}
@@ -440,7 +447,7 @@ func (reconciler *KieAppReconciler) CreateCustomObjects(object v1.CustomObject, 
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *KieAppReconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
 	if reconciler.checkImageStreamTag(name, namespace) {
 		return namespace, nil
 	} else if reconciler.checkImageStreamTag(name, cr.Namespace) {
@@ -457,7 +464,7 @@ func (reconciler *KieAppReconciler) ensureImageStream(name string, namespace str
 }
 
 // createCustomObject checks for an object's existence before creating it
-func (reconciler *KieAppReconciler) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *Reconciler) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
 	name := obj.GetName()
 	namespace := cr.GetNamespace()
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", name, "namespace", namespace)
@@ -476,7 +483,7 @@ func (reconciler *KieAppReconciler) createCustomObject(obj v1.OpenShiftObject, c
 }
 
 // createObj creates an object based on the error passed in from a `client.Get`
-func (reconciler *KieAppReconciler) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
+func (reconciler *Reconciler) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 
 	if err != nil && errors.IsNotFound(err) {
@@ -497,7 +504,8 @@ func (reconciler *KieAppReconciler) createObj(obj v1.OpenShiftObject, err error)
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *KieAppReconciler) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
+// UpdateObj reconciles the given object
+func (reconciler *Reconciler) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 	log.Info("Updating")
 	err := reconciler.Service.Update(context.TODO(), obj)
@@ -529,7 +537,8 @@ func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 	return dcNames
 }
 
-func (reconciler *KieAppReconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
+// GetRouteHost returns the Hostname of the route provided
+func (reconciler *Reconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 	log := log.With("kind", route.GetObjectKind().GroupVersionKind().Kind, "name", route.Name, "namespace", route.Namespace)
 	err := controllerutil.SetControllerReference(cr, &route, reconciler.Service.GetScheme())

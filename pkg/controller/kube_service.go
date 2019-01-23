@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	cachev1 "sigs.k8s.io/controller-runtime/pkg/cache"
