@@ -6,6 +6,7 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,9 +26,9 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 	}
 
 	watchObjects := []runtime.Object{
-		&corev1.ConfigMap{},
 		// Watch for changes to primary resource KieApp
 		&v1.KieApp{},
+		&appsv1.Deployment{},
 	}
 	objectHandler := &handler.EnqueueRequestForObject{}
 	for _, watchObject := range watchObjects {
@@ -38,6 +39,20 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 	}
 
 	watchOwnedObjects := []runtime.Object{
+		&corev1.ConfigMap{},
+	}
+	ownerHandler := &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &appsv1.Deployment{},
+	}
+	for _, watchObject := range watchOwnedObjects {
+		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+		if err != nil {
+			return err
+		}
+	}
+
+	watchOwnedObjects = []runtime.Object{
 		&oappsv1.DeploymentConfig{},
 		&corev1.PersistentVolumeClaim{},
 		&rbacv1.RoleBinding{},
@@ -49,7 +64,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		&buildv1.BuildConfig{},
 		&oimagev1.ImageStream{},
 	}
-	ownerHandler := &handler.EnqueueRequestForOwner{
+	ownerHandler = &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.KieApp{},
 	}
@@ -59,5 +74,6 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 			return err
 		}
 	}
+
 	return nil
 }

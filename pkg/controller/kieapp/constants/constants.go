@@ -25,6 +25,12 @@ const (
 	DefaultPassword = "RedHat"
 	// SSODefaultPrincipalAttribute default PrincipalAttribute to use for SSO integration
 	SSODefaultPrincipalAttribute = "preferred_username"
+	// NameSpaceEnv is an environment variable of the current namespace
+	// set via downward api when the code is running via deployment
+	NameSpaceEnv = "WATCH_NAMESPACE"
+	// OpNameEnv is an environment variable of the operator name
+	// set when the code is running via deployment
+	OpNameEnv = "OPERATOR_NAME"
 )
 
 // MonitoringEnvs Type of environments that will deploy the Monitoring console.
