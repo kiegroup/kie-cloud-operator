@@ -52,6 +52,10 @@ lint:
 build:
 	./hack/go-build.sh
 
+.PHONY: rhel
+rhel:
+	./hack/go-build.sh rhel
+
 .PHONY: clean
 clean:
 	rm -rf build/_output pkg/controller/kieapp/defaults/a_defaults-packr.go

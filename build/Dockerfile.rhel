@@ -1,0 +1,5 @@
+FROM registry.redhat.io/rhel-minimal:7.6
+
+USER nobody
+
+ADD build/_output/bin/kie-cloud-operator /usr/local/bin/kie-cloud-operator
