@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +16,7 @@ type MockPlatformService struct {
 	GetFunc             func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
 	ListFunc            func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error
 	UpdateFunc          func(ctx context.Context, obj runtime.Object) error
+	UpdateStatusFunc    func(ctx context.Context, obj runtime.Object) error
 	GetCachedFunc       func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
 	ImageStreamTagsFunc func(namespace string) imagev1.ImageStreamTagInterface
 	GetSchemeFunc       func() *runtime.Scheme
@@ -35,6 +37,10 @@ func MockService() *MockPlatformService {
 		},
 		UpdateFunc: func(ctx context.Context, obj runtime.Object) error {
 			log.Debugf("Mock service will do no-op in lieu of updating %v", obj)
+			return nil
+		},
+		UpdateStatusFunc: func(ctx context.Context, obj runtime.Object) error {
+			log.Debugf("Mock service will do no-op in lieu of updating status %v", obj)
 			return nil
 		},
 		GetCachedFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {

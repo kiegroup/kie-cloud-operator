@@ -37,15 +37,6 @@ type KieAppRegistry struct {
 	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
 }
 
-// KieAppStatus defines the observed state of KieApp
-type KieAppStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Status      string   `json:"status,omitempty"`
-	ConsoleHost string   `json:"consoleHost,omitempty"`
-	Deployments []string `json:"deployments,omitempty"`
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // KieApp is the Schema for the kieapps API
@@ -67,6 +58,7 @@ type KieAppList struct {
 	Items           []KieApp `json:"items"`
 }
 
+// KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
 	// Business Central container configs
 	Console KieAppObject `json:"console,omitempty"`
@@ -247,6 +239,46 @@ type AuthTemplate struct {
 	SSO        SSOAuthConfig        `json:"sso,omitempty"`
 	LDAP       LDAPAuthConfig       `json:"ldap,omitempty"`
 	RoleMapper RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+}
+
+// ConditionType - type of condition
+type ConditionType string
+
+const (
+	// DeployedConditionType - the kieapp is deployed
+	DeployedConditionType ConditionType = "Deployed"
+	// ProvisioningConditionType - the kieapp is being provisioned
+	ProvisioningConditionType ConditionType = "Provisioning"
+	// FailedConditionType - the kieapp is in a failed state
+	FailedConditionType ConditionType = "Failed"
+)
+
+// ReasonType - type of reason
+type ReasonType string
+
+const (
+	// DeploymentFailedReason - Unable to deploy the application
+	DeploymentFailedReason ReasonType = "DeploymentFailed"
+	// ConfigurationErrorReason - An invalid configuration caused an error
+	ConfigurationErrorReason ReasonType = "ConfigurationError"
+	// UnknownReason - Unable to determine the error
+	UnknownReason ReasonType = "Unknown"
+)
+
+// Condition - The condition for the kie-cloud-operator
+type Condition struct {
+	Type               ConditionType          `json:"type"`
+	Status             corev1.ConditionStatus `json:"status"`
+	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
+	Reason             ReasonType             `json:"reason,omitempty"`
+	Message            string                 `json:"message,omitempty"`
+}
+
+// KieAppStatus - The status for custom resources managed by the operator-sdk.
+type KieAppStatus struct {
+	Conditions  []Condition `json:"conditions"`
+	ConsoleHost string      `json:"consoleHost,omitempty"`
+	Deployments []string    `json:"deployments"`
 }
 
 type PlatformService interface {
