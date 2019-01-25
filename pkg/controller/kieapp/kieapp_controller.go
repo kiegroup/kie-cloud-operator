@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
+
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -57,21 +59,23 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
 
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 
-	env, rResult, err := reconciler.NewEnv(instance)
+	env, rResult, err := reconciler.newEnv(instance)
 	if err != nil {
+		reconciler.setFailedStatus(instance, v1.ConfigurationErrorReason, err)
 		return rResult, err
 	}
-
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &oappsv1.DeploymentConfigList{}
 	err = reconciler.Service.List(context.TODO(), listOps, dcList)
 	if err != nil {
 		log.Warn("Failed to list dc's. ", err)
+		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
 	dcNames := getDcNames(dcList.Items, instance)
@@ -108,6 +112,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		for _, uDc := range dcUpdates {
 			rResult, err := reconciler.UpdateObj(&uDc)
 			if err != nil {
+				reconciler.setFailedStatus(instance, v1.DeploymentFailedReason, err)
 				return rResult, err
 			}
 		}
@@ -125,16 +130,29 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
-
 	instance.Status.Deployments = dcNames
+
 	// Update CR if needed
-	if !reflect.DeepEqual(instance, cachedInstance) {
+	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) || !reflect.DeepEqual(instance.Spec, cachedInstance.Spec) {
+		status.SetProvisioning(instance)
 		return reconciler.UpdateObj(instance)
 	}
-
+	status.SetDeployed(instance)
+	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) {
+		return reconciler.UpdateObj(instance)
+	}
 	return reconcile.Result{}, nil
+}
+
+func (reconciler *Reconciler) setFailedStatus(instance *v1.KieApp, reason v1.ReasonType, err error) {
+	status.SetFailed(instance, reason, err)
+	_, updateError := reconciler.UpdateObj(instance)
+	if updateError != nil {
+		log.Warn("Unable to update object after receiving failed status. ", err)
+	}
 }
 
 func (reconciler *Reconciler) createConfigMaps(namespace string) (reconcile.Result, error) {
@@ -267,7 +285,7 @@ func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfi
 }
 
 // NewEnv creates an Environment generated from the given KieApp
-func (reconciler *Reconciler) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
+func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
 		return env, reconcile.Result{Requeue: true}, err
@@ -280,14 +298,12 @@ func (reconciler *Reconciler) NewEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
 				consoleCN = reconciler.GetRouteHost(rt, cr)
-				// set consoleHost in CR status to console route host set above
 				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
 				break
 			}
 		}
 		if consoleCN == "" {
 			consoleCN = cr.Name
-			// set consoleHost in CR status to console route host set above
 			cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
 		}
 
@@ -444,6 +460,7 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 			return reconcile.Result{}, err
 		}
 	}
+
 	return reconcile.Result{}, nil
 }
 

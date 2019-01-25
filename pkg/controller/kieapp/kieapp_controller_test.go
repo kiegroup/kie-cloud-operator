@@ -215,7 +215,7 @@ func TestGenerateSecret(t *testing.T) {
 		return scheme
 	}
 	reconciler := &Reconciler{mockService}
-	env, _, err = reconciler.NewEnv(cr)
+	env, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 }
@@ -237,7 +237,7 @@ func TestConsoleHost(t *testing.T) {
 		return scheme
 	}
 	reconciler := &Reconciler{mockService}
-	_, _, err = reconciler.NewEnv(cr)
+	_, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
