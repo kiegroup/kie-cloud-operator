@@ -57,7 +57,7 @@ func configureAuth(spec v1.KieAppSpec, envTemplate *v1.EnvTemplate) (err error) 
 
 func configureSSO(config *v1.SSOAuthConfig, deployments int, envTemplate *v1.EnvTemplate) error {
 	if len(config.URL) == 0 || len(config.Realm) == 0 {
-		return errors.New("neither url nor realm can be emtpy")
+		return errors.New("neither url nor realm can be empty")
 	}
 	// Set defaults
 	if len(config.PrincipalAttribute) == 0 {

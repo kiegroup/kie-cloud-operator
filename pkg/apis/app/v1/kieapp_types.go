@@ -37,15 +37,6 @@ type KieAppRegistry struct {
 	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
 }
 
-// KieAppStatus defines the observed state of KieApp
-type KieAppStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Status      string   `json:"status,omitempty"`
-	ConsoleHost string   `json:"consoleHost,omitempty"`
-	Deployments []string `json:"deployments,omitempty"`
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // KieApp is the Schema for the kieapps API
@@ -67,6 +58,7 @@ type KieAppList struct {
 	Items           []KieApp `json:"items"`
 }
 
+// KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
 	// Business Central container configs
 	Console KieAppObject `json:"console,omitempty"`
@@ -104,36 +96,44 @@ type CustomObject struct {
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
 }
 
+// KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
 	KieServerContainerDeployment string          `json:"kieServerContainerDeployment,omitempty"`
 	GitSource                    GitSource       `json:"gitSource,omitempty"`
 	Webhooks                     []WebhookSecret `json:"webhooks,omitempty"`
 }
 
+// GitSource Git coordinates to locate the source code to build
 type GitSource struct {
 	URI        string `json:"uri,omitempty"`
 	Reference  string `json:"reference,omitempty"`
 	ContextDir string `json:"contextDir,omitempty"`
 }
 
+// WebhookType literal type to distinguish between different types of Webhooks
 type WebhookType string
 
 const (
-	GitHubWebhook  WebhookType = "GitHub"
+	// GitHubWebhook GitHub webhook
+	GitHubWebhook WebhookType = "GitHub"
+	// GenericWebhook Generic webhook
 	GenericWebhook WebhookType = "Generic"
 )
 
+// WebhookSecret Secret to use for a given webhook
 type WebhookSecret struct {
 	Type   WebhookType `json:"type,omitempty"`
 	Secret string      `json:"secret,omitempty"`
 }
 
+// KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
 	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
 	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
 	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
+// SSOAuthConfig Authentication configuration for SSO
 type SSOAuthConfig struct {
 	URL                      string         `json:"url,omitempty"`
 	Realm                    string         `json:"realm,omitempty"`
@@ -144,11 +144,13 @@ type SSOAuthConfig struct {
 	Clients                  SSOAuthClients `json:"clients,omitempty"`
 }
 
+// SSOAuthClients Different SSO Clients to use
 type SSOAuthClients struct {
 	Console SSOAuthClient   `json:"console,omitempty"`
 	Servers []SSOAuthClient `json:"servers,omitempty"`
 }
 
+// SSOAuthClient Auth client to use for the SSO integration
 type SSOAuthClient struct {
 	Name          string `json:"name,omitempty"`
 	Secret        string `json:"secret,omitempty"`
@@ -156,6 +158,7 @@ type SSOAuthClient struct {
 	HostnameHTTPS string `json:"hostnameHTTPS,omitempty"`
 }
 
+// LDAPAuthConfig Authentication configuration for LDAP
 type LDAPAuthConfig struct {
 	URL                            string          `json:"url,omitempty"`
 	BindDN                         string          `json:"bindDN,omitempty"`
@@ -180,14 +183,19 @@ type LDAPAuthConfig struct {
 	ReferralUserAttributeIDToCheck string          `json:"referralUserAttributeIDToCheck,omitempty"`
 }
 
+// SearchScopeType Type used to define how the LDAP searches are performed
 type SearchScopeType string
 
 const (
-	SubtreeSearchScope  SearchScopeType = "SUBTREE_SCOPE"
-	ObjectSearchScope   SearchScopeType = "OBJECT_SCOPE"
+	// SubtreeSearchScope Subtree search scope
+	SubtreeSearchScope SearchScopeType = "SUBTREE_SCOPE"
+	// ObjectSearchScope Object search scope
+	ObjectSearchScope SearchScopeType = "OBJECT_SCOPE"
+	// OneLevelSearchScope One Level search scope
 	OneLevelSearchScope SearchScopeType = "ONELEVEL_SCOPE"
 )
 
+// RoleMapperAuthConfig Configuration for RoleMapper Authentication
 type RoleMapperAuthConfig struct {
 	RolesProperties string `json:"rolesProperties,omitempty"`
 	ReplaceRole     string `json:"replaceRole,omitempty"`
@@ -203,6 +211,7 @@ type EnvTemplate struct {
 	ServerCount []Template `json:"serverCount,omitempty"`
 }
 
+// Template contains all the variables used in the yaml templates
 type Template struct {
 	*CommonConfig
 	ApplicationName              string       `json:"applicationName,omitempty"`
@@ -225,10 +234,51 @@ type CommonConfig struct {
 	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
+// AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
 	SSO        SSOAuthConfig        `json:"sso,omitempty"`
 	LDAP       LDAPAuthConfig       `json:"ldap,omitempty"`
 	RoleMapper RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+}
+
+// ConditionType - type of condition
+type ConditionType string
+
+const (
+	// DeployedConditionType - the kieapp is deployed
+	DeployedConditionType ConditionType = "Deployed"
+	// ProvisioningConditionType - the kieapp is being provisioned
+	ProvisioningConditionType ConditionType = "Provisioning"
+	// FailedConditionType - the kieapp is in a failed state
+	FailedConditionType ConditionType = "Failed"
+)
+
+// ReasonType - type of reason
+type ReasonType string
+
+const (
+	// DeploymentFailedReason - Unable to deploy the application
+	DeploymentFailedReason ReasonType = "DeploymentFailed"
+	// ConfigurationErrorReason - An invalid configuration caused an error
+	ConfigurationErrorReason ReasonType = "ConfigurationError"
+	// UnknownReason - Unable to determine the error
+	UnknownReason ReasonType = "Unknown"
+)
+
+// Condition - The condition for the kie-cloud-operator
+type Condition struct {
+	Type               ConditionType          `json:"type"`
+	Status             corev1.ConditionStatus `json:"status"`
+	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
+	Reason             ReasonType             `json:"reason,omitempty"`
+	Message            string                 `json:"message,omitempty"`
+}
+
+// KieAppStatus - The status for custom resources managed by the operator-sdk.
+type KieAppStatus struct {
+	Conditions  []Condition `json:"conditions"`
+	ConsoleHost string      `json:"consoleHost,omitempty"`
+	Deployments []string    `json:"deployments"`
 }
 
 type PlatformService interface {

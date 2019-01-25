@@ -46,7 +46,7 @@ func TestMergeServices(t *testing.T) {
 	overwrite.Console.Services = append(overwrite.Console.Services, *service3)
 	overwrite.Console.Services = append(overwrite.Console.Services, *service5)
 
-	mergedEnv, err := merge(baseline, *overwrite)
+	mergedEnv, _ := merge(baseline, *overwrite)
 	assert.Equal(t, 4, len(mergedEnv.Console.Services), "Expected 4 services")
 	finalService1 := mergedEnv.Console.Services[0]
 	finalService3 := mergedEnv.Console.Services[2]

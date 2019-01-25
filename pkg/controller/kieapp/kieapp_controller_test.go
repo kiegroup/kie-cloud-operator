@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -14,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func TestKieAppDefaults(t *testing.T) {
@@ -50,7 +51,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 
-	env = ConsolidateObjects(env, cr)
+	env = consolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
 	log.Debug("Testing with environment ", cr.Spec.Environment)
@@ -88,7 +89,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	env = ConsolidateObjects(env, cr)
+	env = consolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", cr.Name), env.Console.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
@@ -138,7 +139,7 @@ func TestTrialServerEnv(t *testing.T) {
 		log.Error("Error getting environment. ", err)
 	}
 	env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
-	env = ConsolidateObjects(env, cr)
+	env = consolidateObjects(env, cr)
 
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)
@@ -213,8 +214,8 @@ func TestGenerateSecret(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &KieAppReconciler{mockService}
-	env, _, err = reconciler.NewEnv(cr)
+	reconciler := &Reconciler{mockService}
+	env, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 }
@@ -235,8 +236,8 @@ func TestConsoleHost(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &KieAppReconciler{mockService}
-	_, _, err = reconciler.NewEnv(cr)
+	reconciler := &Reconciler{mockService}
+	_, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
