@@ -8,7 +8,7 @@ metadata:
     certified: "false"
     description: KieCloud can deploy RHPAM environments in the form of KieApp objects.
     containerImage: quay.io/kiegroup/kie-cloud-operator:0.1
-    createdAt: 2019-01-23T17:30:36Z
+    createdAt: 2019-01-25T20:48:22Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
