@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"os"
 	"regexp"
 	"strings"
 
@@ -16,9 +17,13 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	"github.com/kiegroup/kie-cloud-operator/version"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var log = logs.GetLogger("kieapp.defaults")
@@ -157,8 +162,7 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 
 // important to parse template first with this function, before unmarshalling into object
 func loadYaml(service v1.PlatformService, filename, namespace string, e v1.EnvTemplate) ([]byte, error) {
-	// use embedded files for tests, instead of ConfigMaps
-	if service.IsMockService() {
+	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
 		box := packr.NewBox("../../../../config")
 		if box.Has(filename) {
 			yamlString, err := box.FindString(filename)
@@ -209,8 +213,8 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 }
 
 // ConfigMapsFromFile reads the files under the config folder and creates
-// configmaps in the given namespace
-func ConfigMapsFromFile(namespace string) []corev1.ConfigMap {
+// configmaps in the given namespace. It sets OwnerRef to operator deployment.
+func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) []corev1.ConfigMap {
 	box := packr.NewBox("../../../../config")
 	cmList := map[string][]map[string]string{}
 	for _, filename := range box.List() {
@@ -234,11 +238,33 @@ func ConfigMapsFromFile(namespace string) []corev1.ConfigMap {
 		cm := corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cmName,
-				Namespace: namespace,
+				Namespace: ns,
+				Annotations: map[string]string{
+					v1.SchemeGroupVersion.Group: version.Version,
+				},
 			},
 			Data: cmData,
+		}
+
+		cm.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
+		err := controllerutil.SetControllerReference(myDep, &cm, scheme)
+		if err != nil {
+			log.Error("Error setting controller reference. ", err)
+		}
+		for index := range cm.OwnerReferences {
+			cm.OwnerReferences[index].BlockOwnerDeletion = nil
 		}
 		configMaps = append(configMaps, cm)
 	}
 	return configMaps
+}
+
+// UseEmbeddedFiles checks environment variables WATCH_NAMESPACE & OPERATOR_NAME
+func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace string, useEmbedded bool) {
+	namespace := os.Getenv(constants.NameSpaceEnv)
+	name := os.Getenv(constants.OpNameEnv)
+	if service.IsMockService() || namespace == "" || name == "" {
+		return name, namespace, true
+	}
+	return name, namespace, false
 }

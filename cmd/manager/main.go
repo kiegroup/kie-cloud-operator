@@ -10,6 +10,7 @@ import (
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -90,6 +91,14 @@ func main() {
 	}
 
 	log.Info("Starting the Operator.")
+
+	message := "ConfigMaps not available. Using embedded configs."
+	if os.Getenv(constants.NameSpaceEnv) == "" {
+		log.Warnf("%s required env %s not set, please configure downward API", message, constants.NameSpaceEnv)
+	}
+	if os.Getenv(constants.OpNameEnv) == "" {
+		log.Warnf("%s required env %s not set, please configure env", message, constants.OpNameEnv)
+	}
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
