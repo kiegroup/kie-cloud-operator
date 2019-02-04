@@ -87,7 +87,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    v1.RhpamTrial,
 			KieDeployments: 6,
 		},
 	}
@@ -98,13 +98,13 @@ func TestMultipleServerDeployment(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestTrialEnvironment(t *testing.T) {
+func TestRHPAMTrialEnvironment(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    v1.RhpamTrial,
 			KieDeployments: 2,
 		},
 	}
@@ -124,6 +124,38 @@ func TestTrialEnvironment(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "rhpam72-businesscentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.Exec.Command[2])
+}
+
+func TestRHDMTrialEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    v1.RhdmTrial,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting trial environment")
+	wbServices := env.Console.Services
+	mainService := getService(wbServices, "test-rhdmcentr")
+	assert.NotNil(t, mainService, "rhdmcentr service not found")
+	assert.Len(t, mainService.Spec.Ports, 3, "The rhdmcentr service should have three ports")
+	assert.True(t, hasPort(mainService, 8001), "The rhdmcentr service should listen on port 8001")
+
+	pingService := getService(wbServices, "test-rhdmcentr-ping")
+	assert.NotNil(t, pingService, "Ping service not found")
+	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
+	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhdm72-decisioncentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-drools-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-drools-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.Exec.Command[2])
 }
 
 func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
@@ -132,7 +164,79 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "production",
+			Environment:    v1.RhpamProduction,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhpam72-businesscentral-monitoring-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhdmAuthoringHAEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    v1.RhdmAuthoringHA,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhdm72-decisioncentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamAuthoringHAEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    v1.RhpamAuthoringHA,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhpam72-businesscentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhdmProdImmutableEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    v1.RhdmProductionImmutable,
+			KieDeployments: 2,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "rhdm72-decisioncentral-openshift", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamProdImmutableEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment:    v1.RhpamProductionImmutable,
 			KieDeployments: 2,
 		},
 	}
@@ -150,7 +254,7 @@ func TestBuildConfiguration(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "production-immutable",
+			Environment: v1.RhpamProductionImmutable,
 			Objects: v1.KieAppObjects{
 				Builds: []v1.KieAppBuildObject{
 					{
@@ -211,7 +315,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "authoring",
+			Environment:    v1.RhpamAuthoring,
 			KieDeployments: 3,
 		},
 	}
@@ -227,7 +331,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "authoring-ha",
+			Environment:    v1.RhpamAuthoringHA,
 			KieDeployments: 3,
 		},
 	}
@@ -246,7 +350,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	object := shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -261,7 +365,7 @@ func TestConstructSmartrouterObject(t *testing.T) {
 	object := shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Smartrouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Smartrouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -277,7 +381,7 @@ func TestConstructServerObject(t *testing.T) {
 		object := shared.ConstructObject(env.Servers[i], &cr.Spec.Objects.Server)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i), object.DeploymentConfigs[0].Name)
 		re := regexp.MustCompile("[0-9]+")
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
 			assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
@@ -308,7 +412,7 @@ func buildKieApp(name string) *v1.KieApp {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Console: v1.KieAppObject{
 					Env:       sampleEnv,
@@ -334,7 +438,7 @@ func TestPartialTemplateConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "authoring",
+			Environment: v1.RhdmAuthoring,
 			CommonConfig: v1.CommonConfig{
 				AdminPassword: "MyPassword",
 			},
@@ -345,7 +449,7 @@ func TestPartialTemplateConfig(t *testing.T) {
 	assert.Nil(t, err, "Error getting authoring environment")
 	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
 	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
-	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAMCENTR_MAVEN_REPO_PASSWORD")
+	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Len(t, mavenPassword, 8, "Expected a password with length of 8 to be generated, but got %v", mavenPassword)
 }
 
@@ -364,7 +468,7 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: v1.RhdmTrial,
 			CommonConfig: v1.CommonConfig{
 				AdminPassword: "MyPassword",
 			},
@@ -375,7 +479,7 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
 	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
-	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAMCENTR_MAVEN_REPO_PASSWORD")
+	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
 }
 
@@ -385,7 +489,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "production-immutable",
+			Environment: v1.RhdmProductionImmutable,
 			Objects: v1.KieAppObjects{
 				Builds: []v1.KieAppBuildObject{
 					{

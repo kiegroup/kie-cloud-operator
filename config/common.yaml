@@ -17,7 +17,7 @@ console:
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "rhpam{{.Version}}-{{.ConsoleImage}}-openshift:{{.ImageTag}}"
+                name: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-openshift:{{.ImageTag}}"
           - type: ConfigChange
         replicas: 1
         selector:
@@ -30,11 +30,11 @@ console:
               app: "{{.ApplicationName}}"
               service: "{{.ApplicationName}}-{{.ConsoleName}}"
           spec:
-            serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
+            serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
             terminationGracePeriodSeconds: 60
             containers:
               - name: "{{.ApplicationName}}-{{.ConsoleName}}"
-                image: rhpam{{.Version}}-{{.ConsoleImage}}-openshift
+                image: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -44,7 +44,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.ConsoleProbePage}}
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
@@ -53,7 +53,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/kie-wb.jsp
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.ConsoleProbePage}}
                   initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 30
@@ -295,7 +295,7 @@ smartrouter:
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "rhpam{{.Version}}-smartrouter-openshift:{{.ImageTag}}"
+                name: "{{.Product}}{{.Version}}-smartrouter-openshift:{{.ImageTag}}"
           - type: ConfigChange
         replicas: 2
         selector:
@@ -311,7 +311,7 @@ smartrouter:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "{{.ApplicationName}}-smartrouter"
-                image: rhpam{{.Version}}-smartrouter-openshift
+                image: "{{.Product}}{{.Version}}-smartrouter-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -331,8 +331,6 @@ smartrouter:
                     value: "kie-server-router"
                   - name: KIE_SERVER_ROUTER_NAME
                     value: "KIE Server Router"
-                  - name: KIE_SERVER_ROUTER_PROTOCOL
-                    value: ""
                   - name: KIE_SERVER_CONTROLLER_USER
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
@@ -342,12 +340,12 @@ smartrouter:
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
                     value: "http"
                   - name: KIE_SERVER_ROUTER_REPO
-                    value: "/opt/rhpam-smartrouter/data"
+                    value: "/opt/{{.Product}}-smartrouter/data"
                   - name: KIE_SERVER_ROUTER_CONFIG_WATCHER_ENABLED
                     value: "true"
                 volumeMounts:
                   - name: "{{.ApplicationName}}-smartrouter"
-                    mountPath: "/opt/rhpam-smartrouter/data"
+                    mountPath: "/opt/{{.Product}}-smartrouter/data"
             volumes:
               - name: "{{.ApplicationName}}-smartrouter"
                 persistentVolumeClaim:
@@ -406,7 +404,7 @@ servers:
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
+                  name: "{{.Product}}{{.Version}}-kieserver-openshift:{{.ImageTag}}"
             - type: ConfigChange
           replicas: 1
           selector:
@@ -419,11 +417,11 @@ servers:
                 service: "{{.ApplicationName}}-kieserver-{{$index}}"
                 deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
             spec:
-              serviceAccountName: "{{.ApplicationName}}-rhpamsvc"
+              serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "rhpam{{.Version}}-kieserver-openshift"
+                  image: "{{.Product}}{{.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
@@ -456,43 +454,15 @@ servers:
                       value: "443"
                     - name: KIE_SERVER_ID
                       value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-                      value: ""
-                    - name: DATASOURCES
-                      value: "RHPAM"
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
-                    - name: RHPAM_JNDI
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_JTA
-                      value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
-                  ## H2 driver settings BEGIN
-                    - name: RHPAM_DRIVER
-                      value: "h2"
-                    - name: RHPAM_USERNAME
-                      value: "sa"
-                    - name: RHPAM_PASSWORD
-                      value: "{{.AdminPassword}}"
-                    - name: RHPAM_SERVICE_HOST
-                      value: "dummy_ignored"
-                    - name: RHPAM_SERVICE_PORT
-                      value: "12345"
-                    - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.H2Dialect"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
-                  ## H2 driver settings END
-                    - name: RHPAMCENTR_MAVEN_REPO_USERNAME
+                    - name: "{{.MavenRepo}}_MAVEN_REPO_USERNAME"
                       value: mavenUser
-                    - name: RHPAMCENTR_MAVEN_REPO_PASSWORD
+                    - name: "{{.MavenRepo}}_MAVEN_REPO_PASSWORD"
                       value: "{{.MavenPassword}}"
-                    - name: RHPAMCENTR_MAVEN_REPO_SERVICE
+                    - name: "{{.MavenRepo}}_MAVEN_REPO_SERVICE"
                       value: "{{.ApplicationName}}-{{.ConsoleName}}"
                     - name: MAVEN_REPOS
-                      value: "RHPAMCENTR,EXTERNAL"
-                    - name: RHPAMCENTR_MAVEN_REPO_PATH
+                      value: "{{.MavenRepo}},EXTERNAL"
+                    - name: "{{.MavenRepo}}_MAVEN_REPO_PATH"
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
@@ -704,7 +674,7 @@ servers:
 others:
   - roles:
       - metadata:
-          name: "{{.ApplicationName}}-rhpamsvc-view"
+          name: "{{.ApplicationName}}-{{.Product}}svc-view"
         rules:
           - apiGroups:
               - ""
@@ -727,17 +697,17 @@ others:
               - view
     rolebindings:
       - metadata:
-          name: "{{.ApplicationName}}-rhpamsvc-view"
+          name: "{{.ApplicationName}}-{{.Product}}svc-view"
         subjects:
           - kind: ServiceAccount
-            name: "{{.ApplicationName}}-rhpamsvc"
+            name: "{{.ApplicationName}}-{{.Product}}svc"
         roleRef:
           kind: Role
-          name: "{{.ApplicationName}}-rhpamsvc-view"
+          name: "{{.ApplicationName}}-{{.Product}}svc-view"
 
     serviceAccounts:
       - metadata:
-          name: "{{.ApplicationName}}-rhpamsvc"
+          name: "{{.ApplicationName}}-{{.Product}}svc"
           labels:
             app: "{{.ApplicationName}}"
 # Other required resources END

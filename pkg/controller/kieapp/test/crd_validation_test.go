@@ -42,7 +42,7 @@ kind: KieApp
 metadata:
   name: trial
 spec:
-  environment: trial
+  environment: rhpam-trial
 `
 	var input map[string]interface{}
 	assert.NoError(t, yaml.Unmarshal([]byte(inputYaml), &input))
@@ -61,7 +61,7 @@ kind: KieApp
 metadata:
   name: trial
 spec:
-  environment: trial
+  environment: rhdm-trial
   auth:
     sso:
       url: https://rh-sso.example.com
@@ -84,7 +84,7 @@ kind: KieApp
 metadata:
   name: trial
 spec:
-  environment: trial
+  environment: rhpam-trial
   objects:
     console:
       env:

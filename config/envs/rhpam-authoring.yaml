@@ -29,7 +29,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-rhpamcentr"
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
 ## KIE smartrouter BEGIN
 smartrouter:
   omit: true
@@ -49,6 +49,32 @@ servers:
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                  env:
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
+                  ## H2 driver settings BEGIN
+                    - name: RHPAM_DRIVER
+                      value: "h2"
+                    - name: RHPAM_USERNAME
+                      value: "sa"
+                    - name: RHPAM_PASSWORD
+                      value: "{{.AdminPassword}}"
+                    - name: RHPAM_SERVICE_HOST
+                      value: "dummy_ignored"
+                    - name: RHPAM_SERVICE_PORT
+                      value: "12345"
+                    - name: KIE_SERVER_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.H2Dialect"
+                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
                   volumeMounts:
                     - name: "{{.ApplicationName}}-h2-pvol"
                       mountPath: "/opt/eap/standalone/data"

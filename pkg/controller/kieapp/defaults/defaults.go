@@ -68,36 +68,15 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	if cr.Spec.KieDeployments == 0 {
 		cr.Spec.KieDeployments = 1
 	}
-	if cr.Spec.RhpamRegistry == (v1.KieAppRegistry{}) {
-		cr.Spec.RhpamRegistry.Registry = logs.GetEnv("REGISTRY", constants.RhpamRegistry) // default to red hat registry
-		cr.Spec.RhpamRegistry.Insecure = logs.GetBoolEnv("INSECURE")
+	if cr.Spec.ImageRegistry == (v1.KieAppRegistry{}) {
+		cr.Spec.ImageRegistry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry) // default to red hat registry
+		cr.Spec.ImageRegistry.Insecure = logs.GetBoolEnv("INSECURE")
 	}
 
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
-	isTrialEnv := (cr.Spec.Environment == "trial")
-	if len(config.Version) == 0 {
-		pattern := regexp.MustCompile("[0-9]+")
-		config.Version = strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), "")
-	}
-	if len(config.ImageTag) == 0 {
-		config.ImageTag = constants.ImageStreamTag
-	}
-	if len(config.ConsoleName) == 0 {
-		if constants.MonitoringEnvs[cr.Spec.Environment] {
-			config.ConsoleName = constants.RhpamcentrMonitoringServicePrefix
-		} else {
-			config.ConsoleName = constants.RhpamcentrServicePrefix
-		}
-	}
-	if len(config.ConsoleImage) == 0 {
-		if constants.MonitoringEnvs[cr.Spec.Environment] {
-			config.ConsoleImage = constants.RhpamcentrMonitoringImageName
-		} else {
-			config.ConsoleImage = constants.RhpamcentrImageName
-		}
-	}
-
+	setAppConstants(&cr.Spec)
+	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(config, isTrialEnv)
 
 	crTemplate := v1.Template{
@@ -267,4 +246,35 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 		return name, namespace, true
 	}
 	return name, namespace, false
+}
+
+// setAppConstants sets the application-related constants to use in the template processing
+func setAppConstants(spec *v1.KieAppSpec) {
+	env := spec.Environment
+	appConstants, hasEnv := constants.EnvironmentConstants[env]
+	if !hasEnv {
+		return
+	}
+	if len(spec.CommonConfig.Version) == 0 {
+		pattern := regexp.MustCompile("[0-9]+")
+		spec.CommonConfig.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
+	}
+	if len(spec.CommonConfig.ImageTag) == 0 {
+		spec.CommonConfig.ImageTag = constants.ImageStreamTag
+	}
+	if len(spec.CommonConfig.Product) == 0 {
+		spec.CommonConfig.Product = appConstants.Product
+	}
+	if len(spec.CommonConfig.ConsoleName) == 0 {
+		spec.CommonConfig.ConsoleName = appConstants.Prefix
+	}
+	if len(spec.CommonConfig.ConsoleImage) == 0 {
+		spec.CommonConfig.ConsoleImage = appConstants.ImageName
+	}
+	if len(spec.CommonConfig.MavenRepo) == 0 {
+		spec.CommonConfig.MavenRepo = appConstants.MavenRepo
+	}
+	if len(spec.CommonConfig.ConsoleProbePage) == 0 {
+		spec.CommonConfig.ConsoleProbePage = appConstants.ConsoleProbePage
+	}
 }

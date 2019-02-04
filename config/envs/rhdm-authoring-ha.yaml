@@ -1,0 +1,275 @@
+console:
+  persistentVolumeClaims:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        labels:
+          app: "{{.ApplicationName}}"
+      spec:
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 1Gi
+
+  deploymentConfigs:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+      spec:
+        ## Replicas for Decision Central
+        replicas: 2
+        template:
+          metadata:
+            name: "{{.ApplicationName}}-{{.ConsoleName}}"
+          spec:
+            containers:
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+                volumeMounts:
+                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                    mountPath: "/opt/eap/standalone/data/kie"
+                ports:
+                  - name: git-ssh
+                    containerPort: 8001
+                    protocol: TCP
+                env:
+                  - name: APPFORMER_ELASTIC_HOST
+                    value: "{{.ApplicationName}}-{{.Product}}index"
+                  - name: APPFORMER_JMS_BROKER_ADDRESS
+                    value: "{{.ApplicationName}}-amq-tcp"
+                  - name: APPFORMER_JMS_BROKER_USER
+                    value: "jmsBrokserUser"
+                  - name: APPFORMER_JMS_BROKER_PASSWORD
+                    value: "{{.AdminPassword}}"
+            volumes:
+              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                persistentVolumeClaim:
+                  claimName: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+
+  services:
+    - spec:
+        ports:
+          - name: git-ssh
+            port: 8001
+            targetPort: 8001
+      metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+
+## KIE smartrouter BEGIN
+smartrouter:
+  omit: true
+## KIE smartrouter END
+# ES/AMQ BEGIN
+others:
+  - persistentVolumeClaims:
+      - metadata:
+          name: "{{.ApplicationName}}-{{.Product}}index-claim"
+          labels:
+            app: "{{.ApplicationName}}"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "1Gi"
+
+    deploymentConfigs:
+      - metadata:
+          name: "{{.ApplicationName}}-{{.Product}}index"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-{{.Product}}index"
+        spec:
+          strategy:
+            type: Recreate
+          triggers:
+            - type: ImageChange
+              imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "{{.ApplicationName}}-{{.Product}}index"
+                from:
+                  kind: ImageStreamTag
+                  namespace: "openshift"
+                  name: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift:{{.ImageTag}}"
+            - type: ConfigChange
+          replicas: 1
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
+          template:
+            metadata:
+              name: "{{.ApplicationName}}-{{.Product}}index"
+              labels:
+                deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
+                app: "{{.ApplicationName}}"
+            spec:
+              terminationGracePeriodSeconds: 60
+              containers:
+                - name: "{{.ApplicationName}}-{{.Product}}index"
+                  image: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift"
+                  imagePullPolicy: Always
+                  volumeMounts:
+                    - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
+                      mountPath: "/opt/elasticsearch/data"
+                  livenessProbe:
+                    tcpSocket:
+                      port: 9300
+                    initialDelaySeconds: 15
+                    timeoutSeconds: 1
+                  readinessProbe:
+                    httpGet:
+                      scheme: HTTP
+                      path: /_cluster/health
+                      port: 9200
+                    initialDelaySeconds: 15
+                    timeoutSeconds: 2
+                  ports:
+                    - name: es
+                      containerPort: 9300
+                      protocol: TCP
+                    - name: http
+                      containerPort: 9200
+                      protocol: TCP
+              volumes:
+                - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
+                  persistentVolumeClaim:
+                    claimName: "{{.ApplicationName}}-{{.Product}}index-claim"
+
+      - metadata:
+          labels:
+            app: "{{.ApplicationName}}"
+          name: "{{.ApplicationName}}-amq"
+        spec:
+          replicas: 1
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-amq"
+          strategy:
+            rollingParams:
+              maxSurge: 0
+            type: Rolling
+          template:
+            metadata:
+              labels:
+                app: "{{.ApplicationName}}"
+                deploymentConfig: "{{.ApplicationName}}-amq"
+              name: "{{.ApplicationName}}-amq"
+            spec:
+              containers:
+                - env:
+                    - name: AMQ_USER
+                      value: "jmsBrokserUser"
+                    - name: AMQ_PASSWORD
+                      value: "{{.AdminPassword}}"
+                    - name: AMQ_ROLE
+                      value: admin
+                    - name: AMQ_NAME
+                      value: broker
+                    - name: AMQ_TRANSPORTS
+                      value: "openwire"
+                    - name: AMQ_GLOBAL_MAX_SIZE
+                      value: "100 gb"
+                  image: "amq-broker-72-openshift"
+                  imagePullPolicy: Always
+                  readinessProbe:
+                    exec:
+                      command:
+                        - "/bin/bash"
+                        - "-c"
+                        - "/opt/amq/bin/readinessProbe.sh"
+                  lifecycle:
+                    preStop:
+                      exec:
+                        command:
+                          - /opt/amq/bin/shutdownHook.sh
+                  name: "{{.ApplicationName}}-amq"
+                  ports:
+                    - containerPort: 8161
+                      name: jolokia
+                      protocol: TCP
+                    - containerPort: 5672
+                      name: amqp
+                      protocol: TCP
+                    - containerPort: 1883
+                      name: mqtt
+                      protocol: TCP
+                    - containerPort: 61613
+                      name: stomp
+                      protocol: TCP
+                    - containerPort: 61616
+                      name: artemis
+                      protocol: TCP
+              terminationGracePeriodSeconds: 60
+          triggers:
+            - imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "{{.ApplicationName}}-amq"
+                from:
+                  kind: ImageStreamTag
+                  namespace: "openshift"
+                  name: "amq-broker-72-openshift:1.0"
+              type: ImageChange
+            - type: ConfigChange
+
+    services:
+      - spec:
+          ports:
+            - port: 61616
+              targetPort: 61616
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-amq"
+        metadata:
+          name: "{{.ApplicationName}}-amq-tcp"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-amq"
+          annotations:
+            description: The broker's OpenWire port.
+
+      - spec:
+          ports:
+            - name: rest
+              port: 9200
+              targetPort: 9200
+            - name: transport
+              port: 9300
+              targetPort: 9300
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
+        metadata:
+          name: "{{.ApplicationName}}-{{.Product}}index"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-{{.Product}}index"
+          annotations:
+            description: All the Decision Central Indexing Elasticsearch ports.
+
+    routes:
+      - id: "{{.ApplicationName}}-{{.Product}}index-http"
+        metadata:
+          name: "{{.ApplicationName}}-{{.Product}}index"
+          labels:
+            app: "{{.ApplicationName}}"
+          annotations:
+            description: Route for Decision Central Indexing's Elasticsearch http service.
+        spec:
+          host: ""
+          to:
+            name: "{{.ApplicationName}}-{{.Product}}index"
+          port:
+            targetPort: rest
+
+## ES/AMQ END
+
+## KIE Servers BEGIN
+servers:
+  ## RANGE BEGINS
+  #{{ range $index, $Map := .ServerCount }}
+  ## KIE server deployment config BEGIN
+  - deploymentConfigs:
+      - metadata:
+          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          replicas: 2
+  ## KIE server deployment config END
+  #{{end}}
+  ## RANGE ends
+## KIE Servers END

@@ -1,6 +1,6 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: production
+  name: rhdm-trial
 spec:
-  environment: production
+  environment: rhdm-trial

@@ -1,0 +1,6 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: rhpam-authoring
+spec:
+  environment: rhpam-authoring

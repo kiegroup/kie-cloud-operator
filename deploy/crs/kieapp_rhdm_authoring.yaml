@@ -1,0 +1,6 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: rhdm-authoring
+spec:
+  environment: rhdm-authoring

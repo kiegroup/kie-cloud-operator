@@ -1,6 +1,6 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: trial
+  name: rhdm-authoring-ha
 spec:
-  environment: trial
+  environment: rhdm-authoring-ha

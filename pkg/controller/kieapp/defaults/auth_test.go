@@ -116,7 +116,7 @@ func TestAuthMultipleType(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				SSO:  &v1.SSOAuthConfig{},
 				LDAP: &v1.LDAPAuthConfig{},
@@ -133,7 +133,7 @@ func TestAuthOnlyRoleMapper(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				RoleMapper: &v1.RoleMapperAuthConfig{},
 			},
@@ -149,7 +149,7 @@ func TestAuthNotConfigured(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -162,7 +162,7 @@ func TestAuthSSOEmptyConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				SSO: &v1.SSOAuthConfig{},
 			},
@@ -178,7 +178,7 @@ func TestAuthSSOConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 2,
 			Auth: v1.KieAppAuthObject{
 				SSO: &v1.SSOAuthConfig{
@@ -228,7 +228,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 2,
 			Auth: v1.KieAppAuthObject{
 				SSO: &v1.SSOAuthConfig{
@@ -309,7 +309,7 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 2,
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{},
@@ -326,7 +326,7 @@ func TestAuthLDAPConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 2,
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{
@@ -358,7 +358,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 2,
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{
