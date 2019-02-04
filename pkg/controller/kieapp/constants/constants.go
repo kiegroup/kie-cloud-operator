@@ -1,22 +1,20 @@
 package constants
 
+import "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+
 const (
-	// RhpamcentrServicePrefix prefix to use for the console
-	RhpamcentrServicePrefix = "rhpamcentr"
-	// RhpamcentrMonitoringServicePrefix prefix to use for the monitoring console
-	RhpamcentrMonitoringServicePrefix = "rhpamcentrmon"
-	// RhpamcentrImageName image name of the console
-	RhpamcentrImageName = "businesscentral"
-	// RhpamcentrMonitoringImageName image name of the monitoring console
-	RhpamcentrMonitoringImageName = "businesscentral-monitoring"
+	// RhpamPrefix RHPAM prefix
+	RhpamPrefix = "rhpam"
+	// RhdmPrefix RHDM prefix
+	RhdmPrefix = "rhdm"
 	// KieServerServicePrefix prefix to use for the servers
 	KieServerServicePrefix = "kieserver"
-	// RhpamRegistry default registry
-	RhpamRegistry = "registry.redhat.io"
+	// ImageRegistry default registry
+	ImageRegistry = "registry.redhat.io"
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
-	// RhpamVersion default version
-	RhpamVersion = "7.2"
+	// ProductVersion default version
+	ProductVersion = "7.2"
 	// ImageStreamTag default tag name for the ImageStreams
 	ImageStreamTag = "1.0"
 	// ConfigMapPrefix prefix to use for the configmaps
@@ -31,11 +29,24 @@ const (
 	// OpNameEnv is an environment variable of the operator name
 	// set when the code is running via deployment
 	OpNameEnv = "OPERATOR_NAME"
+	// TrialEnvSuffix is the suffix for trial environments
+	TrialEnvSuffix = "trial"
 )
 
-// MonitoringEnvs Type of environments that will deploy the Monitoring console.
-// The console resources will be suffixed as -monitoring as well
-var MonitoringEnvs = map[string]bool{
-	"production":           true,
-	"production-immutable": true,
+var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhpamMonitorAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhdmAppConstants = &v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-drools-wb.jsp"}
+
+// EnvironmentConstants contains
+var EnvironmentConstants = map[v1.EnvironmentType]*v1.AppConstants{
+	v1.RhpamProduction:          rhpamMonitorAppConstants,
+	v1.RhpamProductionImmutable: rhpamMonitorAppConstants,
+	v1.RhpamTrial:               rhpamAppConstants,
+	v1.RhpamAuthoring:           rhpamAppConstants,
+	v1.RhpamAuthoringHA:         rhpamAppConstants,
+	v1.RhdmTrial:                rhdmAppConstants,
+	v1.RhdmAuthoring:            rhdmAppConstants,
+	v1.RhdmAuthoringHA:          rhdmAppConstants,
+	v1.RhdmOptawebTrial:         rhdmAppConstants,
+	v1.RhdmProductionImmutable:  rhdmAppConstants,
 }

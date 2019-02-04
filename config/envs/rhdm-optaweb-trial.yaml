@@ -1,0 +1,133 @@
+console:
+  omit: true
+smartrouter:
+  omit: true
+## KIE Servers BEGIN
+servers:
+  #{{ range $index, $Map := .ServerCount }}
+  - omit: true
+  #{{end}}
+others:
+## Optaweb BEGIN
+  - deploymentConfigs:
+      - metadata:
+          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+        spec:
+          strategy:
+            type: Recreate
+          triggers:
+            - type: ImageChange
+              imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "{{.ApplicationName}}-optaweb-employee-rostering"
+                from:
+                  kind: ImageStreamTag
+                  namespace: "openshift"
+                  name: "{{.Product}}{{.Version}}-optaweb-employee-rostering-openshift:{{.ImageTag}}"
+            - type: ConfigChange
+          replicas: 1
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
+          template:
+            metadata:
+              name: "{{.ApplicationName}}-optaweb-employee-rostering"
+              labels:
+                deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
+                app: "{{.ApplicationName}}"
+                service: "{{.ApplicationName}}-optaweb-employee-rostering"
+            spec:
+              serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
+              terminationGracePeriodSeconds: 60
+              containers:
+                - name: "{{.ApplicationName}}-optaweb-employee-rostering"
+                  image: "{{.Product}}{{.Version}}-optaweb-employee-rostering-openshift"
+                  imagePullPolicy: Always
+                  resources:
+                    limits:
+                      memory: 1Gi
+                  livenessProbe:
+                    exec:
+                      command:
+                        - "/bin/bash"
+                        - "-c"
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/swagger/index.html
+                    initialDelaySeconds: 180
+                    timeoutSeconds: 2
+                    periodSeconds: 15
+                  readinessProbe:
+                    exec:
+                      command:
+                        - "/bin/bash"
+                        - "-c"
+                        - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/swagger/index.html
+                    initialDelaySeconds: 60
+                    timeoutSeconds: 2
+                    periodSeconds: 30
+                    failureThreshold: 6
+                  ports:
+                    - name: jolokia
+                      containerPort: 8778
+                      protocol: TCP
+                    - name: http
+                      containerPort: 8080
+                      protocol: TCP
+                  env:
+                    - name: KIE_ADMIN_USER
+                      value: adminUser
+                    - name: KIE_ADMIN_PWD
+                      value: "{{.AdminPassword}}"
+                    - name: OPTAWEB_EMPLOYEE_ROSTERING_PERSISTENCE_DATASOURCE
+                      value: "java:jboss/datasources/ExampleDS"
+                    - name: OPTAWEB_EMPLOYEE_ROSTERING_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.H2Dialect"
+                    - name: OPTAWEB_EMPLOYEE_ROSTERING_PERSISTENCE_HBM2DDL_AUTO
+                      value: "create"
+    services:
+      - spec:
+          ports:
+            - name: http
+              port: 8080
+              targetPort: 8080
+          selector:
+            deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
+        metadata:
+          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+          annotations:
+            description: All the Optaweb's ports. (KIE server)
+    routes:
+      - id: "{{.ApplicationName}}-optaweb-employee-rostering-https"
+        metadata:
+          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+          annotations:
+            description: Route for Optaweb's https service.
+            haproxy.router.openshift.io/timeout: 60s
+        spec:
+          to:
+            name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          port:
+            targetPort: http
+      - id: "{{.ApplicationName}}-optaweb-employee-rostering-http"
+        metadata:
+          name: "{{.ApplicationName}}-optaweb-employee-rostering-http"
+          labels:
+            app: "{{.ApplicationName}}"
+            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+          annotations:
+            description: Route for Optaweb's http service.
+            haproxy.router.openshift.io/timeout: 60s
+        spec:
+          to:
+            name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          port:
+            targetPort: http
+## Optaweb END

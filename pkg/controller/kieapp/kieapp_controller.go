@@ -193,16 +193,16 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	version := []byte(cr.Spec.CommonConfig.Version)
 	imageName := tagName
-	regContext := fmt.Sprintf("rhpam-%s", string(version[0]))
+	regContext := fmt.Sprintf("%s-%s", cr.Spec.CommonConfig.Product, string(version[0]))
 
-	registryAddress := cr.Spec.RhpamRegistry.Registry
-	if strings.Contains(result[0], "businesscentral-indexing-openshift") {
-		regContext = "rhpam-7-tech-preview"
+	registryAddress := cr.Spec.ImageRegistry.Registry
+	if strings.Contains(result[0], fmt.Sprintf("%s-indexing-openshift", cr.Spec.CommonConfig.ConsoleImage)) {
+		regContext = fmt.Sprintf("%s-7-tech-preview", cr.Spec.CommonConfig.Product)
 	} else if strings.Contains(result[0], "amq-broker-7") {
-		registryAddress = constants.RhpamRegistry
+		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"
 	} else if result[0] == "postgresql" || result[0] == "mysql" {
-		registryAddress = constants.RhpamRegistry
+		registryAddress = constants.ImageRegistry
 		regContext = "rhscl"
 		pattern := regexp.MustCompile("[0-9]+")
 		imageName = fmt.Sprintf("%s-%s-rhel7:%s", result[0], strings.Join(pattern.FindAllString(result[1], -1), ""), "latest")
@@ -223,7 +223,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
-	if cr.Spec.RhpamRegistry.Insecure {
+	if cr.Spec.ImageRegistry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
 		}

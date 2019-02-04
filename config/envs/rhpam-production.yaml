@@ -1,3 +1,19 @@
+console:
+  deploymentConfigs:
+    - metadata:
+        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+      spec:
+        replicas: 3
+        containers:
+          - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+            env:
+              - name: MAVEN_REPO_URL
+                value: ""
+              - name: MAVEN_REPO_USERNAME
+                value: ""
+              - name: MAVEN_REPO_PASSWORD
+                value: ""
+
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
@@ -15,53 +31,8 @@ servers:
           resources:
             requests:
               storage: "1Gi"
+
     ## PostgreSQL persistent volume claim END
-    ## KIE server build config BEGIN
-    imageStreams:
-      - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-    buildConfigs:
-      - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-        spec:
-          source:
-            type: Git
-            git:
-              uri: "{{.GitSource.URI}}"
-              ref: "{{.GitSource.Reference}}"
-            contextDir: "{{.GitSource.ContextDir}}"
-          strategy:
-            type: Source
-            sourceStrategy:
-              env:
-                - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-                  value: "{{.KieServerContainerDeployment}}"
-              forcePull: true
-              from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "rhpam{{.Version}}-kieserver-openshift:{{.ImageTag}}"
-          output:
-            to:
-              kind: ImageStreamTag
-              name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
-          triggers:
-            - type: GitHub
-              github:
-                secret: "{{.GitHubWebhookSecret}}"
-            - type: Generic
-              generic:
-                secret: "{{.GenericWebhookSecret}}"
-            - type: ImageChange
-              imageChange: {}
-            - type: ConfigChange
-    ## KIE server build config END
     ## KIE server deployment config BEGIN
     deploymentConfigs:
       - metadata:
@@ -70,21 +41,11 @@ servers:
             app: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
-          triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "{{.ApplicationName}}-kieserver-{{$index}}"
-                from:
-                  kind: ImageStreamTag
-                  namespace: ""
-                  name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
+          replicas: 3
           template:
             spec:
               containers:
                 - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "{{.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: EXTERNAL_MAVEN_REPO_ID
                       value: ""
@@ -95,13 +56,21 @@ servers:
                     - name: EXTERNAL_MAVEN_REPO_PASSWORD
                       value: ""
                     - name: KIE_SERVER_ROUTER_SERVICE
-                      value: ""
-                    - name: KIE_SERVER_ROUTER_HOST
-                      value: ""
+                      value: "{{.ApplicationName}}-smartrouter"
                     - name: KIE_SERVER_ROUTER_PORT
-                      value: ""
+                      value: "9000"
                     - name: KIE_SERVER_ROUTER_PROTOCOL
                       value: "http"
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
                     ## PostgreSQL driver settings BEGIN
                     - name: RHPAM_DRIVER
                       value: "postgresql"
@@ -117,8 +86,6 @@ servers:
                       value: "{{.ApplicationName}}-postgresql-{{$index}}"
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "30000"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: ""
                     ## PostgreSQL driver settings END
       ## KIE server deployment config END
       ## PostgreSQL deployment config BEGIN
@@ -205,6 +172,6 @@ servers:
           selector:
             deploymentConfig: "{{.ApplicationName}}-postgresql-{{$index}}"
     ## PostgreSQL service END
-#{{end}}
-## RANGE ends
-## KIE Servers END
+  #{{end}}
+  ## RANGE ends
+  ## KIE Servers END

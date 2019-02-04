@@ -23,6 +23,7 @@ type MockPlatformService struct {
 }
 
 func MockService() *MockPlatformService {
+	mockImageStreamTag := &MockImageStreamTag{}
 	return &MockPlatformService{
 		CreateFunc: func(ctx context.Context, obj runtime.Object) error {
 			log.Debugf("Mock service will do no-op in lieu of creating %v", obj)
@@ -47,7 +48,7 @@ func MockService() *MockPlatformService {
 			return nil
 		},
 		ImageStreamTagsFunc: func(namespace string) imagev1.ImageStreamTagInterface {
-			return &MockImageStreamTag{}
+			return mockImageStreamTag
 		},
 		GetSchemeFunc: func() *runtime.Scheme {
 			return nil

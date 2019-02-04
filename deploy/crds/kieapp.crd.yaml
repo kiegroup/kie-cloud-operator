@@ -25,11 +25,16 @@ spec:
               type: string
               description: The name of the environment used as a baseline
               enum:
-                - authoring-ha
-                - authoring
-                - production-immutable
-                - production
-                - trial
+                - rhdm-authoring-ha
+                - rhdm-authoring
+                - rhdm-optaweb-trial
+                - rhdm-production-immutable
+                - rhdm-trial
+                - rhpam-authoring-ha
+                - rhpam-authoring
+                - rhpam-production-immutable
+                - rhpam-production
+                - rhpam-trial
             kieDeployments:
               type: integer
               description: The number of distinct KIE server deployments
