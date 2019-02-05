@@ -14,6 +14,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
+	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -67,6 +68,11 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
+	}
+	if instance.GetAnnotations() == nil {
+		instance.SetAnnotations(map[string]string{
+			v1.SchemeGroupVersion.Group: version.Version,
+		})
 	}
 
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
@@ -219,6 +225,9 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 			From: &corev1.ObjectReference{
 				Kind: "DockerImage",
 				Name: registryURL,
+			},
+			ReferencePolicy: oimagev1.TagReferencePolicy{
+				Type: oimagev1.LocalTagReferencePolicy,
 			},
 		},
 	}
@@ -621,7 +630,7 @@ func (reconciler *Reconciler) createConfigMap(obj v1.OpenShiftObject) (*corev1.C
 	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, emptyObj)
 	if errors.IsNotFound(err) {
 		// attempt creation of configmap if doesn't exist
-		_, err = reconciler.createObj(obj, err)
+		reconciler.createObj(obj, err)
 		return &corev1.ConfigMap{}, false
 	} else if err != nil {
 		if err != nil {
