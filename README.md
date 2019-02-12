@@ -155,3 +155,10 @@ spec:
       rolesProperties: rolesMapper.properties
       replaceRole: true
 ```
+
+## Build rhel-based image for release
+
+Requires `cekit` and `rhpkg` -
+```bash
+make rhel
+```
