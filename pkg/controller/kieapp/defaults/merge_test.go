@@ -16,7 +16,7 @@ import (
 )
 
 func TestMergeServices(t *testing.T) {
-	baseline, err := getEnvironment("trial", "test")
+	baseline, err := getEnvironment("rhpam-trial", "test")
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -63,7 +63,7 @@ func TestMergeServices(t *testing.T) {
 }
 
 func TestMergeRoutes(t *testing.T) {
-	baseline, err := getEnvironment("trial", "test")
+	baseline, err := getEnvironment("rhdm-trial", "test")
 	assert.Nil(t, err)
 	overwrite := baseline.DeepCopy()
 
@@ -107,11 +107,11 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the baseline label to be set")
 	assert.Equal(t, "true", finalRoute4.Labels["overwrite"], "Expected the overwrite label to be set")
 	assert.Equal(t, "overwrite", finalRoute4.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "test-rhpamcentr-2", finalRoute3.Name, "Second route name should end with -2")
-	assert.Equal(t, "test-rhpamcentr-3", finalRoute4.Name, "Second route name should end with -3")
+	assert.Equal(t, "test-rhdmcentr-2", finalRoute3.Name, "Second route name should end with -2")
+	assert.Equal(t, "test-rhdmcentr-3", finalRoute4.Name, "Second route name should end with -3")
 }
 
-func getEnvironment(environment string, name string) (v1.Environment, error) {
+func getEnvironment(environment v1.EnvironmentType, name string) (v1.Environment, error) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -131,7 +131,7 @@ func getEnvironment(environment string, name string) (v1.Environment, error) {
 
 func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var prodEnv v1.Environment
-	err := getParsedTemplate("envs/production.yaml", "prod", &prodEnv)
+	err := getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
@@ -153,9 +153,46 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
 
+func TestMergeConfigsWithoutOverrides(t *testing.T) {
+	var authEnv v1.Environment
+	err := getParsedTemplate("envs/rhdm-authoring.yaml", "authoring", &authEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "authoring", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	assert.Equal(t, 1, len(common.Servers))
+	assert.Equal(t, 0, len(authEnv.Servers))
+
+	merged, err := merge(common, authEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	assert.Equal(t, merged.Servers, common.Servers)
+}
+
+func TestMergeConfigsWithoutBaseline(t *testing.T) {
+	var authEnv v1.Environment
+	err := getParsedTemplate("envs/rhdm-authoring.yaml", "authoring", &authEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "authoring", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	assert.Equal(t, 1, len(common.Servers))
+	assert.Equal(t, 0, len(authEnv.Servers))
+
+	//Use authEnv as baseline and common as overrides
+	merged, err := merge(authEnv, common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	assert.Equal(t, merged.Servers, common.Servers)
+}
+
 func TestMergeSmartRouterOmitted(t *testing.T) {
 	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/trial.yaml", "test", &trialEnv)
+	err := getParsedTemplate("envs/rhpam-trial.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
@@ -170,7 +207,7 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 
 func TestMergeImageStreams(t *testing.T) {
 	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/production-immutable.yaml", "test", &trialEnv)
+	err := getParsedTemplate("envs/rhpam-production-immutable.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
@@ -187,7 +224,7 @@ func TestMergeImageStreams(t *testing.T) {
 
 func TestMergeBuildConfigs(t *testing.T) {
 	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/production-immutable.yaml", "test", &trialEnv)
+	err := getParsedTemplate("envs/rhdm-production-immutable.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment

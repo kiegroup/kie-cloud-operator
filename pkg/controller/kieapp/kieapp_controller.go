@@ -8,17 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
-
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
+	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -43,9 +44,15 @@ type Reconciler struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// Create critical ConfigMaps if don't exist
-	if result, err := reconciler.createConfigMaps(request.Namespace); err != nil {
-		return result, err
+	if opName, depNameSpace, useEmbedded := defaults.UseEmbeddedFiles(reconciler.Service); !useEmbedded {
+		myDep := &appsv1.Deployment{}
+		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
+		if err == nil {
+			// Reconcile ConfigMaps
+			reconciler.CreateConfigMaps(myDep)
+		} else {
+			log.Error("Can't properly create ConfigMaps. ", err)
+		}
 	}
 
 	// Fetch the KieApp instance
@@ -61,6 +68,11 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
+	}
+	if instance.GetAnnotations() == nil {
+		instance.SetAnnotations(map[string]string{
+			v1.SchemeGroupVersion.Group: version.Version,
+		})
 	}
 
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
@@ -79,6 +91,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 	dcNames := getDcNames(dcList.Items, instance)
+	instance.Status.Deployments = dcNames
 
 	// Update DeploymentConfigs if needed
 	var dcUpdates []oappsv1.DeploymentConfig
@@ -116,7 +129,9 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 				return rResult, err
 			}
 		}
-		return rResult, nil
+		if status.SetProvisioning(instance) {
+			return reconciler.UpdateObj(instance)
+		}
 	}
 
 	// Fetch the cached KieApp instance
@@ -133,17 +148,21 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
-	instance.Status.Deployments = dcNames
 
 	// Update CR if needed
 	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) || !reflect.DeepEqual(instance.Spec, cachedInstance.Spec) {
-		status.SetProvisioning(instance)
-		return reconciler.UpdateObj(instance)
+		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
 	}
-	status.SetDeployed(instance)
-	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) {
-		return reconciler.UpdateObj(instance)
+	if status.SetDeployed(instance) {
+		if instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
 	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -153,35 +172,6 @@ func (reconciler *Reconciler) setFailedStatus(instance *v1.KieApp, reason v1.Rea
 	if updateError != nil {
 		log.Warn("Unable to update object after receiving failed status. ", err)
 	}
-}
-
-func (reconciler *Reconciler) createConfigMaps(namespace string) (reconcile.Result, error) {
-	configMaps := defaults.ConfigMapsFromFile(namespace)
-	for _, configMap := range configMaps {
-		var testDir bool
-		result := strings.Split(configMap.Name, "-")
-		if len(result) > 1 {
-			if result[1] == "testdata" {
-				testDir = true
-			}
-		}
-		// don't create configmaps for test directories
-		if !testDir {
-			configMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
-			emptyObj := &corev1.ConfigMap{}
-			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, emptyObj)
-			if err != nil {
-				_, err := reconciler.createObj(
-					&configMap,
-					err,
-				)
-				if err != nil && !errors.IsAlreadyExists(err) {
-					return reconcile.Result{RequeueAfter: time.Duration(1) * time.Second}, err
-				}
-			}
-		}
-	}
-	return reconcile.Result{}, nil
 }
 
 // Check ImageStream
@@ -209,16 +199,16 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	version := []byte(cr.Spec.CommonConfig.Version)
 	imageName := tagName
-	regContext := fmt.Sprintf("rhpam-%s", string(version[0]))
+	regContext := fmt.Sprintf("%s-%s", cr.Spec.CommonConfig.Product, string(version[0]))
 
-	registryAddress := cr.Spec.RhpamRegistry.Registry
-	if strings.Contains(result[0], "businesscentral-indexing-openshift") {
-		regContext = "rhpam-7-tech-preview"
+	registryAddress := cr.Spec.ImageRegistry.Registry
+	if strings.Contains(result[0], fmt.Sprintf("%s-indexing-openshift", cr.Spec.CommonConfig.ConsoleImage)) {
+		regContext = fmt.Sprintf("%s-7-tech-preview", cr.Spec.CommonConfig.Product)
 	} else if strings.Contains(result[0], "amq-broker-7") {
-		registryAddress = constants.RhpamRegistry
+		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"
 	} else if result[0] == "postgresql" || result[0] == "mysql" {
-		registryAddress = constants.RhpamRegistry
+		registryAddress = constants.ImageRegistry
 		regContext = "rhscl"
 		pattern := regexp.MustCompile("[0-9]+")
 		imageName = fmt.Sprintf("%s-%s-rhel7:%s", result[0], strings.Join(pattern.FindAllString(result[1], -1), ""), "latest")
@@ -236,10 +226,13 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 				Kind: "DockerImage",
 				Name: registryURL,
 			},
+			ReferencePolicy: oimagev1.TagReferencePolicy{
+				Type: oimagev1.LocalTagReferencePolicy,
+			},
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
-	if cr.Spec.RhpamRegistry.Insecure {
+	if cr.Spec.ImageRegistry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
 		}
@@ -530,7 +523,7 @@ func (reconciler *Reconciler) UpdateObj(obj v1.OpenShiftObject) (reconcile.Resul
 		log.Warn("Failed to update object. ", err)
 		return reconcile.Result{}, err
 	}
-	// Spec updated - return and requeue
+	// Object updated - return and requeue
 	return reconcile.Result{Requeue: true}, nil
 }
 
@@ -588,4 +581,62 @@ func (reconciler *Reconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) s
 	}
 
 	return found.Spec.Host
+}
+
+// CreateConfigMaps generates & creates necessary ConfigMaps from embedded files
+func (reconciler *Reconciler) CreateConfigMaps(myDep *appsv1.Deployment) {
+	configMaps := defaults.ConfigMapsFromFile(myDep, myDep.Namespace, reconciler.Service.GetScheme())
+	for _, configMap := range configMaps {
+		var testDir bool
+		result := strings.Split(configMap.Name, "-")
+		if len(result) > 1 {
+			if result[1] == "testdata" {
+				testDir = true
+			}
+		}
+		// don't create configmaps for test directories
+		if !testDir {
+			// if configmap already exists, compare to new
+			if existingCM, exists := reconciler.createConfigMap(&configMap); exists {
+				// if new configmap and existing have different data
+				if !reflect.DeepEqual(configMap.Data, existingCM.Data) || !reflect.DeepEqual(configMap.BinaryData, existingCM.BinaryData) {
+					log.Infof("Differences detected in %s ConfigMap.", configMap.Name)
+					existingCM.Name = strings.Join([]string{configMap.Name, "bak"}, "-")
+					for annotation, ver := range configMap.Annotations {
+						if annotation == v1.SchemeGroupVersion.Group {
+							existingCM.Name = strings.Join([]string{configMap.Name, ver, "bak"}, "-")
+						}
+					}
+					existingCM.ResourceVersion = ""
+					existingCM.OwnerReferences = nil
+					// create a backup configmap of existing
+					// if backup configmap already exists, overwrite w/ new backup
+					if existingBackupCM, exists := reconciler.createConfigMap(existingCM); exists {
+						// if backup configmap and existing backup have different data
+						if !reflect.DeepEqual(existingCM.Data, existingBackupCM.Data) || !reflect.DeepEqual(existingCM.BinaryData, existingBackupCM.BinaryData) {
+							existingBackupCM.Data = existingCM.Data
+							reconciler.UpdateObj(existingBackupCM)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// createConfigMap creates an individual ConfigMap, will return the existing ConfigMap object should one exist
+func (reconciler *Reconciler) createConfigMap(obj v1.OpenShiftObject) (*corev1.ConfigMap, bool) {
+	emptyObj := &corev1.ConfigMap{}
+	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, emptyObj)
+	if errors.IsNotFound(err) {
+		// attempt creation of configmap if doesn't exist
+		reconciler.createObj(obj, err)
+		return &corev1.ConfigMap{}, false
+	} else if err != nil {
+		if err != nil {
+			log.Error(err)
+		}
+		return &corev1.ConfigMap{}, false
+	}
+	return emptyObj, true
 }

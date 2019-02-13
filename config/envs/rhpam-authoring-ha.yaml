@@ -32,7 +32,7 @@ console:
                     protocol: TCP
                 env:
                   - name: APPFORMER_ELASTIC_HOST
-                    value: "{{.ApplicationName}}-rhpamindex"
+                    value: "{{.ApplicationName}}-{{.Product}}index"
                   - name: APPFORMER_JMS_BROKER_ADDRESS
                     value: "{{.ApplicationName}}-amq-tcp"
                   - name: APPFORMER_JMS_BROKER_USER
@@ -72,7 +72,7 @@ others:
               storage: "1Gi"
 
       - metadata:
-          name: "{{.ApplicationName}}-rhpamindex-claim"
+          name: "{{.ApplicationName}}-{{.Product}}index-claim"
           labels:
             app: "{{.ApplicationName}}"
         spec:
@@ -84,10 +84,10 @@ others:
 
     deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-rhpamindex"
+          name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-rhpamindex"
+            service: "{{.ApplicationName}}-{{.Product}}index"
         spec:
           strategy:
             type: Recreate
@@ -96,29 +96,29 @@ others:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-rhpamindex"
+                  - "{{.ApplicationName}}-{{.Product}}index"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "rhpam{{.Version}}-businesscentral-indexing-openshift:{{.ImageTag}}"
+                  name: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift:{{.ImageTag}}"
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-rhpamindex"
+            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
           template:
             metadata:
-              name: "{{.ApplicationName}}-rhpamindex"
+              name: "{{.ApplicationName}}-{{.Product}}index"
               labels:
-                deploymentConfig: "{{.ApplicationName}}-rhpamindex"
+                deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
                 app: "{{.ApplicationName}}"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-rhpamindex"
-                  image: rhpam{{.Version}}-businesscentral-indexing-openshift
+                - name: "{{.ApplicationName}}-{{.Product}}index"
+                  image: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift"
                   imagePullPolicy: Always
                   volumeMounts:
-                    - name: "{{.ApplicationName}}-rhpamindex-pvol"
+                    - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
                       mountPath: "/opt/elasticsearch/data"
                   livenessProbe:
                     tcpSocket:
@@ -139,25 +139,10 @@ others:
                     - name: http
                       containerPort: 9200
                       protocol: TCP
-                  env:
-                    - name: ES_CLUSTER_NAME
-                      value: ""
-                    - name: ES_NODE_NAME
-                      value: ""
-                    - name: ES_TRANSPORT_HOST
-                      value: ""
-                    - name: ES_TRANSPORT_TCP_PORT
-                      value: ""
-                    - name: ES_HTTP_PORT
-                      value: ""
-                    - name: ES_HTTP_HOST
-                      value: ""
-                    - name: ES_JAVA_OPTS
-                      value: ""
               volumes:
-                - name: "{{.ApplicationName}}-rhpamindex-pvol"
+                - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.ApplicationName}}-rhpamindex-claim"
+                    claimName: "{{.ApplicationName}}-{{.Product}}index-claim"
 
       - metadata:
           name: "{{.ApplicationName}}-mysql"
@@ -339,19 +324,19 @@ others:
               port: 9300
               targetPort: 9300
           selector:
-            deploymentConfig: "{{.ApplicationName}}-rhpamindex"
+            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
         metadata:
-          name: "{{.ApplicationName}}-rhpamindex"
+          name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-rhpamindex"
+            service: "{{.ApplicationName}}-{{.Product}}index"
           annotations:
             description: All the Business Central Indexing Elasticsearch ports.
 
     routes:
-      - id: "{{.ApplicationName}}-rhpamindex-http"
+      - id: "{{.ApplicationName}}-{{.Product}}index-http"
         metadata:
-          name: "{{.ApplicationName}}-rhpamindex"
+          name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
           annotations:
@@ -359,7 +344,7 @@ others:
         spec:
           host: ""
           to:
-            name: "{{.ApplicationName}}-rhpamindex"
+            name: "{{.ApplicationName}}-{{.Product}}index"
           port:
             targetPort: rest
 
@@ -384,17 +369,17 @@ servers:
                   env:
                     - name: AUTO_CONFIGURE_EJB_TIMER
                       value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
                     - name: DATASOURCES
                       value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
                     - name: RHPAM_JNDI
                       value: "java:/jboss/datasources/rhpam"
                     - name: RHPAM_JTA
                       value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
                     ## MySQL driver settings BEGIN
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
                     - name: RHPAM_DRIVER
                       value: "mysql"
                     - name: KIE_SERVER_PERSISTENCE_DIALECT
@@ -407,8 +392,6 @@ servers:
                       value: "{{.ApplicationName}}-mysql"
                     - name: RHPAM_SERVICE_PORT
                       value: "3306"
-                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: ""
                     ## MySQL driver settings END
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"

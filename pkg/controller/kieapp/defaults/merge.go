@@ -18,26 +18,36 @@ import (
 
 func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, error) {
 	var env v1.Environment
+	var err error
 	env.Console = mergeCustomObject(baseline.Console, overwrite.Console)
 	env.Smartrouter = mergeCustomObject(baseline.Smartrouter, overwrite.Smartrouter)
-	if len(overwrite.Others) == 0 {
-		env.Others = baseline.Others
-	} else if len(baseline.Others) == 0 {
-		env.Others = overwrite.Others
-	} else {
-		for index := range baseline.Others {
-			mergedObject := mergeCustomObject(baseline.Others[index], overwrite.Others[index])
-			env.Others = append(env.Others, mergedObject)
-		}
+	env.Others, err = mergeCustomObjects(baseline.Others, overwrite.Others)
+	if err != nil {
+		return v1.Environment{}, err
 	}
-	if len(baseline.Servers) != len(overwrite.Servers) {
-		return v1.Environment{}, errors.New("incompatible objects with different array lengths cannot be merged")
-	}
-	for index := range baseline.Servers {
-		mergedObject := mergeCustomObject(baseline.Servers[index], overwrite.Servers[index])
-		env.Servers = append(env.Servers, mergedObject)
+	env.Servers, err = mergeCustomObjects(baseline.Servers, overwrite.Servers)
+	if err != nil {
+		return v1.Environment{}, err
 	}
 	return env, nil
+}
+
+func mergeCustomObjects(baseline, overwrite []v1.CustomObject) ([]v1.CustomObject, error) {
+	if len(overwrite) == 0 {
+		return baseline, nil
+	}
+	if len(baseline) == 0 {
+		return overwrite, nil
+	}
+	if len(baseline) != len(overwrite) {
+		return nil, errors.New("incompatible objects with different array lengths cannot be merged")
+	}
+	result := []v1.CustomObject{}
+	for index := range baseline {
+		mergedObject := mergeCustomObject(baseline[index], overwrite[index])
+		result = append(result, mergedObject)
+	}
+	return result, nil
 }
 
 func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.CustomObject {

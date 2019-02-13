@@ -53,22 +53,22 @@ oc create -f deploy/role_binding.yaml
 oc create -f deploy/operator.yaml
 ```
 
-## Trigger a KieApp deployment
+### Trigger a KieApp deployment
 
 ```bash
-$ oc create -f deploy/crs/kieapp_trial.yaml
-kieapp.app.kiegroup.org/trial created
+$ oc create -f deploy/crs/kieapp_rhpam_trial.yaml
+kieapp.app.kiegroup.org/rhpam-trial created
 ```
 
-## Clean up a KieApp deployment
+### Clean up a KieApp deployment
 
 ```bash
 # Using the KieApp name
-oc delete KieApp trial
-# Using the file name
-oc delete -f deploy/crs/kieapp_trial.yaml
-# Delete all the KieApp deployments
-oc delete KieApp --all
+oc delete kieapp rhpam-trial
+# OR using the file name
+oc delete -f deploy/crs/kieapp_rhpam_trial.yaml
+# OR delete all the KieApp deployments
+oc delete kieapp --all
 ```
 
 ## Development

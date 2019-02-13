@@ -4,21 +4,21 @@ metadata:
   name: kiecloud-operator.v0.1.0
   namespace: placeholder
   annotations:
-    categories: kieapp, rhpam, kie, cloud, pam, bpm, process, case, automation, operator
+    categories: kieapp, rhpam, rhdm, kie, cloud, pam, bpm, process, case, automation, operator
     certified: "false"
-    description: KieCloud can deploy RHPAM environments in the form of KieApp objects.
+    description: KieCloud can deploy RHPAM/RHDM environments in the form of KieApp objects.
     containerImage: quay.io/kiegroup/kie-cloud-operator:0.1
     createdAt: 2019-01-25T20:48:22Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
-      [{"apiVersion":"app.kiegroup.org/v1","kind":"KieApp","metadata":{"name":"trial"},"spec":{"environment":"trial"}}]
+      [{"apiVersion":"app.kiegroup.org/v1","kind":"KieApp","metadata":{"name":"trial"},"spec":{"environment":"rhpam-trial"}}]
   labels:
     operator-kiecloud: "true"
 spec:
   displayName: KieCloud
-  description: KieCloud can deploy RHPAM environments in the form of KieApp objects.
-  keywords: [kieapp rhpam kie cloud pam bpm process case automation operator]
+  description: KieCloud can deploy RHPAM/RHDM environments in the form of KieApp objects.
+  keywords: [kieapp rhpam rhdm kie cloud pam bpm process case automation decision operator]
   version: 0.1.0
   maturity: beta
   maintainers:

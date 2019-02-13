@@ -23,12 +23,47 @@ type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment    string           `json:"environment,omitempty"`
+	Environment    EnvironmentType  `json:"environment,omitempty"`
 	KieDeployments int              `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	RhpamRegistry  KieAppRegistry   `json:"rhpamRegistry,omitempty"`
+	ImageRegistry  KieAppRegistry   `json:"imageRegistry,omitempty"`
 	Objects        KieAppObjects    `json:"objects,omitempty"`
 	CommonConfig   CommonConfig     `json:"commonConfig,omitempty"`
 	Auth           KieAppAuthObject `json:"auth,omitempty"`
+}
+
+// EnvironmentType describes a possible application environment
+type EnvironmentType string
+
+const (
+	// RhpamTrial RHPAM Trial environment
+	RhpamTrial EnvironmentType = "rhpam-trial"
+	// RhpamProduction RHPAM Production environment
+	RhpamProduction EnvironmentType = "rhpam-production"
+	// RhpamProductionImmutable RHPAM Production Immutable environment
+	RhpamProductionImmutable EnvironmentType = "rhpam-production-immutable"
+	// RhpamAuthoring RHPAM Authoring environment
+	RhpamAuthoring EnvironmentType = "rhpam-authoring"
+	// RhpamAuthoringHA RHPAM Authoring HA environment
+	RhpamAuthoringHA EnvironmentType = "rhpam-authoring-ha"
+	// RhdmTrial RHDM Trial environment
+	RhdmTrial EnvironmentType = "rhdm-trial"
+	// RhdmAuthoring RHDM Authoring environment
+	RhdmAuthoring EnvironmentType = "rhdm-authoring"
+	// RhdmAuthoringHA RHDM Authoring HA environment
+	RhdmAuthoringHA EnvironmentType = "rhdm-authoring-ha"
+	// RhdmOptawebTrial RHDM Optaweb Employee Rostering Trial environment
+	RhdmOptawebTrial EnvironmentType = "rhdm-optaweb-trial"
+	// RhdmProductionImmutable RHDM Production Immutable environment
+	RhdmProductionImmutable EnvironmentType = "rhdm-production-immutable"
+)
+
+// AppConstants data type to store application deployment constants
+type AppConstants struct {
+	Product          string `json:"name,omitempty"`
+	Prefix           string `json:"prefix,omitempty"`
+	ImageName        string `json:"imageName,omitempty"`
+	MavenRepo        string `json:"mavenRepo,omitempty"`
+	ConsoleProbePage string `json:"consoleProbePage,omitemtpy"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
@@ -225,13 +260,16 @@ type Template struct {
 type CommonConfig struct {
 	Version            string `json:"version,omitempty"`
 	ImageTag           string `json:"imageTag,omitempty"`
+	Product            string `json:"product,omitempty"`
 	ConsoleName        string `json:"consoleName,omitempty"`
 	ConsoleImage       string `json:"consoleImage,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
 	ControllerPassword string `json:"controllerPassword,omitempty"`
 	ServerPassword     string `json:"serverPassword,omitempty"`
+	MavenRepo          string `json:"mavenRepo,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
+	ConsoleProbePage   string `json:"consoleProbePage,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

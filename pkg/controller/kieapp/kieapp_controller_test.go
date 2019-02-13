@@ -25,7 +25,7 @@ func TestKieAppDefaults(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 			Objects: v1.KieAppObjects{
 				Server: v1.KieAppObject{},
 			},
@@ -73,7 +73,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhdm-trial",
 			Objects: v1.KieAppObjects{
 				Console: v1.KieAppObject{
 					Env: []corev1.EnvVar{
@@ -91,9 +91,9 @@ func TestTrialConsoleEnv(t *testing.T) {
 	}
 	env = consolidateObjects(env, cr)
 
-	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", cr.Name), env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Name), env.Console.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -121,7 +121,7 @@ func TestTrialServerEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "trial",
+			Environment:    "rhpam-trial",
 			KieDeployments: 3,
 			Objects: v1.KieAppObjects{
 				Server: v1.KieAppObject{
@@ -144,7 +144,7 @@ func TestTrialServerEnv(t *testing.T) {
 	assert.Equal(t, cr.Spec.KieDeployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, cr.Spec.KieDeployments-1), env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Name)
 	pattern := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.RhpamVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -154,7 +154,7 @@ func TestTrialServerEnv(t *testing.T) {
 	assert.Contains(t, env.Servers[cr.Spec.KieDeployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
 }
 
-func TestRhpamRegistry(t *testing.T) {
+func TestImageRegistry(t *testing.T) {
 	registry1 := "registry1.test.com"
 	os.Setenv("REGISTRY", registry1)
 	defer os.Unsetenv("REGISTRY")
@@ -165,15 +165,15 @@ func TestRhpamRegistry(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 		},
 	}
 	_, err := defaults.GetEnvironment(cr, test.MockService())
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	assert.Equal(t, registry1, cr.Spec.RhpamRegistry.Registry)
-	assert.Equal(t, true, cr.Spec.RhpamRegistry.Insecure)
+	assert.Equal(t, registry1, cr.Spec.ImageRegistry.Registry)
+	assert.Equal(t, true, cr.Spec.ImageRegistry.Insecure)
 
 	registry2 := "registry2.test.com:5000"
 	cr2 := &v1.KieApp{
@@ -181,8 +181,8 @@ func TestRhpamRegistry(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
-			RhpamRegistry: v1.KieAppRegistry{
+			Environment: "rhpam-trial",
+			ImageRegistry: v1.KieAppRegistry{
 				Registry: registry2,
 			},
 		},
@@ -191,8 +191,8 @@ func TestRhpamRegistry(t *testing.T) {
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	assert.Equal(t, registry2, cr2.Spec.RhpamRegistry.Registry)
-	assert.Equal(t, false, cr2.Spec.RhpamRegistry.Insecure)
+	assert.Equal(t, registry2, cr2.Spec.ImageRegistry.Registry)
+	assert.Equal(t, false, cr2.Spec.ImageRegistry.Insecure)
 }
 
 func TestGenerateSecret(t *testing.T) {
@@ -201,7 +201,7 @@ func TestGenerateSecret(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 		},
 	}
 	env, err := defaults.GetEnvironment(cr, test.MockService())
@@ -226,7 +226,7 @@ func TestConsoleHost(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhdm-trial",
 		},
 	}
 
@@ -248,7 +248,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "trial",
+			Environment: "rhpam-trial",
 		},
 	}
 	env, err := defaults.GetEnvironment(cr, test.MockService())
@@ -285,4 +285,108 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
 	})
+}
+
+func TestCreateRhpamImageStreams(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhpam-trial",
+		},
+	}
+	mockSvc := test.MockService()
+	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
+	_, err := defaults.GetEnvironment(cr, mockSvc)
+	assert.Nil(t, err)
+	reconciler := Reconciler{
+		Service: mockSvc,
+	}
+
+	reconciler.createLocalImageTag("rhpam72-businesscentral-openshift:1.0", cr)
+
+	isTag, err := isTagMock.Get("test-ns/rhpam72-businesscentral-openshift:1.0", metav1.GetOptions{})
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam72-businesscentral-openshift:1.0", isTag.Tag.From.Name)
+}
+
+func TestCreateRhdmImageStreams(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhdm-trial",
+		},
+	}
+	mockSvc := test.MockService()
+	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
+	_, err := defaults.GetEnvironment(cr, mockSvc)
+	assert.Nil(t, err)
+	reconciler := Reconciler{
+		Service: mockSvc,
+	}
+
+	reconciler.createLocalImageTag("rhdm72-decisioncentral-openshift:1.0", cr)
+
+	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-openshift:1.0", metav1.GetOptions{})
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.Equal(t, "registry.redhat.io/rhdm-7/rhdm72-decisioncentral-openshift:1.0", isTag.Tag.From.Name)
+}
+
+func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhdm-trial",
+		},
+	}
+	mockSvc := test.MockService()
+	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
+	_, err := defaults.GetEnvironment(cr, mockSvc)
+	assert.Nil(t, err)
+	reconciler := Reconciler{
+		Service: mockSvc,
+	}
+
+	reconciler.createLocalImageTag("rhdm72-decisioncentral-indexing-openshift:1.0", cr)
+
+	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-indexing-openshift:1.0", metav1.GetOptions{})
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.Equal(t, "registry.redhat.io/rhdm-7-tech-preview/rhdm72-decisioncentral-indexing-openshift:1.0", isTag.Tag.From.Name)
+}
+
+func TestCreateImageStreamsLatest(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhdm-trial",
+		},
+	}
+	mockSvc := test.MockService()
+	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
+	_, err := defaults.GetEnvironment(cr, mockSvc)
+	assert.Nil(t, err)
+	reconciler := Reconciler{
+		Service: mockSvc,
+	}
+
+	reconciler.createLocalImageTag("rhdm72-decisioncentral-indexing-openshift", cr)
+
+	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-indexing-openshift:latest", metav1.GetOptions{})
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.Equal(t, "registry.redhat.io/rhdm-7-tech-preview/rhdm72-decisioncentral-indexing-openshift:latest", isTag.Tag.From.Name)
 }

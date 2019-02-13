@@ -1,6 +1,6 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: authoring
+  name: rhpam-trial
 spec:
-  environment: authoring
+  environment: rhpam-trial
