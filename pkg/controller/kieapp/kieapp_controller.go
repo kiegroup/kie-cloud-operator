@@ -347,6 +347,35 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 
 		env.Servers[i] = server
 	}
+
+	// smartrouter keystore generation
+	if !env.Smartrouter.Omit {
+		smartCN := ""
+		for _, rt := range env.Smartrouter.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				smartCN = reconciler.GetRouteHost(rt, cr)
+				break
+			}
+		}
+		if smartCN == "" {
+			smartCN = cr.Name
+		}
+
+		defaults.ConfigureHostname(&env.Smartrouter, cr, smartCN)
+		env.Smartrouter.Secrets = append(env.Smartrouter.Secrets, corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Name),
+				Labels: map[string]string{
+					"app": cr.Name,
+				},
+			},
+			Data: map[string][]byte{
+				"keystore.jks": shared.GenerateKeystore(smartCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
+			},
+		})
+	}
 	env = consolidateObjects(env, cr)
 
 	rResult, err := reconciler.CreateCustomObjects(env.Console, cr)
@@ -414,10 +443,11 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 		if len(object.BuildConfigs) == 0 {
 			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
 				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
-					namespace, err := reconciler.ensureImageStream(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace, cr)
-					if err == nil {
-						object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace = namespace
-					}
+					object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace, _ = reconciler.ensureImageStream(
+						trigger.ImageChangeParams.From.Name,
+						trigger.ImageChangeParams.From.Namespace,
+						cr,
+					)
 				}
 			}
 		}
@@ -438,11 +468,10 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 	for index := range object.BuildConfigs {
 		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
 		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
-			from := object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From
-			namespace, err := reconciler.ensureImageStream(from.Name, from.Namespace, cr)
-			if err == nil {
-				from.Namespace = namespace
-			}
+			object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, _ = reconciler.ensureImageStream(
+				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Name,
+				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, cr,
+			)
 		}
 		allObjects = append(allObjects, &object.BuildConfigs[index])
 	}

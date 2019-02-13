@@ -18,7 +18,10 @@ metadata:
 spec:
   displayName: KieCloud
   description: KieCloud can deploy RHPAM/RHDM environments in the form of KieApp objects.
-  keywords: [kieapp rhpam rhdm kie cloud pam bpm process case automation decision operator]
+  keywords:
+    [
+      kieapp rhpam rhdm kie cloud pam bpm process case automation decision operator,
+    ]
   version: 0.1.0
   maturity: beta
   maintainers:
