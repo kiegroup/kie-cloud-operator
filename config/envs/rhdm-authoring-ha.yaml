@@ -1,7 +1,7 @@
 console:
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
         labels:
           app: "{{.ApplicationName}}"
       spec:
@@ -13,18 +13,18 @@ console:
 
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         ## Replicas for Decision Central
         replicas: 2
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.ConsoleName}}"
+            name: "{{.ApplicationName}}-{{.Console.Name}}"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}"
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                  - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
                 ports:
                   - name: git-ssh
@@ -40,9 +40,9 @@ console:
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "{{.AdminPassword}}"
             volumes:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+                  claimName: "{{.ApplicationName}}-{{.Console.Name}}-claim"
 
   services:
     - spec:
@@ -51,7 +51,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
 
 ## KIE smartrouter BEGIN
 smartrouter:
@@ -89,7 +89,7 @@ others:
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift:{{.ImageTag}}"
+                  name: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-indexing-openshift:{{.ImageTag}}"
             - type: ConfigChange
           replicas: 1
           selector:
@@ -104,7 +104,7 @@ others:
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "{{.ApplicationName}}-{{.Product}}index"
-                  image: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-indexing-openshift"
+                  image: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-indexing-openshift"
                   imagePullPolicy: Always
                   volumeMounts:
                     - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
@@ -262,11 +262,11 @@ others:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .Servers }}
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           replicas: 2
   ## KIE server deployment config END

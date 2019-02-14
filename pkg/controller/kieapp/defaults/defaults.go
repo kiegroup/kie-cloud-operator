@@ -13,7 +13,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -64,10 +64,6 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 }
 
 func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
-	// default to '1' Kie DC
-	if cr.Spec.KieDeployments == 0 {
-		cr.Spec.KieDeployments = 1
-	}
 	if cr.Spec.ImageRegistry == (v1.KieAppRegistry{}) {
 		cr.Spec.ImageRegistry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry) // default to red hat registry
 		cr.Spec.ImageRegistry.Insecure = logs.GetBoolEnv("INSECURE")
@@ -75,32 +71,15 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
+	config.ApplicationName = cr.Name
 	setAppConstants(&cr.Spec)
 	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(config, isTrialEnv)
 
-	crTemplate := v1.Template{
-		CommonConfig:    config,
-		ApplicationName: cr.Name,
-	}
 	envTemplate := v1.EnvTemplate{
-		Template: crTemplate,
-	}
-	//For s2i KIE servers, the build configs determine the number and content of each KIE server group
-	if len(cr.Spec.Objects.Builds) > 0 {
-		cr.Spec.KieDeployments = len(cr.Spec.Objects.Builds)
-		for _, build := range cr.Spec.Objects.Builds {
-			buildTemplate := crTemplate.DeepCopy()
-			buildTemplate.GitSource = build.GitSource
-			buildTemplate.GitHubWebhookSecret = getWebhookSecret(v1.GitHubWebhook, build.Webhooks)
-			buildTemplate.GenericWebhookSecret = getWebhookSecret(v1.GenericWebhook, build.Webhooks)
-			buildTemplate.KieServerContainerDeployment = build.KieServerContainerDeployment
-			envTemplate.ServerCount = append(envTemplate.ServerCount, *buildTemplate)
-		}
-	} else {
-		for i := 0; i < cr.Spec.KieDeployments; i++ {
-			envTemplate.ServerCount = append(envTemplate.ServerCount, crTemplate)
-		}
+		CommonConfig: config,
+		Console:      getConsoleTemplate(cr),
+		Servers:      getServersConfig(cr, config),
 	}
 	if err := configureAuth(cr.Spec, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -108,6 +87,102 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	}
 
 	return envTemplate, nil
+}
+
+func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
+	appConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	if !hasEnv {
+		return v1.ConsoleTemplate{}
+	}
+	return v1.ConsoleTemplate{
+		Name:      appConstants.Prefix,
+		ImageName: appConstants.ImageName,
+		ProbePage: appConstants.ConsoleProbePage,
+	}
+}
+
+// Returns the templates to use depending on whether the spec was defined with a common configuration
+// or a specific one.
+func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) []v1.ServerTemplate {
+	servers := []v1.ServerTemplate{}
+	if len(cr.Spec.Objects.Servers) != 0 {
+		for i, server := range cr.Spec.Objects.Servers {
+			kieServerID := fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i)
+			if len(server.Name) > 0 {
+				kieServerID = server.Name
+			}
+			crTemplate := v1.ServerTemplate{
+				KieServerID: kieServerID,
+			}
+			crTemplate.Build = getBuildConfig(commonConfig, server.Build)
+			if server.Build != nil {
+				crTemplate.From = getKieServerImageForBuild(commonConfig, i)
+			} else {
+				crTemplate.From = getDefaultKieServerImage(commonConfig, server.From)
+			}
+			servers = append(servers, crTemplate)
+		}
+	} else {
+		deployments := constants.DefaultKieDeployments
+		if cr.Spec.Objects.Server != nil && cr.Spec.Objects.Server.Deployments != 0 {
+			deployments = cr.Spec.Objects.Server.Deployments
+		}
+		for i := 0; i < deployments; i++ {
+			crTemplate := v1.ServerTemplate{
+				KieServerID: fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i),
+			}
+			server := cr.Spec.Objects.Server
+			var serverFrom *corev1.ObjectReference
+			if server != nil {
+				crTemplate.Build = getBuildConfig(commonConfig, server.Build)
+				serverFrom = server.From
+			}
+			if server != nil && server.Build != nil {
+				crTemplate.From = getKieServerImageForBuild(commonConfig, i)
+			} else {
+				crTemplate.From = getDefaultKieServerImage(commonConfig, serverFrom)
+			}
+			servers = append(servers, crTemplate)
+		}
+	}
+	return servers
+}
+
+const defaultKieServerIDTemplate = "%v-kieserver-%v"
+
+func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
+	if build == nil {
+		return v1.BuildTemplate{}
+	}
+	buildTemplate := v1.BuildTemplate{
+		GitSource:                    build.GitSource,
+		GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, build.Webhooks),
+		GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, build.Webhooks),
+		KieServerContainerDeployment: build.KieServerContainerDeployment,
+	}
+	buildTemplate.From = getDefaultKieServerImage(config, build.From)
+	return buildTemplate
+}
+
+func getDefaultKieServerImage(config *v1.CommonConfig, from *corev1.ObjectReference) corev1.ObjectReference {
+	if from != nil {
+		return *from
+	}
+	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", config.Product, config.Version, constants.ImageStreamTag)
+	return corev1.ObjectReference{
+		Kind:      "ImageStreamTag",
+		Name:      imageName,
+		Namespace: constants.ImageStreamNamespace,
+	}
+}
+
+func getKieServerImageForBuild(config *v1.CommonConfig, index int) corev1.ObjectReference {
+	imageName := fmt.Sprintf("%s-kieserver-%v:latest", config.ApplicationName, index)
+	return corev1.ObjectReference{
+		Kind:      "ImageStreamTag",
+		Name:      imageName,
+		Namespace: "",
+	}
 }
 
 func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
@@ -265,16 +340,7 @@ func setAppConstants(spec *v1.KieAppSpec) {
 	if len(spec.CommonConfig.Product) == 0 {
 		spec.CommonConfig.Product = appConstants.Product
 	}
-	if len(spec.CommonConfig.ConsoleName) == 0 {
-		spec.CommonConfig.ConsoleName = appConstants.Prefix
-	}
-	if len(spec.CommonConfig.ConsoleImage) == 0 {
-		spec.CommonConfig.ConsoleImage = appConstants.ImageName
-	}
 	if len(spec.CommonConfig.MavenRepo) == 0 {
 		spec.CommonConfig.MavenRepo = appConstants.MavenRepo
-	}
-	if len(spec.CommonConfig.ConsoleProbePage) == 0 {
-		spec.CommonConfig.ConsoleProbePage = appConstants.ConsoleProbePage
 	}
 }

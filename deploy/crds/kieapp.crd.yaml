@@ -35,10 +35,6 @@ spec:
                 - rhpam-production-immutable
                 - rhpam-production
                 - rhpam-trial
-            kieDeployments:
-              type: integer
-              description: The number of distinct KIE server deployments
-              minimum: 1
             objects:
               type: object
               description: Configuration of the RHPAM components
@@ -97,45 +93,261 @@ spec:
                 server:
                   type: object
                   description: Configuration of the RHPAM KIE server
-#                  anyOf:
-#                  - required:
-#                    - env
-#                  - required:
-#                    - resources
                   properties:
-                    env:
-                      type: array
-                      items:
+                    deployments:
+                      type: integer
+                      format: int16
+                      description: Number of Server sets that will be deployed
+                    from:
+                      type: object
+                      description: Image definition to use for all the servers
+                      required:
+                        - kind
+                        - name
+                      properties:
+                        kind:
+                          type: string
+                          description: Object kind. e.g. ImageStreamTag
+                        name:
+                          type: string
+                          description: Object name
+                        namespace:
+                          type: string
+                          description: Namespace where the object is located
+                    build:
+                      type: object
+                      description: Configuration of build configs for immutable KIE servers
+                      required:
+                        - kieServerContainerDeployment
+                        - gitSource
+                      properties:
+                        kieServerContainerDeployment:
+                          type: string
+                          description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+                        gitSource:
+                          type: object
+                          required:
+                            - uri
+                            - reference
+                            - contextDir
+                          properties:
+                            uri:
+                              type: string
+                              description: Git URI for the s2i source
+                            reference:
+                              type: string
+                              description: Branch to use in the git repository
+                            contextDir:
+                              type: string
+                              description: Context/subdirectory where the code is located, relatively to repo root
+                        webhooks:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            description: WebHook secretes for build configs
+                            required:
+                              - type
+                              - secret
+                            properties:
+                              type:
+                                type: string
+                                description: WebHook type, either GitHub or Generic
+                                enum:
+                                  - GitHub
+                                  - Generic
+                              secret:
+                                type: string
+                                description: Secret value for webhook
+                        from:
+                          type: object
+                          description: Image definition to use for all the servers
+                          required:
+                            - kind
+                            - name
+                          properties:
+                            kind:
+                              type: string
+                              description: Object kind. e.g. ImageStreamTag
+                            name:
+                              type: string
+                              description: Object name
+                            namespace:
+                              type: string
+                              description: Namespace where the object is located
+                    spec:
+                      type: object
+                      description: Common Server configuration
+#                      anyOf:
+#                      - required:
+#                        - env
+#                      - required:
+#                        - resources
+                      properties:
+                        env:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - name
+                            oneOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFrom
+                            properties:
+                              name:
+                                type: string
+                                description: Name of an environment variable
+                              value:
+                                type: string
+                                description: Value for that environment variable
+                              valueFrom:
+                                type: object
+                                description: Source for the environment variable's value
+                        resources:
+                          type: object
+#                           anyOf:
+#                             - required:
+#                               - limits
+#                             - required:
+#                               - requests
+                          properties:
+                            limits:
+                              type: object
+                            requests:
+                              type: object
+                servers:
+                  type: array
+                  description: Configuration of the each individual KIE server
+                  minItems: 1
+                  items:
+                    type: object
+                    description: KIE Server configuration
+                    properties:
+                      name:
+                        type: integer
+                        format: int16
+                        description: Number of Server sets that will be deployed
+                      from:
                         type: object
+                        description: Image definition to use for all the servers
                         required:
+                          - kind
                           - name
-                        oneOf:
-                          - required:
-                              - value
-                          - required:
-                              - valueFrom
                         properties:
+                          kind:
+                            type: string
+                            description: Object kind. e.g. ImageStreamTag
                           name:
                             type: string
-                            description: Name of an environment variable
-                          value:
+                            description: Object name
+                          namespace:
                             type: string
-                            description: Value for that environment variable
-                          valueFrom:
+                            description: Namespace where the object is located
+                      build:
+                        type: object
+                        description: Configuration of build configs for immutable KIE servers
+                        required:
+                          - kieServerContainerDeployment
+                          - gitSource
+                        properties:
+                          kieServerContainerDeployment:
+                            type: string
+                            description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+                          gitSource:
                             type: object
-                            description: Source for the environment variable's value
-                    resources:
-                      type: object
-                      # anyOf:
-                      # - required:
-                      #   - limits
-                      # - required:
-                      #   - requests
-                      properties:
-                        limits:
-                          type: object
-                        requests:
-                          type: object
+                            required:
+                              - uri
+                              - reference
+                              - contextDir
+                            properties:
+                              uri:
+                                type: string
+                                description: Git URI for the s2i source
+                              reference:
+                                type: string
+                                description: Branch to use in the git repository
+                              contextDir:
+                                type: string
+                                description: Context/subdirectory where the code is located, relatively to repo root
+                          webhooks:
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              description: WebHook secretes for build configs
+                              required:
+                                - type
+                                - secret
+                              properties:
+                                type:
+                                  type: string
+                                  description: WebHook type, either GitHub or Generic
+                                  enum:
+                                    - GitHub
+                                    - Generic
+                                secret:
+                                  type: string
+                                  description: Secret value for webhook
+                          from:
+                            type: object
+                            description: Image definition to use for all the servers
+                            required:
+                              - kind
+                              - name
+                            properties:
+                              kind:
+                                type: string
+                                description: Object kind. e.g. ImageStreamTag
+                              name:
+                                type: string
+                                description: Object name
+                              namespace:
+                                type: string
+                                description: Namespace where the object is located
+                      spec:
+                        type: object
+                        description: Common Server configuration
+  #                       anyOf:
+  #                       - required:
+  #                         - env
+  #                       - required:
+  #                         - resources
+                        properties:
+                          env:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                                - name
+                              oneOf:
+                                - required:
+                                    - value
+                                - required:
+                                    - valueFrom
+                              properties:
+                                name:
+                                  type: string
+                                  description: Name of an environment variable
+                                value:
+                                  type: string
+                                  description: Value for that environment variable
+                                valueFrom:
+                                  type: object
+                                  description: Source for the environment variable's value
+                          resources:
+                            type: object
+#                             anyOf:
+#                             - required:
+#                               - limits
+#                             - required:
+#                               - requests
+                            properties:
+                              limits:
+                                type: object
+                              requests:
+                                type: object
                 smartrouter:
                   type: object
                   description: Configuration of the RHPAM smart router
@@ -178,54 +390,6 @@ spec:
                           type: object
                         requests:
                           type: object
-                builds:
-                  type: array
-                  minItems: 1
-                  items:
-                    type: object
-                    description: Configuration of build configs for immutable KIE servers
-                    required:
-                      - kieServerContainerDeployment
-                      - gitSource
-                    properties:
-                      kieServerContainerDeployment:
-                        type: string
-                        description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
-                      gitSource:
-                        type: object
-                        required:
-                          - uri
-                          - reference
-                          - contextDir
-                        properties:
-                          uri:
-                            type: string
-                            description: Git URI for the s2i source
-                          reference:
-                            type: string
-                            description: Branch to use in the git repository
-                          contextDir:
-                            type: string
-                            description: Context/subdirectory where the code is located, relatively to repo root
-                      webhooks:
-                        type: array
-                        minItems: 1
-                        items:
-                          type: object
-                          description: WebHook secretes for build configs
-                          required:
-                            - type
-                            - secret
-                          properties:
-                            type:
-                              type: string
-                              description: WebHook type, either GitHub or Generic
-                              enum:
-                                - GitHub
-                                - Generic
-                            secret:
-                              type: string
-                              description: Secret value for webhook
             auth:
               type: object
               description: Authentication integration configuration

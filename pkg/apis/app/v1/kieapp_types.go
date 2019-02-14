@@ -23,12 +23,11 @@ type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment    EnvironmentType  `json:"environment,omitempty"`
-	KieDeployments int              `json:"kieDeployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	ImageRegistry  KieAppRegistry   `json:"imageRegistry,omitempty"`
-	Objects        KieAppObjects    `json:"objects,omitempty"`
-	CommonConfig   CommonConfig     `json:"commonConfig,omitempty"`
-	Auth           KieAppAuthObject `json:"auth,omitempty"`
+	Environment   EnvironmentType  `json:"environment,omitempty"`
+	ImageRegistry KieAppRegistry   `json:"imageRegistry,omitempty"`
+	Objects       KieAppObjects    `json:"objects,omitempty"`
+	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
+	Auth          KieAppAuthObject `json:"auth,omitempty"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -97,14 +96,33 @@ type KieAppList struct {
 type KieAppObjects struct {
 	// Business Central container configs
 	Console KieAppObject `json:"console,omitempty"`
-	// KIE Server container configs
-	Server KieAppObject `json:"server,omitempty"`
+	// KIE Server common container configs
+	Server *CommonKieServerSet `json:"server,omitempty"`
+	// KIE Server configuration for individual sets
+	Servers []KieServerSet `json:"servers,omitempty"`
 	// Smartrouter container configs
 	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
-	// S2I Build configuration
-	Builds []KieAppBuildObject `json:"builds,omitempty"`
 }
 
+// CommonKieServerSet KIE Server configuration to use for all the defined sets
+type CommonKieServerSet struct {
+	Deployments int                     `json:"deployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	Spec        KieAppObject            `json:"server,omitempty"`
+	From        *corev1.ObjectReference `json:"from,omitempty"`
+	// S2I Build configuration
+	Build *KieAppBuildObject `json:"builds,omitempty"`
+}
+
+// KieServerSet KIE Server configuration for a single set
+type KieServerSet struct {
+	Name string                  `json:"name,omitempty"`
+	Spec KieAppObject            `json:"spec,omitempty"`
+	From *corev1.ObjectReference `json:"from,omitempty"`
+	// S2I Build configuration
+	Build *KieAppBuildObject `json:"builds,omitempty"`
+}
+
+// KieAppObject Generic object definition
 type KieAppObject struct {
 	Env       []corev1.EnvVar             `json:"env,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources"`
@@ -133,9 +151,10 @@ type CustomObject struct {
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
-	KieServerContainerDeployment string          `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                    GitSource       `json:"gitSource,omitempty"`
-	Webhooks                     []WebhookSecret `json:"webhooks,omitempty"`
+	KieServerContainerDeployment string                  `json:"kieServerContainerDeployment,omitempty"`
+	GitSource                    GitSource               `json:"gitSource,omitempty"`
+	Webhooks                     []WebhookSecret         `json:"webhooks,omitempty"`
+	From                         *corev1.ObjectReference `json:"from,omitempty"`
 }
 
 // GitSource Git coordinates to locate the source code to build
@@ -170,13 +189,14 @@ type KieAppAuthObject struct {
 
 // SSOAuthConfig Authentication configuration for SSO
 type SSOAuthConfig struct {
-	URL                      string         `json:"url,omitempty"`
-	Realm                    string         `json:"realm,omitempty"`
-	AdminUser                string         `json:"adminUser,omitempty"`
-	AdminPassword            string         `json:"adminPassword,omitempty"`
-	DisableSSLCertValidation bool           `json:"disableSSLCertValication,omitempty"`
-	PrincipalAttribute       string         `json:"principalAttribute,omitempty"`
-	Clients                  SSOAuthClients `json:"clients,omitempty"`
+	URL                      string `json:"url,omitempty"`
+	Realm                    string `json:"realm,omitempty"`
+	AdminUser                string `json:"adminUser,omitempty"`
+	AdminPassword            string `json:"adminPassword,omitempty"`
+	DisableSSLCertValidation bool   `json:"disableSSLCertValication,omitempty"`
+	PrincipalAttribute       string `json:"principalAttribute,omitempty"`
+	// TODO: Refactor into each object's definition
+	Clients SSOAuthClients `json:"clients,omitempty"`
 }
 
 // SSOAuthClients Different SSO Clients to use
@@ -242,34 +262,47 @@ type OpenShiftObject interface {
 }
 
 type EnvTemplate struct {
-	Template    `json:",inline"`
-	ServerCount []Template `json:"serverCount,omitempty"`
+	*CommonConfig `json:",inline"`
+	Console       ConsoleTemplate  `json:"console,omitempty"`
+	Servers       []ServerTemplate `json:"servers,omitempty"`
 }
 
-// Template contains all the variables used in the yaml templates
-type Template struct {
-	*CommonConfig
-	ApplicationName              string       `json:"applicationName,omitempty"`
-	GitSource                    GitSource    `json:"gitSource,omitempty"`
-	GitHubWebhookSecret          string       `json:"githubWebhookSecret,omitempty"`
-	GenericWebhookSecret         string       `json:"genericWebhookSecret,omitempty"`
-	KieServerContainerDeployment string       `json:"kieServerContainerDeployment,omitempty"`
-	Auth                         AuthTemplate `json:"auth,omitempty"`
+type ConsoleTemplate struct {
+	SSOAuthClient SSOAuthClient `json:"ssoAuthClient,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	ImageName     string        `json:"imageName,omitempty"`
+	ProbePage     string        `json:"probePage,omitempty"`
+}
+
+// ServerTemplate contains all the variables used in the yaml templates
+type ServerTemplate struct {
+	SSOAuthClient SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From          corev1.ObjectReference `json:"from,omitempty"`
+	KieServerID   string                 `json:"kieServerID,omitempty"`
+	Build         BuildTemplate          `json:"build,omitempty"`
+}
+
+// BuildTemplate build variables used in the templates
+type BuildTemplate struct {
+	From                         corev1.ObjectReference `json:"from,omitempty"`
+	GitSource                    GitSource              `json:"gitSource,omitempty"`
+	GitHubWebhookSecret          string                 `json:"githubWebhookSecret,omitempty"`
+	GenericWebhookSecret         string                 `json:"genericWebhookSecret,omitempty"`
+	KieServerContainerDeployment string                 `json:"kieServerContainerDeployment,omitempty"`
 }
 
 type CommonConfig struct {
-	Version            string `json:"version,omitempty"`
-	ImageTag           string `json:"imageTag,omitempty"`
-	Product            string `json:"product,omitempty"`
-	ConsoleName        string `json:"consoleName,omitempty"`
-	ConsoleImage       string `json:"consoleImage,omitempty"`
-	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
-	AdminPassword      string `json:"adminPassword,omitempty"`
-	ControllerPassword string `json:"controllerPassword,omitempty"`
-	ServerPassword     string `json:"serverPassword,omitempty"`
-	MavenRepo          string `json:"mavenRepo,omitempty"`
-	MavenPassword      string `json:"mavenPassword,omitempty"`
-	ConsoleProbePage   string `json:"consoleProbePage,omitempty"`
+	ApplicationName    string       `json:"applicationName,omitempty"`
+	Auth               AuthTemplate `json:"auth,omitempty"`
+	Version            string       `json:"version,omitempty"`
+	ImageTag           string       `json:"imageTag,omitempty"`
+	Product            string       `json:"product,omitempty"`
+	KeyStorePassword   string       `json:"keyStorePassword,omitempty"`
+	AdminPassword      string       `json:"adminPassword,omitempty"`
+	ControllerPassword string       `json:"controllerPassword,omitempty"`
+	ServerPassword     string       `json:"serverPassword,omitempty"`
+	MavenRepo          string       `json:"mavenRepo,omitempty"`
+	MavenPassword      string       `json:"mavenPassword,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

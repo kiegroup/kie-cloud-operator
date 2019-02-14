@@ -1,7 +1,7 @@
 package defaults
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/pkg/errors"
@@ -45,7 +45,7 @@ func configureAuth(spec v1.KieAppSpec, envTemplate *v1.EnvTemplate) (err error) 
 	} else if spec.Auth.SSO == nil && spec.Auth.LDAP == nil && spec.Auth.RoleMapper != nil {
 		err = errors.New("roleMapper configuration must be declared together with SSO or LDAP")
 	} else if spec.Auth.SSO != nil {
-		err = configureSSO(spec.Auth.SSO, spec.KieDeployments, envTemplate)
+		err = configureSSO(spec.Auth.SSO, envTemplate)
 	} else if spec.Auth.LDAP != nil {
 		err = configureLDAP(spec.Auth.LDAP, envTemplate)
 	}
@@ -55,15 +55,25 @@ func configureAuth(spec v1.KieAppSpec, envTemplate *v1.EnvTemplate) (err error) 
 	return
 }
 
-func configureSSO(config *v1.SSOAuthConfig, deployments int, envTemplate *v1.EnvTemplate) error {
+func configureSSO(config *v1.SSOAuthConfig, envTemplate *v1.EnvTemplate) error {
 	if len(config.URL) == 0 || len(config.Realm) == 0 {
 		return errors.New("neither url nor realm can be empty")
+	}
+	if len(config.Clients.Servers) != 0 && len(config.Clients.Servers) != len(envTemplate.Servers) {
+		return errors.New("the number of Server SSO clients defined must match the number of KIE Servers")
 	}
 	// Set defaults
 	if len(config.PrincipalAttribute) == 0 {
 		config.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
 	}
 	envTemplate.Auth.SSO = *config.DeepCopy()
+	envTemplate.Console.SSOAuthClient = *config.Clients.Console.DeepCopy()
+	if len(config.Clients.Servers) > 0 {
+		for i := range envTemplate.Servers {
+			envTemplate.Servers[i].SSOAuthClient = *config.Clients.Servers[i].DeepCopy()
+		}
+	}
+
 	return nil
 }
 

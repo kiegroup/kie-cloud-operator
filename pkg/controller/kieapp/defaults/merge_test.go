@@ -7,7 +7,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 
 	"github.com/ghodss/yaml"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -206,15 +206,31 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 }
 
 func TestMergeImageStreams(t *testing.T) {
-	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/rhpam-production-immutable.yaml", "test", &trialEnv)
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Build: &v1.KieAppBuildObject{
+						KieServerContainerDeployment: "test",
+					},
+				},
+			},
+		},
+	}
+	var prodImmutableEnv v1.Environment
+	err := getParsedTemplateFromCR(cr, "envs/rhpam-production-immutable.yaml", &prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
-	err = getParsedTemplate("common.yaml", "test", &common)
+	err = getParsedTemplateFromCR(cr, "common.yaml", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
-	mergedEnv, err := merge(common, trialEnv)
+	mergedEnv, err := merge(common, prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 	for i, server := range mergedEnv.Servers {
 		assert.Equal(t, 1, len(server.ImageStreams))
@@ -223,15 +239,31 @@ func TestMergeImageStreams(t *testing.T) {
 }
 
 func TestMergeBuildConfigs(t *testing.T) {
-	var trialEnv v1.Environment
-	err := getParsedTemplate("envs/rhdm-production-immutable.yaml", "test", &trialEnv)
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Build: &v1.KieAppBuildObject{
+						KieServerContainerDeployment: "test",
+					},
+				},
+			},
+		},
+	}
+	var prodImmutableEnv v1.Environment
+	err := getParsedTemplateFromCR(cr, "envs/rhpam-production-immutable.yaml", &prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
-	err = getParsedTemplate("common.yaml", "test", &common)
+	err = getParsedTemplateFromCR(cr, "common.yaml", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
-	mergedEnv, err := merge(common, trialEnv)
+	mergedEnv, err := merge(common, prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 	for i, server := range mergedEnv.Servers {
 		assert.Equal(t, 1, len(server.BuildConfigs))
@@ -438,6 +470,10 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 			Namespace: "test-ns",
 		},
 	}
+	return getParsedTemplateFromCR(cr, filename, object)
+}
+
+func getParsedTemplateFromCR(cr *v1.KieApp, filename string, object interface{}) error {
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		log.Error("Error getting environment template", err)

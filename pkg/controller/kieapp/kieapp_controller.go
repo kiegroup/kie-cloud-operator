@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -202,7 +202,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	regContext := fmt.Sprintf("%s-%s", cr.Spec.CommonConfig.Product, string(version[0]))
 
 	registryAddress := cr.Spec.ImageRegistry.Registry
-	if strings.Contains(result[0], fmt.Sprintf("%s-indexing-openshift", cr.Spec.CommonConfig.ConsoleImage)) {
+	if strings.Contains(result[0], "indexing-openshift") {
 		regContext = fmt.Sprintf("%s-7-tech-preview", cr.Spec.CommonConfig.Product)
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
@@ -406,8 +406,13 @@ func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
 	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	for i, s := range env.Servers {
-		s = shared.ConstructObject(s, &cr.Spec.Objects.Server)
-		env.Servers[i] = s
+		if cr.Spec.Objects.Server != nil {
+			s = shared.ConstructObject(s, &cr.Spec.Objects.Server.Spec)
+			env.Servers[i] = s
+		} else if len(cr.Spec.Objects.Servers) != 0 {
+			s = shared.ConstructObject(s, &cr.Spec.Objects.Servers[i].Spec)
+			env.Servers[i] = s
+		}
 	}
 	return env
 }

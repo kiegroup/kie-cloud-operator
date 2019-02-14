@@ -1,78 +1,74 @@
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .ServerCount }}
-  ## KIE server build config BEGIN
-  - imageStreams:
+  #{{ range $index, $Map := .Servers }}
+    ## KIE server deployment config BEGIN
+  - deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+        spec:
+          replicas: 2
+          template:
+            spec:
+              containers:
+                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                  image: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                  env:
+                    - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+                      value: "{{.Build.KieServerContainerDeployment}}"
+
+      ## KIE server deployment config END
+  ## KIE server build config BEGIN
+  #{{if .Build.KieServerContainerDeployment}}
+    imageStreams:
+      - metadata:
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          labels:
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
     buildConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           source:
             type: Git
             git:
-              uri: "{{.GitSource.URI}}"
-              ref: "{{.GitSource.Reference}}"
-            contextDir: "{{.GitSource.ContextDir}}"
+              uri: "{{.Build.GitSource.URI}}"
+              ref: "{{.Build.GitSource.Reference}}"
+            contextDir: "{{.Build.GitSource.ContextDir}}"
           strategy:
             type: Source
             sourceStrategy:
               env:
                 - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-                  value: "{{.KieServerContainerDeployment}}"
+                  value: "{{.Build.KieServerContainerDeployment}}"
               forcePull: true
               from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "{{.Product}}{{.Version}}-kieserver-openshift:{{.ImageTag}}"
+                kind: "{{.Build.From.Kind}}"
+                namespace: "{{.Build.From.Namespace}}"
+                name: "{{.Build.From.Name}}"
           output:
             to:
               kind: ImageStreamTag
-              name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
+              name: "{{$.ApplicationName}}-kieserver-{{$index}}:latest"
           triggers:
             - type: GitHub
               github:
-                secret: "{{.GitHubWebhookSecret}}"
+                secret: "{{.Build.GitHubWebhookSecret}}"
             - type: Generic
               generic:
-                secret: "{{.GenericWebhookSecret}}"
+                secret: "{{.Build.GenericWebhookSecret}}"
             - type: ImageChange
               imageChange: {}
             - type: ConfigChange
+    #{{end}}
     ## KIE server build config END
-    ## KIE server deployment config BEGIN
-    deploymentConfigs:
-      - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
-          labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
-        spec:
-          replicas: 2
-          triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "{{.ApplicationName}}-kieserver-{{$index}}"
-                from:
-                  kind: ImageStreamTag
-                  namespace: ""
-                  name: "{{.ApplicationName}}-kieserver-{{$index}}:latest"
-          template:
-            spec:
-              containers:
-                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "{{.ApplicationName}}-kieserver-{{$index}}"
-      ## KIE server deployment config END
 #{{end}}
 ## RANGE ends
 ## KIE Servers END
