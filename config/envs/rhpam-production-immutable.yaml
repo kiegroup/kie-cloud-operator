@@ -108,6 +108,8 @@ servers:
                       value: "org.hibernate.dialect.PostgreSQLDialect"
                     - name: RHPAM_USERNAME
                       value: "rhpam"
+                    - name: RHPAM_PASSWORD
+                      value: "{{$.AdminPassword}}"
                     - name: RHPAM_SERVICE_HOST
                       value: "{{$.ApplicationName}}-postgresql-{{$index}}"
                     - name: RHPAM_SERVICE_PORT
