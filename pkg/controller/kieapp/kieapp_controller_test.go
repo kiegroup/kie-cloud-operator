@@ -305,12 +305,12 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag("rhpam72-businesscentral-openshift:1.0", cr)
+	reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
 
-	isTag, err := isTagMock.Get("test-ns/rhpam72-businesscentral-openshift:1.0", metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam72-businesscentral-openshift:1.0", isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
@@ -331,12 +331,12 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag("rhdm72-decisioncentral-openshift:1.0", cr)
+	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
 
-	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-openshift:1.0", metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, "registry.redhat.io/rhdm-7/rhdm72-decisioncentral-openshift:1.0", isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
@@ -357,12 +357,12 @@ func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag("rhdm72-decisioncentral-indexing-openshift:1.0", cr)
+	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
 
-	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-indexing-openshift:1.0", metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, "registry.redhat.io/rhdm-7-tech-preview/rhdm72-decisioncentral-indexing-openshift:1.0", isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7-tech-preview/rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
@@ -383,10 +383,10 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag("rhdm72-decisioncentral-indexing-openshift", cr)
+	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift", cr.Spec.CommonConfig.Version), cr)
 
-	isTag, err := isTagMock.Get("test-ns/rhdm72-decisioncentral-indexing-openshift:latest", metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, "registry.redhat.io/rhdm-7-tech-preview/rhdm72-decisioncentral-indexing-openshift:latest", isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7-tech-preview/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
 }

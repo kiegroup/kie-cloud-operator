@@ -14,7 +14,7 @@ const (
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
 	// ProductVersion default version
-	ProductVersion = "7.2"
+	ProductVersion = "7.3"
 	// ImageStreamTag default tag name for the ImageStreams
 	ImageStreamTag = "1.0"
 	// ConfigMapPrefix prefix to use for the configmaps

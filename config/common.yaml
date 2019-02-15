@@ -90,6 +90,14 @@ console:
                     value: "{{.ServerPassword}}"
                   - name: KIE_MBEANS
                     value: enabled
+                  ## OpenShift Enhancement BEGIN
+                  #- name: KIE_CONTROLLER_OCP_ENABLED
+                  #  value: "true"
+                  #- name: KIE_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                  #  value: "true"
+                  #- name: KIE_CONTROLLER_TEMPLATE_CACHE_TTL
+                  #  value: "60000"
+                  ## OpenShift Enhancement END
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -327,10 +335,18 @@ smartrouter:
                         fieldPath: status.podIP
                   - name: KIE_SERVER_ROUTER_PORT
                     value: "9000"
+                  - name: KIE_SERVER_ROUTER_PORT_TLS
+                    value: "9443"
                   - name: KIE_SERVER_ROUTER_ID
                     value: "kie-server-router"
                   - name: KIE_SERVER_ROUTER_NAME
                     value: "KIE Server Router"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
+                    value: "jboss"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
+                    value: "{{.KeyStorePassword}}"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
+                    value: "/etc/smartrouter-secret-volume/keystore.jks"
                   - name: KIE_SERVER_CONTROLLER_USER
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
@@ -346,15 +362,25 @@ smartrouter:
                 volumeMounts:
                   - name: "{{.ApplicationName}}-smartrouter"
                     mountPath: "/opt/{{.Product}}-smartrouter/data"
+                  - name: smartrouter-keystore-volume
+                    mountPath: "/etc/smartrouter-secret-volume"
+                    readOnly: true
             volumes:
               - name: "{{.ApplicationName}}-smartrouter"
                 persistentVolumeClaim:
                   claimName: "{{.ApplicationName}}-smartrouter-claim"
+              - name: smartrouter-keystore-volume
+                secret:
+                  secretName: "{{.ApplicationName}}-smartrouter-app-secret"
   services:
     - spec:
         ports:
-          - port: 9000
+          - name: http
+            port: 9000
             targetPort: 9000
+          - name: https
+            port: 9443
+            targetPort: 9443
         selector:
           deploymentConfig: "{{.ApplicationName}}-smartrouter"
       metadata:
@@ -363,7 +389,7 @@ smartrouter:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
-          description: The smart router server http port.
+      description: The smart router server http and https ports.
   routes:
     - id: "{{.ApplicationName}}-smartrouter-https"
       metadata:
@@ -372,11 +398,13 @@ smartrouter:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
-          description: Route for Smart Router's http service.
+          description: Route for Smart Router's https service.
       spec:
         host: ""
         to:
           name: "{{.ApplicationName}}-smartrouter"
+        port:
+          targetPort: https
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
@@ -394,7 +422,9 @@ servers:
             service: "{{.ApplicationName}}-kieserver-{{$index}}"
         spec:
           strategy:
-            type: Recreate
+            rollingParams:
+              maxUnavailable: 0
+            type: Rolling
           triggers:
             - type: ImageChange
               imageChangeParams:
@@ -428,6 +458,8 @@ servers:
                       value: adminUser
                     - name: KIE_ADMIN_PWD
                       value: "{{.AdminPassword}}"
+                    #- name: KIE_SERVER_STARTUP_STRATEGY
+                    #  value: "OpenShiftStartupStrategy"
                     - name: KIE_SERVER_USER
                       value: executionUser
                     - name: KIE_SERVER_PWD
@@ -622,6 +654,10 @@ servers:
               targetPort: 8443
           selector:
             deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+          sessionAffinity: ClientIP
+          sessionAffinityConfig:
+            clientIP:
+              timeoutSeconds: 3600
         metadata:
           name: "{{.ApplicationName}}-kieserver-{{$index}}"
           labels:
@@ -674,16 +710,14 @@ servers:
 others:
   - roles:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
         rules:
           - apiGroups:
               - ""
             resources:
               - "*"
             verbs:
-              - get
-              - list
-              - view
+              - "*"
           - apiGroups:
               - app.kiegroup.org
               - apps.openshift.io
@@ -692,22 +726,21 @@ others:
             resources:
               - "*"
             verbs:
-              - get
-              - list
-              - view
-    rolebindings:
-      - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
-        subjects:
-          - kind: ServiceAccount
-            name: "{{.ApplicationName}}-{{.Product}}svc"
-        roleRef:
-          kind: Role
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
+              - "*"
 
     serviceAccounts:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}svc"
           labels:
             app: "{{.ApplicationName}}"
+
+    rolebindings:
+      - metadata:
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
+        subjects:
+          - kind: ServiceAccount
+            name: "{{.ApplicationName}}-{{.Product}}svc"
+        roleRef:
+          kind: Role
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
 # Other required resources END
