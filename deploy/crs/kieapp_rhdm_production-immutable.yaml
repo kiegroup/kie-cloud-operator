@@ -5,9 +5,10 @@ metadata:
 spec:
   environment: rhdm-production-immutable
   objects:
-    builds:
-      - kieServerContainerDeployment: rhdm-kieserver-hellorules=org.openshift.quickstarts:rhdm-kieserver-hellorules:1.4.0-SNAPSHOT
-        gitSource:
-          uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
-          reference: master
-          contextDir: quickstarts/hello-rules/hellorules
+    servers:
+      - build:
+          kieServerContainerDeployment: rhdm-kieserver-hellorules=org.openshift.quickstarts:rhdm-kieserver-hellorules:1.4.0-SNAPSHOT
+          gitSource:
+            uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
+            reference: master
+            contextDir: quickstarts/hello-rules/hellorules

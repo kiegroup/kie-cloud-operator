@@ -4,7 +4,7 @@ smartrouter:
   omit: true
 ## KIE Servers BEGIN
 servers:
-  #{{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .Servers }}
   - omit: true
   #{{end}}
 others:
