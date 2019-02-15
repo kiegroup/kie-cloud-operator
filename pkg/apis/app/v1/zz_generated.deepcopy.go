@@ -109,11 +109,6 @@ func (in *CommonKieServerSet) DeepCopyInto(out *CommonKieServerSet) {
 		*out = new(corev1.ObjectReference)
 		**out = **in
 	}
-	if in.Build != nil {
-		in, out := &in.Build, &out.Build
-		*out = new(KieAppBuildObject)
-		(*in).DeepCopyInto(*out)
-	}
 	return
 }
 

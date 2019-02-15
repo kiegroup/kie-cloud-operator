@@ -18,6 +18,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,10 +77,14 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(config, isTrialEnv)
 
+	serversConfig, err := getServersConfig(cr, config)
+	if err != nil {
+		return v1.EnvTemplate{}, err
+	}
 	envTemplate := v1.EnvTemplate{
 		CommonConfig: config,
 		Console:      getConsoleTemplate(cr),
-		Servers:      getServersConfig(cr, config),
+		Servers:      serversConfig,
 	}
 	if err := configureAuth(cr.Spec, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -103,8 +108,11 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
-func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) []v1.ServerTemplate {
+func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
 	servers := []v1.ServerTemplate{}
+	if cr.Spec.Objects.Server != nil && len(cr.Spec.Objects.Servers) > 0 {
+		return servers, errors.New("invalid spec: provide either server or servers object")
+	}
 	if len(cr.Spec.Objects.Servers) != 0 {
 		for i, server := range cr.Spec.Objects.Servers {
 			kieServerID := fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i)
@@ -134,18 +142,13 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) []v1.ServerT
 			server := cr.Spec.Objects.Server
 			var serverFrom *corev1.ObjectReference
 			if server != nil {
-				crTemplate.Build = getBuildConfig(commonConfig, server.Build)
 				serverFrom = server.From
 			}
-			if server != nil && server.Build != nil {
-				crTemplate.From = getKieServerImageForBuild(commonConfig, i)
-			} else {
-				crTemplate.From = getDefaultKieServerImage(commonConfig, serverFrom)
-			}
+			crTemplate.From = getDefaultKieServerImage(commonConfig, serverFrom)
 			servers = append(servers, crTemplate)
 		}
 	}
-	return servers
+	return servers, nil
 }
 
 const defaultKieServerIDTemplate = "%v-kieserver-%v"
@@ -159,6 +162,8 @@ func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.Bui
 		GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, build.Webhooks),
 		GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, build.Webhooks),
 		KieServerContainerDeployment: build.KieServerContainerDeployment,
+		MavenMirrorURL:               build.MavenMirrorURL,
+		ArtifactDir:                  build.ArtifactDir,
 	}
 	buildTemplate.From = getDefaultKieServerImage(config, build.From)
 	return buildTemplate

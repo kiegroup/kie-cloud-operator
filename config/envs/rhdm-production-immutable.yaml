@@ -1,3 +1,7 @@
+## KIE smartrouter BEGIN
+smartrouter:
+  omit: true
+## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
@@ -19,6 +23,7 @@ servers:
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "{{.Build.KieServerContainerDeployment}}"
+
 
       ## KIE server deployment config END
   ## KIE server build config BEGIN
@@ -48,6 +53,10 @@ servers:
               env:
                 - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                   value: "{{.Build.KieServerContainerDeployment}}"
+                - name: MAVEN_MIRROR_URL
+                  value: "{{.Build.MavenMirrorURL}}"
+                - name: ARTIFACT_DIR
+                  value: "{{.Build.ArtifactDir}}"
               forcePull: true
               from:
                 kind: "{{.Build.From.Kind}}"

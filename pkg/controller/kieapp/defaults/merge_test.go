@@ -205,7 +205,7 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 	assert.False(t, mergedEnv.Console.Omit, "Console deployment must not be omitted")
 }
 
-func TestMergeImageStreams(t *testing.T) {
+func TestMergeBuildConfigandIStreams(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -214,9 +214,11 @@ func TestMergeImageStreams(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamProductionImmutable,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Build: &v1.KieAppBuildObject{
-						KieServerContainerDeployment: "test",
+				Servers: []v1.KieServerSet{
+					v1.KieServerSet{
+						Build: &v1.KieAppBuildObject{
+							KieServerContainerDeployment: "test",
+						},
 					},
 				},
 			},
@@ -235,38 +237,6 @@ func TestMergeImageStreams(t *testing.T) {
 	for i, server := range mergedEnv.Servers {
 		assert.Equal(t, 1, len(server.ImageStreams))
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.ImageStreams[0].ObjectMeta.Name)
-	}
-}
-
-func TestMergeBuildConfigs(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test-ns",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Build: &v1.KieAppBuildObject{
-						KieServerContainerDeployment: "test",
-					},
-				},
-			},
-		},
-	}
-	var prodImmutableEnv v1.Environment
-	err := getParsedTemplateFromCR(cr, "envs/rhpam-production-immutable.yaml", &prodImmutableEnv)
-	assert.Nil(t, err, "Error: %v", err)
-
-	var common v1.Environment
-	err = getParsedTemplateFromCR(cr, "common.yaml", &common)
-	assert.Nil(t, err, "Error: %v", err)
-
-	mergedEnv, err := merge(common, prodImmutableEnv)
-	assert.Nil(t, err, "Error: %v", err)
-	for i, server := range mergedEnv.Servers {
-		assert.Equal(t, 1, len(server.BuildConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.BuildConfigs[0].ObjectMeta.Name)
 		assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v:latest", i), server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)

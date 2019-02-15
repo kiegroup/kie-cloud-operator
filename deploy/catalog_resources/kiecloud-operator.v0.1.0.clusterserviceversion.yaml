@@ -77,6 +77,10 @@ spec:
             version: v1
           - kind: Route
             version: route.openshift.io/v1
+          - kind: BuildConfig
+            version: build.openshift.io/v1
+          - kind: ImageStream
+            version: image.openshift.io/v1
         specDescriptors:
           - description: Environment of PAM to deploy.
             displayName: Environment

@@ -107,74 +107,16 @@ spec:
                       properties:
                         kind:
                           type: string
-                          description: Object kind. e.g. ImageStreamTag
+                          description: Object kind
+                          enum:
+                            - ImageStreamTag
+                            - DockerImage
                         name:
                           type: string
                           description: Object name
                         namespace:
                           type: string
-                          description: Namespace where the object is located
-                    build:
-                      type: object
-                      description: Configuration of build configs for immutable KIE servers
-                      required:
-                        - kieServerContainerDeployment
-                        - gitSource
-                      properties:
-                        kieServerContainerDeployment:
-                          type: string
-                          description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
-                        gitSource:
-                          type: object
-                          required:
-                            - uri
-                            - reference
-                            - contextDir
-                          properties:
-                            uri:
-                              type: string
-                              description: Git URI for the s2i source
-                            reference:
-                              type: string
-                              description: Branch to use in the git repository
-                            contextDir:
-                              type: string
-                              description: Context/subdirectory where the code is located, relatively to repo root
-                        webhooks:
-                          type: array
-                          minItems: 1
-                          items:
-                            type: object
-                            description: WebHook secretes for build configs
-                            required:
-                              - type
-                              - secret
-                            properties:
-                              type:
-                                type: string
-                                description: WebHook type, either GitHub or Generic
-                                enum:
-                                  - GitHub
-                                  - Generic
-                              secret:
-                                type: string
-                                description: Secret value for webhook
-                        from:
-                          type: object
-                          description: Image definition to use for all the servers
-                          required:
-                            - kind
-                            - name
-                          properties:
-                            kind:
-                              type: string
-                              description: Object kind. e.g. ImageStreamTag
-                            name:
-                              type: string
-                              description: Object name
-                            namespace:
-                              type: string
-                              description: Namespace where the object is located
+                          description: Namespace where the object is located for the case of Kind ImageStreamTag
                     spec:
                       type: object
                       description: Common Server configuration
@@ -255,6 +197,12 @@ spec:
                           kieServerContainerDeployment:
                             type: string
                             description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+                          mavenMirrorURL:
+                            type: string
+                            description: Maven mirror to use for S2I builds
+                          artifactDir:
+                            type: string
+                            description: List of directories from which archives will be copied into the deployment folder. If unspecified, all archives in /target will be copied.
                           gitSource:
                             type: object
                             required:

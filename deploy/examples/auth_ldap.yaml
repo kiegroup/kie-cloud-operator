@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: rhdm-ldap
+spec:
+  environment: rhdm-trial
+  auth:
+    ldap:
+      url: ldaps://myldap.example.com
+      bindDN: uid=admin,ou=users,ou=exmample,ou=com
+      bindCredential: s3cret
+      baseCtxDN: ou=users,ou=example,ou=com
+      baseFilter: (uid={0})
+      searchScope: SUBTREE_SCOPE
+      roleAttributeID: memberOf
+      rolesCtxDN: ou=groups,ou=example,ou=com
+      roleFilter: (memberOf={1})
+      defaultRole: guest
+    roleMapper:
+      rolesProperties: /conf/roleMapper.properties
+      replaceRole: true

@@ -1,0 +1,20 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: rhdm-sso
+spec:
+  environment: rhdm-trial
+  objects:
+    server:
+      # The number of kie server sets must be the same as the SSO clients defined
+      deployments: 2
+  auth:
+    sso:
+      url: https://rh-sso.example.com:8443
+      realm: rhdm
+      clients:
+        console:
+          name: rhdm-console
+        servers:
+          - name: kieserver-1
+          - name: kieserver-2

@@ -109,8 +109,6 @@ type CommonKieServerSet struct {
 	Deployments int                     `json:"deployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
 	Spec        KieAppObject            `json:"server,omitempty"`
 	From        *corev1.ObjectReference `json:"from,omitempty"`
-	// S2I Build configuration
-	Build *KieAppBuildObject `json:"builds,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set
@@ -119,7 +117,7 @@ type KieServerSet struct {
 	Spec KieAppObject            `json:"spec,omitempty"`
 	From *corev1.ObjectReference `json:"from,omitempty"`
 	// S2I Build configuration
-	Build *KieAppBuildObject `json:"builds,omitempty"`
+	Build *KieAppBuildObject `json:"build,omitempty"`
 }
 
 // KieAppObject Generic object definition
@@ -153,6 +151,8 @@ type CustomObject struct {
 type KieAppBuildObject struct {
 	KieServerContainerDeployment string                  `json:"kieServerContainerDeployment,omitempty"`
 	GitSource                    GitSource               `json:"gitSource,omitempty"`
+	MavenMirrorURL               string                  `json:"mavenMirrorURL,omitempty"`
+	ArtifactDir                  string                  `json:"artifactDir,omitempty"`
 	Webhooks                     []WebhookSecret         `json:"webhooks,omitempty"`
 	From                         *corev1.ObjectReference `json:"from,omitempty"`
 }
@@ -289,6 +289,8 @@ type BuildTemplate struct {
 	GitHubWebhookSecret          string                 `json:"githubWebhookSecret,omitempty"`
 	GenericWebhookSecret         string                 `json:"genericWebhookSecret,omitempty"`
 	KieServerContainerDeployment string                 `json:"kieServerContainerDeployment,omitempty"`
+	MavenMirrorURL               string                 `json:"mavenMirrorURL,omitempty"`
+	ArtifactDir                  string                 `json:"artifactDir,omitempty"`
 }
 
 type CommonConfig struct {
