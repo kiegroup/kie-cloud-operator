@@ -1,10 +1,10 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.ConsoleName}}"
+          service: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         strategy:
           type: Recreate
@@ -13,28 +13,28 @@ console:
             imageChangeParams:
               automatic: true
               containerNames:
-                - "{{.ApplicationName}}-{{.ConsoleName}}"
+                - "{{.ApplicationName}}-{{.Console.Name}}"
               from:
                 kind: ImageStreamTag
-                namespace: "openshift"
-                name: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-openshift:{{.ImageTag}}"
+                namespace: openshift
+                name: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-openshift:{{.ImageTag}}"
           - type: ConfigChange
         replicas: 1
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
+          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.ConsoleName}}"
+            name: "{{.ApplicationName}}-{{.Console.Name}}"
             labels:
-              deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
+              deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
               app: "{{.ApplicationName}}"
-              service: "{{.ApplicationName}}-{{.ConsoleName}}"
+              service: "{{.ApplicationName}}-{{.Console.Name}}"
           spec:
             serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
             terminationGracePeriodSeconds: 60
             containers:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
-                image: "{{.Product}}{{.Version}}-{{.ConsoleImage}}-openshift"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}"
+                image: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -44,7 +44,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.ConsoleProbePage}}
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.Console.ProbePage}}
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
@@ -53,7 +53,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.ConsoleProbePage}}
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.Console.ProbePage}}
                   initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 30
@@ -90,6 +90,14 @@ console:
                     value: "{{.ServerPassword}}"
                   - name: KIE_MBEANS
                     value: enabled
+                  ## OpenShift Enhancement BEGIN
+                  #- name: KIE_CONTROLLER_OCP_ENABLED
+                  #  value: "true"
+                  #- name: KIE_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                  #  value: "true"
+                  #- name: KIE_CONTROLLER_TEMPLATE_CACHE_TTL
+                  #  value: "60000"
+                  ## OpenShift Enhancement END
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -99,11 +107,11 @@ console:
                   - name: HTTPS_PASSWORD
                     value: "{{.KeyStorePassword}}"
                   - name: WORKBENCH_ROUTE_NAME
-                    value: "{{.ApplicationName}}-{{.ConsoleName}}"
+                    value: "{{.ApplicationName}}-{{.Console.Name}}"
                   - name: JGROUPS_PING_PROTOCOL
                     value: "openshift.DNS_PING"
                   - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "{{.ApplicationName}}-{{.ConsoleName}}-ping"
+                    value: "{{.ApplicationName}}-{{.Console.Name}}-ping"
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
                   # Auth config BEGIN
@@ -124,13 +132,13 @@ console:
                   - name: SSO_PRINCIPAL_ATTRIBUTE
                     value: "{{.Auth.SSO.PrincipalAttribute}}"
                   - name: SSO_SECRET
-                    value: "{{.Auth.SSO.Clients.Console.Secret}}"
+                    value: "{{.Console.SSOAuthClient.Secret}}"
                   - name: SSO_CLIENT
-                    value: "{{.Auth.SSO.Clients.Console.Name}}"
+                    value: "{{.Console.SSOAuthClient.Name}}"
                   - name: HOSTNAME_HTTP
-                    value: "{{.Auth.SSO.Clients.Console.HostnameHTTP}}"
+                    value: "{{.Console.SSOAuthClient.HostnameHTTP}}"
                   - name: HOSTNAME_HTTPS
-                    value: "{{.Auth.SSO.Clients.Console.HostnameHTTPS}}"
+                    value: "{{.Console.SSOAuthClient.HostnameHTTPS}}"
                   #{{end}}
                   ## SSO config END
                   ## LDAP config BEGIN
@@ -189,21 +197,21 @@ console:
                   ## RoleMapping config END
                   # Auth config END
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-keystore-volume"
+                  - name: "{{.ApplicationName}}-{{.Console.Name}}-keystore-volume"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
-                  - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+                  - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
             volumes:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}-keystore-volume"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}-keystore-volume"
                 secret:
                   secretName: "{{.ApplicationName}}-businesscentral-app-secret"
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+                  claimName: "{{.ApplicationName}}-{{.Console.Name}}-claim"
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
       spec:
         accessModes:
           - ReadWriteMany
@@ -220,12 +228,12 @@ console:
             port: 8443
             targetPort: 8443
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
+          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.ConsoleName}}"
+          service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: All the Business Central web server's ports.
     - spec:
@@ -235,29 +243,29 @@ console:
             port: 8888
             targetPort: 8888
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.ConsoleName}}"
+          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-ping"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-ping"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.ConsoleName}}"
+          service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
   routes:
-    - id: "{{.ApplicationName}}-{{.ConsoleName}}-https"
+    - id: "{{.ApplicationName}}-{{.Console.Name}}-https"
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.ConsoleName}}"
+          service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's https service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
         host: ""
         to:
-          name: "{{.ApplicationName}}-{{.ConsoleName}}"
+          name: "{{.ApplicationName}}-{{.Console.Name}}"
         port:
           targetPort: https
         tls:
@@ -327,16 +335,24 @@ smartrouter:
                         fieldPath: status.podIP
                   - name: KIE_SERVER_ROUTER_PORT
                     value: "9000"
+                  - name: KIE_SERVER_ROUTER_PORT_TLS
+                    value: "9443"
                   - name: KIE_SERVER_ROUTER_ID
                     value: "kie-server-router"
                   - name: KIE_SERVER_ROUTER_NAME
                     value: "KIE Server Router"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
+                    value: "jboss"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
+                    value: "{{.KeyStorePassword}}"
+                  - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
+                    value: "/etc/smartrouter-secret-volume/keystore.jks"
                   - name: KIE_SERVER_CONTROLLER_USER
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
                     value: "{{.ControllerPassword}}"
                   - name: KIE_SERVER_CONTROLLER_SERVICE
-                    value: "{{.ApplicationName}}-{{.ConsoleName}}"
+                    value: "{{.ApplicationName}}-{{.Console.Name}}"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
                     value: "http"
                   - name: KIE_SERVER_ROUTER_REPO
@@ -346,15 +362,25 @@ smartrouter:
                 volumeMounts:
                   - name: "{{.ApplicationName}}-smartrouter"
                     mountPath: "/opt/{{.Product}}-smartrouter/data"
+                  - name: smartrouter-keystore-volume
+                    mountPath: "/etc/smartrouter-secret-volume"
+                    readOnly: true
             volumes:
               - name: "{{.ApplicationName}}-smartrouter"
                 persistentVolumeClaim:
                   claimName: "{{.ApplicationName}}-smartrouter-claim"
+              - name: smartrouter-keystore-volume
+                secret:
+                  secretName: "{{.ApplicationName}}-smartrouter-app-secret"
   services:
     - spec:
         ports:
-          - port: 9000
+          - name: http
+            port: 9000
             targetPort: 9000
+          - name: https
+            port: 9443
+            targetPort: 9443
         selector:
           deploymentConfig: "{{.ApplicationName}}-smartrouter"
       metadata:
@@ -363,7 +389,7 @@ smartrouter:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
-          description: The smart router server http port.
+      description: The smart router server http and https ports.
   routes:
     - id: "{{.ApplicationName}}-smartrouter-https"
       metadata:
@@ -372,11 +398,13 @@ smartrouter:
           app: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
-          description: Route for Smart Router's http service.
+          description: Route for Smart Router's https service.
       spec:
         host: ""
         to:
           name: "{{.ApplicationName}}-smartrouter"
+        port:
+          targetPort: https
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
@@ -384,68 +412,72 @@ smartrouter:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .Servers }}
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           strategy:
-            type: Recreate
+            rollingParams:
+              maxUnavailable: 0
+            type: Rolling
           triggers:
             - type: ImageChange
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-kieserver-{{$index}}"
+                  - "{{$.ApplicationName}}-kieserver-{{$index}}"
                 from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "{{.Product}}{{.Version}}-kieserver-openshift:{{.ImageTag}}"
+                  kind: "{{.From.Kind}}"
+                  namespace: "{{.From.Namespace}}"
+                  name: "{{.From.Name}}"
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
           template:
             metadata:
-              name: "{{.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
               labels:
-                app: "{{.ApplicationName}}"
-                service: "{{.ApplicationName}}-kieserver-{{$index}}"
-                deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+                app: "{{$.ApplicationName}}"
+                service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
             spec:
-              serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
+              serviceAccountName: "{{$.ApplicationName}}-{{$.Product}}svc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
-                  image: "{{.Product}}{{.Version}}-kieserver-openshift"
+                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                  image: "{{$.Product}}{{$.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
                       value: adminUser
                     - name: KIE_ADMIN_PWD
-                      value: "{{.AdminPassword}}"
+                      value: "{{$.AdminPassword}}"
+                    #- name: KIE_SERVER_STARTUP_STRATEGY
+                    #  value: "OpenShiftStartupStrategy"
                     - name: KIE_SERVER_USER
                       value: executionUser
                     - name: KIE_SERVER_PWD
-                      value: "{{.ServerPassword}}"
+                      value: "{{$.ServerPassword}}"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
                     - name: KIE_SERVER_CONTROLLER_USER
                       value: controllerUser
                     - name: KIE_SERVER_CONTROLLER_PWD
-                      value: "{{.ControllerPassword}}"
+                      value: "{{$.ControllerPassword}}"
                     - name: KIE_SERVER_CONTROLLER_SERVICE
-                      value: "{{.ApplicationName}}-{{.ConsoleName}}"
+                      value: "{{$.ApplicationName}}-{{$.Console.Name}}"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
                       value: ws
                     - name: KIE_MBEANS
                       value: enabled
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
+                      value: "{{$.ApplicationName}}-kieserver-{{$index}}"
                     - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
                       value: "false"
                     - name: KIE_SERVER_PROTOCOL
@@ -453,16 +485,16 @@ servers:
                     - name: KIE_SERVER_PORT
                       value: "443"
                     - name: KIE_SERVER_ID
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}"
-                    - name: "{{.MavenRepo}}_MAVEN_REPO_USERNAME"
+                      value: "{{.KieServerID}}"
+                    - name: "{{$.MavenRepo}}_MAVEN_REPO_USERNAME"
                       value: mavenUser
-                    - name: "{{.MavenRepo}}_MAVEN_REPO_PASSWORD"
-                      value: "{{.MavenPassword}}"
-                    - name: "{{.MavenRepo}}_MAVEN_REPO_SERVICE"
-                      value: "{{.ApplicationName}}-{{.ConsoleName}}"
+                    - name: "{{$.MavenRepo}}_MAVEN_REPO_PASSWORD"
+                      value: "{{$.MavenPassword}}"
+                    - name: "{{$.MavenRepo}}_MAVEN_REPO_SERVICE"
+                      value: "{{$.ApplicationName}}-{{$.Console.Name}}"
                     - name: MAVEN_REPOS
-                      value: "{{.MavenRepo}},EXTERNAL"
-                    - name: "{{.MavenRepo}}_MAVEN_REPO_PATH"
+                      value: "{{$.MavenRepo}},EXTERNAL"
+                    - name: "{{$.MavenRepo}}_MAVEN_REPO_PATH"
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
@@ -473,11 +505,11 @@ servers:
                     - name: HTTPS_NAME
                       value: "jboss"
                     - name: HTTPS_PASSWORD
-                      value: "{{.KeyStorePassword}}"
+                      value: "{{$.KeyStorePassword}}"
                     - name: JGROUPS_PING_PROTOCOL
                       value: "openshift.DNS_PING"
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
+                      value: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
@@ -497,17 +529,14 @@ servers:
                       value: "{{$.Auth.SSO.DisableSSLCertValidation}}"
                     - name: SSO_PRINCIPAL_ATTRIBUTE
                       value: "{{$.Auth.SSO.PrincipalAttribute}}"
-                    #{{if eq (len $.Auth.SSO.Clients.Servers) (len $.ServerCount)}}
-                    #{{$serverClient := index $.Auth.SSO.Clients.Servers $index}}
                     - name: SSO_SECRET
-                      value: "{{$serverClient.Secret}}"
+                      value: "{{.SSOAuthClient.Secret}}"
                     - name: SSO_CLIENT
-                      value: "{{$serverClient.Name}}"
+                      value: "{{.SSOAuthClient.Name}}"
                     - name: HOSTNAME_HTTP
-                      value: "{{$serverClient.HostnameHTTP}}"
+                      value: "{{.SSOAuthClient.HostnameHTTP}}"
                     - name: HOSTNAME_HTTPS
-                      value: "{{$serverClient.HostnameHTTPS}}"
-                    #{{end}}
+                      value: "{{.SSOAuthClient.HostnameHTTPS}}"
                     #{{end}}
                     ## SSO config END
                     ## LDAP config BEGIN
@@ -608,7 +637,7 @@ servers:
               volumes:
                 - name: kieserver-keystore-volume
                   secret:
-                    secretName: "{{.ApplicationName}}-kieserver-{{$index}}-app-secret"
+                    secretName: "{{$.ApplicationName}}-kieserver-{{$index}}-app-secret"
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:
@@ -621,12 +650,16 @@ servers:
               port: 8443
               targetPort: 8443
           selector:
-            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          sessionAffinity: ClientIP
+          sessionAffinityConfig:
+            clientIP:
+              timeoutSeconds: 3600
         metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -636,30 +669,30 @@ servers:
               port: 8888
               targetPort: 8888
           selector:
-            deploymentConfig: "{{.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
         metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}-ping"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "{{.ApplicationName}}-kieserver-{{$index}}-https"
+      - id: "{{$.ApplicationName}}-kieserver-{{$index}}-https"
         metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's https service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.ApplicationName}}-kieserver-{{$index}}"
+            name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           port:
             targetPort: https
           tls:
@@ -674,16 +707,14 @@ servers:
 others:
   - roles:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
         rules:
           - apiGroups:
               - ""
             resources:
               - "*"
             verbs:
-              - get
-              - list
-              - view
+              - "*"
           - apiGroups:
               - app.kiegroup.org
               - apps.openshift.io
@@ -692,22 +723,21 @@ others:
             resources:
               - "*"
             verbs:
-              - get
-              - list
-              - view
-    rolebindings:
-      - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
-        subjects:
-          - kind: ServiceAccount
-            name: "{{.ApplicationName}}-{{.Product}}svc"
-        roleRef:
-          kind: Role
-          name: "{{.ApplicationName}}-{{.Product}}svc-view"
+              - "*"
 
     serviceAccounts:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}svc"
           labels:
             app: "{{.ApplicationName}}"
+
+    rolebindings:
+      - metadata:
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
+        subjects:
+          - kind: ServiceAccount
+            name: "{{.ApplicationName}}-{{.Product}}svc"
+        roleRef:
+          kind: Role
+          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
 # Other required resources END

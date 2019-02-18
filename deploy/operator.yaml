@@ -43,8 +43,8 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "kie-cloud-operator"
-            #- name: DEBUG
-            #  value: ""
+            - name: DEBUG
+              value: "false"
             #- name: INSECURE
             #  value: ""
             #- name: REGISTRY

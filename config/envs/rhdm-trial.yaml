@@ -1,45 +1,45 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         template:
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
             volumes:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}-pvol"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                 emptyDir: {}
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
         annotations:
           delete: "true"
   services:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         ports:
           - name: git-ssh
             port: 8001
             targetPort: 8001
   routes:
-    - id: "{{.ApplicationName}}-{{.ConsoleName}}-http"
+    - id: "{{.ApplicationName}}-{{.Console.Name}}-http"
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-http"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-http"
         labels:
           app: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.ConsoleName}}"
+          service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's http service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
         to:
-          name: "{{.ApplicationName}}-{{.ConsoleName}}"
+          name: "{{.ApplicationName}}-{{.Console.Name}}"
         port:
           targetPort: http
 ## KIE smartrouter BEGIN
@@ -49,21 +49,21 @@ smartrouter:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .Servers }}
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           template:
             metadata:
-              name: "{{.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+                      value: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
                     - name: KIE_SERVER_PROTOCOL
                     - name: KIE_SERVER_PORT
                     - name: FILTERS
@@ -91,18 +91,18 @@ servers:
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
-      - id: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+      - id: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
         metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}-http"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's http service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.ApplicationName}}-kieserver-{{$index}}"
+            name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           port:
             targetPort: http
     ## KIE server route END

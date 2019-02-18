@@ -1,21 +1,21 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.ConsoleName}}"
+            name: "{{.ApplicationName}}-{{.Console.Name}}"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.ConsoleName}}"
+              - name: "{{.ApplicationName}}-{{.Console.Name}}"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}-claim"
+        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
       spec:
         accessModes:
           - ReadWriteOnce
@@ -29,7 +29,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-{{.ConsoleName}}"
+        name: "{{.ApplicationName}}-{{.Console.Name}}"
 ## KIE smartrouter BEGIN
 smartrouter:
   omit: true
@@ -37,18 +37,18 @@ smartrouter:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .ServerCount }}
+  #{{ range $index, $Map := .Servers }}
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           template:
             metadata:
-              name: "{{.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
             spec:
               containers:
-                - name: "{{.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -66,7 +66,7 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "sa"
                     - name: RHPAM_PASSWORD
-                      value: "{{.AdminPassword}}"
+                      value: "{{$.AdminPassword}}"
                     - name: RHPAM_SERVICE_HOST
                       value: "dummy_ignored"
                     - name: RHPAM_SERVICE_PORT
@@ -76,21 +76,21 @@ servers:
                     - name: RHPAM_XA_CONNECTION_PROPERTY_URL
                       value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
                   volumeMounts:
-                    - name: "{{.ApplicationName}}-h2-pvol"
+                    - name: "{{$.ApplicationName}}-h2-pvol"
                       mountPath: "/opt/eap/standalone/data"
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "{{.ApplicationName}}-h2-pvol"
+                - name: "{{$.ApplicationName}}-h2-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.ApplicationName}}-h2-claim-{{$index}}"
+                    claimName: "{{$.ApplicationName}}-h2-claim-{{$index}}"
     ## KIE server deployment config END
     persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
-          name: "{{.ApplicationName}}-h2-claim-{{$index}}"
+          name: "{{$.ApplicationName}}-h2-claim-{{$index}}"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-kieserver-{{$index}}"
+            app: "{{$.ApplicationName}}"
+            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           accessModes:
             - ReadWriteOnce

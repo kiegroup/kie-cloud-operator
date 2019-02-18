@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cp /tmp/artifacts/kie-cloud-operator /usr/local/bin/kie-cloud-operator
+chmod +x /usr/local/bin/kie-cloud-operator

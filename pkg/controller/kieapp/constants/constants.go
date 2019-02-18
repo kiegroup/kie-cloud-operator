@@ -1,6 +1,8 @@
 package constants
 
-import "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+import (
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+)
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -14,7 +16,7 @@ const (
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
 	// ProductVersion default version
-	ProductVersion = "7.2"
+	ProductVersion = "7.3"
 	// ImageStreamTag default tag name for the ImageStreams
 	ImageStreamTag = "1.0"
 	// ConfigMapPrefix prefix to use for the configmaps
@@ -31,6 +33,8 @@ const (
 	OpNameEnv = "OPERATOR_NAME"
 	// TrialEnvSuffix is the suffix for trial environments
 	TrialEnvSuffix = "trial"
+	// DefaultKieDeployments default number of Kie Server deployments
+	DefaultKieDeployments = 1
 )
 
 var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}

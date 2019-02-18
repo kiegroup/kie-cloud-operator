@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -202,7 +202,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	regContext := fmt.Sprintf("%s-%s", cr.Spec.CommonConfig.Product, string(version[0]))
 
 	registryAddress := cr.Spec.ImageRegistry.Registry
-	if strings.Contains(result[0], fmt.Sprintf("%s-indexing-openshift", cr.Spec.CommonConfig.ConsoleImage)) {
+	if strings.Contains(result[0], "indexing-openshift") {
 		regContext = fmt.Sprintf("%s-7-tech-preview", cr.Spec.CommonConfig.Product)
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
@@ -347,6 +347,35 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 
 		env.Servers[i] = server
 	}
+
+	// smartrouter keystore generation
+	if !env.Smartrouter.Omit {
+		smartCN := ""
+		for _, rt := range env.Smartrouter.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				smartCN = reconciler.GetRouteHost(rt, cr)
+				break
+			}
+		}
+		if smartCN == "" {
+			smartCN = cr.Name
+		}
+
+		defaults.ConfigureHostname(&env.Smartrouter, cr, smartCN)
+		env.Smartrouter.Secrets = append(env.Smartrouter.Secrets, corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Name),
+				Labels: map[string]string{
+					"app": cr.Name,
+				},
+			},
+			Data: map[string][]byte{
+				"keystore.jks": shared.GenerateKeystore(smartCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
+			},
+		})
+	}
 	env = consolidateObjects(env, cr)
 
 	rResult, err := reconciler.CreateCustomObjects(env.Console, cr)
@@ -377,8 +406,13 @@ func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
 	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
 	for i, s := range env.Servers {
-		s = shared.ConstructObject(s, &cr.Spec.Objects.Server)
-		env.Servers[i] = s
+		if cr.Spec.Objects.Server != nil {
+			s = shared.ConstructObject(s, &cr.Spec.Objects.Server.Spec)
+			env.Servers[i] = s
+		} else if len(cr.Spec.Objects.Servers) != 0 {
+			s = shared.ConstructObject(s, &cr.Spec.Objects.Servers[i].Spec)
+			env.Servers[i] = s
+		}
 	}
 	return env
 }
@@ -414,10 +448,11 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 		if len(object.BuildConfigs) == 0 {
 			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
 				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
-					namespace, err := reconciler.ensureImageStream(trigger.ImageChangeParams.From.Name, trigger.ImageChangeParams.From.Namespace, cr)
-					if err == nil {
-						object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace = namespace
-					}
+					object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace, _ = reconciler.ensureImageStream(
+						trigger.ImageChangeParams.From.Name,
+						trigger.ImageChangeParams.From.Namespace,
+						cr,
+					)
 				}
 			}
 		}
@@ -438,11 +473,10 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 	for index := range object.BuildConfigs {
 		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
 		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
-			from := object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From
-			namespace, err := reconciler.ensureImageStream(from.Name, from.Namespace, cr)
-			if err == nil {
-				from.Namespace = namespace
-			}
+			object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, _ = reconciler.ensureImageStream(
+				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Name,
+				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, cr,
+			)
 		}
 		allObjects = append(allObjects, &object.BuildConfigs[index])
 	}

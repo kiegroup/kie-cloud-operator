@@ -3,7 +3,7 @@ package defaults
 import (
 	"testing"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
@@ -178,8 +178,7 @@ func TestAuthSSOConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "rhpam-trial",
-			KieDeployments: 2,
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				SSO: &v1.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
@@ -202,9 +201,9 @@ func TestAuthSSOConfig(t *testing.T) {
 		{Name: "SSO_PASSWORD"},
 	}
 	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
 	}
 
@@ -215,21 +214,20 @@ func TestAuthSSOConfig(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS"},
 	}
 	for _, expectedEnv := range expectedClientEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.NotContains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
 	}
 }
 
-func TestAuthSSOConfigWithClients(t *testing.T) {
+func TestAuthSSOConfigWithMismatchedClients(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "rhpam-trial",
-			KieDeployments: 2,
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				SSO: &v1.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
@@ -253,6 +251,55 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Deployments: 3,
+				},
+			},
+		},
+	}
+	_, err := GetEnvironment(cr, test.MockService())
+	assert.Error(t, err, "the number of Server SSO clients defined must match the number of KIE Servers")
+
+}
+
+func TestAuthSSOConfigWithClients(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhpam-trial",
+			Auth: v1.KieAppAuthObject{
+				SSO: &v1.SSOAuthConfig{
+					URL:   "https://sso.example.com:8080",
+					Realm: "rhpam-test",
+					Clients: v1.SSOAuthClients{
+						Console: v1.SSOAuthClient{
+							Name:          "test-rhpamcentr-client",
+							Secret:        "supersecret",
+							HostnameHTTP:  "test-rhpamcentr.example.com",
+							HostnameHTTPS: "secure-test-rhpamcentr.example.com",
+						},
+						Servers: []v1.SSOAuthClient{
+							{
+								Name:   "test-kieserver-a-client",
+								Secret: "supersecret-a",
+							},
+							{
+								Name:          "test-kieserver-b-client",
+								Secret:        "supersecret-b",
+								HostnameHTTPS: "test-kieserver-b.example.com",
+							},
+						},
+					},
+				},
+			},
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Deployments: 2,
 				},
 			},
 		},
@@ -291,7 +338,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "SSO_CLIENT", Value: "test-kieserver-a-client"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
-		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 0 does not contain env %v", expectedEnv)
 	}
 	expectedServerClientEnvs = []corev1.EnvVar{
 		{Name: "SSO_SECRET", Value: "supersecret-b"},
@@ -299,7 +346,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
-		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
 	}
 }
 
@@ -309,8 +356,7 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "rhpam-trial",
-			KieDeployments: 2,
+			Environment: "rhpam-trial",
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{},
 			},
@@ -326,8 +372,12 @@ func TestAuthLDAPConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "rhpam-trial",
-			KieDeployments: 2,
+			Environment: "rhpam-trial",
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Deployments: 2,
+				},
+			},
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
@@ -358,8 +408,12 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment:    "rhpam-trial",
-			KieDeployments: 2,
+			Environment: "rhpam-trial",
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Deployments: 2,
+				},
+			},
 			Auth: v1.KieAppAuthObject{
 				LDAP: &v1.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",

@@ -1,7 +1,6 @@
 #!/bin/sh
 
 REGISTRY=quay.io/kiegroup
-RH_REGISTRY=registry.redhat.io/rhpam-7-tech-preview
 IMAGE=kie-cloud-operator
 TAG=0.1
 
@@ -10,9 +9,12 @@ if [[ -z ${CI} ]]; then
     source hack/go-test.sh
     operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
     if [[ ${1} == "rhel" ]]; then
-        REGISTRY=${RH_REGISTRY}
-        echo "Building Docker image ${REGISTRY}/${IMAGE}:${TAG}"
-        docker build . -f build/Dockerfile.rhel -t ${REGISTRY}/${IMAGE}:${TAG}
+        mkdir -p target/image
+        RESULT=$(md5sum build/_output/bin/kie-cloud-operator)
+        MD5=$(echo ${RESULT} | awk {'print $1'})
+        cekit-cache -v add --md5 ${RESULT}
+        cekit build --redhat --build-engine=osbs \
+            --overrides "{'version': '${TAG}', 'artifacts': [{'name': 'kie-cloud-operator', 'md5': '${MD5}'}]}"
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o build/_output/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
