@@ -12,6 +12,7 @@ servers:
           name: "{{$.ApplicationName}}-postgresql-claim-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-postgresql-{{$index}}"
         spec:
           accessModes:
@@ -27,12 +28,14 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
     buildConfigs:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           source:
@@ -78,6 +81,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           replicas: 2
@@ -137,6 +141,7 @@ servers:
           name: "{{$.ApplicationName}}-postgresql-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-postgresql-{{$index}}"
         spec:
           strategy:
@@ -161,6 +166,7 @@ servers:
               labels:
                 deploymentConfig: "{{$.ApplicationName}}-postgresql-{{$index}}"
                 app: "{{$.ApplicationName}}"
+                application: "{{$.ApplicationName}}"
                 service: "{{$.ApplicationName}}-postgresql-{{$index}}"
             spec:
               containers:

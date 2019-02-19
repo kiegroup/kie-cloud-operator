@@ -4,6 +4,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
       spec:
         accessModes:
           - ReadWriteMany
@@ -64,6 +65,7 @@ others:
           name: "{{.ApplicationName}}-{{.Product}}index-claim"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -76,6 +78,7 @@ others:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-{{.Product}}index"
         spec:
           strategy:
@@ -100,6 +103,7 @@ others:
               labels:
                 deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
                 app: "{{.ApplicationName}}"
+                application: "{{.ApplicationName}}"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
@@ -136,6 +140,7 @@ others:
       - metadata:
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
           name: "{{.ApplicationName}}-amq"
         spec:
           replicas: 1
@@ -149,6 +154,7 @@ others:
             metadata:
               labels:
                 app: "{{.ApplicationName}}"
+                application: "{{.ApplicationName}}"
                 deploymentConfig: "{{.ApplicationName}}-amq"
               name: "{{.ApplicationName}}-amq"
             spec:
@@ -220,6 +226,7 @@ others:
           name: "{{.ApplicationName}}-amq-tcp"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-amq"
           annotations:
             description: The broker's OpenWire port.
@@ -238,6 +245,7 @@ others:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-{{.Product}}index"
           annotations:
             description: All the Decision Central Indexing Elasticsearch ports.
@@ -248,6 +256,7 @@ others:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
           annotations:
             description: Route for Decision Central Indexing's Elasticsearch http service.
         spec:

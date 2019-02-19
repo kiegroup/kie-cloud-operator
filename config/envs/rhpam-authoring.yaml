@@ -60,7 +60,7 @@ servers:
                       value: "true"
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
-                  ## H2 driver settings BEGIN
+                    ## H2 driver settings BEGIN
                     - name: RHPAM_DRIVER
                       value: "h2"
                     - name: RHPAM_USERNAME
@@ -90,6 +90,7 @@ servers:
           name: "{{$.ApplicationName}}-h2-claim-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           accessModes:
