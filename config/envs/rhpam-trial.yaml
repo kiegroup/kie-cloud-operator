@@ -33,6 +33,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}-http"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's http service.
@@ -72,7 +73,7 @@ servers:
                       value: "true"
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
-                  ## H2 driver settings BEGIN
+                    ## H2 driver settings BEGIN
                     - name: RHPAM_DRIVER
                       value: "h2"
                     - name: RHPAM_USERNAME
@@ -87,7 +88,7 @@ servers:
                       value: "org.hibernate.dialect.H2Dialect"
                     - name: RHPAM_XA_CONNECTION_PROPERTY_URL
                       value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
-                  ## H2 driver settings END
+                    ## H2 driver settings END
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
                     - name: KIE_SERVER_PROTOCOL
@@ -129,6 +130,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's http service.

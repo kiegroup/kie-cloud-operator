@@ -306,7 +306,8 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
 				Labels: map[string]string{
-					"app": cr.Name,
+					"app":         cr.Name,
+					"application": cr.Name,
 				},
 			},
 			Data: map[string][]byte{
@@ -337,7 +338,8 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("%s-kieserver-%d-app-secret", cr.Name, i),
 				Labels: map[string]string{
-					"app": cr.Name,
+					"app":         cr.Name,
+					"application": cr.Name,
 				},
 			},
 			Data: map[string][]byte{
@@ -368,7 +370,8 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Name),
 				Labels: map[string]string{
-					"app": cr.Name,
+					"app":         cr.Name,
+					"application": cr.Name,
 				},
 			},
 			Data: map[string][]byte{

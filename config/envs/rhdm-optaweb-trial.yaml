@@ -8,12 +8,13 @@ servers:
   - omit: true
   #{{end}}
 others:
-## Optaweb BEGIN
+  ## Optaweb BEGIN
   - deploymentConfigs:
       - metadata:
           name: "{{.ApplicationName}}-optaweb-employee-rostering"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-optaweb-employee-rostering"
         spec:
           strategy:
@@ -38,6 +39,7 @@ others:
               labels:
                 deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
                 app: "{{.ApplicationName}}"
+                application: "{{.ApplicationName}}"
                 service: "{{.ApplicationName}}-optaweb-employee-rostering"
             spec:
               serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
@@ -98,6 +100,7 @@ others:
           name: "{{.ApplicationName}}-optaweb-employee-rostering"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-optaweb-employee-rostering"
           annotations:
             description: All the Optaweb's ports. (KIE server)
@@ -107,6 +110,7 @@ others:
           name: "{{.ApplicationName}}-optaweb-employee-rostering"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-optaweb-employee-rostering"
           annotations:
             description: Route for Optaweb's https service.
@@ -121,6 +125,7 @@ others:
           name: "{{.ApplicationName}}-optaweb-employee-rostering-http"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
             service: "{{.ApplicationName}}-optaweb-employee-rostering"
           annotations:
             description: Route for Optaweb's http service.
