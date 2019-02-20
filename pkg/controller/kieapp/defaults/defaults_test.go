@@ -543,6 +543,47 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
 }
 
+func TestDefaultKieServerNum(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhdmTrial,
+		},
+	}
+	_, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.Equal(t, constants.DefaultKieDeployments, cr.Spec.Objects.Server.Deployments, "Default number of kieserver deployments not being set in CR")
+	assert.Len(t, cr.Spec.Objects.Servers, 0, "There should be zero custom kieservers being set by default")
+}
+
+func TestZeroKieServerDeployments(t *testing.T) {
+	deployments := 0
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhdmTrial,
+			Objects: v1.KieAppObjects{
+				Server: &v1.CommonKieServerSet{
+					Deployments: deployments,
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting trial environment")
+	for i := 0; i < deployments; i++ {
+		kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: fmt.Sprintf("test-kieserver-%v", i)}
+		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+	}
+	assert.Equal(t, deployments, cr.Spec.Objects.Server.Deployments, "Number of kieserver deployments not set properly in CR")
+	assert.Len(t, cr.Spec.Objects.Servers, 0, "There should be zero custom kieservers being set by default")
+}
 func TestDefaultKieServerID(t *testing.T) {
 	deployments := 2
 	cr := &v1.KieApp{
