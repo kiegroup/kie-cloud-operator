@@ -23,9 +23,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-postgresql-claim-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-postgresql-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-postgresql-{{$index}}"
+            service: "{{$.Product}}-posgtresql"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -39,9 +39,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
         spec:
           replicas: 3
           template:
@@ -96,9 +96,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-postgresql-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-postgresql-{{$index}}"
+            service: "{{$.Product}}-posgtresql"
         spec:
           strategy:
             type: Recreate
@@ -121,9 +121,9 @@ servers:
               name: "{{$.ApplicationName}}-postgresql-{{$index}}"
               labels:
                 deploymentConfig: "{{$.ApplicationName}}-postgresql-{{$index}}"
-                app: "{{$.ApplicationName}}"
+                app: "{{$.ApplicationName}}-postgresql-{{$index}}"
                 application: "{{$.ApplicationName}}"
-                service: "{{$.ApplicationName}}-postgresql-{{$index}}"
+                service: "{{$.Product}}-posgtresql"
             spec:
               containers:
                 - name: "{{$.ApplicationName}}-postgresql"
@@ -169,7 +169,7 @@ servers:
             description: The database server's port.
           labels:
             application: prod
-            service: "{{$.ApplicationName}}-postgresql-{{$index}}"
+            service: "{{$.Product}}-posgtresql"
           name: "{{$.ApplicationName}}-postgresql-{{$index}}"
         spec:
           ports:

@@ -11,9 +11,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
         spec:
           replicas: 2
           template:
@@ -44,16 +44,16 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
     buildConfigs:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
         spec:
           source:
             type: Git

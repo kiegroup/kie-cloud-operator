@@ -89,9 +89,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-h2-claim-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
         spec:
           accessModes:
             - ReadWriteOnce

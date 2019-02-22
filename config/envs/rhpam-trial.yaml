@@ -32,9 +32,9 @@ console:
       metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}-http"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          service: "{{.Product}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's http service.
           haproxy.router.openshift.io/timeout: 60s
@@ -129,9 +129,9 @@ servers:
         metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
           annotations:
             description: Route for KIE server's http service.
             haproxy.router.openshift.io/timeout: 60s

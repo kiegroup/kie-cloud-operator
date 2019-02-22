@@ -3,8 +3,9 @@ console:
     - metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
+          service: "{{.Product}}-{{.Console.Name}}"
       spec:
         accessModes:
           - ReadWriteMany
@@ -64,8 +65,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-mysql-claim"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-mysql"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-mysql"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -76,8 +78,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}index-claim"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-{{.Product}}index"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -89,8 +92,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            app: "{{.ApplicationName}}-{{.Product}}index"
+            application: "{{.ApplicationName}}"
+            service: "{{.Product}}-{{.Product}}index"
         spec:
           strategy:
             type: Recreate
@@ -113,8 +117,9 @@ others:
               name: "{{.ApplicationName}}-{{.Product}}index"
               labels:
                 deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
-                app: "{{.ApplicationName}}"
+                app: "{{.ApplicationName}}-{{.Product}}index"
                 application: "{{.ApplicationName}}"
+                service: "{{.Product}}-{{.Product}}index"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
@@ -151,8 +156,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-mysql"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-mysql"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-mysql"
         spec:
           strategy:
             type: Recreate
@@ -175,8 +181,9 @@ others:
               name: "{{.ApplicationName}}-mysql"
               labels:
                 deploymentConfig: "{{.ApplicationName}}-mysql"
-                app: "{{.ApplicationName}}"
+                app: "{{.ApplicationName}}-mysql"
                 application: "{{.ApplicationName}}"
+                service: "{{.Product}}-mysql"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
@@ -217,10 +224,11 @@ others:
                     claimName: "{{.ApplicationName}}-mysql-claim"
 
       - metadata:
-          labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
           name: "{{.ApplicationName}}-amq"
+          labels:
+            app: "{{.ApplicationName}}-amq"
+            application: "{{.ApplicationName}}"
+            service: "{{.Product}}-amq"
         spec:
           replicas: 1
           selector:
@@ -232,8 +240,9 @@ others:
           template:
             metadata:
               labels:
-                app: "{{.ApplicationName}}"
+                app: "{{.ApplicationName}}-amq"
                 application: "{{.ApplicationName}}"
+                service: "{{.Product}}-amq"
                 deploymentConfig: "{{.ApplicationName}}-amq"
               name: "{{.ApplicationName}}-amq"
             spec:
@@ -304,9 +313,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-amq-tcp"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-amq"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-amq"
+            service: "{{.Product}}-amq"
           annotations:
             description: The broker's OpenWire port.
 
@@ -319,9 +328,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-mysql"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-mysql"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-mysql"
+            service: "{{.Product}}-mysql"
           annotations:
             description: The MySQL server's port.
 
@@ -338,9 +347,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            service: "{{.Product}}-{{.Product}}index"
           annotations:
             description: All the Business Central Indexing Elasticsearch ports.
 
@@ -349,8 +358,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-{{.Product}}index"
           annotations:
             description: Route for Business Central Indexing's Elasticsearch http service.
         spec:

@@ -3,8 +3,9 @@ console:
     - metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
+          service: "{{.Product}}-{{.Console.Name}}"
       spec:
         accessModes:
           - ReadWriteMany
@@ -64,8 +65,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}index-claim"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-{{.Product}}index"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -77,9 +79,9 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            service: "{{.Product}}-{{.Product}}index"
         spec:
           strategy:
             type: Recreate
@@ -102,8 +104,9 @@ others:
               name: "{{.ApplicationName}}-{{.Product}}index"
               labels:
                 deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
-                app: "{{.ApplicationName}}"
+                app: "{{.ApplicationName}}-{{.Product}}index"
                 application: "{{.ApplicationName}}"
+                service: "{{.Product}}-{{.Product}}index"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
@@ -139,8 +142,9 @@ others:
 
       - metadata:
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-amq"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-amq"
           name: "{{.ApplicationName}}-amq"
         spec:
           replicas: 1
@@ -153,8 +157,9 @@ others:
           template:
             metadata:
               labels:
-                app: "{{.ApplicationName}}"
+                app: "{{.ApplicationName}}-amq"
                 application: "{{.ApplicationName}}"
+                service: "{{.Product}}-amq"
                 deploymentConfig: "{{.ApplicationName}}-amq"
               name: "{{.ApplicationName}}-amq"
             spec:
@@ -225,9 +230,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-amq-tcp"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-amq"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-amq"
+            service: "{{.Product}}-amq"
           annotations:
             description: The broker's OpenWire port.
 
@@ -244,9 +249,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            service: "{{.Product}}-{{.Product}}index"
           annotations:
             description: All the Decision Central Indexing Elasticsearch ports.
 
@@ -255,8 +260,9 @@ others:
         metadata:
           name: "{{.ApplicationName}}-{{.Product}}index"
           labels:
-            app: "{{.ApplicationName}}"
+            app: "{{.ApplicationName}}-{{.Product}}index"
             application: "{{.ApplicationName}}"
+            service: "{{.Product}}-{{.Product}}index"
           annotations:
             description: Route for Decision Central Indexing's Elasticsearch http service.
         spec:

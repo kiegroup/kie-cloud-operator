@@ -3,9 +3,9 @@ console:
     - metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          service: "{{.Product}}-{{.Console.Name}}"
       spec:
         strategy:
           type: Recreate
@@ -28,9 +28,9 @@ console:
             name: "{{.ApplicationName}}-{{.Console.Name}}"
             labels:
               deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
-              app: "{{.ApplicationName}}"
+              app: "{{.ApplicationName}}-{{.Console.Name}}"
               application: "{{.ApplicationName}}"
-              service: "{{.ApplicationName}}-{{.Console.Name}}"
+              service: "{{.Product}}-{{.Console.Name}}"
           spec:
             serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
             terminationGracePeriodSeconds: 60
@@ -234,9 +234,9 @@ console:
       metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          service: "{{.Product}}-{{.Console.Name}}"
         annotations:
           description: All the Business Central web server's ports.
     - spec:
@@ -250,9 +250,9 @@ console:
       metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}-ping"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          service: "{{.Product}}-{{.Console.Name}}"
         annotations:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
@@ -261,9 +261,9 @@ console:
       metadata:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-{{.Console.Name}}"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          service: "{{.Product}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's https service.
           haproxy.router.openshift.io/timeout: 60s
@@ -282,9 +282,9 @@ smartrouter:
     - metadata:
         name: "{{.ApplicationName}}-smartrouter-claim"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-smartrouter"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          service: "{{.Product}}-smartrouter"
       spec:
         accessModes:
           - ReadWriteMany
@@ -295,9 +295,9 @@ smartrouter:
     - metadata:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-smartrouter"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          service: "{{.Product}}-smartrouter"
       spec:
         strategy:
           type: Recreate
@@ -319,10 +319,10 @@ smartrouter:
           metadata:
             name: "{{.ApplicationName}}-smartrouter"
             labels:
-              app: "{{.ApplicationName}}"
+              app: "{{.ApplicationName}}-smartrouter"
               application: "{{.ApplicationName}}"
               deploymentConfig: "{{.ApplicationName}}-smartrouter"
-              service: "{{.ApplicationName}}-smartrouter"
+              service: "{{.Product}}-smartrouter"
           spec:
             terminationGracePeriodSeconds: 60
             containers:
@@ -394,9 +394,9 @@ smartrouter:
       metadata:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-smartrouter"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          service: "{{.Product}}-smartrouter"
         annotations:
       description: The smart router server http and https ports.
   routes:
@@ -404,9 +404,9 @@ smartrouter:
       metadata:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
+          app: "{{.ApplicationName}}-smartrouter"
           application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          service: "{{.Product}}-smartrouter"
         annotations:
           description: Route for Smart Router's https service.
       spec:
@@ -428,9 +428,9 @@ servers:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
         spec:
           strategy:
             rollingParams:
@@ -454,9 +454,9 @@ servers:
             metadata:
               name: "{{$.ApplicationName}}-kieserver-{{$index}}"
               labels:
-                app: "{{$.ApplicationName}}"
+                app: "{{$.ApplicationName}}-kieserver-{{$index}}"
                 application: "{{$.ApplicationName}}"
-                service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                service: "{{$.Product}}-kieserver"
                 deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
             spec:
               serviceAccountName: "{{$.ApplicationName}}-{{$.Product}}svc"
@@ -670,9 +670,9 @@ servers:
         metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -686,9 +686,9 @@ servers:
         metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
@@ -699,9 +699,9 @@ servers:
         metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
-            app: "{{$.ApplicationName}}"
+            app: "{{$.ApplicationName}}-kieserver-{{$index}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{$.Product}}-kieserver"
           annotations:
             description: Route for KIE server's https service.
             haproxy.router.openshift.io/timeout: 60s
@@ -744,7 +744,6 @@ others:
       - metadata:
           name: "{{.ApplicationName}}-{{.Product}}svc"
           labels:
-            app: "{{.ApplicationName}}"
             application: "{{.ApplicationName}}"
 
     rolebindings:
