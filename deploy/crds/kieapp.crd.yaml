@@ -337,6 +337,16 @@ spec:
                           type: object
                         requests:
                           type: object
+            imageRegistry:
+              type: object
+              description: If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
+              properties:
+                registry:
+                  type: string
+                  description: Image registry's base 'url:port'. e.g. registry.example.com:5000. Defaults to 'registry.redhat.io'.
+                insecure:
+                  type: boolean
+                  description: A flag used to indicate the specified registry is insecure. Defaults to 'false'.
             auth:
               type: object
               description: Authentication integration configuration
