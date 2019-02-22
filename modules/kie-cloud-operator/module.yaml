@@ -1,5 +1,5 @@
 schema_version: 1
 
-name: business-automation-operator
+name: kie-cloud-operator
 execute:
   - script: install

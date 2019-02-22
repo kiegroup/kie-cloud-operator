@@ -1,0 +1,4 @@
+#!/bin/sh
+
+tar xvfz /tmp/artifacts/kie-cloud-operator.tar.gz -C /usr/local/bin/
+chmod +x /usr/local/bin/kie-cloud-operator

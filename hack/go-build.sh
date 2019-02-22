@@ -9,12 +9,12 @@ if [[ -z ${CI} ]]; then
     source hack/go-test.sh
     operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
     if [[ ${1} == "rhel" ]]; then
-        mkdir -p target/image
-        RESULT=$(md5sum build/_output/bin/kie-cloud-operator)
-        MD5=$(echo ${RESULT} | awk {'print $1'})
-        cekit-cache -v add --md5 ${RESULT}
-        cekit build --redhat --build-engine=osbs \
-            --overrides "{'version': '${TAG}', 'artifacts': [{'name': 'kie-cloud-operator', 'md5': '${MD5}'}]}"
+        cekit build \
+            --redhat \
+            --build-tech-preview \
+            --package-manager=microdnf \
+            --build-engine=osbs \
+            --build-osbs-target=rhpam-7-rhel-7-containers-candidate
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o build/_output/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
