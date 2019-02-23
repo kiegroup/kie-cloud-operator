@@ -110,7 +110,7 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 // or a specific one.
 func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
 	servers := []v1.ServerTemplate{}
-	if cr.Spec.Objects.Server != nil && len(cr.Spec.Objects.Servers) > 0 {
+	if cr.Spec.Objects.Servers != nil && len(cr.Spec.Objects.Servers) > 0 {
 		return servers, errors.New("invalid spec: provide either server or servers object")
 	}
 	if len(cr.Spec.Objects.Servers) != 0 {

@@ -96,26 +96,18 @@ type KieAppList struct {
 type KieAppObjects struct {
 	// Business Central container configs
 	Console KieAppObject `json:"console,omitempty"`
-	// KIE Server common container configs
-	Server *CommonKieServerSet `json:"server,omitempty"`
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// Smartrouter container configs
 	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
 }
 
-// CommonKieServerSet KIE Server configuration to use for all the defined sets
-type CommonKieServerSet struct {
-	Deployments int                     `json:"deployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	Spec        KieAppObject            `json:"server,omitempty"`
-	From        *corev1.ObjectReference `json:"from,omitempty"`
-}
-
-// KieServerSet KIE Server configuration for a single set
+// KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
 type KieServerSet struct {
-	Name string                  `json:"name,omitempty"`
-	Spec KieAppObject            `json:"spec,omitempty"`
-	From *corev1.ObjectReference `json:"from,omitempty"`
+	Deployments int                     `json:"deployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	Name        string                  `json:"name,omitempty"`
+	Spec        KieAppObject            `json:"spec,omitempty"`
+	From        *corev1.ObjectReference `json:"from,omitempty"`
 	// S2I Build configuration
 	Build *KieAppBuildObject `json:"build,omitempty"`
 }

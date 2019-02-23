@@ -90,75 +90,6 @@ spec:
                           type: object
                         requests:
                           type: object
-                server:
-                  type: object
-                  description: Configuration of the RHPAM KIE server
-                  properties:
-                    deployments:
-                      type: integer
-                      format: int16
-                      description: Number of Server sets that will be deployed
-                    from:
-                      type: object
-                      description: Image definition to use for all the servers
-                      required:
-                        - kind
-                        - name
-                      properties:
-                        kind:
-                          type: string
-                          description: Object kind
-                          enum:
-                            - ImageStreamTag
-                            - DockerImage
-                        name:
-                          type: string
-                          description: Object name
-                        namespace:
-                          type: string
-                          description: Namespace where the object is located for the case of Kind ImageStreamTag
-                    spec:
-                      type: object
-                      description: Common Server configuration
-#                      anyOf:
-#                      - required:
-#                        - env
-#                      - required:
-#                        - resources
-                      properties:
-                        env:
-                          type: array
-                          items:
-                            type: object
-                            required:
-                              - name
-                            oneOf:
-                              - required:
-                                  - value
-                              - required:
-                                  - valueFrom
-                            properties:
-                              name:
-                                type: string
-                                description: Name of an environment variable
-                              value:
-                                type: string
-                                description: Value for that environment variable
-                              valueFrom:
-                                type: object
-                                description: Source for the environment variable's value
-                        resources:
-                          type: object
-#                           anyOf:
-#                             - required:
-#                               - limits
-#                             - required:
-#                               - requests
-                          properties:
-                            limits:
-                              type: object
-                            requests:
-                              type: object
                 servers:
                   type: array
                   description: Configuration of the each individual KIE server
@@ -170,6 +101,10 @@ spec:
                       name:
                         type: string
                         description: Server name
+                      deployments:
+                        type: integer
+                        format: int16
+                        description: Number of Server sets that will be deployed
                       from:
                         type: object
                         description: Image definition to use for all the servers
@@ -179,7 +114,10 @@ spec:
                         properties:
                           kind:
                             type: string
-                            description: Object kind. e.g. ImageStreamTag
+                            description: Object kind
+                            enum:
+                              - ImageStreamTag
+                              - DockerImage
                           name:
                             type: string
                             description: Object name
