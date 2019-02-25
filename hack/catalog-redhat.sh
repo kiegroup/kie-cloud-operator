@@ -6,15 +6,15 @@ else
     CATALOG_NS=${1}
 fi
 
-CSV=`cat deploy/catalog_resources/community/kiecloud-operator.v1.0.0.clusterserviceversion.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
+CSV=`cat deploy/catalog_resources/redhat/businessautomation-operator.v1.0.0.clusterserviceversion.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 CRD=`cat deploy/crds/kieapp.crd.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
-PKG=`cat deploy/catalog_resources/community/kiecloud.package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
+PKG=`cat deploy/catalog_resources/redhat/businessautomation.package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: catalog-resources
+  name: ba-resources
   namespace: ${CATALOG_NS}
 data:
   clusterServiceVersions: |
@@ -29,15 +29,15 @@ cat <<EOF | kubectl apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: catalog-resources
+  name: ba-resources
   namespace: ${CATALOG_NS}
 spec:
-  configMap: catalog-resources
-  displayName: Catalog Operators
+  configMap: ba-resources
+  displayName: Business Automation Operators
   publisher: Red Hat
   sourceType: internal
 status:
   configMapReference:
-    name: catalog-resources
+    name: ba-resources
     namespace: ${CATALOG_NS}
 EOF
