@@ -9,7 +9,10 @@ if [[ -z ${CI} ]]; then
     source hack/go-test.sh
     operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
     if [[ ${1} == "rhel" ]]; then
-        cekit build \
+        if [[ ${2} == "release" ]]; then
+            CFLAG="--build-osbs-release"
+        fi
+        cekit build ${CFLAG} \
             --redhat \
             --build-tech-preview \
             --package-manager=microdnf \
