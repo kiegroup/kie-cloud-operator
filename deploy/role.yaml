@@ -8,9 +8,7 @@ rules:
     resources:
       - "*"
     verbs:
-      - get
-      - list
-      - view
+      - "*"
   - apiGroups:
       - ""
     resources:
@@ -49,12 +47,7 @@ rules:
       - roles
       - rolebindings
     verbs:
-      - get
-      - list
-      - watch
-      - view
-      - create
-      - bind
+      - "*"
   - apiGroups:
       - monitoring.coreos.com
     resources:
