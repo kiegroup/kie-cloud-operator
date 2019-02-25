@@ -19,6 +19,7 @@ packages:
   content_sets:
     x86_64:
       - rhel-7-server-rpms
+      - rhel-atomic-host-rpms
   install:
     - tar
     - gzip
