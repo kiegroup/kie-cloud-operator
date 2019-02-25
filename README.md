@@ -160,5 +160,8 @@ spec:
 
 Requires `cekit` and `rhpkg` -
 ```bash
+# scratch build
 make rhel
+# release candidate
+make rhel-release
 ```
