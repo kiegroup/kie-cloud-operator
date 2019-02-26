@@ -56,6 +56,10 @@ build:
 rhel:
 	./hack/go-build.sh rhel
 
+.PHONY: rhel-release
+rhel-release:
+	./hack/go-build.sh rhel release
+
 .PHONY: clean
 clean:
 	rm -rf build/_output \

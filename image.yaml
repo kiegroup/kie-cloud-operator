@@ -1,37 +1,47 @@
 schema_version: 1
 
-name: "rhpam-7-tech-preview/business-automation-operator"
+name: "rhpam-7/rhpam73-operator"
 description: "Red Hat Business Automation Operator"
-version: "x.x"
-from: "rhel-minimal:7.6"
+version: "1.0"
+from: "rhel7-minimal"
 labels:
   - name: "maintainer"
     value: "bsig-cloud@redhat.com"
   - name: "com.redhat.component"
-    value: "business-automation-operator-container"
+    value: "rhpam-7-rhpam73-operator-container"
   - name: "io.k8s.description"
     value: "Operator for deploying RHPAM & RHDM"
   - name: "io.k8s.display-name"
     value: "Red Hat Business Automation Operator"
-  - name: "io.openshift.expose-services"
-    value: "60000:metrics"
   - name: "io.openshift.tags"
     value: "rhpam,rhdm,operator"
+packages:
+  content_sets:
+    x86_64:
+      - rhel-7-server-rpms
+      - rhel-atomic-host-rpms
+  install:
+    - tar
+    - gzip
 modules:
   repositories:
     - path: modules
   install:
-    - name: business-automation-operator
+    - name: kie-cloud-operator
 artifacts:
-  - name: kie-cloud-operator
-    md5: md5sum
-ports:
-  - value: 6000
+  - name: kie-cloud-operator.tar.gz
+    url: https://github.com/kiegroup/kie-cloud-operator/releases/download/v1.0.0/kie-cloud-operator.v1.0.0.tar.gz
+    md5: fc3c072baaf79421d3d4e1a3b09ad5ea
 osbs:
   configuration:
-    container_file: container.yaml
+    container:
+      platforms:
+        only:
+          - x86_64
+      compose:
+        pulp_repos: true
   repository:
-    name: containers/business-automation-operator
+    name: containers/rhpam-7-operator
     branch: rhpam-7.3-openshift-rhel-7
 run:
   user: nobody

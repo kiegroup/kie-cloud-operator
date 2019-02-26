@@ -421,7 +421,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 				},
 				RoleMapper: &v1.RoleMapperAuthConfig{
 					RolesProperties: "mapping.properties",
-					ReplaceRole:     "true",
+					ReplaceRole:     true,
 				},
 			},
 		},

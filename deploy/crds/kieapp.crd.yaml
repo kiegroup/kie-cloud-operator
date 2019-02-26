@@ -139,9 +139,8 @@ spec:
                     description: KIE Server configuration
                     properties:
                       name:
-                        type: integer
-                        format: int16
-                        description: Number of Server sets that will be deployed
+                        type: string
+                        description: Server name
                       from:
                         type: object
                         description: Image definition to use for all the servers
@@ -289,6 +288,16 @@ spec:
                           type: object
                         requests:
                           type: object
+            imageRegistry:
+              type: object
+              description: If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
+              properties:
+                registry:
+                  type: string
+                  description: Image registry's base 'url:port'. e.g. registry.example.com:5000. Defaults to 'registry.redhat.io'.
+                insecure:
+                  type: boolean
+                  description: A flag used to indicate the specified registry is insecure. Defaults to 'false'.
             auth:
               type: object
               description: Authentication integration configuration
@@ -447,5 +456,5 @@ spec:
                       type: string
                       description: When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3
                     replaceRole:
-                      type: string
+                      type: boolean
                       description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.

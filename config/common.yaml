@@ -4,6 +4,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-{{.Console.Name}}"
       spec:
         strategy:
@@ -28,6 +29,7 @@ console:
             labels:
               deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
               app: "{{.ApplicationName}}"
+              application: "{{.ApplicationName}}"
               service: "{{.ApplicationName}}-{{.Console.Name}}"
           spec:
             serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
@@ -233,6 +235,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: All the Business Central web server's ports.
@@ -248,6 +251,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}-ping"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
@@ -258,6 +262,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-{{.Console.Name}}"
         annotations:
           description: Route for Business Central's https service.
@@ -278,6 +283,7 @@ smartrouter:
         name: "{{.ApplicationName}}-smartrouter-claim"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
       spec:
         accessModes:
@@ -290,6 +296,7 @@ smartrouter:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
       spec:
         strategy:
@@ -313,6 +320,7 @@ smartrouter:
             name: "{{.ApplicationName}}-smartrouter"
             labels:
               app: "{{.ApplicationName}}"
+              application: "{{.ApplicationName}}"
               deploymentConfig: "{{.ApplicationName}}-smartrouter"
               service: "{{.ApplicationName}}-smartrouter"
           spec:
@@ -387,6 +395,7 @@ smartrouter:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
       description: The smart router server http and https ports.
@@ -396,6 +405,7 @@ smartrouter:
         name: "{{.ApplicationName}}-smartrouter"
         labels:
           app: "{{.ApplicationName}}"
+          application: "{{.ApplicationName}}"
           service: "{{.ApplicationName}}-smartrouter"
         annotations:
           description: Route for Smart Router's https service.
@@ -419,6 +429,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           strategy:
@@ -444,6 +455,7 @@ servers:
               name: "{{$.ApplicationName}}-kieserver-{{$index}}"
               labels:
                 app: "{{$.ApplicationName}}"
+                application: "{{$.ApplicationName}}"
                 service: "{{$.ApplicationName}}-kieserver-{{$index}}"
                 deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
             spec:
@@ -659,6 +671,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
@@ -674,6 +687,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
@@ -686,6 +700,7 @@ servers:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
           annotations:
             description: Route for KIE server's https service.
@@ -730,6 +745,7 @@ others:
           name: "{{.ApplicationName}}-{{.Product}}svc"
           labels:
             app: "{{.ApplicationName}}"
+            application: "{{.ApplicationName}}"
 
     rolebindings:
       - metadata:

@@ -6,12 +6,13 @@ smartrouter:
 servers:
   ## RANGE BEGINS
   #{{ range $index, $Map := .Servers }}
-    ## KIE server deployment config BEGIN
+  ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           replicas: 2
@@ -37,19 +38,21 @@ servers:
                       value: "EXTERNAL"
 
       ## KIE server deployment config END
-  ## KIE server build config BEGIN
-  #{{if .Build.KieServerContainerDeployment}}
+    ## KIE server build config BEGIN
+    #{{if .Build.KieServerContainerDeployment}}
     imageStreams:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
     buildConfigs:
       - metadata:
           name: "{{$.ApplicationName}}-kieserver-{{$index}}"
           labels:
             app: "{{$.ApplicationName}}"
+            application: "{{$.ApplicationName}}"
             service: "{{$.ApplicationName}}-kieserver-{{$index}}"
         spec:
           source:

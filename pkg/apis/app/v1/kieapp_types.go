@@ -253,7 +253,7 @@ const (
 // RoleMapperAuthConfig Configuration for RoleMapper Authentication
 type RoleMapperAuthConfig struct {
 	RolesProperties string `json:"rolesProperties,omitempty"`
-	ReplaceRole     string `json:"replaceRole,omitempty"`
+	ReplaceRole     bool   `json:"replaceRole,omitempty"`
 }
 
 type OpenShiftObject interface {

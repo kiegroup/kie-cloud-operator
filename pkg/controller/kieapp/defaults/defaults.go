@@ -131,11 +131,12 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			servers = append(servers, crTemplate)
 		}
 	} else {
-		deployments := constants.DefaultKieDeployments
-		if cr.Spec.Objects.Server != nil && cr.Spec.Objects.Server.Deployments != 0 {
-			deployments = cr.Spec.Objects.Server.Deployments
+		if cr.Spec.Objects.Server == nil {
+			cr.Spec.Objects.Server = &v1.CommonKieServerSet{
+				Deployments: constants.DefaultKieDeployments,
+			}
 		}
-		for i := 0; i < deployments; i++ {
+		for i := 0; i < cr.Spec.Objects.Server.Deployments; i++ {
 			crTemplate := v1.ServerTemplate{
 				KieServerID: fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i),
 			}

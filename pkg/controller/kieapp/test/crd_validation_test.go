@@ -35,6 +35,18 @@ func TestSampleCustomResources(t *testing.T) {
 	}
 }
 
+func TestExampleCustomResources(t *testing.T) {
+	schema := getSchema(t)
+	box := packr.NewBox("../../../../deploy/examples")
+	for _, file := range box.List() {
+		yamlString, err := box.FindString(file)
+		assert.NoError(t, err, "Error reading %v CR yaml", file)
+		var input map[string]interface{}
+		assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
+		assert.NoError(t, validate.AgainstSchema(schema, input, strfmt.Default), "File %v does not validate against the CRD schema", file)
+	}
+}
+
 func TestTrialEnvMinimum(t *testing.T) {
 	var inputYaml = `
 apiVersion: app.kiegroup.org/v1
