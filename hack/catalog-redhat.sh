@@ -42,7 +42,10 @@ status:
     namespace: ${CATALOG_NS}
 EOF
 
-cat <<EOF >deploy/catalog_resources/redhat/bundle.1.0.0.yaml
+BUNDLE_FILE="deploy/catalog_resources/redhat/bundle.1.0.0.yaml"
+if [ -d $(dirname "${BUNDLE_FILE}") ]; then
+echo "Generating ${BUNDLE_FILE}"
+cat <<EOF >${BUNDLE_FILE}
 data:
   clusterServiceVersions: |
 ${CSV}
@@ -51,3 +54,4 @@ ${CRD}
   packages: >
 ${PKG}
 EOF
+fi
