@@ -1,28 +1,28 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: kiecloud-operator.v0.1.0
+  name: businessautomation-operator.v1.0.0
   namespace: placeholder
   annotations:
-    categories: kieapp, rhpam, rhdm, kie, cloud, pam, bpm, process, case, automation, operator
+    categories: kieapp, rhpam, rhdm, kie, cloud, pam, bpm, process, case, business, automation, operator
     certified: "false"
-    description: KieCloud can deploy RHPAM/RHDM environments in the form of KieApp objects.
-    containerImage: quay.io/kiegroup/kie-cloud-operator:0.1
+    description: Business Automation Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
+    containerImage: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.0
     createdAt: 2019-01-25T20:48:22Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
-      [{"apiVersion":"app.kiegroup.org/v1","kind":"KieApp","metadata":{"name":"trial"},"spec":{"environment":"rhpam-trial"}}]
+      [{"apiVersion":"app.kiegroup.org/v1","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]
   labels:
-    operator-kiecloud: "true"
+    operator-businessautomation: "true"
 spec:
-  displayName: KieCloud
-  description: KieCloud can deploy RHPAM/RHDM environments in the form of KieApp objects.
+  displayName: Business Automation
+  description: Business Automation Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
   keywords:
     [
-      kieapp rhpam rhdm kie cloud pam bpm process case automation decision operator,
+      kieapp rhpam rhdm kie cloud pam bpm process case business automation decision operator,
     ]
-  version: 0.1.0
+  version: 1.0.0
   maturity: beta
   maintainers:
     - name: Red Hat, Inc.
@@ -38,12 +38,12 @@ spec:
     - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2Q3MWUwMH0uY2xzLTJ7ZmlsbDojYzIxYTAwfS5jbHMtM3tmaWxsOiNjZGNkY2R9LmNscy00e2ZpbGw6I2ZmZn0uY2xzLTV7ZmlsbDojZWFlYWVhfTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5Mb2dvPC90aXRsZT48ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIj48Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiB0cmFuc2Zvcm09InJvdGF0ZSgtNDUgNTAgNTApIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNODUuMzYgMTQuNjRhNTAgNTAgMCAwIDEtNzAuNzIgNzAuNzJ6Ii8+PHBhdGggY2xhc3M9ImNscy0zIiBkPSJNNTMuNTYgMjIuNzJ2MzguOWwtNi4xNyAyLjU1djEyLjI1YTI3IDI3IDAgMCAwIDIuNzMuM1Y2Ni40Nmw2LjE3LTIuNTVWMjMuMDZjLS45LS4xNi0xLjgxLS4yNy0yLjczLS4zNHoiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik01MS41NCAyMGEzMC4xNCAzMC4xNCAwIDAgMC00LjE1IDYwVjY0LjE3bDYuMTctMi41NVYyMC4wOWMtLjY3LS4wOS0xLjM0LS4wOS0yLjAyLS4wOXpNNDAuMzkgNTEuNTlhMi4yNiAyLjI2IDAgMSAxIDIuMjYtMi4yNiAyLjI2IDIuMjYgMCAwIDEtMi4yNiAyLjI2eiIvPjxjaXJjbGUgY3g9IjQwLjM5IiBjeT0iNDkuMzMiIHI9IjIuMjYiLz48Y2lyY2xlIGN4PSI2Mi43IiBjeT0iNDkuMzMiIHI9IjIuMjYiLz48cGF0aCBjbGFzcz0iY2xzLTUiIGQ9Ik01Ni4yOSAyMy4wNnY0MC44NWwtNi4xNyAyLjU1Vjc2LjdjLjQ3IDAgLjk1LjA1IDEuNDMuMDVhMjcuMDYgMjcuMDYgMCAwIDAgNC43NC01My42OXptNi40MSAyOC41M2EyLjI2IDIuMjYgMCAxIDEgMi4zLTIuMjYgMi4yNiAyLjI2IDAgMCAxLTIuMyAyLjI2eiIvPjwvZz48L3N2Zz4=
       mediatype: image/svg+xml
   labels:
-    alm-owner-kiecloud: kiecloud-operator
-    operated-by: kiecloud-operator.v0.1.0
+    alm-owner-businessautomation: businessautomation-operator
+    operated-by: businessautomation-operator.v1.0.0
   selector:
     matchLabels:
-      alm-owner-kiecloud: kiecloud-operator
-      operated-by: kiecloud-operator.v0.1.0
+      alm-owner-businessautomation: businessautomation-operator
+      operated-by: businessautomation-operator.v1.0.0
   installModes:
     - type: OwnNamespace
       supported: true
@@ -107,7 +107,7 @@ spec:
     strategy: deployment
     spec:
       permissions:
-        - serviceAccountName: kie-cloud-operator
+        - serviceAccountName: business-automation-operator
           rules:
             - apiGroups:
                 - ""
@@ -162,23 +162,23 @@ spec:
                 - get
                 - create
       deployments:
-        - name: kie-cloud-operator
+        - name: business-automation-operator
           spec:
             replicas: 1
             strategy:
               type: Recreate
             selector:
               matchLabels:
-                name: kie-cloud-operator
+                name: business-automation-operator
             template:
               metadata:
                 labels:
-                  name: kie-cloud-operator
+                  name: business-automation-operator
               spec:
-                serviceAccountName: kie-cloud-operator
+                serviceAccountName: business-automation-operator
                 containers:
-                  - name: kie-cloud-operator
-                    image: quay.io/kiegroup/kie-cloud-operator:0.1
+                  - name: business-automation-operator
+                    image: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.0
                     ports:
                       - containerPort: 60000
                         name: metrics
@@ -203,4 +203,4 @@ spec:
                           fieldRef:
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
-                        value: "kie-cloud-operator"
+                        value: "business-automation-operator"
