@@ -41,3 +41,13 @@ status:
     name: ba-resources
     namespace: ${CATALOG_NS}
 EOF
+
+cat <<EOF >deploy/catalog_resources/redhat/bundle.1.0.0.yaml
+data:
+  clusterServiceVersions: |
+${CSV}
+  customResourceDefinitions: |
+${CRD}
+  packages: >
+${PKG}
+EOF
