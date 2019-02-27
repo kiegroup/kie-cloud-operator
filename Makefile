@@ -54,6 +54,10 @@ build:
 
 .PHONY: rhel
 rhel:
+	LOCAL=true ./hack/go-build.sh rhel
+
+.PHONY: rhel-scratch
+rhel-scratch:
 	./hack/go-build.sh rhel
 
 .PHONY: rhel-release
