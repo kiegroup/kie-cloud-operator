@@ -1,4 +1,33 @@
 #!/bin/sh
 
-tar xvfz /tmp/artifacts/kie-cloud-operator.tar.gz -C /usr/local/bin/
-chmod +x /usr/local/bin/kie-cloud-operator
+INSTALL_PKGS="go-toolset-1.10"
+yum install -y ${INSTALL_PKGS} \
+    && rpm -q ${INSTALL_PKGS}
+
+scl enable go-toolset-1.10 - << \EOF
+REPO=kie-cloud-operator
+GHORG=github.com/kiegroup
+GHFULL=${GHORG}/${REPO}
+GOPATH=${HOME}/go
+go version
+
+mkdir -p ${GOPATH}/src/${GHFULL}
+tar xfz /tmp/artifacts/kie-cloud-operator.tar.gz --strip-components=1 -C ${GOPATH}/src/${GHFULL}
+cd ${GOPATH}/src/${GHFULL} && pwd
+
+go generate ./...
+go vet ./...
+go test ./...
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o /usr/local/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
+EOF
+
+BINARY=/usr/local/bin/kie-cloud-operator
+if [[ ! -f ${BINARY} ]] ; then
+    echo "${BINARY} does not exist, aborting."
+    exit 1
+fi
+stat ${BINARY}
+
+yum -y autoremove ${INSTALL_PKGS} \
+    && yum clean all && rm -rf /var/cache/yum
+rm -rf ${HOME}/go
