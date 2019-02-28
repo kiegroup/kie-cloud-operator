@@ -73,43 +73,14 @@ func TestInaccessibleConfigMap(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 }
 
-func TestInvalidServersConfiguration(t *testing.T) {
-	defer func() {
-		err := recover()
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test-ns",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 1,
-				},
-				Servers: []v1.KieServerSet{
-					v1.KieServerSet{},
-				},
-			},
-		},
-	}
-
-	_, err := GetEnvironment(cr, test.MockService())
-	assert.Error(t, err, "invalid spec: provide either server or servers object")
-}
-
 func TestMultipleServerDeployment(t *testing.T) {
+	deployments := 6
 	defer func() {
 		err := recover()
 		if err != nil {
 			log.Error(err)
 		}
 	}()
-	expectedDeployments := 6
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -118,20 +89,21 @@ func TestMultipleServerDeployment(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: expectedDeployments,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(deployments)},
 				},
 			},
 		},
 	}
 
 	env, err := GetEnvironment(cr, test.MockService())
-	assert.Equal(t, expectedDeployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, expectedDeployments-1), env.Servers[expectedDeployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, deployments, len(env.Servers))
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments-1), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
 
 func TestRHPAMTrialEnvironment(t *testing.T) {
+	deployments := 2
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -139,8 +111,8 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 2,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(deployments)},
 				},
 			},
 		},
@@ -166,6 +138,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 }
 
 func TestRHDMTrialEnvironment(t *testing.T) {
+	deployments := 2
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -173,8 +146,8 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhdmTrial,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 2,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(deployments)},
 				},
 			},
 		},
@@ -293,38 +266,21 @@ func TestBuildConfiguration(t *testing.T) {
 			Environment: v1.RhpamProductionImmutable,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
-					v1.KieServerSet{
+					{
+						Deployments: Pint(2),
 						Build: &v1.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
-							MavenMirrorURL:               "https://maven.mirror.com/0",
-							ArtifactDir:                  "dir0",
+							MavenMirrorURL:               "https://maven.mirror.com/",
+							ArtifactDir:                  "dir",
 							GitSource: v1.GitSource{
-								URI:        "http://git.example.com0",
-								Reference:  "somebranch0",
-								ContextDir: "example0",
+								URI:        "http://git.example.com",
+								Reference:  "somebranch",
+								ContextDir: "example",
 							},
 							Webhooks: []v1.WebhookSecret{
 								{
 									Type:   v1.GitHubWebhook,
-									Secret: "s3cr3t0",
-								},
-							},
-						},
-					},
-					v1.KieServerSet{
-						Build: &v1.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.1-SNAPSHOT",
-							MavenMirrorURL:               "https://maven.mirror.com/1",
-							ArtifactDir:                  "dir1",
-							GitSource: v1.GitSource{
-								URI:        "http://git.example.com1",
-								Reference:  "somebranch1",
-								ContextDir: "example1",
-							},
-							Webhooks: []v1.WebhookSecret{
-								{
-									Type:   v1.GitHubWebhook,
-									Secret: "s3cr3t1",
+									Secret: "s3cr3t",
 								},
 							},
 						},
@@ -336,16 +292,16 @@ func TestBuildConfiguration(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
-	for i, server := range env.Servers {
+	for _, server := range env.Servers {
 		assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
-		assert.Equal(t, fmt.Sprintf("http://git.example.com%v", i), server.BuildConfigs[0].Spec.Source.Git.URI)
-		assert.Equal(t, fmt.Sprintf("somebranch%v", i), server.BuildConfigs[0].Spec.Source.Git.Ref)
-		assert.Equal(t, fmt.Sprintf("example%v", i), server.BuildConfigs[0].Spec.Source.ContextDir)
+		assert.Equal(t, fmt.Sprintf("http://git.example.com"), server.BuildConfigs[0].Spec.Source.Git.URI)
+		assert.Equal(t, fmt.Sprintf("somebranch"), server.BuildConfigs[0].Spec.Source.Git.Ref)
+		assert.Equal(t, fmt.Sprintf("example"), server.BuildConfigs[0].Spec.Source.ContextDir)
 
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.%v-SNAPSHOT", i), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
-		assert.Equal(t, fmt.Sprintf("https://maven.mirror.com/%v", i), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
-		assert.Equal(t, fmt.Sprintf("dir%v", i), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
-		assert.Equal(t, fmt.Sprintf("s3cr3t%v", i), server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
+		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+		assert.Equal(t, fmt.Sprintf("https://maven.mirror.com/"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
+		assert.Equal(t, fmt.Sprintf("dir"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+		assert.Equal(t, fmt.Sprintf("s3cr3t"), server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
 		assert.NotEmpty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
 	}
 }
@@ -404,7 +360,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	object := shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
+	object := shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -419,7 +375,7 @@ func TestConstructSmartrouterObject(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	object := shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
+	object := shared.ConstructObject(env.Smartrouter, cr.Spec.Objects.Smartrouter)
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Smartrouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -435,7 +391,7 @@ func TestConstructServerObject(t *testing.T) {
 	assert.Nil(t, err)
 
 	for i := range env.Servers {
-		object := shared.ConstructObject(env.Servers[i], &cr.Spec.Objects.Server.Spec)
+		object := shared.ConstructObject(env.Servers[i], cr.Spec.Objects.Servers[0].KieAppObject)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i), object.DeploymentConfigs[0].Name)
 		re := regexp.MustCompile("[0-9]+")
 		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -471,15 +427,20 @@ func buildKieApp(name string) *v1.KieApp {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
-				Console: v1.KieAppObject{
-					Env:       sampleEnv,
-					Resources: sampleResources,
-				},
-				Server: &v1.CommonKieServerSet{
-					Spec: v1.KieAppObject{
-
+				Console: v1.SecuredKieAppObject{
+					KieAppObject: v1.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
+					},
+				},
+				Servers: []v1.KieServerSet{
+					{
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							KieAppObject: v1.KieAppObject{
+								Env:       sampleEnv,
+								Resources: sampleResources,
+							},
+						},
 					},
 				},
 				Smartrouter: v1.KieAppObject{
@@ -555,8 +516,8 @@ func TestDefaultKieServerNum(t *testing.T) {
 	_, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, constants.DefaultKieDeployments, cr.Spec.Objects.Server.Deployments, "Default number of kieserver deployments not being set in CR")
-	assert.Len(t, cr.Spec.Objects.Servers, 0, "There should be zero custom kieservers being set by default")
+	assert.Equal(t, constants.DefaultKieDeployments, *cr.Spec.Objects.Servers[0].Deployments, "Default number of kieserver deployments not being set in CR")
+	assert.Len(t, cr.Spec.Objects.Servers, 1, "There should be 1 custom kieserver being set by default")
 }
 
 func TestZeroKieServerDeployments(t *testing.T) {
@@ -568,8 +529,8 @@ func TestZeroKieServerDeployments(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhdmTrial,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: deployments,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(deployments)},
 				},
 			},
 		},
@@ -581,9 +542,9 @@ func TestZeroKieServerDeployments(t *testing.T) {
 		kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: fmt.Sprintf("test-kieserver-%v", i)}
 		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
 	}
-	assert.Equal(t, deployments, cr.Spec.Objects.Server.Deployments, "Number of kieserver deployments not set properly in CR")
-	assert.Len(t, cr.Spec.Objects.Servers, 0, "There should be zero custom kieservers being set by default")
+	assert.Equal(t, deployments, *cr.Spec.Objects.Servers[0].Deployments, "Number of kieserver deployments not set properly in CR")
 }
+
 func TestDefaultKieServerID(t *testing.T) {
 	deployments := 2
 	cr := &v1.KieApp{
@@ -593,8 +554,8 @@ func TestDefaultKieServerID(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhdmTrial,
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: deployments,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(deployments)},
 				},
 			},
 		},
@@ -617,11 +578,11 @@ func TestSetKieServerID(t *testing.T) {
 			Environment: v1.RhdmTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
-					v1.KieServerSet{
-						Name: "kieserver-alpha",
+					{
+						Name: "alpha",
 					},
-					v1.KieServerSet{
-						Name: "kieserver-beta",
+					{
+						Name: "beta",
 					},
 				},
 			},
@@ -630,10 +591,15 @@ func TestSetKieServerID(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "kieserver-alpha"}
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
-	kieServerID = corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "kieserver-beta"}
-	assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+	for _, s := range env.Servers {
+		if s.KieName == GenKieName(cr.Name, "alpha") {
+			kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: fmt.Sprintf("%s-%s", s.KieName, "kieserver-0")}
+			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+		} else {
+			kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: fmt.Sprintf("%s-%s", s.KieName, "kieserver-0")}
+			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+		}
+	}
 }
 
 func TestSetKieServerFrom(t *testing.T) {
@@ -645,13 +611,14 @@ func TestSetKieServerFrom(t *testing.T) {
 			Environment: v1.RhdmTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
-					v1.KieServerSet{
+					{
+						Name: "one",
 						From: &corev1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: "hello-rules:latest",
 						},
 					},
-					v1.KieServerSet{
+					{
 						From: &corev1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: "bye-rules:latest",
@@ -664,10 +631,15 @@ func TestSetKieServerFrom(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, "hello-rules:latest", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, "bye-rules:latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	for _, s := range env.Servers {
+		if s.KieName == GenKieName(cr.Name, "one") {
+			assert.Equal(t, "hello-rules:latest", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, "", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+		} else {
+			assert.Equal(t, "bye-rules:latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, "", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+		}
+	}
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
@@ -679,13 +651,14 @@ func TestSetKieServerFromBuild(t *testing.T) {
 			Environment: v1.RhdmProductionImmutable,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
-					v1.KieServerSet{
+					{
+						Name: "one",
 						From: &corev1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: "hello-rules:latest",
 						},
 					},
-					v1.KieServerSet{
+					{
 						From: &corev1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: "bye-rules:latest",
@@ -698,11 +671,16 @@ func TestSetKieServerFromBuild(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, "hello-rules:latest", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, "test-kieserver-1:latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	for _, s := range env.Servers {
+		if s.KieName == GenKieName(cr.Name, "one") {
+			assert.Nil(t, err, "Error getting trial environment")
+			assert.Equal(t, "hello-rules:latest", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, "", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+		} else {
+			assert.Equal(t, "test-kieserver-0:latest", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, "", s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+		}
+	}
 }
 
 func TestMultipleBuildConfigurations(t *testing.T) {
@@ -715,6 +693,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{
+						Name: "one",
 						Build: &v1.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
 							GitSource: v1.GitSource{
@@ -759,15 +738,19 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
-	assert.Equal(t, "somebranch", env.Servers[0].BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, "anotherbranch", env.Servers[1].BuildConfigs[0].Spec.Source.Git.Ref)
 
-	assert.Equal(t, "ImageStreamTag", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	assert.Equal(t, "custom-kieserver", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
-	assert.Equal(t, "", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
-
-	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	imgName := fmt.Sprintf("rhdm%v-kieserver-openshift:%v", cr.Spec.CommonConfig.Version, cr.Spec.CommonConfig.ImageTag)
-	assert.Equal(t, imgName, env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
-	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
+	for _, s := range env.Servers {
+		if s.KieName == GenKieName(cr.Name, "one") {
+			assert.Equal(t, "somebranch", s.BuildConfigs[0].Spec.Source.Git.Ref)
+			assert.Equal(t, "ImageStreamTag", s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
+			assert.Equal(t, "custom-kieserver", s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+			assert.Equal(t, "", s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
+		} else {
+			assert.Equal(t, "anotherbranch", s.BuildConfigs[0].Spec.Source.Git.Ref)
+			assert.Equal(t, "ImageStreamTag", s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
+			imgName := fmt.Sprintf("rhdm%v-kieserver-openshift:%v", cr.Spec.CommonConfig.Version, cr.Spec.CommonConfig.ImageTag)
+			assert.Equal(t, imgName, s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+			assert.Equal(t, "openshift", s.BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
+		}
+	}
 }

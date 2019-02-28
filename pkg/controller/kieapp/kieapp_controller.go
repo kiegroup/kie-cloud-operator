@@ -406,15 +406,13 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 }
 
 func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
-	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
-	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
-	for i, s := range env.Servers {
-		if cr.Spec.Objects.Server != nil {
-			s = shared.ConstructObject(s, &cr.Spec.Objects.Server.Spec)
-			env.Servers[i] = s
-		} else if len(cr.Spec.Objects.Servers) != 0 {
-			s = shared.ConstructObject(s, &cr.Spec.Objects.Servers[i].Spec)
-			env.Servers[i] = s
+	env.Console = shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
+	env.Smartrouter = shared.ConstructObject(env.Smartrouter, cr.Spec.Objects.Smartrouter)
+	for index := range cr.Spec.Objects.Servers {
+		for envIndex := range env.Servers {
+			if env.Servers[envIndex].KieName == defaults.GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name) {
+				env.Servers[envIndex] = shared.ConstructObject(env.Servers[envIndex], cr.Spec.Objects.Servers[index].KieAppObject)
+			}
 		}
 	}
 	return env

@@ -18,7 +18,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +35,6 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
-
 	var common v1.Environment
 	yamlBytes, err := loadYaml(service, "common.yaml", cr.Namespace, envTemplate)
 	if err != nil {
@@ -46,7 +44,6 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
-
 	var env v1.Environment
 	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
 	if err != nil {
@@ -86,7 +83,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 	}
-	if err := configureAuth(cr.Spec, &envTemplate); err != nil {
+	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
 		return envTemplate, err
 	}
@@ -109,50 +106,49 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
 func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
-	servers := []v1.ServerTemplate{}
-	if cr.Spec.Objects.Servers != nil && len(cr.Spec.Objects.Servers) > 0 {
-		return servers, errors.New("invalid spec: provide either server or servers object")
+	var servers []v1.ServerTemplate
+	if len(cr.Spec.Objects.Servers) == 0 {
+		cr.Spec.Objects.Servers = []v1.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
 	}
-	if len(cr.Spec.Objects.Servers) != 0 {
-		for i, server := range cr.Spec.Objects.Servers {
-			kieServerID := fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i)
-			if len(server.Name) > 0 {
-				kieServerID = server.Name
-			}
-			crTemplate := v1.ServerTemplate{
-				KieServerID: kieServerID,
-			}
-			crTemplate.Build = getBuildConfig(commonConfig, server.Build)
-			if server.Build != nil {
-				crTemplate.From = getKieServerImageForBuild(commonConfig, i)
-			} else {
-				crTemplate.From = getDefaultKieServerImage(commonConfig, server.From)
-			}
-			servers = append(servers, crTemplate)
+	names := map[string]bool{}
+	for index := range cr.Spec.Objects.Servers {
+		kieID := GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name)
+		if exists := names[kieID]; exists {
+			return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", kieID)
 		}
-	} else {
-		if cr.Spec.Objects.Server == nil {
-			cr.Spec.Objects.Server = &v1.CommonKieServerSet{
-				Deployments: constants.DefaultKieDeployments,
-			}
+		if cr.Spec.Objects.Servers[index].Deployments == nil {
+			cr.Spec.Objects.Servers[index].Deployments = Pint(constants.DefaultKieDeployments)
 		}
-		for i := 0; i < cr.Spec.Objects.Server.Deployments; i++ {
-			crTemplate := v1.ServerTemplate{
-				KieServerID: fmt.Sprintf(defaultKieServerIDTemplate, cr.Name, i),
+		for i := 0; i < *cr.Spec.Objects.Servers[index].Deployments; i++ {
+			names[kieID] = true
+		}
+	}
+	for index := range cr.Spec.Objects.Servers {
+		for kieID := range names {
+			if kieID == GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name) {
+				for i := 0; i < *cr.Spec.Objects.Servers[index].Deployments; i++ {
+					crTemplate := v1.ServerTemplate{KieName: kieID, KieIndex: i}
+					crTemplate.Build = getBuildConfig(commonConfig, cr.Spec.Objects.Servers[index].Build)
+					if cr.Spec.Objects.Servers[index].Build != nil {
+						crTemplate.From = getKieServerImageForBuild(commonConfig, i)
+					} else {
+						crTemplate.From = getDefaultKieServerImage(commonConfig, cr.Spec.Objects.Servers[index].From)
+					}
+					servers = append(servers, crTemplate)
+				}
 			}
-			server := cr.Spec.Objects.Server
-			var serverFrom *corev1.ObjectReference
-			if server != nil {
-				serverFrom = server.From
-			}
-			crTemplate.From = getDefaultKieServerImage(commonConfig, serverFrom)
-			servers = append(servers, crTemplate)
 		}
 	}
 	return servers, nil
 }
 
-const defaultKieServerIDTemplate = "%v-kieserver-%v"
+// GenKieName generates the KieName for a given server
+func GenKieName(crName, serverName string) string {
+	if serverName != "" {
+		return strings.Join([]string{crName, serverName}, "-")
+	}
+	return crName
+}
 
 func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
 	if build == nil {
@@ -221,7 +217,7 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 }
 
 // important to parse template first with this function, before unmarshalling into object
-func loadYaml(service v1.PlatformService, filename, namespace string, e v1.EnvTemplate) ([]byte, error) {
+func loadYaml(service v1.PlatformService, filename, namespace string, env v1.EnvTemplate) ([]byte, error) {
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
 		box := packr.NewBox("../../../../config")
 		if box.Has(filename) {
@@ -229,31 +225,31 @@ func loadYaml(service v1.PlatformService, filename, namespace string, e v1.EnvTe
 			if err != nil {
 				return nil, err
 			}
-			return parseTemplate(e, yamlString), nil
+			return parseTemplate(env, yamlString), nil
 		}
-		return nil, fmt.Errorf("%s does not exist, '%s' KieApp not deployed", filename, e.ApplicationName)
+		return nil, fmt.Errorf("%s does not exist, '%s' KieApp not deployed", filename, env.ApplicationName)
 	}
 
 	cmName, file := convertToConfigMapName(filename)
 	configMap := &corev1.ConfigMap{}
 	err := service.Get(context.TODO(), types.NamespacedName{Name: cmName, Namespace: namespace}, configMap)
 	if err != nil {
-		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, e.ApplicationName)
+		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, env.ApplicationName)
 	}
-	log.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", e.ApplicationName, file, cmName)
-	return parseTemplate(e, configMap.Data[file]), nil
+	log.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", env.ApplicationName, file, cmName)
+	return parseTemplate(env, configMap.Data[file]), nil
 }
 
-func parseTemplate(e v1.EnvTemplate, objYaml string) []byte {
+func parseTemplate(env v1.EnvTemplate, objYaml string) []byte {
 	var b bytes.Buffer
 
-	tmpl, err := template.New(e.ApplicationName).Parse(objYaml)
+	tmpl, err := template.New(env.ApplicationName).Parse(objYaml)
 	if err != nil {
 		log.Error("Error creating new Go template. ", err)
 	}
 
 	// template replacement
-	err = tmpl.Execute(&b, e)
+	err = tmpl.Execute(&b, env)
 	if err != nil {
 		log.Error("Error applying Go template. ", err)
 	}
@@ -349,4 +345,9 @@ func setAppConstants(spec *v1.KieAppSpec) {
 	if len(spec.CommonConfig.MavenRepo) == 0 {
 		spec.CommonConfig.MavenRepo = appConstants.MavenRepo
 	}
+}
+
+// Pint returns a pointer to an integer
+func Pint(i int) *int {
+	return &i
 }

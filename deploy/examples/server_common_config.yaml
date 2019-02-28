@@ -5,15 +5,18 @@ metadata:
 spec:
   environment: rhpam-trial
   objects:
+    console:
+      env:
+        - name: MY_VALUE
+          value: "example"
     servers:
       # Kieserver sets will be named sequentially rhpam-trial-kieserver-0
       - deployments: 2
-        spec:
-          # Env variables that will be added to all the kie servers
-          env:
-            - name: MY_VAR
-              value: "example"
-          # Override default memory limits for all the kie servers
-          resources:
-            memory:
-              limits: 2Gi
+        # Env variables that will be added to all the kie servers
+        env:
+          - name: MY_VALUE
+            value: "example"
+        # Override default memory limits for all the kie servers
+        resources:
+          memory:
+            limits: 2Gi

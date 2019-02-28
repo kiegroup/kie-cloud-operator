@@ -215,7 +215,7 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 			Environment: v1.RhpamProductionImmutable,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
-					v1.KieServerSet{
+					{
 						Build: &v1.KieAppBuildObject{
 							KieServerContainerDeployment: "test",
 						},
@@ -235,7 +235,7 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 	mergedEnv, err := merge(common, prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 	for i, server := range mergedEnv.Servers {
-		assert.Equal(t, 1, len(server.ImageStreams))
+		assert.Len(t, server.ImageStreams, 1)
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.ImageStreams[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver-%v", i), server.BuildConfigs[0].ObjectMeta.Name)
 		assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)

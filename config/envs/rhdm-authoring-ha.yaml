@@ -275,7 +275,7 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
         spec:
           replicas: 2
   ## KIE server deployment config END

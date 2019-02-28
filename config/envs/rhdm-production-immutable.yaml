@@ -9,18 +9,18 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
         spec:
           replicas: 2
           template:
             spec:
               containers:
-                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
-                  image: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                  image: "{{.KieName}}-kieserver-{{.KieIndex}}"
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "{{.Build.KieServerContainerDeployment}}"
@@ -42,18 +42,18 @@ servers:
     #{{if .Build.KieServerContainerDeployment}}
     imageStreams:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
     buildConfigs:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
         spec:
           source:
             type: Git
@@ -79,7 +79,7 @@ servers:
           output:
             to:
               kind: ImageStreamTag
-              name: "{{$.ApplicationName}}-kieserver-{{$index}}:latest"
+              name: "{{.KieName}}-kieserver-{{.KieIndex}}:latest"
           triggers:
             - type: GitHub
               github:

@@ -369,15 +369,15 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
         spec:
           replicas: 2
           template:
             metadata:
-              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{.KieName}}-kieserver-{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -399,7 +399,7 @@ servers:
                     - name: RHPAM_PASSWORD
                       value: "{{$.AdminPassword}}"
                     - name: RHPAM_SERVICE_HOST
-                      value: "{{$.ApplicationName}}-mysql"
+                      value: "{{.KieName}}-mysql"
                     - name: RHPAM_SERVICE_PORT
                       value: "3306"
                     ## MySQL driver settings END
