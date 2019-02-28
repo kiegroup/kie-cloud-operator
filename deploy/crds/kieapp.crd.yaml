@@ -143,7 +143,6 @@ spec:
                             required:
                               - uri
                               - reference
-                              - contextDir
                             properties:
                               uri:
                                 type: string

@@ -488,14 +488,10 @@ servers:
                       value: ws
                     - name: KIE_MBEANS
                       value: enabled
-                    - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.KieName}}{{.KieIndex}}"
-                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
-                      value: "false"
-                    - name: KIE_SERVER_PROTOCOL
-                      value: https
-                    - name: KIE_SERVER_PORT
-                      value: "443"
+                    - name: KIE_SERVER_HOST
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: status.podIP
                     - name: KIE_SERVER_ID
                       value: "{{.KieName}}{{.KieIndex}}"
                     - name: "{{$.MavenRepo}}_MAVEN_REPO_USERNAME"
