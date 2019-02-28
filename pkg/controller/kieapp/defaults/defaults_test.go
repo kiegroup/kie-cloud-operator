@@ -195,8 +195,8 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-drools-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
-	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-drools-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.Exec.Command[2])
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
+	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.Exec.Command[2])
 }
 
 func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
