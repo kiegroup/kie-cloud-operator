@@ -39,7 +39,7 @@ const (
 
 var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
 var rhpamMonitorAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
-var rhdmAppConstants = &v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-drools-wb.jsp"}
+var rhdmAppConstants = &v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[v1.EnvironmentType]*v1.AppConstants{
