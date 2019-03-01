@@ -130,8 +130,6 @@ servers:
                       value: "{{$.ApplicationName}}-postgresql-{{$index}}"
                     - name: RHPAM_SERVICE_PORT
                       value: "5432"
-                    - name: TIMER_SERVICE_DATA_STORE
-                      value: "{{$.ApplicationName}}-postgresql-{{$index}}"
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "30000"
                     ## PostgreSQL driver settings END

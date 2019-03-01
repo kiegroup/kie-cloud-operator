@@ -379,8 +379,6 @@ servers:
               containers:
                 - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
                   env:
-                    - name: AUTO_CONFIGURE_EJB_TIMER
-                      value: "true"
                     - name: DATASOURCES
                       value: "RHPAM"
                     - name: RHPAM_DATABASE
@@ -395,7 +393,7 @@ servers:
                     - name: RHPAM_DRIVER
                       value: "mysql"
                     - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.MySQLDialect"
+                      value: "org.hibernate.dialect.MySQL57Dialect"
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
