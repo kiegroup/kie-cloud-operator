@@ -38,24 +38,10 @@ spec:
             objects:
               type: object
               description: Configuration of the RHPAM components
-#              anyOf:
-#              - required:
-#                - console
-#              - required:
-#                - server
-#              - required:
-#                - smartrouter
-#              - required:
-#                - builds
               properties:
                 console:
                   type: object
                   description: Configuration of the RHPAM workbench
-#                  anyOf:
-#                  - required:
-#                    - env
-#                  - required:
-#                    - resources
                   properties:
                     env:
                       type: array
@@ -80,11 +66,6 @@ spec:
                             description: Source for the environment variable's value
                     resources:
                       type: object
-#                      anyOf:
-#                      - required:
-#                       - limits
-#                      - required:
-#                       - requests
                       properties:
                         limits:
                           type: object
@@ -120,11 +101,6 @@ spec:
                     spec:
                       type: object
                       description: Common Server configuration
-#                      anyOf:
-#                      - required:
-#                        - env
-#                      - required:
-#                        - resources
                       properties:
                         env:
                           type: array
@@ -149,11 +125,6 @@ spec:
                                 description: Source for the environment variable's value
                         resources:
                           type: object
-#                           anyOf:
-#                             - required:
-#                               - limits
-#                             - required:
-#                               - requests
                           properties:
                             limits:
                               type: object
@@ -256,11 +227,6 @@ spec:
                       spec:
                         type: object
                         description: Common Server configuration
-  #                       anyOf:
-  #                       - required:
-  #                         - env
-  #                       - required:
-  #                         - resources
                         properties:
                           env:
                             type: array
@@ -285,11 +251,6 @@ spec:
                                   description: Source for the environment variable's value
                           resources:
                             type: object
-#                             anyOf:
-#                             - required:
-#                               - limits
-#                             - required:
-#                               - requests
                             properties:
                               limits:
                                 type: object
@@ -298,11 +259,6 @@ spec:
                 smartrouter:
                   type: object
                   description: Configuration of the RHPAM smart router
-#                  anyOf:
-#                  - required:
-#                    - env
-#                  - required:
-#                    - resources
                   properties:
                     env:
                       type: array
@@ -327,11 +283,6 @@ spec:
                             description: Source for the environment variable's value
                     resources:
                       type: object
-#                      anyOf:
-#                      - required:
-#                        - limits
-#                      - required:
-#                        - requests
                       properties:
                         limits:
                           type: object
@@ -350,11 +301,6 @@ spec:
             auth:
               type: object
               description: Authentication integration configuration
-#              oneOf:
-#              - required:
-#                - sso
-#              - required:
-#                - ldap
               properties:
                 sso:
                   type: object
@@ -385,17 +331,10 @@ spec:
                     clients:
                       type: object
                       description: Client definitions used for creating the RH-SSO clients in the specified Realm
-#                      anyOf:
-#                      - required:
-#                        - console
-#                      - required:
-#                        - servers
                       properties:
                         console:
                           type: object
                           description: Console client definition
-#                          required:
-#                          - name
                           properties:
                             name:
                               type: string
@@ -417,8 +356,6 @@ spec:
                           items:
                             type: object
                             description: Single Server client definition
-#                            required:
-#                            - name
                             properties:
                               name:
                                 type: string
