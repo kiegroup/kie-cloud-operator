@@ -172,10 +172,10 @@ func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet,
 }
 
 func GetKieIndex(serverSet *v1.KieServerSet, relativeIndex int) string {
-	if *serverSet.Deployments == 1 {
+	if *serverSet.Deployments == 1 || relativeIndex == 0 {
 		return ""
 	} else {
-		return fmt.Sprintf("%s%d", "-", relativeIndex)
+		return fmt.Sprintf("%s%d", "-", relativeIndex+1)
 	}
 }
 

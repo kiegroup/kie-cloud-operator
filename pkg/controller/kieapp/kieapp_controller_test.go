@@ -170,7 +170,7 @@ func TestTrialServerEnv(t *testing.T) {
 	env = consolidateObjects(env, cr)
 
 	assert.Equal(t, deployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments-1), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	pattern := regexp.MustCompile("[0-9]+")
 	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
 	assert.Equal(t, expectedISTagName, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)

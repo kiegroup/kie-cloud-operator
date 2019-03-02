@@ -100,7 +100,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, deployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments-1), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
 
@@ -132,7 +132,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.NotNil(t, pingService, "Ping service not found")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
@@ -167,7 +167,7 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.NotNil(t, pingService, "Ping service not found")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)-1), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
@@ -442,7 +442,11 @@ func TestConstructServerObject(t *testing.T) {
 
 		for i := range env.Servers {
 			object := shared.ConstructObject(env.Servers[i], cr.Spec.Objects.Servers[0].KieAppObject)
-			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i), object.DeploymentConfigs[0].Name)
+			if i == 0 {
+				assert.Equal(t, fmt.Sprintf("%s-kieserver", name), object.DeploymentConfigs[0].Name)
+			} else {
+				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), object.DeploymentConfigs[0].Name)
+			}
 			re := regexp.MustCompile("[0-9]+")
 			assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
@@ -614,10 +618,10 @@ func TestDefaultKieServerID(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	for i := 0; i < deployments; i++ {
-		kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: fmt.Sprintf("test-kieserver-%v", i)}
-		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
-	}
+	kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "test-kieserver"}
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+	kieServerID2 := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "test-kieserver-2"}
+	assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID2)
 }
 
 func TestSetKieServerID(t *testing.T) {
@@ -790,16 +794,16 @@ func TestExampleServerCommonConfig(t *testing.T) {
 	env, err := GetEnvironment(&kieApp, test.MockService())
 	assert.NoError(t, err, "Error getting environment for %v", kieApp.Spec.Environment)
 	assert.Equal(t, 2, len(env.Servers), "Expect two servers")
-	assert.Equal(t, "server-common-config-kieserver-0", env.Servers[0].DeploymentConfigs[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-0", env.Servers[0].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-0-ping", env.Servers[0].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-0", env.Servers[0].Routes[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-0-http", env.Servers[0].Routes[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-1", env.Servers[1].DeploymentConfigs[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-1", env.Servers[1].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-1-ping", env.Servers[1].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-1", env.Servers[1].Routes[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-1-http", env.Servers[1].Routes[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].DeploymentConfigs[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].Services[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-ping", env.Servers[0].Services[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-http", env.Servers[0].Routes[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].DeploymentConfigs[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].Services[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-2-ping", env.Servers[1].Services[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-common-config-kieserver-2-http", env.Servers[1].Routes[1].Name, "Unexpected name for object")
 }
 
 func LoadKieApp(t *testing.T, folder string, fileName string) v1.KieApp {
