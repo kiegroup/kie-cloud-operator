@@ -297,25 +297,23 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 	}
 
-	expectedServerAClientEnvs := []corev1.EnvVar{
+	expectedServerClientEnvs := []corev1.EnvVar{
 		{Name: "SSO_SECRET", Value: "supersecret-a"},
 		{Name: "SSO_CLIENT", Value: "test-kieserver-a-client"},
 	}
-	expectedServerBClientEnvs := []corev1.EnvVar{
+	for _, expectedEnv := range expectedServerClientEnvs {
+		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 0 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
+	}
+	expectedServerClientEnvs = []corev1.EnvVar{
 		{Name: "SSO_SECRET", Value: "supersecret-b"},
 		{Name: "SSO_CLIENT", Value: "test-kieserver-b-client"},
 		{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
 	}
-	for _, s := range env.Servers {
-		if s.KieName == GenKieName(cr.Name, "one") {
-			for _, expectedEnv := range expectedServerAClientEnvs {
-				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server A does not contain env %v", expectedEnv)
-			}
-		} else {
-			for _, expectedEnv := range expectedServerBClientEnvs {
-				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server B does not contain env %v", expectedEnv)
-			}
-		}
+	for _, expectedEnv := range expectedServerClientEnvs {
+		assert.Contains(t, env.Servers[2].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 2 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[3].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 3 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[4].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 4 does not contain env %v", expectedEnv)
 	}
 }
 

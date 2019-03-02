@@ -369,15 +369,15 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
         spec:
           replicas: 2
           template:
             metadata:
-              name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+              name: "{{.KieName}}{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"

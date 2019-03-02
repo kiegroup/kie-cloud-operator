@@ -21,11 +21,11 @@ servers:
   ## PostgreSQL persistent volume claim BEGIN
   - persistentVolumeClaims:
       - metadata:
-          name: "{{.KieName}}-postgresql-claim-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}-postgresql-claim"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-postgresql-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}-postgresql"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -37,17 +37,17 @@ servers:
     ## KIE server deployment config BEGIN
     deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           replicas: 3
           template:
             spec:
               containers:
-                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: EXTERNAL_MAVEN_REPO_ID
                       value: ""
@@ -83,7 +83,7 @@ servers:
                     - name: RHPAM_PASSWORD
                       value: "{{$.AdminPassword}}"
                     - name: RHPAM_SERVICE_HOST
-                      value: "{{.KieName}}-postgresql-{{.KieIndex}}"
+                      value: "{{.KieName}}{{.KieIndex}}-postgresql"
                     - name: RHPAM_SERVICE_PORT
                       value: "5432"
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
@@ -92,11 +92,11 @@ servers:
       ## KIE server deployment config END
       ## PostgreSQL deployment config BEGIN
       - metadata:
-          name: "{{.KieName}}-postgresql-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}-postgresql"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-postgresql-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}-postgresql"
         spec:
           strategy:
             type: Recreate
@@ -113,15 +113,15 @@ servers:
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.KieName}}-postgresql-{{.KieIndex}}"
+            deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
           template:
             metadata:
-              name: "{{.KieName}}-postgresql-{{.KieIndex}}"
+              name: "{{.KieName}}{{.KieIndex}}-postgresql"
               labels:
-                deploymentConfig: "{{.KieName}}-postgresql-{{.KieIndex}}"
+                deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
                 app: "{{$.ApplicationName}}"
                 application: "{{$.ApplicationName}}"
-                service: "{{.KieName}}-postgresql-{{.KieIndex}}"
+                service: "{{.KieName}}{{.KieIndex}}-postgresql"
             spec:
               containers:
                 - name: "{{.KieName}}-postgresql"
@@ -158,7 +158,7 @@ servers:
               volumes:
                 - name: "{{.KieName}}-postgresql-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.KieName}}-postgresql-claim-{{.KieIndex}}"
+                    claimName: "{{.KieName}}{{.KieIndex}}-postgresql-claim"
     ## PostgreSQL deployment config END
     services:
       ## PostgreSQL service BEGIN
@@ -167,14 +167,14 @@ servers:
             description: The database server's port.
           labels:
             application: prod
-            service: "{{.KieName}}-postgresql-{{.KieIndex}}"
-          name: "{{.KieName}}-postgresql-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}-postgresql"
+          name: "{{.KieName}}{{.KieIndex}}-postgresql"
         spec:
           ports:
             - port: 5432
               targetPort: 5432
           selector:
-            deploymentConfig: "{{.KieName}}-postgresql-{{.KieIndex}}"
+            deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
     ## PostgreSQL service END
   #{{end}}
   ## RANGE ends

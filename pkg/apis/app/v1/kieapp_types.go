@@ -132,8 +132,6 @@ type Environment struct {
 
 type CustomObject struct {
 	Omit                   bool                           `json:"omit,omitempty"`
-	KieName                string                         `json:"kieName,omitempty"`
-	KieIndex               string                         `json:"kieIndex,omitempty"`
 	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
 	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
@@ -268,7 +266,7 @@ type ConsoleTemplate struct {
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
 	KieName       string                 `json:"kieName,omitempty"`
-	KieIndex      int                    `json:"kieIndex,omitempty"`
+	KieIndex      string                 `json:"kieIndex,omitempty"`
 	SSOAuthClient SSOAuthClient          `json:"ssoAuthClient,omitempty"`
 	From          corev1.ObjectReference `json:"from,omitempty"`
 	Build         BuildTemplate          `json:"build,omitempty"`

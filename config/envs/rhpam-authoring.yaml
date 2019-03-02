@@ -41,14 +41,14 @@ servers:
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
         spec:
           template:
             metadata:
-              name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+              name: "{{.KieName}}{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -82,16 +82,16 @@ servers:
                 ## H2 volume settings BEGIN
                 - name: "{{.KieName}}-h2-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.KieName}}-h2-claim-{{.KieIndex}}"
+                    claimName: "{{.KieName}}{{.KieIndex}}-h2-claim"
     ## KIE server deployment config END
     persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
-          name: "{{.KieName}}-h2-claim-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}-h2-claim"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           accessModes:
             - ReadWriteOnce
