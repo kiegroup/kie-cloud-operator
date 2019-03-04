@@ -12,3 +12,4 @@ spec:
             uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
             reference: master
             contextDir: quickstarts/hello-rules/hellorules
+        deployments: 2

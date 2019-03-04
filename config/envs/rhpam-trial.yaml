@@ -54,14 +54,14 @@ servers:
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}"
         spec:
           template:
             metadata:
-              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{.KieName}}{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -90,7 +90,7 @@ servers:
                       value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
                     ## H2 driver settings END
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
+                      value: "{{.KieName}}{{.KieIndex}}-http"
                     - name: KIE_SERVER_PROTOCOL
                     - name: KIE_SERVER_PORT
                     - name: FILTERS
@@ -116,28 +116,28 @@ servers:
                     - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
                       value: "1"
                   volumeMounts:
-                    - name: "{{$.ApplicationName}}-h2-pvol"
+                    - name: "{{.KieName}}-h2-pvol"
                       mountPath: "/opt/eap/standalone/data"
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "{{$.ApplicationName}}-h2-pvol"
+                - name: "{{.KieName}}-h2-pvol"
                   emptyDir: {}
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
-      - id: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
+      - id: "{{.KieName}}{{.KieIndex}}-http"
         metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}-http"
+          name: "{{.KieName}}{{.KieIndex}}-http"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
           annotations:
             description: Route for KIE server's http service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            name: "{{.KieName}}{{.KieIndex}}"
           port:
             targetPort: http
     ## KIE server route END

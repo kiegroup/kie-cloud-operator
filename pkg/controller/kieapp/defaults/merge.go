@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -42,7 +42,7 @@ func mergeCustomObjects(baseline, overwrite []v1.CustomObject) ([]v1.CustomObjec
 	if len(baseline) != len(overwrite) {
 		return nil, errors.New("incompatible objects with different array lengths cannot be merged")
 	}
-	result := []v1.CustomObject{}
+	var result []v1.CustomObject
 	for index := range baseline {
 		mergedObject := mergeCustomObject(baseline[index], overwrite[index])
 		result = append(result, mergedObject)

@@ -1,7 +1,6 @@
 ###
 # This CR deploys 2 kie server sets that will use 2 different images
 # that already contain a process deployed.
-# Besides, the kieServerID is set so the default ID won't be used
 ###
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
@@ -12,26 +11,23 @@ spec:
   objects:
     # Kieserver resources will be named sequentially rhpam-production-immutable-kieserver-0
     servers:
-      # Defines the KieServerID for this deployment
       - name: kieserver-a
-      # Replace the default image stream
+        # Replace the default image stream
         from:
           kind: ImageStreamTag
           name: library-s2i:latest
-        spec:
-          env:
-            # This environment variable must be specified to use the
-            - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-              value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
-      # Defines the KieServerID for this deployment
+        env:
+          # This environment variable must be specified to use the
+          - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+            value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
       - name: kieserver-b
-      # Replace the default image stream
+        deployments: 2
+        # Replace the default image stream
         from:
           kind: ImageStreamTag
           name: approval-hr:latest
           namespace: builds
-        spec:
-          env:
-            # This environment variable must be specified to use the
-            - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-              value: rhpam-kieserver-hr=org.openshift.quickstarts:rhpam-kieserver-approval:1.4.0-SNAPSHOT
+        env:
+          # This environment variable must be specified to use the
+          - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+            value: rhpam-kieserver-hr=org.openshift.quickstarts:rhpam-kieserver-approval:1.4.0-SNAPSHOT

@@ -41,14 +41,14 @@ servers:
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}"
         spec:
           template:
             metadata:
-              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{.KieName}}{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -76,22 +76,22 @@ servers:
                     - name: RHPAM_XA_CONNECTION_PROPERTY_URL
                       value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
                   volumeMounts:
-                    - name: "{{$.ApplicationName}}-h2-pvol"
+                    - name: "{{.KieName}}-h2-pvol"
                       mountPath: "/opt/eap/standalone/data"
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "{{$.ApplicationName}}-h2-pvol"
+                - name: "{{.KieName}}-h2-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{$.ApplicationName}}-h2-claim-{{$index}}"
+                    claimName: "{{.KieName}}{{.KieIndex}}-h2-claim"
     ## KIE server deployment config END
     persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
-          name: "{{$.ApplicationName}}-h2-claim-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}-h2-claim"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           accessModes:
             - ReadWriteOnce

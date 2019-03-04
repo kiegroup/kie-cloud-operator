@@ -426,11 +426,11 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           strategy:
             rollingParams:
@@ -441,7 +441,7 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{$.ApplicationName}}-kieserver-{{$index}}"
+                  - "{{.KieName}}{{.KieIndex}}"
                 from:
                   kind: "{{.From.Kind}}"
                   namespace: "{{.From.Namespace}}"
@@ -449,20 +449,20 @@ servers:
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
           template:
             metadata:
-              name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+              name: "{{.KieName}}{{.KieIndex}}"
               labels:
                 app: "{{$.ApplicationName}}"
                 application: "{{$.ApplicationName}}"
-                service: "{{$.ApplicationName}}-kieserver-{{$index}}"
-                deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                service: "{{.KieName}}{{.KieIndex}}"
+                deploymentConfig: "{{.KieName}}{{.KieIndex}}"
             spec:
               serviceAccountName: "{{$.ApplicationName}}-{{$.Product}}svc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   image: "{{$.Product}}{{$.Version}}-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
@@ -489,7 +489,7 @@ servers:
                     - name: KIE_MBEANS
                       value: enabled
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{$.ApplicationName}}-kieserver-{{$index}}"
+                      value: "{{.KieName}}{{.KieIndex}}"
                     - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
                       value: "false"
                     - name: KIE_SERVER_PROTOCOL
@@ -497,7 +497,7 @@ servers:
                     - name: KIE_SERVER_PORT
                       value: "443"
                     - name: KIE_SERVER_ID
-                      value: "{{.KieServerID}}"
+                      value: "{{.KieName}}{{.KieIndex}}"
                     - name: "{{$.MavenRepo}}_MAVEN_REPO_USERNAME"
                       value: mavenUser
                     - name: "{{$.MavenRepo}}_MAVEN_REPO_PASSWORD"
@@ -521,7 +521,7 @@ servers:
                     - name: JGROUPS_PING_PROTOCOL
                       value: "openshift.DNS_PING"
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
+                      value: "{{.KieName}}{{.KieIndex}}-ping"
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
@@ -649,7 +649,7 @@ servers:
               volumes:
                 - name: kieserver-keystore-volume
                   secret:
-                    secretName: "{{$.ApplicationName}}-kieserver-{{$index}}-app-secret"
+                    secretName: "{{.KieName}}{{.KieIndex}}-app-secret"
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:
@@ -662,17 +662,17 @@ servers:
               port: 8443
               targetPort: 8443
           selector:
-            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
           sessionAffinity: ClientIP
           sessionAffinityConfig:
             clientIP:
               timeoutSeconds: 3600
         metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -682,32 +682,32 @@ servers:
               port: 8888
               targetPort: 8888
           selector:
-            deploymentConfig: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
         metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}-ping"
+          name: "{{.KieName}}{{.KieIndex}}-ping"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "{{$.ApplicationName}}-kieserver-{{$index}}-https"
+      - id: "{{.KieName}}{{.KieIndex}}-https"
         metadata:
-          name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            service: "{{.KieName}}{{.KieIndex}}"
           annotations:
             description: Route for KIE server's https service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{$.ApplicationName}}-kieserver-{{$index}}"
+            name: "{{.KieName}}{{.KieIndex}}"
           port:
             targetPort: https
           tls:
