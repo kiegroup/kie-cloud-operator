@@ -296,7 +296,7 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			}
 		}
 		if consoleCN == "" {
-			consoleCN = cr.Name
+			consoleCN = cr.Spec.CommonConfig.ApplicationName
 			cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
 		}
 
@@ -304,10 +304,10 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Name),
+				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Spec.CommonConfig.ApplicationName),
 				Labels: map[string]string{
-					"app":         cr.Name,
-					"application": cr.Name,
+					"app":         cr.Spec.CommonConfig.ApplicationName,
+					"application": cr.Spec.CommonConfig.ApplicationName,
 				},
 			},
 			Data: map[string][]byte{
@@ -330,7 +330,7 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			}
 		}
 		if serverCN == "" {
-			serverCN = cr.Name
+			serverCN = cr.Spec.CommonConfig.ApplicationName
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, relativeIndex := defaults.GetServerSet(cr, i)
@@ -341,8 +341,8 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("%s%s-app-secret", kieName, kieIndex),
 				Labels: map[string]string{
-					"app":         cr.Name,
-					"application": cr.Name,
+					"app":         cr.Spec.CommonConfig.ApplicationName,
+					"application": cr.Spec.CommonConfig.ApplicationName,
 				},
 			},
 			Data: map[string][]byte{
@@ -364,17 +364,17 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			}
 		}
 		if smartCN == "" {
-			smartCN = cr.Name
+			smartCN = cr.Spec.CommonConfig.ApplicationName
 		}
 
 		defaults.ConfigureHostname(&env.Smartrouter, cr, smartCN)
 		env.Smartrouter.Secrets = append(env.Smartrouter.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Name),
+				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Spec.CommonConfig.ApplicationName),
 				Labels: map[string]string{
-					"app":         cr.Name,
-					"application": cr.Name,
+					"app":         cr.Spec.CommonConfig.ApplicationName,
+					"application": cr.Spec.CommonConfig.ApplicationName,
 				},
 			},
 			Data: map[string][]byte{

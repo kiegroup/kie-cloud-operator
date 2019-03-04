@@ -3,11 +3,12 @@ package defaults
 import (
 	"context"
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/gobuffalo/packr"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/ghodss/yaml"
+	"github.com/gobuffalo/packr"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -100,7 +101,7 @@ func TestMultipleServerDeployment(t *testing.T) {
 
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, deployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	assert.Nil(t, err)
 }
 
@@ -132,7 +133,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.NotNil(t, pingService, "Ping service not found")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
@@ -167,7 +168,7 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.NotNil(t, pingService, "Ping service not found")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "curl --fail --silent -u \"${KIE_ADMIN_USER}\":\"${KIE_ADMIN_PWD}\" http://localhost:8080/kie-wb.jsp", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.Exec.Command[2])
@@ -371,7 +372,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting authoring environment")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }
 
@@ -386,7 +387,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting authoring-ha environment")
-	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }
 

@@ -69,7 +69,9 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
-	config.ApplicationName = cr.Name
+	if config.ApplicationName == "" {
+		config.ApplicationName = cr.Name
+	}
 	setAppConstants(&cr.Spec)
 	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(config, isTrialEnv)
@@ -115,9 +117,9 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 		serverSet := &cr.Spec.Objects.Servers[index]
 		if serverSet.Name == "" {
 			if len(cr.Spec.Objects.Servers) == 1 {
-				serverSet.Name = fmt.Sprintf("%v-kieserver", cr.Name)
+				serverSet.Name = fmt.Sprintf("%v-kieserver", cr.Spec.CommonConfig.ApplicationName)
 			} else {
-				serverSet.Name = fmt.Sprintf("%v-kieserver%v", cr.Name, index)
+				serverSet.Name = fmt.Sprintf("%v-kieserver%v", cr.Spec.CommonConfig.ApplicationName, index)
 			}
 		} else if usedNames[serverSet.Name] {
 			return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", serverSet.Name)
