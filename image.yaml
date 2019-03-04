@@ -18,7 +18,7 @@ labels:
 artifacts:
   - name: kie-cloud-operator.tar.gz
     url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.x.tar.gz
-    md5: f2f9ff3269b723254e5ac295d7b88843
+    md5: 645b82a59a7d563052656f1d05e07eb2
 packages:
   content_sets:
     x86_64:
