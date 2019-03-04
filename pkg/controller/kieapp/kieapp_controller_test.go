@@ -71,6 +71,9 @@ func TestTrialConsoleEnv(t *testing.T) {
 		},
 		Spec: v1.KieAppSpec{
 			Environment: "rhdm-trial",
+			CommonConfig: v1.CommonConfig{
+				ApplicationName: "trial",
+			},
 			Objects: v1.KieAppObjects{
 				Console: v1.SecuredKieAppObject{
 					KieAppObject: v1.KieAppObject{
@@ -90,7 +93,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	}
 	env = consolidateObjects(env, cr)
 
-	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Name), env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
@@ -170,7 +173,7 @@ func TestTrialServerEnv(t *testing.T) {
 	env = consolidateObjects(env, cr)
 
 	assert.Equal(t, deployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	pattern := regexp.MustCompile("[0-9]+")
 	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
 	assert.Equal(t, expectedISTagName, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -344,7 +347,7 @@ func TestConsoleHost(t *testing.T) {
 	reconciler := &Reconciler{mockService}
 	_, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
-	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
+	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
 
 func TestMergeTrialAndCommonConfig(t *testing.T) {
