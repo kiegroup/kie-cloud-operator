@@ -19,11 +19,11 @@ import (
 )
 
 // ConstructObject returns an object after merging the environment object and the one defined in the CR
-func ConstructObject(object v1.CustomObject, cr *v1.KieAppObject) v1.CustomObject {
+func ConstructObject(object v1.CustomObject, appObject v1.KieAppObject) v1.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
 		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
-			c.Env = EnvOverride(c.Env, cr.Env)
-			err := mergo.Merge(&c.Resources, cr.Resources, mergo.WithOverride)
+			c.Env = EnvOverride(c.Env, appObject.Env)
+			err := mergo.Merge(&c.Resources, appObject.Resources, mergo.WithOverride)
 			if err != nil {
 				log.Error("Error merging interfaces. ", err)
 			}

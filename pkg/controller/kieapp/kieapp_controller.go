@@ -333,10 +333,13 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			serverCN = cr.Name
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
+		serverSet, relativeIndex := defaults.GetServerSet(cr, i)
+		kieName := serverSet.Name
+		kieIndex := defaults.GetKieIndex(&serverSet, relativeIndex)
 		server.Secrets = append(server.Secrets, corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s-kieserver-%d-app-secret", cr.Name, i),
+				Name: fmt.Sprintf("%s%s-app-secret", kieName, kieIndex),
 				Labels: map[string]string{
 					"app":         cr.Name,
 					"application": cr.Name,
@@ -406,16 +409,11 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 }
 
 func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
-	env.Console = shared.ConstructObject(env.Console, &cr.Spec.Objects.Console)
-	env.Smartrouter = shared.ConstructObject(env.Smartrouter, &cr.Spec.Objects.Smartrouter)
-	for i, s := range env.Servers {
-		if cr.Spec.Objects.Server != nil {
-			s = shared.ConstructObject(s, &cr.Spec.Objects.Server.Spec)
-			env.Servers[i] = s
-		} else if len(cr.Spec.Objects.Servers) != 0 {
-			s = shared.ConstructObject(s, &cr.Spec.Objects.Servers[i].Spec)
-			env.Servers[i] = s
-		}
+	env.Console = shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
+	env.Smartrouter = shared.ConstructObject(env.Smartrouter, cr.Spec.Objects.Smartrouter)
+	for index := range env.Servers {
+		serverSet, _ := defaults.GetServerSet(cr, index)
+		env.Servers[index] = shared.ConstructObject(env.Servers[index], serverSet.SecuredKieAppObject.KieAppObject)
 	}
 	return env
 }

@@ -41,17 +41,3 @@ status:
     name: ba-resources
     namespace: ${CATALOG_NS}
 EOF
-
-BUNDLE_FILE="deploy/catalog_resources/redhat/bundle.1.0.0.yaml"
-if [ -d $(dirname "${BUNDLE_FILE}") ]; then
-echo "Generating ${BUNDLE_FILE}"
-cat <<EOF >${BUNDLE_FILE}
-data:
-  clusterServiceVersions: |
-${CSV}
-  customResourceDefinitions: |
-${CRD}
-  packages: >
-${PKG}
-EOF
-fi

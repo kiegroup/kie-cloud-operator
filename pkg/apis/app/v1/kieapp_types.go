@@ -95,29 +95,26 @@ type KieAppList struct {
 // KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
 	// Business Central container configs
-	Console KieAppObject `json:"console,omitempty"`
-	// KIE Server common container configs
-	Server *CommonKieServerSet `json:"server,omitempty"`
+	Console SecuredKieAppObject `json:"console,omitempty"`
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// Smartrouter container configs
 	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
 }
 
-// CommonKieServerSet KIE Server configuration to use for all the defined sets
-type CommonKieServerSet struct {
-	Deployments int                     `json:"deployments"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	Spec        KieAppObject            `json:"server,omitempty"`
-	From        *corev1.ObjectReference `json:"from,omitempty"`
+// KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
+type KieServerSet struct {
+	Deployments         *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	Name                string                  `json:"name,omitempty"`
+	From                *corev1.ObjectReference `json:"from,omitempty"`
+	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
+	SecuredKieAppObject `json:",inline"`
 }
 
-// KieServerSet KIE Server configuration for a single set
-type KieServerSet struct {
-	Name string                  `json:"name,omitempty"`
-	Spec KieAppObject            `json:"spec,omitempty"`
-	From *corev1.ObjectReference `json:"from,omitempty"`
-	// S2I Build configuration
-	Build *KieAppBuildObject `json:"build,omitempty"`
+// SecuredKieAppObject Generic object definition
+type SecuredKieAppObject struct {
+	SSOClient    *SSOAuthClient `json:"ssoClient,omitempty"`
+	KieAppObject `json:",inline"`
 }
 
 // KieAppObject Generic object definition
@@ -195,14 +192,6 @@ type SSOAuthConfig struct {
 	AdminPassword            string `json:"adminPassword,omitempty"`
 	DisableSSLCertValidation bool   `json:"disableSSLCertValication,omitempty"`
 	PrincipalAttribute       string `json:"principalAttribute,omitempty"`
-	// TODO: Refactor into each object's definition
-	Clients SSOAuthClients `json:"clients,omitempty"`
-}
-
-// SSOAuthClients Different SSO Clients to use
-type SSOAuthClients struct {
-	Console SSOAuthClient   `json:"console,omitempty"`
-	Servers []SSOAuthClient `json:"servers,omitempty"`
 }
 
 // SSOAuthClient Auth client to use for the SSO integration
@@ -276,9 +265,10 @@ type ConsoleTemplate struct {
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
+	KieName       string                 `json:"kieName,omitempty"`
+	KieIndex      string                 `json:"kieIndex,omitempty"`
 	SSOAuthClient SSOAuthClient          `json:"ssoAuthClient,omitempty"`
 	From          corev1.ObjectReference `json:"from,omitempty"`
-	KieServerID   string                 `json:"kieServerID,omitempty"`
 	Build         BuildTemplate          `json:"build,omitempty"`
 }
 

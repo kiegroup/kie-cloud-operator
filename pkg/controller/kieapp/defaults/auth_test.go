@@ -221,50 +221,6 @@ func TestAuthSSOConfig(t *testing.T) {
 	}
 }
 
-func TestAuthSSOConfigWithMismatchedClients(t *testing.T) {
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				SSO: &v1.SSOAuthConfig{
-					URL:   "https://sso.example.com:8080",
-					Realm: "rhpam-test",
-					Clients: v1.SSOAuthClients{
-						Console: v1.SSOAuthClient{
-							Name:          "test-rhpamcentr-client",
-							Secret:        "supersecret",
-							HostnameHTTP:  "test-rhpamcentr.example.com",
-							HostnameHTTPS: "secure-test-rhpamcentr.example.com",
-						},
-						Servers: []v1.SSOAuthClient{
-							{
-								Name:   "test-kieserver-a-client",
-								Secret: "supersecret-a",
-							},
-							{
-								Name:          "test-kieserver-b-client",
-								Secret:        "supersecret-b",
-								HostnameHTTPS: "test-kieserver-b.example.com",
-							},
-						},
-					},
-				},
-			},
-			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 3,
-				},
-			},
-		},
-	}
-	_, err := GetEnvironment(cr, test.MockService())
-	assert.Error(t, err, "the number of Server SSO clients defined must match the number of KIE Servers")
-
-}
-
 func TestAuthSSOConfigWithClients(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -276,30 +232,38 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 				SSO: &v1.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
-					Clients: v1.SSOAuthClients{
-						Console: v1.SSOAuthClient{
-							Name:          "test-rhpamcentr-client",
-							Secret:        "supersecret",
-							HostnameHTTP:  "test-rhpamcentr.example.com",
-							HostnameHTTPS: "secure-test-rhpamcentr.example.com",
-						},
-						Servers: []v1.SSOAuthClient{
-							{
+				},
+			},
+			Objects: v1.KieAppObjects{
+				Console: v1.SecuredKieAppObject{
+					SSOClient: &v1.SSOAuthClient{
+						Name:          "test-rhpamcentr-client",
+						Secret:        "supersecret",
+						HostnameHTTP:  "test-rhpamcentr.example.com",
+						HostnameHTTPS: "secure-test-rhpamcentr.example.com",
+					},
+				},
+				Servers: []v1.KieServerSet{
+					{
+						Name:        "one",
+						Deployments: Pint(2),
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							SSOClient: &v1.SSOAuthClient{
 								Name:   "test-kieserver-a-client",
 								Secret: "supersecret-a",
 							},
-							{
+						},
+					},
+					{
+						Deployments: Pint(3),
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							SSOClient: &v1.SSOAuthClient{
 								Name:          "test-kieserver-b-client",
 								Secret:        "supersecret-b",
 								HostnameHTTPS: "test-kieserver-b.example.com",
 							},
 						},
 					},
-				},
-			},
-			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 2,
 				},
 			},
 		},
@@ -339,6 +303,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
 		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 0 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
 	}
 	expectedServerClientEnvs = []corev1.EnvVar{
 		{Name: "SSO_SECRET", Value: "supersecret-b"},
@@ -346,7 +311,9 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
-		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[2].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 2 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[3].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 3 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[4].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 4 does not contain env %v", expectedEnv)
 	}
 }
 
@@ -374,8 +341,8 @@ func TestAuthLDAPConfig(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: "rhpam-trial",
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 2,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(2)},
 				},
 			},
 			Auth: v1.KieAppAuthObject{
@@ -410,8 +377,8 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: "rhpam-trial",
 			Objects: v1.KieAppObjects{
-				Server: &v1.CommonKieServerSet{
-					Deployments: 2,
+				Servers: []v1.KieServerSet{
+					{Deployments: Pint(2)},
 				},
 			},
 			Auth: v1.KieAppAuthObject{
