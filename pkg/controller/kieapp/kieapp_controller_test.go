@@ -121,7 +121,7 @@ func TestServerConflict(t *testing.T) {
 	}
 	_, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), fmt.Sprintf("duplicate kieserver name %s-%s", name, duplicate))
+	assert.Equal(t, err.Error(), fmt.Sprintf("duplicate kieserver name %s", duplicate))
 }
 
 func TestTrialServerEnv(t *testing.T) {
@@ -170,7 +170,7 @@ func TestTrialServerEnv(t *testing.T) {
 	env = consolidateObjects(env, cr)
 
 	assert.Equal(t, deployments, len(env.Servers))
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments-1), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
 	pattern := regexp.MustCompile("[0-9]+")
 	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
 	assert.Equal(t, expectedISTagName, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -237,22 +237,23 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	pattern := regexp.MustCompile("[0-9]+")
 	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
-	for _, s := range env.Servers {
-		if s.KieName == defaults.GenKieName(cr.Name, "server-a") {
-			assert.Equal(t, expectedISTagName, s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", s.KieName, 0), s.DeploymentConfigs[0].Name)
-			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
-			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
-			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-				Name:  "KIE_ADMIN_PWD",
-				Value: "replaced",
-			})
-			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
-		} else {
-			assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
-			assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
-			assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
-		}
+	for index := 0; index < 1; index++ {
+		s := env.Servers[index]
+		assert.Equal(t, expectedISTagName, s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  "KIE_ADMIN_PWD",
+			Value: "replaced",
+		})
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+	}
+	for index := 1; index < 1+deployments; index++ {
+		s := env.Servers[index]
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	}
 }
 
@@ -320,6 +321,8 @@ func TestGenerateSecret(t *testing.T) {
 	env, _, err = reconciler.newEnv(cr)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Equal(t, "test-kieserver-app-secret", env.Servers[0].Secrets[0].Name)
 }
 
 func TestConsoleHost(t *testing.T) {
@@ -363,8 +366,8 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
 	assert.Equal(t, "test-rhpamcentr-http", env.Console.Routes[1].Name)
 
-	assert.Equal(t, "test-kieserver-0", env.Servers[0].Routes[0].Name)
-	assert.Equal(t, "test-kieserver-0-http", env.Servers[0].Routes[1].Name)
+	assert.Equal(t, "test-kieserver", env.Servers[0].Routes[0].Name)
+	assert.Equal(t, "test-kieserver-http", env.Servers[0].Routes[1].Name)
 
 	// Env vars overrides
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -378,11 +381,11 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 
 	// H2 Volumes are mounted
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-		Name:      "test-h2-pvol",
+		Name:      "test-kieserver-h2-pvol",
 		MountPath: "/opt/eap/standalone/data",
 	})
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "test-h2-pvol",
+		Name: "test-kieserver-h2-pvol",
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},

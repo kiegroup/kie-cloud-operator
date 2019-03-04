@@ -54,14 +54,14 @@ servers:
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
         spec:
           template:
             metadata:
-              name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+              name: "{{.KieName}}{{.KieIndex}}"
             spec:
               containers:
-                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -90,7 +90,7 @@ servers:
                       value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
                     ## H2 driver settings END
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.KieName}}-kieserver-{{.KieIndex}}-http"
+                      value: "{{.KieName}}{{.KieIndex}}-http"
                     - name: KIE_SERVER_PROTOCOL
                     - name: KIE_SERVER_PORT
                     - name: FILTERS
@@ -125,19 +125,19 @@ servers:
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
-      - id: "{{.KieName}}-kieserver-{{.KieIndex}}-http"
+      - id: "{{.KieName}}{{.KieIndex}}-http"
         metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}-http"
+          name: "{{.KieName}}{{.KieIndex}}-http"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
           annotations:
             description: Route for KIE server's http service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            name: "{{.KieName}}{{.KieIndex}}"
           port:
             targetPort: http
     ## KIE server route END

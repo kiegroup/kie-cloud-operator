@@ -1,7 +1,7 @@
 package defaults
 
 import (
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/pkg/errors"
@@ -67,16 +67,14 @@ func configureSSO(cr *v1.KieApp, envTemplate *v1.EnvTemplate) error {
 	if cr.Spec.Objects.Console.SSOClient != nil {
 		envTemplate.Console.SSOAuthClient = *cr.Spec.Objects.Console.SSOClient.DeepCopy()
 	}
-	for index := range cr.Spec.Objects.Servers {
-		for envIndex := range envTemplate.Servers {
-			if envTemplate.Servers[envIndex].KieName == GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name) {
-				if cr.Spec.Auth.SSO != nil && cr.Spec.Objects.Servers[index].SSOClient != nil {
-					envTemplate.Servers[envIndex].SSOAuthClient = *cr.Spec.Objects.Servers[index].SSOClient.DeepCopy()
-				}
+	if cr.Spec.Auth.SSO != nil {
+		for index := range envTemplate.Servers {
+			serverSet, _ := GetServerSet(cr, index)
+			if serverSet.SSOClient != nil {
+				envTemplate.Servers[index].SSOAuthClient = *serverSet.SSOClient.DeepCopy()
 			}
 		}
 	}
-
 	return nil
 }
 

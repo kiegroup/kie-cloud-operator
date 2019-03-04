@@ -108,46 +108,75 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
 	var servers []v1.ServerTemplate
 	if len(cr.Spec.Objects.Servers) == 0 {
-		cr.Spec.Objects.Servers = []v1.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
+		cr.Spec.Objects.Servers = []v1.KieServerSet{{}}
 	}
-	names := map[string]bool{}
+	usedNames := map[string]bool{}
 	for index := range cr.Spec.Objects.Servers {
-		kieID := GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name)
-		if exists := names[kieID]; exists {
-			return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", kieID)
+		serverSet := &cr.Spec.Objects.Servers[index]
+		if serverSet.Name == "" {
+			if len(cr.Spec.Objects.Servers) == 1 {
+				serverSet.Name = fmt.Sprintf("%v-kieserver", cr.Name)
+			} else {
+				serverSet.Name = fmt.Sprintf("%v-kieserver%v", cr.Name, index)
+			}
+		} else if usedNames[serverSet.Name] {
+			return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", serverSet.Name)
+		} else {
+			usedNames[serverSet.Name] = true
 		}
-		if cr.Spec.Objects.Servers[index].Deployments == nil {
-			cr.Spec.Objects.Servers[index].Deployments = Pint(constants.DefaultKieDeployments)
+		if serverSet.Deployments == nil {
+			serverSet.Deployments = Pint(constants.DefaultKieDeployments)
 		}
-		for i := 0; i < *cr.Spec.Objects.Servers[index].Deployments; i++ {
-			names[kieID] = true
+		crTemplate := v1.ServerTemplate{
+			Build: getBuildConfig(commonConfig, serverSet.Build),
 		}
-	}
-	for index := range cr.Spec.Objects.Servers {
-		for kieID := range names {
-			if kieID == GenKieName(cr.Name, cr.Spec.Objects.Servers[index].Name) {
-				for i := 0; i < *cr.Spec.Objects.Servers[index].Deployments; i++ {
-					crTemplate := v1.ServerTemplate{KieName: kieID, KieIndex: i}
-					crTemplate.Build = getBuildConfig(commonConfig, cr.Spec.Objects.Servers[index].Build)
-					if cr.Spec.Objects.Servers[index].Build != nil {
-						crTemplate.From = getKieServerImageForBuild(commonConfig, i)
-					} else {
-						crTemplate.From = getDefaultKieServerImage(commonConfig, cr.Spec.Objects.Servers[index].From)
-					}
-					servers = append(servers, crTemplate)
-				}
+		if serverSet.Build != nil {
+			if *serverSet.Deployments > 1 {
+				return []v1.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
+			}
+			crTemplate.From = corev1.ObjectReference{
+				Kind:      "ImageStreamTag",
+				Name:      fmt.Sprintf("%s-kieserver:latest", commonConfig.ApplicationName),
+				Namespace: "",
+			}
+		} else {
+			crTemplate.From = getDefaultKieServerImage(commonConfig, serverSet.From)
+		}
+		crTemplate.KieName = serverSet.Name
+		if *serverSet.Deployments == 1 {
+			crTemplate.KieIndex = GetKieIndex(serverSet, 0)
+			servers = append(servers, crTemplate)
+		} else {
+			for i := 0; i < *serverSet.Deployments; i++ {
+				instanceTemplate := crTemplate.DeepCopy()
+				instanceTemplate.KieIndex = GetKieIndex(serverSet, i)
+				servers = append(servers, *instanceTemplate)
 			}
 		}
 	}
 	return servers, nil
 }
 
-// GenKieName generates the KieName for a given server
-func GenKieName(crName, serverName string) string {
-	if serverName != "" {
-		return strings.Join([]string{crName, serverName}, "-")
+func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet, relativeIndex int) {
+	count := 0
+	for _, thisServerSet := range cr.Spec.Objects.Servers {
+		for relativeIndex = 0; relativeIndex < *thisServerSet.Deployments; relativeIndex++ {
+			if count == requestedIndex {
+				serverSet = thisServerSet
+				return
+			}
+			count++
+		}
 	}
-	return crName
+	return
+}
+
+func GetKieIndex(serverSet *v1.KieServerSet, relativeIndex int) string {
+	if *serverSet.Deployments == 1 || relativeIndex == 0 {
+		return ""
+	} else {
+		return fmt.Sprintf("%s%d", "-", relativeIndex+1)
+	}
 }
 
 func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
@@ -175,15 +204,6 @@ func getDefaultKieServerImage(config *v1.CommonConfig, from *corev1.ObjectRefere
 		Kind:      "ImageStreamTag",
 		Name:      imageName,
 		Namespace: constants.ImageStreamNamespace,
-	}
-}
-
-func getKieServerImageForBuild(config *v1.CommonConfig, index int) corev1.ObjectReference {
-	imageName := fmt.Sprintf("%s-kieserver-%v:latest", config.ApplicationName, index)
-	return corev1.ObjectReference{
-		Kind:      "ImageStreamTag",
-		Name:      imageName,
-		Namespace: "",
 	}
 }
 
@@ -283,7 +303,7 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 		cmData[file] = s
 		cmList[cmName] = append(cmList[cmName], cmData)
 	}
-	configMaps := []corev1.ConfigMap{}
+	var configMaps []corev1.ConfigMap
 	for cmName, dataSlice := range cmList {
 		cmData := map[string]string{}
 		for _, dataList := range dataSlice {

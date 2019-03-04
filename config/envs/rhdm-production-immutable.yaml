@@ -9,18 +9,18 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           replicas: 2
           template:
             spec:
               containers:
-                - name: "{{.KieName}}-kieserver-{{.KieIndex}}"
-                  image: "{{.KieName}}-kieserver-{{.KieIndex}}"
+                - name: "{{.KieName}}{{.KieIndex}}"
+                  image: "{{.KieName}}{{.KieIndex}}"
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "{{.Build.KieServerContainerDeployment}}"
@@ -42,18 +42,18 @@ servers:
     #{{if .Build.KieServerContainerDeployment}}
     imageStreams:
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
     buildConfigs:
       - metadata:
-          name: "{{.KieName}}-kieserver-{{.KieIndex}}"
+          name: "{{.KieName}}{{.KieIndex}}"
           labels:
             app: "{{$.ApplicationName}}"
             application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}-kieserver-{{.KieIndex}}"
+            service: "{{.KieName}}{{.KieIndex}}"
         spec:
           source:
             type: Git
@@ -79,7 +79,7 @@ servers:
           output:
             to:
               kind: ImageStreamTag
-              name: "{{.KieName}}-kieserver-{{.KieIndex}}:latest"
+              name: "{{.KieName}}{{.KieIndex}}:latest"
           triggers:
             - type: GitHub
               github:
