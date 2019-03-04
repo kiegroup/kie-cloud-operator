@@ -105,6 +105,28 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 	}
 }
 
+// serverSortBlanks moves blank names to the end
+func serverSortBlanks(serverSets []v1.KieServerSet) []v1.KieServerSet {
+	var newSets []v1.KieServerSet
+	// servers with existing names should be placed in front
+	for index := range serverSets {
+		if serverSets[index].Name != "" {
+			newSets = append(newSets, serverSets[index])
+		}
+	}
+	// servers without names should be at the end
+	for index := range serverSets {
+		if serverSets[index].Name == "" {
+			newSets = append(newSets, serverSets[index])
+		}
+	}
+	if len(newSets) != len(serverSets) {
+		log.Error("slice lengths aren't equal, returning server sets w/o blank names sorted")
+		return serverSets
+	}
+	return newSets
+}
+
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
 func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
@@ -112,6 +134,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 	if len(cr.Spec.Objects.Servers) == 0 {
 		cr.Spec.Objects.Servers = []v1.KieServerSet{{}}
 	}
+	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
 	usedNames := map[string]bool{}
 	for index := range cr.Spec.Objects.Servers {
 		serverSet := &cr.Spec.Objects.Servers[index]
