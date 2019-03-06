@@ -276,9 +276,8 @@ func TestInvalidBuildConfiguration(t *testing.T) {
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: v1.GitSource{
-								URI:        "http://git.example.com",
-								Reference:  "somebranch",
-								ContextDir: "example",
+								URI:       "http://git.example.com",
+								Reference: "somebranch",
 							},
 							Webhooks: []v1.WebhookSecret{
 								{
@@ -323,6 +322,13 @@ func TestBuildConfiguration(t *testing.T) {
 							},
 						},
 					},
+					{
+						From: &corev1.ObjectReference{
+							Kind:      "ImageStreamTag",
+							Name:      "test",
+							Namespace: "other-ns",
+						},
+					},
 				},
 			},
 		},
@@ -330,17 +336,33 @@ func TestBuildConfiguration(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, 2, len(env.Servers))
+	assert.Equal(t, "example", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
+
+	// Server #0
 	server := env.Servers[0]
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
-	assert.Equal(t, fmt.Sprintf("http://git.example.com"), server.BuildConfigs[0].Spec.Source.Git.URI)
-	assert.Equal(t, fmt.Sprintf("somebranch"), server.BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, fmt.Sprintf("example"), server.BuildConfigs[0].Spec.Source.ContextDir)
+	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
+	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
 
-	assert.Equal(t, fmt.Sprintf("rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
-	assert.Equal(t, fmt.Sprintf("https://maven.mirror.com/"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
-	assert.Equal(t, fmt.Sprintf("dir"), server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
-	assert.Equal(t, fmt.Sprintf("s3cr3t"), server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
+	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
 	assert.NotEmpty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
+
+	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
+	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+
+	// Server #1
+	server = env.Servers[1]
+	assert.Empty(t, server.ImageStreams)
+	assert.Empty(t, server.BuildConfigs)
+	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
+	assert.Equal(t, "test", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "other-ns", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
 func getService(services []corev1.Service, name string) corev1.Service {

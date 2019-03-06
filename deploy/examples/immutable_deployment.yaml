@@ -21,7 +21,6 @@ spec:
           - name: KIE_SERVER_CONTAINER_DEPLOYMENT
             value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
       - name: kieserver-b
-        deployments: 2
         # Replace the default image stream
         from:
           kind: ImageStreamTag

@@ -75,25 +75,73 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		})
 	}
 
-	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
-
 	env, rResult, err := reconciler.newEnv(instance)
 	if err != nil {
 		reconciler.setFailedStatus(instance, v1.ConfigurationErrorReason, err)
 		return rResult, err
 	}
+
+	dcUpdated, err := reconciler.updateDeploymentConfigs(instance, env)
+
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if dcUpdated && status.SetProvisioning(instance) {
+		return reconciler.UpdateObj(instance)
+	}
+	bcUpdated, err := reconciler.updateBuildConfigs(instance, env)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if bcUpdated && status.SetProvisioning(instance) {
+		return reconciler.UpdateObj(instance)
+	}
+
+	// Fetch the cached KieApp instance
+	cachedInstance := &v1.KieApp{}
+	err = reconciler.Service.GetCached(context.TODO(), request.NamespacedName, cachedInstance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
+		return reconcile.Result{}, err
+	}
+
+	// Update CR if needed
+	if reconciler.hasChanged(instance, cachedInstance) {
+		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+	if status.SetDeployed(instance) {
+		if instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v1.Environment) (bool, error) {
+	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &oappsv1.DeploymentConfigList{}
-	err = reconciler.Service.List(context.TODO(), listOps, dcList)
+	err := reconciler.Service.List(context.TODO(), listOps, dcList)
 	if err != nil {
 		log.Warn("Failed to list dc's. ", err)
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
-		return reconcile.Result{}, err
+		return false, err
 	}
 	dcNames := getDcNames(dcList.Items, instance)
 	instance.Status.Deployments = dcNames
 
-	// Update DeploymentConfigs if needed
 	var dcUpdates []oappsv1.DeploymentConfig
 	for _, dc := range dcList.Items {
 		for _, cDc := range env.Console.DeploymentConfigs {
@@ -123,47 +171,69 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	if len(dcUpdates) > 0 {
 		for _, uDc := range dcUpdates {
-			rResult, err := reconciler.UpdateObj(&uDc)
+			_, err := reconciler.UpdateObj(&uDc)
 			if err != nil {
 				reconciler.setFailedStatus(instance, v1.DeploymentFailedReason, err)
-				return rResult, err
+				return false, err
 			}
 		}
-		if status.SetProvisioning(instance) {
-			return reconciler.UpdateObj(instance)
-		}
+		return true, nil
 	}
+	return false, nil
+}
 
-	// Fetch the cached KieApp instance
-	cachedInstance := &v1.KieApp{}
-	err = reconciler.Service.GetCached(context.TODO(), request.NamespacedName, cachedInstance)
+func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Environment) (bool, error) {
+	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
+	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	bcList := &buildv1.BuildConfigList{}
+	err := reconciler.Service.List(context.TODO(), listOps, bcList)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
+		log.Warn("Failed to list bc's. ", err)
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
-		return reconcile.Result{}, err
+		return false, err
 	}
 
-	// Update CR if needed
-	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) || !reflect.DeepEqual(instance.Spec, cachedInstance.Spec) {
-		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
+	var bcUpdates []buildv1.BuildConfig
+	for _, bc := range bcList.Items {
+		for _, server := range env.Servers {
+			for _, sBc := range server.BuildConfigs {
+				if bc.Name == sBc.Name {
+					bcUpdates = reconciler.bcUpdateCheck(bc, sBc, bcUpdates, instance)
+				}
+			}
 		}
-		return reconcile.Result{Requeue: true}, nil
 	}
-	if status.SetDeployed(instance) {
-		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
+	if len(bcUpdates) > 0 {
+		for _, uBc := range bcUpdates {
+			_, err := reconciler.UpdateObj(&uBc)
+			if err != nil {
+				reconciler.setFailedStatus(instance, v1.DeploymentFailedReason, err)
+				return false, err
+			}
 		}
-		return reconcile.Result{Requeue: true}, nil
+		return true, nil
 	}
+	return false, nil
+}
 
-	return reconcile.Result{}, nil
+func (reconciler *Reconciler) hasChanged(instance, cached *v1.KieApp) bool {
+	if !reflect.DeepEqual(instance.Status, cached.Status) {
+		return true
+	}
+	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
+		return true
+	}
+	if len(instance.Spec.Objects.Servers) > 0 {
+		if len(instance.Spec.Objects.Servers) != len(cached.Spec.Objects.Servers) {
+			return true
+		}
+		for i := range instance.Spec.Objects.Servers {
+			if !reflect.DeepEqual(instance.Spec.Objects.Servers[i], cached.Spec.Objects.Servers[i]) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (reconciler *Reconciler) setFailedStatus(instance *v1.KieApp, reason v1.ReasonType, err error) {
@@ -275,6 +345,38 @@ func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfi
 		dcUpdates = append(dcUpdates, dcnew)
 	}
 	return dcUpdates
+}
+
+func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bcUpdates []buildv1.BuildConfig, cr *v1.KieApp) []buildv1.BuildConfig {
+	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
+	update := false
+
+	if !reflect.DeepEqual(current.Spec.Source, new.Spec.Source) {
+		log.Debug("Changes detected in 'Source' config.", " OLD - ", current.Spec.Source, " NEW - ", new.Spec.Source)
+		update = true
+	}
+	if !shared.EnvVarCheck(current.Spec.Strategy.SourceStrategy.Env, new.Spec.Strategy.SourceStrategy.Env) {
+		log.Debug("Changes detected in 'Env' config.", " OLD - ", current.Spec.Strategy.SourceStrategy.Env, " NEW - ", new.Spec.Strategy.SourceStrategy.Env)
+		update = true
+	}
+	if !reflect.DeepEqual(current.Spec.Resources, new.Spec.Resources) {
+		log.Debug("Changes detected in 'Resource' config.", " OLD - ", current.Spec.Resources, " NEW - ", new.Spec.Resources)
+		update = true
+	}
+
+	if update {
+		bcnew := new
+		err := controllerutil.SetControllerReference(cr, &bcnew, reconciler.Service.GetScheme())
+		if err != nil {
+			log.Error("Error setting controller reference for bc. ", err)
+		}
+		bcnew.SetNamespace(current.Namespace)
+		bcnew.SetResourceVersion(current.ResourceVersion)
+		bcnew.SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
+
+		bcUpdates = append(bcUpdates, bcnew)
+	}
+	return bcUpdates
 }
 
 // NewEnv creates an Environment generated from the given KieApp
@@ -569,7 +671,6 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 	return false
 }
 
-// getPodNames returns the pod names of the array of pods passed in
 func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
 	var dcNames []string
 	for _, dc := range dcs {
