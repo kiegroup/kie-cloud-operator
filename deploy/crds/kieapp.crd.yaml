@@ -43,6 +43,9 @@ spec:
                   type: object
                   description: Configuration of the RHPAM workbench
                   properties:
+                    keystoreSecret:
+                      type: string
+                      description: Keystore secret name
                     env:
                       type: array
                       items:
@@ -103,6 +106,9 @@ spec:
                         type: integer
                         format: int
                         description: Number of Server sets that will be deployed
+                      keystoreSecret:
+                        type: string
+                        description: Keystore secret name
                       from:
                         type: object
                         description: Image definition to use for all the servers
@@ -233,10 +239,13 @@ spec:
                           hostnameHTTPS:
                             type: string
                             description: Secure hostname to set as redirect URL
-                smartrouter:
+                smartRouter:
                   type: object
                   description: Configuration of the RHPAM smart router
                   properties:
+                    keystoreSecret:
+                      type: string
+                      description: Keystore secret name
                     env:
                       type: array
                       items:

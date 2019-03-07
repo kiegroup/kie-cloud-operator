@@ -44,7 +44,7 @@ console:
         port:
           targetPort: http
 ## KIE smartrouter BEGIN
-smartrouter:
+smartRouter:
   omit: true
 ## KIE smartrouter END
 ## KIE Servers BEGIN
