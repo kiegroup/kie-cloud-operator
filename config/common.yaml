@@ -207,7 +207,7 @@ console:
             volumes:
               - name: "{{.ApplicationName}}-{{.Console.Name}}-keystore-volume"
                 secret:
-                  secretName: "{{.ApplicationName}}-businesscentral-app-secret"
+                  secretName: "{{.Console.KeystoreSecret}}"
               - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
                 persistentVolumeClaim:
                   claimName: "{{.ApplicationName}}-{{.Console.Name}}-claim"
@@ -277,7 +277,7 @@ console:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
 ## KIE smartrouter BEGIN
-smartrouter:
+smartRouter:
   persistentVolumeClaims:
     - metadata:
         name: "{{.ApplicationName}}-smartrouter-claim"
@@ -379,7 +379,7 @@ smartrouter:
                   claimName: "{{.ApplicationName}}-smartrouter-claim"
               - name: smartrouter-keystore-volume
                 secret:
-                  secretName: "{{.ApplicationName}}-smartrouter-app-secret"
+                  secretName: "{{.SmartRouter.KeystoreSecret}}"
   services:
     - spec:
         ports:
@@ -645,7 +645,7 @@ servers:
               volumes:
                 - name: kieserver-keystore-volume
                   secret:
-                    secretName: "{{.KieName}}{{.KieIndex}}-app-secret"
+                    secretName: "{{.KeystoreSecret}}"
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:

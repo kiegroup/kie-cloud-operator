@@ -84,6 +84,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		CommonConfig: config,
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
+		SmartRouter:  getSmartRouterTemplate(cr),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -95,14 +96,31 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 
 func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 	appConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	template := v1.ConsoleTemplate{}
 	if !hasEnv {
-		return v1.ConsoleTemplate{}
+		return template
 	}
-	return v1.ConsoleTemplate{
-		Name:      appConstants.Prefix,
-		ImageName: appConstants.ImageName,
-		ProbePage: appConstants.ConsoleProbePage,
+	if cr.Spec.Objects.Console.KeystoreSecret == "" {
+		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "businesscentral"}, "-"))
+	} else {
+		template.KeystoreSecret = cr.Spec.Objects.Console.KeystoreSecret
 	}
+	template.Name = appConstants.Prefix
+	template.ImageName = appConstants.ImageName
+	template.ProbePage = appConstants.ConsoleProbePage
+
+	return template
+}
+
+func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
+	template := v1.SmartRouterTemplate{}
+	if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
+		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
+	} else {
+		template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
+	}
+
+	return template
 }
 
 // serverSortBlanks moves blank names to the end
@@ -153,7 +171,8 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			serverSet.Deployments = Pint(constants.DefaultKieDeployments)
 		}
 		crTemplate := v1.ServerTemplate{
-			Build: getBuildConfig(commonConfig, serverSet.Build),
+			Build:          getBuildConfig(commonConfig, serverSet.Build),
+			KeystoreSecret: serverSet.KeystoreSecret,
 		}
 		if serverSet.Build != nil {
 			if *serverSet.Deployments > 1 {
@@ -170,11 +189,17 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 		crTemplate.KieName = serverSet.Name
 		if *serverSet.Deployments == 1 {
 			crTemplate.KieIndex = GetKieIndex(serverSet, 0)
+			if crTemplate.KeystoreSecret == "" {
+				crTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{crTemplate.KieName, crTemplate.KieIndex}, ""))
+			}
 			servers = append(servers, crTemplate)
 		} else {
 			for i := 0; i < *serverSet.Deployments; i++ {
 				instanceTemplate := crTemplate.DeepCopy()
 				instanceTemplate.KieIndex = GetKieIndex(serverSet, i)
+				if instanceTemplate.KeystoreSecret == "" {
+					instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{instanceTemplate.KieName, instanceTemplate.KieIndex}, ""))
+				}
 				servers = append(servers, *instanceTemplate)
 			}
 		}

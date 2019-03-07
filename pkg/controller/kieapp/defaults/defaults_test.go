@@ -428,16 +428,16 @@ func TestConstructConsoleObject(t *testing.T) {
 	}
 }
 
-func TestConstructSmartrouterObject(t *testing.T) {
+func TestConstructSmartRouterObject(t *testing.T) {
 	name := "test"
 	cr := buildKieApp(name, 1)
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	object := shared.ConstructObject(env.Smartrouter, cr.Spec.Objects.Smartrouter)
+	object := shared.ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), object.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Smartrouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -521,7 +521,7 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 						},
 					},
 				},
-				Smartrouter: v1.KieAppObject{
+				SmartRouter: v1.KieAppObject{
 					Env:       sampleEnv,
 					Resources: sampleResources,
 				},

@@ -35,6 +35,8 @@ const (
 	TrialEnvSuffix = "trial"
 	// DefaultKieDeployments default number of Kie Server deployments
 	DefaultKieDeployments = 1
+	// KeystoreSecret is the default format for keystore secret names
+	KeystoreSecret = "%s-app-secret"
 )
 
 var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}

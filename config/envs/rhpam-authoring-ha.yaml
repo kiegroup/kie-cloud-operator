@@ -55,7 +55,7 @@ console:
         name: "{{.ApplicationName}}-{{.Console.Name}}"
 
 ## KIE smartrouter BEGIN
-smartrouter:
+smartRouter:
   omit: true
 ## KIE smartrouter END
 # MySQL/ES/AMQ BEGIN
