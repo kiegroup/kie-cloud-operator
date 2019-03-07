@@ -24,4 +24,3 @@ spec:
       env:
         - name: MY_VALUE
           value: "example"
- 
