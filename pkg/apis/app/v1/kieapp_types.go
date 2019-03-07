@@ -98,8 +98,8 @@ type KieAppObjects struct {
 	Console SecuredKieAppObject `json:"console,omitempty"`
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
-	// Smartrouter container configs
-	Smartrouter KieAppObject `json:"smartrouter,omitempty"`
+	// SmartRouter container configs
+	SmartRouter KieAppObject `json:"smartRouter,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
@@ -119,13 +119,14 @@ type SecuredKieAppObject struct {
 
 // KieAppObject Generic object definition
 type KieAppObject struct {
-	Env       []corev1.EnvVar             `json:"env,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources"`
+	Env            []corev1.EnvVar             `json:"env,omitempty"`
+	Resources      corev1.ResourceRequirements `json:"resources"`
+	KeystoreSecret string                      `json:"keystoreSecret,omitempty"`
 }
 
 type Environment struct {
 	Console     CustomObject   `json:"console,omitempty"`
-	Smartrouter CustomObject   `json:"smartrouter,omitempty"`
+	SmartRouter CustomObject   `json:"smartRouter,omitempty"`
 	Servers     []CustomObject `json:"servers,omitempty"`
 	Others      []CustomObject `json:"others,omitempty"`
 }
@@ -252,24 +253,33 @@ type OpenShiftObject interface {
 
 type EnvTemplate struct {
 	*CommonConfig `json:",inline"`
-	Console       ConsoleTemplate  `json:"console,omitempty"`
-	Servers       []ServerTemplate `json:"servers,omitempty"`
+	Console       ConsoleTemplate     `json:"console,omitempty"`
+	Servers       []ServerTemplate    `json:"servers,omitempty"`
+	SmartRouter   SmartRouterTemplate `json:"smartRouter,omitempty"`
 }
 
+// ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	SSOAuthClient SSOAuthClient `json:"ssoAuthClient,omitempty"`
-	Name          string        `json:"name,omitempty"`
-	ImageName     string        `json:"imageName,omitempty"`
-	ProbePage     string        `json:"probePage,omitempty"`
+	SSOAuthClient  SSOAuthClient `json:"ssoAuthClient,omitempty"`
+	Name           string        `json:"name,omitempty"`
+	ImageName      string        `json:"imageName,omitempty"`
+	ProbePage      string        `json:"probePage,omitempty"`
+	KeystoreSecret string        `json:"keystoreSecret,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	KieName       string                 `json:"kieName,omitempty"`
-	KieIndex      string                 `json:"kieIndex,omitempty"`
-	SSOAuthClient SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From          corev1.ObjectReference `json:"from,omitempty"`
-	Build         BuildTemplate          `json:"build,omitempty"`
+	KieName        string                 `json:"kieName,omitempty"`
+	KieIndex       string                 `json:"kieIndex,omitempty"`
+	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From           corev1.ObjectReference `json:"from,omitempty"`
+	Build          BuildTemplate          `json:"build,omitempty"`
+	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
+}
+
+// SmartRouterTemplate contains all the variables used in the yaml templates
+type SmartRouterTemplate struct {
+	KeystoreSecret string `json:"keystoreSecret,omitempty"`
 }
 
 // BuildTemplate build variables used in the templates

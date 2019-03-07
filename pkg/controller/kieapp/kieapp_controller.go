@@ -156,7 +156,7 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 				}
 			}
 		}
-		for _, srDc := range env.Smartrouter.DeploymentConfigs {
+		for _, srDc := range env.SmartRouter.DeploymentConfigs {
 			if dc.Name == srDc.Name {
 				dcUpdates = reconciler.dcUpdateCheck(dc, srDc, dcUpdates, instance)
 			}
@@ -403,19 +403,13 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 		}
 
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
-		env.Console.Secrets = append(env.Console.Secrets, corev1.Secret{
-			Type: corev1.SecretTypeOpaque,
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s-businesscentral-app-secret", cr.Spec.CommonConfig.ApplicationName),
-				Labels: map[string]string{
-					"app":         cr.Spec.CommonConfig.ApplicationName,
-					"application": cr.Spec.CommonConfig.ApplicationName,
-				},
-			},
-			Data: map[string][]byte{
-				"keystore.jks": shared.GenerateKeystore(consoleCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
-			},
-		})
+		if cr.Spec.Objects.Console.KeystoreSecret == "" {
+			env.Console.Secrets = append(env.Console.Secrets, generateKeystoreSecret(
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "businesscentral"}, "-")),
+				consoleCN,
+				cr,
+			))
+		}
 	}
 
 	// server(s) keystore generation
@@ -438,27 +432,20 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 		serverSet, relativeIndex := defaults.GetServerSet(cr, i)
 		kieName := serverSet.Name
 		kieIndex := defaults.GetKieIndex(&serverSet, relativeIndex)
-		server.Secrets = append(server.Secrets, corev1.Secret{
-			Type: corev1.SecretTypeOpaque,
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s%s-app-secret", kieName, kieIndex),
-				Labels: map[string]string{
-					"app":         cr.Spec.CommonConfig.ApplicationName,
-					"application": cr.Spec.CommonConfig.ApplicationName,
-				},
-			},
-			Data: map[string][]byte{
-				"keystore.jks": shared.GenerateKeystore(serverCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
-			},
-		})
-
+		if serverSet.KeystoreSecret == "" {
+			server.Secrets = append(server.Secrets, generateKeystoreSecret(
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{kieName, kieIndex}, "")),
+				serverCN,
+				cr,
+			))
+		}
 		env.Servers[i] = server
 	}
 
 	// smartrouter keystore generation
-	if !env.Smartrouter.Omit {
+	if !env.SmartRouter.Omit {
 		smartCN := ""
-		for _, rt := range env.Smartrouter.Routes {
+		for _, rt := range env.SmartRouter.Routes {
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
 				smartCN = reconciler.GetRouteHost(rt, cr)
@@ -469,20 +456,14 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			smartCN = cr.Spec.CommonConfig.ApplicationName
 		}
 
-		defaults.ConfigureHostname(&env.Smartrouter, cr, smartCN)
-		env.Smartrouter.Secrets = append(env.Smartrouter.Secrets, corev1.Secret{
-			Type: corev1.SecretTypeOpaque,
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s-smartrouter-app-secret", cr.Spec.CommonConfig.ApplicationName),
-				Labels: map[string]string{
-					"app":         cr.Spec.CommonConfig.ApplicationName,
-					"application": cr.Spec.CommonConfig.ApplicationName,
-				},
-			},
-			Data: map[string][]byte{
-				"keystore.jks": shared.GenerateKeystore(smartCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
-			},
-		})
+		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
+		if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
+			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, generateKeystoreSecret(
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-")),
+				smartCN,
+				cr,
+			))
+		}
 	}
 	env = consolidateObjects(env, cr)
 
@@ -490,7 +471,7 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 	if err != nil {
 		return env, rResult, err
 	}
-	rResult, err = reconciler.CreateCustomObjects(env.Smartrouter, cr)
+	rResult, err = reconciler.CreateCustomObjects(env.SmartRouter, cr)
 	if err != nil {
 		return env, rResult, err
 	}
@@ -510,9 +491,25 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 	return env, rResult, nil
 }
 
+func generateKeystoreSecret(secretName, keystoreCN string, cr *v1.KieApp) corev1.Secret {
+	return corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+			Labels: map[string]string{
+				"app":         cr.Spec.CommonConfig.ApplicationName,
+				"application": cr.Spec.CommonConfig.ApplicationName,
+			},
+		},
+		Data: map[string][]byte{
+			"keystore.jks": shared.GenerateKeystore(keystoreCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
+		},
+	}
+}
+
 func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
-	env.Smartrouter = shared.ConstructObject(env.Smartrouter, cr.Spec.Objects.Smartrouter)
+	env.SmartRouter = shared.ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
 	for index := range env.Servers {
 		serverSet, _ := defaults.GetServerSet(cr, index)
 		env.Servers[index] = shared.ConstructObject(env.Servers[index], serverSet.SecuredKieAppObject.KieAppObject)

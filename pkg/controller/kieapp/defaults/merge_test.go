@@ -200,7 +200,7 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 
 	mergedEnv, err := merge(common, trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	assert.True(t, mergedEnv.Smartrouter.Omit, "Smartrouter deployment must be omitted")
+	assert.True(t, mergedEnv.SmartRouter.Omit, "SmartRouter deployment must be omitted")
 	assert.False(t, mergedEnv.Console.Omit, "Console deployment must not be omitted")
 }
 
