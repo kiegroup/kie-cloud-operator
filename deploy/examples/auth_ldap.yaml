@@ -1,9 +1,9 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: rhdm-ldap
+  name: rhpam-ldap
 spec:
-  environment: rhdm-trial
+  environment: rhpam-production
   auth:
     ldap:
       url: ldaps://myldap.example.com

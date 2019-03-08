@@ -103,24 +103,29 @@ In order to integrate RHPAM authentication with an existing instance of RH-SSO a
 
 ```yaml
 spec:
-  environment: production
+  environment: rhpam-authoring
   auth:
     sso:
       url: https://rh-sso.example.com
       realm: rhpam
       adminUser: admin
       adminPassword: secret
-      clients:
-        console:
-          name: rhpamcentr-client
-          secret: somePwd
-        servers:
-          - name: kieserver-client-a
-            secret: otherPwd
-            hostnameHTTPS: kieserver-a.example.com
-          - name: kieserver-client-b
-            secret: yetOtherPwd
-            hostnameHTTPS: kieserver-b.example.com
+  objects:
+    console:
+      ssoClient:
+        name: rhpam-console
+        secret: somePwd
+    servers:
+      - name: kieserver-one
+        deployments: 2
+        ssoClient:
+          name: kieserver-one
+          secret: otherPwd
+          hostnameHTTPS: kieserver-one.example.com
+      - name: kieserver-two
+        ssoClient:
+          name: kieserver-two
+          secret: yetOtherPwd
 ```
 
 ### LDAP
@@ -129,13 +134,13 @@ The LDAP configuration allows RHPAM to authenticate and retrieve the user's grou
 
 ```yaml
 spec:
-  environment: production
+  environment: rhpam-production
   auth:
     ldap:
       url: ldaps://myldap.example.com
-      bindDN: uid=admin,dc=example,dc=com
-      bindPassword: somePwd
-      baseCtxDN: ou=users,dc=example,dc=com
+      bindDN: uid=admin,ou=users,ou=exmample,ou=com
+      bindCredential: s3cret
+      baseCtxDN: ou=users,ou=example,ou=com
 ```
 
 ### RoleMapper
@@ -144,15 +149,15 @@ Finally, it is also possible to provide a properties file including how the role
 
 ```yaml
 spec:
-  environment: production
+  environment: rhpam-production
   auth:
     ldap:
       url: ldaps://myldap.example.com
-      bindDN: uid=admin,dc=example,dc=com
-      bindPassword: somePwd
-      baseCtxDN: ou=users,dc=example,dc=com
+      bindDN: uid=admin,ou=users,ou=exmample,ou=com
+      bindCredential: s3cret
+      baseCtxDN: ou=users,ou=example,ou=com
     roleMapper:
-      rolesProperties: rolesMapper.properties
+      rolesProperties: /conf/roleMapper.properties
       replaceRole: true
 ```
 
