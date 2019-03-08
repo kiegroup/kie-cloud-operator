@@ -813,20 +813,20 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 }
 
 func TestExampleServerCommonConfig(t *testing.T) {
-	kieApp := LoadKieApp(t, "examples", "server_common_config.yaml")
+	kieApp := LoadKieApp(t, "examples", "server_config.yaml")
 	env, err := GetEnvironment(&kieApp, test.MockService())
 	assert.NoError(t, err, "Error getting environment for %v", kieApp.Spec.Environment)
-	assert.Equal(t, 2, len(env.Servers), "Expect two servers")
-	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].DeploymentConfigs[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-ping", env.Servers[0].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver", env.Servers[0].Routes[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-http", env.Servers[0].Routes[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].DeploymentConfigs[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-2-ping", env.Servers[1].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-2", env.Servers[1].Routes[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-common-config-kieserver-2-http", env.Servers[1].Routes[1].Name, "Unexpected name for object")
+	assert.Equal(t, 6, len(env.Servers), "Expect six servers")
+	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].DeploymentConfigs[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Services[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-ping", env.Servers[len(env.Servers)-2].Services[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-http", env.Servers[len(env.Servers)-2].Routes[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Services[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-2-ping", env.Servers[len(env.Servers)-1].Services[1].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "server-config-kieserver2-2-http", env.Servers[len(env.Servers)-1].Routes[1].Name, "Unexpected name for object")
 }
 
 func LoadKieApp(t *testing.T, folder string, fileName string) v1.KieApp {
