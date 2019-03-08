@@ -56,3 +56,38 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.AppConstants{
 	v1.RhdmOptawebTrial:         rhdmAppConstants,
 	v1.RhdmProductionImmutable:  rhdmAppConstants,
 }
+
+var ReplicasTrial = &v1.ReplicaSettings{
+	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProductionImmutable = &v1.ReplicaSettings{
+	Console:     v1.Replicas{Replicas: 1},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProduction = &v1.ReplicaSettings{
+	Console:     v1.Replicas{Replicas: 3},
+	Server:      v1.Replicas{Replicas: 3},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasAuthoringHA = &v1.ReplicaSettings{
+	Console:     v1.Replicas{Replicas: 2},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+
+// ReplicaConstants contains
+var ReplicaConstants = map[v1.EnvironmentType]*v1.ReplicaSettings{
+	v1.RhpamProduction:          replicasRhpamProduction,
+	v1.RhpamProductionImmutable: replicasRhpamProductionImmutable,
+	v1.RhpamTrial:               ReplicasTrial,
+	v1.RhpamAuthoring:           ReplicasTrial,
+	v1.RhpamAuthoringHA:         replicasAuthoringHA,
+	v1.RhdmTrial:                ReplicasTrial,
+	v1.RhdmAuthoring:            ReplicasTrial,
+	v1.RhdmAuthoringHA:          replicasAuthoringHA,
+	v1.RhdmOptawebTrial:         ReplicasTrial,
+	v1.RhdmProductionImmutable:  ReplicasTrial,
+}

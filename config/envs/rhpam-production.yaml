@@ -1,11 +1,10 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
-        replicas: 3
         containers:
-          - name: "{{.ApplicationName}}-{{.Console.Name}}"
+          - name: "[[.ApplicationName]]-[[.Console.Name]]"
             env:
               - name: MAVEN_REPO_URL
                 value: ""
@@ -17,15 +16,15 @@ console:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .Servers }}
+  #[[ range $index, $Map := .Servers ]]
   ## PostgreSQL persistent volume claim BEGIN
   - persistentVolumeClaims:
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}-postgresql-claim"
+          name: "[[.KieName]][[.KieIndex]]-postgresql-claim"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}-postgresql"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]-postgresql"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -37,17 +36,16 @@ servers:
     ## KIE server deployment config BEGIN
     deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
         spec:
-          replicas: 3
           template:
             spec:
               containers:
-                - name: "{{.KieName}}{{.KieIndex}}"
+                - name: "[[.KieName]][[.KieIndex]]"
                   env:
                     - name: EXTERNAL_MAVEN_REPO_ID
                       value: ""
@@ -58,7 +56,7 @@ servers:
                     - name: EXTERNAL_MAVEN_REPO_PASSWORD
                       value: ""
                     - name: KIE_SERVER_ROUTER_SERVICE
-                      value: "{{$.ApplicationName}}-smartrouter"
+                      value: "[[$.ApplicationName]]-smartrouter"
                     - name: KIE_SERVER_ROUTER_PORT
                       value: "9000"
                     - name: KIE_SERVER_ROUTER_PROTOCOL
@@ -81,9 +79,9 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
-                      value: "{{$.AdminPassword}}"
+                      value: "[[$.AdminPassword]]"
                     - name: RHPAM_SERVICE_HOST
-                      value: "{{.KieName}}{{.KieIndex}}-postgresql"
+                      value: "[[.KieName]][[.KieIndex]]-postgresql"
                     - name: RHPAM_SERVICE_PORT
                       value: "5432"
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
@@ -92,11 +90,11 @@ servers:
       ## KIE server deployment config END
       ## PostgreSQL deployment config BEGIN
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}-postgresql"
+          name: "[[.KieName]][[.KieIndex]]-postgresql"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}-postgresql"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]-postgresql"
         spec:
           strategy:
             type: Recreate
@@ -105,7 +103,7 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.KieName}}-postgresql"
+                  - "[[.KieName]]-postgresql"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
@@ -113,18 +111,18 @@ servers:
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
+            deploymentConfig: "[[.KieName]][[.KieIndex]]-postgresql"
           template:
             metadata:
-              name: "{{.KieName}}{{.KieIndex}}-postgresql"
+              name: "[[.KieName]][[.KieIndex]]-postgresql"
               labels:
-                deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
-                app: "{{$.ApplicationName}}"
-                application: "{{$.ApplicationName}}"
-                service: "{{.KieName}}{{.KieIndex}}-postgresql"
+                deploymentConfig: "[[.KieName]][[.KieIndex]]-postgresql"
+                app: "[[$.ApplicationName]]"
+                application: "[[$.ApplicationName]]"
+                service: "[[.KieName]][[.KieIndex]]-postgresql"
             spec:
               containers:
-                - name: "{{.KieName}}-postgresql"
+                - name: "[[.KieName]]-postgresql"
                   image: postgresql
                   imagePullPolicy: IfNotPresent
                   livenessProbe:
@@ -145,20 +143,20 @@ servers:
                       protocol: TCP
                   volumeMounts:
                     - mountPath: "/var/lib/pgsql/data"
-                      name: "{{.KieName}}-postgresql-pvol"
+                      name: "[[.KieName]]-postgresql-pvol"
                   env:
                     - name: POSTGRESQL_USER
                       value: "rhpam"
                     - name: POSTGRESQL_PASSWORD
-                      value: "{{$.AdminPassword}}"
+                      value: "[[$.AdminPassword]]"
                     - name: POSTGRESQL_DATABASE
                       value: "rhpam7"
                     - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
                       value: "100"
               volumes:
-                - name: "{{.KieName}}-postgresql-pvol"
+                - name: "[[.KieName]]-postgresql-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.KieName}}{{.KieIndex}}-postgresql-claim"
+                    claimName: "[[.KieName]][[.KieIndex]]-postgresql-claim"
     ## PostgreSQL deployment config END
     services:
       ## PostgreSQL service BEGIN
@@ -167,15 +165,15 @@ servers:
             description: The database server's port.
           labels:
             application: prod
-            service: "{{.KieName}}{{.KieIndex}}-postgresql"
-          name: "{{.KieName}}{{.KieIndex}}-postgresql"
+            service: "[[.KieName]][[.KieIndex]]-postgresql"
+          name: "[[.KieName]][[.KieIndex]]-postgresql"
         spec:
           ports:
             - port: 5432
               targetPort: 5432
           selector:
-            deploymentConfig: "{{.KieName}}{{.KieIndex}}-postgresql"
+            deploymentConfig: "[[.KieName]][[.KieIndex]]-postgresql"
     ## PostgreSQL service END
-  #{{end}}
+  #[[end]]
   ## RANGE ends
   ## KIE Servers END

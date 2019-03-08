@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -16,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func TestKieAppDefaults(t *testing.T) {
@@ -48,7 +47,7 @@ func TestUnknownEnvironmentObjects(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, test.MockService())
 	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
 
-	env = consolidateObjects(env, cr)
+	env = defaults.ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
 	log.Debug("Testing with environment ", cr.Spec.Environment)
@@ -91,7 +90,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	env = consolidateObjects(env, cr)
+	env = defaults.ConsolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
 	re := regexp.MustCompile("[0-9]+")
@@ -170,7 +169,7 @@ func TestTrialServerEnv(t *testing.T) {
 		log.Error("Error getting environment. ", err)
 	}
 	env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
-	env = consolidateObjects(env, cr)
+	env = defaults.ConsolidateObjects(env, cr)
 
 	assert.Equal(t, deployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
@@ -235,7 +234,7 @@ func TestTrialServersEnv(t *testing.T) {
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	env = consolidateObjects(env, cr)
+	env = defaults.ConsolidateObjects(env, cr)
 
 	assert.Len(t, env.Servers, 4)
 	pattern := regexp.MustCompile("[0-9]+")

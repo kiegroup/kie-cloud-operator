@@ -1,10 +1,10 @@
 console:
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
       spec:
         accessModes:
           - ReadWriteMany
@@ -14,18 +14,16 @@ console:
 
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
-        ## Replicas for Business Central
-        replicas: 2
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.Console.Name}}"
+            name: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
+                  - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
                 ports:
                   - name: git-ssh
@@ -33,17 +31,17 @@ console:
                     protocol: TCP
                 env:
                   - name: APPFORMER_ELASTIC_HOST
-                    value: "{{.ApplicationName}}-{{.Product}}index"
+                    value: "[[.ApplicationName]]-[[.Product]]index"
                   - name: APPFORMER_JMS_BROKER_ADDRESS
-                    value: "{{.ApplicationName}}-amq-tcp"
+                    value: "[[.ApplicationName]]-amq-tcp"
                   - name: APPFORMER_JMS_BROKER_USER
                     value: "jmsBrokserUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
-                    value: "{{.AdminPassword}}"
+                    value: "[[.AdminPassword]]"
             volumes:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+                  claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
 
   services:
     - spec:
@@ -52,7 +50,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
 
 ## KIE smartrouter BEGIN
 smartRouter:
@@ -62,10 +60,10 @@ smartRouter:
 others:
   - persistentVolumeClaims:
       - metadata:
-          name: "{{.ApplicationName}}-mysql-claim"
+          name: "[[.ApplicationName]]-mysql-claim"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -74,10 +72,10 @@ others:
               storage: "1Gi"
 
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}index-claim"
+          name: "[[.ApplicationName]]-[[.Product]]index-claim"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
         spec:
           accessModes:
             - ReadWriteOnce
@@ -87,10 +85,10 @@ others:
 
     deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}index"
+          name: "[[.ApplicationName]]-[[.Product]]index"
           labels:
-            app: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            app: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-[[.Product]]index"
         spec:
           strategy:
             type: Recreate
@@ -99,30 +97,30 @@ others:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-{{.Product}}index"
+                  - "[[.ApplicationName]]-[[.Product]]index"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-indexing-openshift:{{.ImageTag}}"
+                  name: "[[.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift:[[.ImageTag]]"
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
+            deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
           template:
             metadata:
-              name: "{{.ApplicationName}}-{{.Product}}index"
+              name: "[[.ApplicationName]]-[[.Product]]index"
               labels:
-                deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
-                app: "{{.ApplicationName}}"
-                application: "{{.ApplicationName}}"
+                deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-{{.Product}}index"
-                  image: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-indexing-openshift"
+                - name: "[[.ApplicationName]]-[[.Product]]index"
+                  image: "[[.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift"
                   imagePullPolicy: Always
                   volumeMounts:
-                    - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
+                    - name: "[[.ApplicationName]]-[[.Product]]index-pvol"
                       mountPath: "/opt/elasticsearch/data"
                   livenessProbe:
                     tcpSocket:
@@ -144,15 +142,15 @@ others:
                       containerPort: 9200
                       protocol: TCP
               volumes:
-                - name: "{{.ApplicationName}}-{{.Product}}index-pvol"
+                - name: "[[.ApplicationName]]-[[.Product]]index-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.ApplicationName}}-{{.Product}}index-claim"
+                    claimName: "[[.ApplicationName]]-[[.Product]]index-claim"
 
       - metadata:
-          name: "{{.ApplicationName}}-mysql"
+          name: "[[.ApplicationName]]-mysql"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
         spec:
           strategy:
             type: Recreate
@@ -161,7 +159,7 @@ others:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-mysql"
+                  - "[[.ApplicationName]]-mysql"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
@@ -169,18 +167,18 @@ others:
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-mysql"
+            deploymentConfig: "[[.ApplicationName]]-mysql"
           template:
             metadata:
-              name: "{{.ApplicationName}}-mysql"
+              name: "[[.ApplicationName]]-mysql"
               labels:
-                deploymentConfig: "{{.ApplicationName}}-mysql"
-                app: "{{.ApplicationName}}"
-                application: "{{.ApplicationName}}"
+                deploymentConfig: "[[.ApplicationName]]-mysql"
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-mysql"
+                - name: "[[.ApplicationName]]-mysql"
                   image: mysql
                   imagePullPolicy: Always
                   livenessProbe:
@@ -203,28 +201,28 @@ others:
                       protocol: TCP
                   volumeMounts:
                     - mountPath: "/var/lib/mysql/data"
-                      name: "{{.ApplicationName}}-mysql-pvol"
+                      name: "[[.ApplicationName]]-mysql-pvol"
                   env:
                     - name: MYSQL_USER
                       value: "rhpam"
                     - name: MYSQL_PASSWORD
-                      value: "{{.AdminPassword}}"
+                      value: "[[.AdminPassword]]"
                     - name: MYSQL_DATABASE
                       value: "rhpam7"
               volumes:
-                - name: "{{.ApplicationName}}-mysql-pvol"
+                - name: "[[.ApplicationName]]-mysql-pvol"
                   persistentVolumeClaim:
-                    claimName: "{{.ApplicationName}}-mysql-claim"
+                    claimName: "[[.ApplicationName]]-mysql-claim"
 
       - metadata:
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-          name: "{{.ApplicationName}}-amq"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+          name: "[[.ApplicationName]]-amq"
         spec:
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-amq"
+            deploymentConfig: "[[.ApplicationName]]-amq"
           strategy:
             rollingParams:
               maxSurge: 0
@@ -232,17 +230,17 @@ others:
           template:
             metadata:
               labels:
-                app: "{{.ApplicationName}}"
-                application: "{{.ApplicationName}}"
-                deploymentConfig: "{{.ApplicationName}}-amq"
-              name: "{{.ApplicationName}}-amq"
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
+                deploymentConfig: "[[.ApplicationName]]-amq"
+              name: "[[.ApplicationName]]-amq"
             spec:
               containers:
                 - env:
                     - name: AMQ_USER
                       value: "jmsBrokserUser"
                     - name: AMQ_PASSWORD
-                      value: "{{.AdminPassword}}"
+                      value: "[[.AdminPassword]]"
                     - name: AMQ_ROLE
                       value: admin
                     - name: AMQ_NAME
@@ -264,7 +262,7 @@ others:
                       exec:
                         command:
                           - /opt/amq/bin/shutdownHook.sh
-                  name: "{{.ApplicationName}}-amq"
+                  name: "[[.ApplicationName]]-amq"
                   ports:
                     - containerPort: 8161
                       name: jolokia
@@ -286,7 +284,7 @@ others:
             - imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-amq"
+                  - "[[.ApplicationName]]-amq"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
@@ -300,13 +298,13 @@ others:
             - port: 61616
               targetPort: 61616
           selector:
-            deploymentConfig: "{{.ApplicationName}}-amq"
+            deploymentConfig: "[[.ApplicationName]]-amq"
         metadata:
-          name: "{{.ApplicationName}}-amq-tcp"
+          name: "[[.ApplicationName]]-amq-tcp"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-amq"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-amq"
           annotations:
             description: The broker's OpenWire port.
 
@@ -315,13 +313,13 @@ others:
             - port: 3306
               targetPort: 3306
           selector:
-            deploymentConfig: "{{.ApplicationName}}-mysql"
+            deploymentConfig: "[[.ApplicationName]]-mysql"
         metadata:
-          name: "{{.ApplicationName}}-mysql"
+          name: "[[.ApplicationName]]-mysql"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-mysql"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-mysql"
           annotations:
             description: The MySQL server's port.
 
@@ -334,29 +332,29 @@ others:
               port: 9300
               targetPort: 9300
           selector:
-            deploymentConfig: "{{.ApplicationName}}-{{.Product}}index"
+            deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
         metadata:
-          name: "{{.ApplicationName}}-{{.Product}}index"
+          name: "[[.ApplicationName]]-[[.Product]]index"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-{{.Product}}index"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-[[.Product]]index"
           annotations:
             description: All the Business Central Indexing Elasticsearch ports.
 
     routes:
-      - id: "{{.ApplicationName}}-{{.Product}}index-http"
+      - id: "[[.ApplicationName]]-[[.Product]]index-http"
         metadata:
-          name: "{{.ApplicationName}}-{{.Product}}index"
+          name: "[[.ApplicationName]]-[[.Product]]index"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
           annotations:
             description: Route for Business Central Indexing's Elasticsearch http service.
         spec:
           host: ""
           to:
-            name: "{{.ApplicationName}}-{{.Product}}index"
+            name: "[[.ApplicationName]]-[[.Product]]index"
           port:
             targetPort: rest
 
@@ -365,19 +363,18 @@ others:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .Servers }}
+  #[[ range $index, $Map := .Servers ]]
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
         spec:
-          replicas: 2
           template:
             metadata:
-              name: "{{.KieName}}{{.KieIndex}}"
+              name: "[[.KieName]][[.KieIndex]]"
             spec:
               containers:
-                - name: "{{.KieName}}{{.KieIndex}}"
+                - name: "[[.KieName]][[.KieIndex]]"
                   env:
                     - name: DATASOURCES
                       value: "RHPAM"
@@ -397,15 +394,15 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
-                      value: "{{$.AdminPassword}}"
+                      value: "[[$.AdminPassword]]"
                     - name: RHPAM_SERVICE_HOST
-                      value: "{{.KieName}}-mysql"
+                      value: "[[.KieName]]-mysql"
                     - name: RHPAM_SERVICE_PORT
                       value: "3306"
                     ## MySQL driver settings END
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
   ## KIE server deployment config END
-  #{{end}}
+  #[[end]]
   ## RANGE ends
 ## KIE Servers END

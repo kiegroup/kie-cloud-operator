@@ -1,11 +1,11 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
         strategy:
           type: Recreate
@@ -14,29 +14,29 @@ console:
             imageChangeParams:
               automatic: true
               containerNames:
-                - "{{.ApplicationName}}-{{.Console.Name}}"
+                - "[[.ApplicationName]]-[[.Console.Name]]"
               from:
                 kind: ImageStreamTag
                 namespace: openshift
-                name: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-openshift:{{.ImageTag}}"
+                name: "[[.Product]][[.Version]]-[[.Console.ImageName]]-openshift:[[.ImageTag]]"
           - type: ConfigChange
-        replicas: 1
+        replicas: [[.Console.Replicas]]
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
+          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.Console.Name}}"
+            name: "[[.ApplicationName]]-[[.Console.Name]]"
             labels:
-              deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
-              app: "{{.ApplicationName}}"
-              application: "{{.ApplicationName}}"
-              service: "{{.ApplicationName}}-{{.Console.Name}}"
+              deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
+              app: "[[.ApplicationName]]"
+              application: "[[.ApplicationName]]"
+              service: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
-            serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
+            serviceAccountName: "[[.ApplicationName]]-[[.Product]]svc"
             terminationGracePeriodSeconds: 60
             containers:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}"
-                image: "{{.Product}}{{.Version}}-{{.Console.ImageName}}-openshift"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
+                image: "[[.Product]][[.Version]]-[[.Console.ImageName]]-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -46,7 +46,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.Console.ProbePage}}
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/[[.Console.ProbePage]]
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
@@ -55,7 +55,7 @@ console:
                     command:
                       - "/bin/bash"
                       - "-c"
-                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/{{.Console.ProbePage}}
+                      - curl --fail --silent -u "${KIE_ADMIN_USER}":"${KIE_ADMIN_PWD}" http://localhost:8080/[[.Console.ProbePage]]
                   initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 30
@@ -77,19 +77,19 @@ console:
                   - name: KIE_ADMIN_USER
                     value: adminUser
                   - name: KIE_ADMIN_PWD
-                    value: "{{.AdminPassword}}"
+                    value: "[[.AdminPassword]]"
                   - name: KIE_MAVEN_USER
                     value: mavenUser
                   - name: KIE_MAVEN_PWD
-                    value: "{{.MavenPassword}}"
+                    value: "[[.MavenPassword]]"
                   - name: KIE_SERVER_CONTROLLER_USER
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "{{.ControllerPassword}}"
+                    value: "[[.ControllerPassword]]"
                   - name: KIE_SERVER_USER
                     value: executionUser
                   - name: KIE_SERVER_PWD
-                    value: "{{.ServerPassword}}"
+                    value: "[[.ServerPassword]]"
                   - name: KIE_MBEANS
                     value: enabled
                   ## OpenShift Enhancement BEGIN
@@ -107,113 +107,113 @@ console:
                   - name: HTTPS_NAME
                     value: "jboss"
                   - name: HTTPS_PASSWORD
-                    value: "{{.KeyStorePassword}}"
+                    value: "[[.KeyStorePassword]]"
                   - name: WORKBENCH_ROUTE_NAME
-                    value: "{{.ApplicationName}}-{{.Console.Name}}"
+                    value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: JGROUPS_PING_PROTOCOL
                     value: "openshift.DNS_PING"
                   - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "{{.ApplicationName}}-{{.Console.Name}}-ping"
+                    value: "[[.ApplicationName]]-[[.Console.Name]]-ping"
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
                   # Auth config BEGIN
                   ## SSO config BEGIN
-                  #{{if .Auth.SSO.URL}}
+                  #[[if .Auth.SSO.URL]]
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                     value: ROOT.war
                   - name: SSO_URL
-                    value: "{{.Auth.SSO.URL}}"
+                    value: "[[.Auth.SSO.URL]]"
                   - name: SSO_REALM
-                    value: "{{.Auth.SSO.Realm}}"
+                    value: "[[.Auth.SSO.Realm]]"
                   - name: SSO_USERNAME
-                    value: "{{.Auth.SSO.AdminUser}}"
+                    value: "[[.Auth.SSO.AdminUser]]"
                   - name: SSO_PASSWORD
-                    value: "{{.Auth.SSO.AdminPassword}}"
+                    value: "[[.Auth.SSO.AdminPassword]]"
                   - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                    value: "{{.Auth.SSO.DisableSSLCertValidation}}"
+                    value: "[[.Auth.SSO.DisableSSLCertValidation]]"
                   - name: SSO_PRINCIPAL_ATTRIBUTE
-                    value: "{{.Auth.SSO.PrincipalAttribute}}"
+                    value: "[[.Auth.SSO.PrincipalAttribute]]"
                   - name: SSO_SECRET
-                    value: "{{.Console.SSOAuthClient.Secret}}"
+                    value: "[[.Console.SSOAuthClient.Secret]]"
                   - name: SSO_CLIENT
-                    value: "{{.Console.SSOAuthClient.Name}}"
+                    value: "[[.Console.SSOAuthClient.Name]]"
                   - name: HOSTNAME_HTTP
-                    value: "{{.Console.SSOAuthClient.HostnameHTTP}}"
+                    value: "[[.Console.SSOAuthClient.HostnameHTTP]]"
                   - name: HOSTNAME_HTTPS
-                    value: "{{.Console.SSOAuthClient.HostnameHTTPS}}"
-                  #{{end}}
+                    value: "[[.Console.SSOAuthClient.HostnameHTTPS]]"
+                  #[[end]]
                   ## SSO config END
                   ## LDAP config BEGIN
-                  #{{if .Auth.LDAP.URL}}
+                  #[[if .Auth.LDAP.URL]]
                   - name: AUTH_LDAP_URL
-                    value: "{{.Auth.LDAP.URL}}"
+                    value: "[[.Auth.LDAP.URL]]"
                   - name: AUTH_LDAP_BIND_DN
-                    value: "{{.Auth.LDAP.BindDN}}"
+                    value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
-                    value: "{{.Auth.LDAP.BindCredential}}"
+                    value: "[[.Auth.LDAP.BindCredential]]"
                   - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: "{{.Auth.LDAP.JAASSecurityDomain}}"
+                    value: "[[.Auth.LDAP.JAASSecurityDomain]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
-                    value: "{{.Auth.LDAP.BaseCtxDN}}"
+                    value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
-                    value: "{{.Auth.LDAP.BaseFilter}}"
+                    value: "[[.Auth.LDAP.BaseFilter]]"
                   - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: "{{.Auth.LDAP.SearchScope}}"
+                    value: "[[.Auth.LDAP.SearchScope]]"
                   - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-                    value: "{{.Auth.LDAP.SearchTimeLimit}}"
+                    value: "[[.Auth.LDAP.SearchTimeLimit]]"
                   - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: "{{.Auth.LDAP.DistinguishedNameAttribute}}"
+                    value: "[[.Auth.LDAP.DistinguishedNameAttribute]]"
                   - name: AUTH_LDAP_PARSE_USERNAME
-                    value: "{{.Auth.LDAP.ParseUsername}}"
+                    value: "[[.Auth.LDAP.ParseUsername]]"
                   - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: "{{.Auth.LDAP.UsernameBeginString}}"
+                    value: "[[.Auth.LDAP.UsernameBeginString]]"
                   - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: "{{.Auth.LDAP.UsernameEndString}}"
+                    value: "[[.Auth.LDAP.UsernameEndString]]"
                   - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-                    value: "{{.Auth.LDAP.RoleAttributeID}}"
+                    value: "[[.Auth.LDAP.RoleAttributeID]]"
                   - name: AUTH_LDAP_ROLES_CTX_DN
-                    value: "{{.Auth.LDAP.RolesCtxDN}}"
+                    value: "[[.Auth.LDAP.RolesCtxDN]]"
                   - name: AUTH_LDAP_ROLE_FILTER
-                    value: "{{.Auth.LDAP.RoleFilter}}"
+                    value: "[[.Auth.LDAP.RoleFilter]]"
                   - name: AUTH_LDAP_ROLE_RECURSION
-                    value: "{{.Auth.LDAP.RoleRecursion}}"
+                    value: "[[.Auth.LDAP.RoleRecursion]]"
                   - name: AUTH_LDAP_DEFAULT_ROLE
-                    value: "{{.Auth.LDAP.DefaultRole}}"
+                    value: "[[.Auth.LDAP.DefaultRole]]"
                   - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: "{{.Auth.LDAP.RoleNameAttributeID}}"
+                    value: "[[.Auth.LDAP.RoleNameAttributeID]]"
                   - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: "{{.Auth.LDAP.ParseRoleNameFromDN}}"
+                    value: "[[.Auth.LDAP.ParseRoleNameFromDN]]"
                   - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: "{{.Auth.LDAP.RoleAttributeIsDN}}"
+                    value: "[[.Auth.LDAP.RoleAttributeIsDN]]"
                   - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: "{{.Auth.LDAP.ReferralUserAttributeIDToCheck}}"
-                  #{{end}}
+                    value: "[[.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                  #[[end]]
                   ## LDAP config END
                   ## RoleMapping config BEGIN
-                  #{{if .Auth.RoleMapper.RolesProperties}}
+                  #[[if .Auth.RoleMapper.RolesProperties]]
                   - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
-                    value: "{{.Auth.RoleMapper.RolesProperties}}"
+                    value: "[[.Auth.RoleMapper.RolesProperties]]"
                   - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                    value: "{{.Auth.RoleMapper.ReplaceRole}}"
-                  #{{end}}
+                    value: "[[.Auth.RoleMapper.ReplaceRole]]"
+                  #[[end]]
                   ## RoleMapping config END
                   # Auth config END
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-{{.Console.Name}}-keystore-volume"
+                  - name: "[[.ApplicationName]]-[[.Console.Name]]-keystore-volume"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
-                  - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
+                  - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
             volumes:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}-keystore-volume"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]-keystore-volume"
                 secret:
-                  secretName: "{{.Console.KeystoreSecret}}"
-              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
+                  secretName: "[[.Console.KeystoreSecret]]"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+                  claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
         accessModes:
           - ReadWriteMany
@@ -230,13 +230,13 @@ console:
             port: 8443
             targetPort: 8443
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
+          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           description: All the Business Central web server's ports.
     - spec:
@@ -246,31 +246,31 @@ console:
             port: 8888
             targetPort: 8888
         selector:
-          deploymentConfig: "{{.ApplicationName}}-{{.Console.Name}}"
+          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-ping"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
           description: "The JGroups ping port for clustering."
   routes:
-    - id: "{{.ApplicationName}}-{{.Console.Name}}-https"
+    - id: "[[.ApplicationName]]-[[.Console.Name]]-https"
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           description: Route for Business Central's https service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
         host: ""
         to:
-          name: "{{.ApplicationName}}-{{.Console.Name}}"
+          name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
           targetPort: https
         tls:
@@ -280,11 +280,11 @@ console:
 smartRouter:
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-smartrouter-claim"
+        name: "[[.ApplicationName]]-smartrouter-claim"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-smartrouter"
       spec:
         accessModes:
           - ReadWriteMany
@@ -293,11 +293,11 @@ smartRouter:
             storage: "64Mi"
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-smartrouter"
+        name: "[[.ApplicationName]]-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-smartrouter"
       spec:
         strategy:
           type: Recreate
@@ -306,28 +306,28 @@ smartRouter:
             imageChangeParams:
               automatic: true
               containerNames:
-                - "{{.ApplicationName}}-smartrouter"
+                - "[[.ApplicationName]]-smartrouter"
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "{{.Product}}{{.Version}}-smartrouter-openshift:{{.ImageTag}}"
+                name: "[[.Product]][[.Version]]-smartrouter-openshift:[[.ImageTag]]"
           - type: ConfigChange
-        replicas: 2
+        replicas: [[.SmartRouter.Replicas]]
         selector:
-          deploymentConfig: "{{.ApplicationName}}-smartrouter"
+          deploymentConfig: "[[.ApplicationName]]-smartrouter"
         template:
           metadata:
-            name: "{{.ApplicationName}}-smartrouter"
+            name: "[[.ApplicationName]]-smartrouter"
             labels:
-              app: "{{.ApplicationName}}"
-              application: "{{.ApplicationName}}"
-              deploymentConfig: "{{.ApplicationName}}-smartrouter"
-              service: "{{.ApplicationName}}-smartrouter"
+              app: "[[.ApplicationName]]"
+              application: "[[.ApplicationName]]"
+              deploymentConfig: "[[.ApplicationName]]-smartrouter"
+              service: "[[.ApplicationName]]-smartrouter"
           spec:
             terminationGracePeriodSeconds: 60
             containers:
-              - name: "{{.ApplicationName}}-smartrouter"
-                image: "{{.Product}}{{.Version}}-smartrouter-openshift"
+              - name: "[[.ApplicationName]]-smartrouter"
+                image: "[[.Product]][[.Version]]-smartrouter-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -352,34 +352,34 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
                     value: "jboss"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
-                    value: "{{.KeyStorePassword}}"
+                    value: "[[.KeyStorePassword]]"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
                   - name: KIE_SERVER_CONTROLLER_USER
                     value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "{{.ControllerPassword}}"
+                    value: "[[.ControllerPassword]]"
                   - name: KIE_SERVER_CONTROLLER_SERVICE
-                    value: "{{.ApplicationName}}-{{.Console.Name}}"
+                    value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
                     value: "http"
                   - name: KIE_SERVER_ROUTER_REPO
-                    value: "/opt/{{.Product}}-smartrouter/data"
+                    value: "/opt/[[.Product]]-smartrouter/data"
                   - name: KIE_SERVER_ROUTER_CONFIG_WATCHER_ENABLED
                     value: "true"
                 volumeMounts:
-                  - name: "{{.ApplicationName}}-smartrouter"
-                    mountPath: "/opt/{{.Product}}-smartrouter/data"
+                  - name: "[[.ApplicationName]]-smartrouter"
+                    mountPath: "/opt/[[.Product]]-smartrouter/data"
                   - name: smartrouter-keystore-volume
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
             volumes:
-              - name: "{{.ApplicationName}}-smartrouter"
+              - name: "[[.ApplicationName]]-smartrouter"
                 persistentVolumeClaim:
-                  claimName: "{{.ApplicationName}}-smartrouter-claim"
+                  claimName: "[[.ApplicationName]]-smartrouter-claim"
               - name: smartrouter-keystore-volume
                 secret:
-                  secretName: "{{.SmartRouter.KeystoreSecret}}"
+                  secretName: "[[.SmartRouter.KeystoreSecret]]"
   services:
     - spec:
         ports:
@@ -390,29 +390,29 @@ smartRouter:
             port: 9443
             targetPort: 9443
         selector:
-          deploymentConfig: "{{.ApplicationName}}-smartrouter"
+          deploymentConfig: "[[.ApplicationName]]-smartrouter"
       metadata:
-        name: "{{.ApplicationName}}-smartrouter"
+        name: "[[.ApplicationName]]-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-smartrouter"
         annotations:
       description: The smart router server http and https ports.
   routes:
-    - id: "{{.ApplicationName}}-smartrouter-https"
+    - id: "[[.ApplicationName]]-smartrouter-https"
       metadata:
-        name: "{{.ApplicationName}}-smartrouter"
+        name: "[[.ApplicationName]]-smartrouter"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-smartrouter"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-smartrouter"
         annotations:
           description: Route for Smart Router's https service.
       spec:
         host: ""
         to:
-          name: "{{.ApplicationName}}-smartrouter"
+          name: "[[.ApplicationName]]-smartrouter"
         port:
           targetPort: https
         tls:
@@ -422,15 +422,15 @@ smartRouter:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .Servers }}
+  #[[ range $index, $Map := .Servers ]]
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
         spec:
           strategy:
             rollingParams:
@@ -441,49 +441,49 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.KieName}}{{.KieIndex}}"
+                  - "[[.KieName]][[.KieIndex]]"
                 from:
-                  kind: "{{.From.Kind}}"
-                  namespace: "{{.From.Namespace}}"
-                  name: "{{.From.Name}}"
+                  kind: "[[.From.Kind]]"
+                  namespace: "[[.From.Namespace]]"
+                  name: "[[.From.Name]]"
             - type: ConfigChange
-          replicas: 1
+          replicas: [[.Replicas]]
           selector:
-            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
+            deploymentConfig: "[[.KieName]][[.KieIndex]]"
           template:
             metadata:
-              name: "{{.KieName}}{{.KieIndex}}"
+              name: "[[.KieName]][[.KieIndex]]"
               labels:
-                app: "{{$.ApplicationName}}"
-                application: "{{$.ApplicationName}}"
-                service: "{{.KieName}}{{.KieIndex}}"
-                deploymentConfig: "{{.KieName}}{{.KieIndex}}"
+                app: "[[$.ApplicationName]]"
+                application: "[[$.ApplicationName]]"
+                service: "[[.KieName]][[.KieIndex]]"
+                deploymentConfig: "[[.KieName]][[.KieIndex]]"
             spec:
-              serviceAccountName: "{{$.ApplicationName}}-{{$.Product}}svc"
+              serviceAccountName: "[[$.ApplicationName]]-[[$.Product]]svc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.KieName}}{{.KieIndex}}"
-                  image: "{{$.Product}}{{$.Version}}-kieserver-openshift"
+                - name: "[[.KieName]][[.KieIndex]]"
+                  image: "[[$.Product]][[$.Version]]-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
                       value: adminUser
                     - name: KIE_ADMIN_PWD
-                      value: "{{$.AdminPassword}}"
+                      value: "[[$.AdminPassword]]"
                     #- name: KIE_SERVER_STARTUP_STRATEGY
                     #  value: "OpenShiftStartupStrategy"
                     - name: KIE_SERVER_USER
                       value: executionUser
                     - name: KIE_SERVER_PWD
-                      value: "{{$.ServerPassword}}"
+                      value: "[[$.ServerPassword]]"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
                     - name: KIE_SERVER_CONTROLLER_USER
                       value: controllerUser
                     - name: KIE_SERVER_CONTROLLER_PWD
-                      value: "{{$.ControllerPassword}}"
+                      value: "[[$.ControllerPassword]]"
                     - name: KIE_SERVER_CONTROLLER_SERVICE
-                      value: "{{$.ApplicationName}}-{{$.Console.Name}}"
+                      value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
                       value: ws
                     - name: KIE_MBEANS
@@ -493,16 +493,16 @@ servers:
                         fieldRef:
                           fieldPath: status.podIP
                     - name: KIE_SERVER_ID
-                      value: "{{.KieName}}{{.KieIndex}}"
-                    - name: "{{$.MavenRepo}}_MAVEN_REPO_USERNAME"
+                      value: "[[.KieName]][[.KieIndex]]"
+                    - name: "[[$.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: mavenUser
-                    - name: "{{$.MavenRepo}}_MAVEN_REPO_PASSWORD"
-                      value: "{{$.MavenPassword}}"
-                    - name: "{{$.MavenRepo}}_MAVEN_REPO_SERVICE"
-                      value: "{{$.ApplicationName}}-{{$.Console.Name}}"
+                    - name: "[[$.MavenRepo]]_MAVEN_REPO_PASSWORD"
+                      value: "[[$.MavenPassword]]"
+                    - name: "[[$.MavenRepo]]_MAVEN_REPO_SERVICE"
+                      value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: MAVEN_REPOS
-                      value: "{{$.MavenRepo}},EXTERNAL"
-                    - name: "{{$.MavenRepo}}_MAVEN_REPO_PATH"
+                      value: "[[$.MavenRepo]],EXTERNAL"
+                    - name: "[[$.MavenRepo]]_MAVEN_REPO_PATH"
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
@@ -513,93 +513,93 @@ servers:
                     - name: HTTPS_NAME
                       value: "jboss"
                     - name: HTTPS_PASSWORD
-                      value: "{{$.KeyStorePassword}}"
+                      value: "[[$.KeyStorePassword]]"
                     - name: JGROUPS_PING_PROTOCOL
                       value: "openshift.DNS_PING"
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "{{.KieName}}{{.KieIndex}}-ping"
+                      value: "[[.KieName]][[.KieIndex]]-ping"
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
                     ## SSO config BEGIN
-                    #{{if $.Auth.SSO.URL}}
+                    #[[if $.Auth.SSO.URL]]
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
                       value: ROOT.war
                     - name: SSO_URL
-                      value: "{{$.Auth.SSO.URL}}"
+                      value: "[[$.Auth.SSO.URL]]"
                     - name: SSO_REALM
-                      value: "{{$.Auth.SSO.Realm}}"
+                      value: "[[$.Auth.SSO.Realm]]"
                     - name: SSO_USERNAME
-                      value: "{{$.Auth.SSO.AdminUser}}"
+                      value: "[[$.Auth.SSO.AdminUser]]"
                     - name: SSO_PASSWORD
-                      value: "{{$.Auth.SSO.AdminPassword}}"
+                      value: "[[$.Auth.SSO.AdminPassword]]"
                     - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
-                      value: "{{$.Auth.SSO.DisableSSLCertValidation}}"
+                      value: "[[$.Auth.SSO.DisableSSLCertValidation]]"
                     - name: SSO_PRINCIPAL_ATTRIBUTE
-                      value: "{{$.Auth.SSO.PrincipalAttribute}}"
+                      value: "[[$.Auth.SSO.PrincipalAttribute]]"
                     - name: SSO_SECRET
-                      value: "{{.SSOAuthClient.Secret}}"
+                      value: "[[.SSOAuthClient.Secret]]"
                     - name: SSO_CLIENT
-                      value: "{{.SSOAuthClient.Name}}"
+                      value: "[[.SSOAuthClient.Name]]"
                     - name: HOSTNAME_HTTP
-                      value: "{{.SSOAuthClient.HostnameHTTP}}"
+                      value: "[[.SSOAuthClient.HostnameHTTP]]"
                     - name: HOSTNAME_HTTPS
-                      value: "{{.SSOAuthClient.HostnameHTTPS}}"
-                    #{{end}}
+                      value: "[[.SSOAuthClient.HostnameHTTPS]]"
+                    #[[end]]
                     ## SSO config END
                     ## LDAP config BEGIN
-                    #{{if $.Auth.LDAP.URL}}
+                    #[[if $.Auth.LDAP.URL]]
                     - name: AUTH_LDAP_URL
-                      value: "{{$.Auth.LDAP.URL}}"
+                      value: "[[$.Auth.LDAP.URL]]"
                     - name: AUTH_LDAP_BIND_DN
-                      value: "{{$.Auth.LDAP.BindDN}}"
+                      value: "[[$.Auth.LDAP.BindDN]]"
                     - name: AUTH_LDAP_BIND_CREDENTIAL
-                      value: "{{$.Auth.LDAP.BindCredential}}"
+                      value: "[[$.Auth.LDAP.BindCredential]]"
                     - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                      value: "{{$.Auth.LDAP.JAASSecurityDomain}}"
+                      value: "[[$.Auth.LDAP.JAASSecurityDomain]]"
                     - name: AUTH_LDAP_BASE_CTX_DN
-                      value: "{{$.Auth.LDAP.BaseCtxDN}}"
+                      value: "[[$.Auth.LDAP.BaseCtxDN]]"
                     - name: AUTH_LDAP_BASE_FILTER
-                      value: "{{$.Auth.LDAP.BaseFilter}}"
+                      value: "[[$.Auth.LDAP.BaseFilter]]"
                     - name: AUTH_LDAP_SEARCH_SCOPE
-                      value: "{{$.Auth.LDAP.SearchScope}}"
+                      value: "[[$.Auth.LDAP.SearchScope]]"
                     - name: AUTH_LDAP_SEARCH_TIME_LIMIT
-                      value: "{{$.Auth.LDAP.SearchTimeLimit}}"
+                      value: "[[$.Auth.LDAP.SearchTimeLimit]]"
                     - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                      value: "{{$.Auth.LDAP.DistinguishedNameAttribute}}"
+                      value: "[[$.Auth.LDAP.DistinguishedNameAttribute]]"
                     - name: AUTH_LDAP_PARSE_USERNAME
-                      value: "{{$.Auth.LDAP.ParseUsername}}"
+                      value: "[[$.Auth.LDAP.ParseUsername]]"
                     - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                      value: "{{$.Auth.LDAP.UsernameBeginString}}"
+                      value: "[[$.Auth.LDAP.UsernameBeginString]]"
                     - name: AUTH_LDAP_USERNAME_END_STRING
-                      value: "{{$.Auth.LDAP.UsernameEndString}}"
+                      value: "[[$.Auth.LDAP.UsernameEndString]]"
                     - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
-                      value: "{{$.Auth.LDAP.RoleAttributeID}}"
+                      value: "[[$.Auth.LDAP.RoleAttributeID]]"
                     - name: AUTH_LDAP_ROLES_CTX_DN
-                      value: "{{$.Auth.LDAP.RolesCtxDN}}"
+                      value: "[[$.Auth.LDAP.RolesCtxDN]]"
                     - name: AUTH_LDAP_ROLE_FILTER
-                      value: "{{$.Auth.LDAP.RoleFilter}}"
+                      value: "[[$.Auth.LDAP.RoleFilter]]"
                     - name: AUTH_LDAP_ROLE_RECURSION
-                      value: "{{$.Auth.LDAP.RoleRecursion}}"
+                      value: "[[$.Auth.LDAP.RoleRecursion]]"
                     - name: AUTH_LDAP_DEFAULT_ROLE
-                      value: "{{$.Auth.LDAP.DefaultRole}}"
+                      value: "[[$.Auth.LDAP.DefaultRole]]"
                     - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                      value: "{{$.Auth.LDAP.RoleNameAttributeID}}"
+                      value: "[[$.Auth.LDAP.RoleNameAttributeID]]"
                     - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                      value: "{{$.Auth.LDAP.ParseRoleNameFromDN}}"
+                      value: "[[$.Auth.LDAP.ParseRoleNameFromDN]]"
                     - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                      value: "{{$.Auth.LDAP.RoleAttributeIsDN}}"
+                      value: "[[$.Auth.LDAP.RoleAttributeIsDN]]"
                     - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                      value: "{{$.Auth.LDAP.ReferralUserAttributeIDToCheck}}"
-                    #{{end}}
+                      value: "[[$.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                    #[[end]]
                     ## LDAP config END
                     ## RoleMapping config BEGIN
-                    #{{if $.Auth.RoleMapper.RolesProperties}}
+                    #[[if $.Auth.RoleMapper.RolesProperties]]
                     - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
-                      value: "{{$.Auth.RoleMapper.RolesProperties}}"
+                      value: "[[$.Auth.RoleMapper.RolesProperties]]"
                     - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                      value: "{{$.Auth.RoleMapper.ReplaceRole}}"
-                    #{{end}}
+                      value: "[[$.Auth.RoleMapper.ReplaceRole]]"
+                    #[[end]]
                     ## RoleMapping config END
                     # Auth config END
                   resources:
@@ -645,7 +645,7 @@ servers:
               volumes:
                 - name: kieserver-keystore-volume
                   secret:
-                    secretName: "{{.KeystoreSecret}}"
+                    secretName: "[[.KeystoreSecret]]"
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:
@@ -658,17 +658,17 @@ servers:
               port: 8443
               targetPort: 8443
           selector:
-            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
+            deploymentConfig: "[[.KieName]][[.KieIndex]]"
           sessionAffinity: ClientIP
           sessionAffinityConfig:
             clientIP:
               timeoutSeconds: 3600
         metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -678,39 +678,39 @@ servers:
               port: 8888
               targetPort: 8888
           selector:
-            deploymentConfig: "{{.KieName}}{{.KieIndex}}"
+            deploymentConfig: "[[.KieName]][[.KieIndex]]"
         metadata:
-          name: "{{.KieName}}{{.KieIndex}}-ping"
+          name: "[[.KieName]][[.KieIndex]]-ping"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "{{.KieName}}{{.KieIndex}}-https"
+      - id: "[[.KieName]][[.KieIndex]]-https"
         metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
           annotations:
             description: Route for KIE server's https service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.KieName}}{{.KieIndex}}"
+            name: "[[.KieName]][[.KieIndex]]"
           port:
             targetPort: https
           tls:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
       ## KIE server routes END
-#{{end}}
+#[[end]]
 ## RANGE ends
 ## KIE Servers END
 
@@ -718,7 +718,7 @@ servers:
 others:
   - roles:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
+          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
         rules:
           - apiGroups:
               - ""
@@ -738,18 +738,18 @@ others:
 
     serviceAccounts:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc"
+          name: "[[.ApplicationName]]-[[.Product]]svc"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
 
     rolebindings:
       - metadata:
-          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
+          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
         subjects:
           - kind: ServiceAccount
-            name: "{{.ApplicationName}}-{{.Product}}svc"
+            name: "[[.ApplicationName]]-[[.Product]]svc"
         roleRef:
           kind: Role
-          name: "{{.ApplicationName}}-{{.Product}}svc-edit"
+          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
 # Other required resources END

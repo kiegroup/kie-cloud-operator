@@ -11,28 +11,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/imdario/mergo"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/pavel-v-chernykh/keystore-go"
 	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
 )
-
-// ConstructObject returns an object after merging the environment object and the one defined in the CR
-func ConstructObject(object v1.CustomObject, appObject v1.KieAppObject) v1.CustomObject {
-	for dcIndex, dc := range object.DeploymentConfigs {
-		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
-			c.Env = EnvOverride(c.Env, appObject.Env)
-			err := mergo.Merge(&c.Resources, appObject.Resources, mergo.WithOverride)
-			if err != nil {
-				log.Error("Error merging interfaces. ", err)
-			}
-			dc.Spec.Template.Spec.Containers[containerIndex] = c
-		}
-		object.DeploymentConfigs[dcIndex] = dc
-	}
-	return object
-}
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
 func GenerateKeystore(commonName, alias string, password []byte) []byte {

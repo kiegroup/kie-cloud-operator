@@ -120,6 +120,7 @@ type SecuredKieAppObject struct {
 // KieAppObject Generic object definition
 type KieAppObject struct {
 	Env            []corev1.EnvVar             `json:"env,omitempty"`
+	Replicas       *int32                      `json:"replicas,omitempty"`
 	Resources      corev1.ResourceRequirements `json:"resources"`
 	KeystoreSecret string                      `json:"keystoreSecret,omitempty"`
 }
@@ -262,6 +263,7 @@ type EnvTemplate struct {
 type ConsoleTemplate struct {
 	SSOAuthClient  SSOAuthClient `json:"ssoAuthClient,omitempty"`
 	Name           string        `json:"name,omitempty"`
+	Replicas       int32         `json:"replicas,omitempty"`
 	ImageName      string        `json:"imageName,omitempty"`
 	ProbePage      string        `json:"probePage,omitempty"`
 	KeystoreSecret string        `json:"keystoreSecret,omitempty"`
@@ -271,6 +273,7 @@ type ConsoleTemplate struct {
 type ServerTemplate struct {
 	KieName        string                 `json:"kieName,omitempty"`
 	KieIndex       string                 `json:"kieIndex,omitempty"`
+	Replicas       int32                  `json:"replicas,omitempty"`
 	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
 	From           corev1.ObjectReference `json:"from,omitempty"`
 	Build          BuildTemplate          `json:"build,omitempty"`
@@ -279,7 +282,21 @@ type ServerTemplate struct {
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
+	Replicas       int32  `json:"replicas,omitempty"`
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
+}
+
+// ReplicaSettings contains the default replica amounts for a component in a given environment type
+type ReplicaSettings struct {
+	Console     Replicas `json:"console,omitempty"`
+	Server      Replicas `json:"server,omitempty"`
+	SmartRouter Replicas `json:"smartRouter,omitempty"`
+}
+
+// Replicas contains replica settings
+type Replicas struct {
+	Replicas  int32 `json:"replicas,omitempty"`
+	DenyScale bool  `json:"denyScale,omitempty"`
 }
 
 // BuildTemplate build variables used in the templates

@@ -10,32 +10,32 @@ spec:
         - name: MY_VALUE
           value: "example"
     servers:
-      # Kieserver sets will be named sequentially rhpam-trial-kieserver1, rhpam-trial-kieserver1-2
+      # Kieserver sets will be named sequentially server-config-kieserver1, server-config-kieserver1-2
       - deployments: 2
-        # Env variables that will be added to all the kie servers
+        # Env variables that will be added to all the kie servers in this set
         env:
           - name: MY_VALUE
             value: "example"
-        # Override default memory limits for all the kie servers
+        # Override default memory limits for all the kie servers in this set
         resources:
-          memory:
-            limits: 2Gi
-      # Kieserver sets will be named sequentially rhpam-trial-kieserver2, rhpam-trial-kieserver2-2
+          limits:
+            memory: 2Gi
+      # Kieserver sets will be named sequentially server-config-kieserver2, server-config-kieserver2-2
       - deployments: 2
-        # Env variables that will be added to all the kie servers
+        # Env variables that will be added to all the kie servers in this set
         env:
           - name: MY_VALUE
             value: "example"
-        # Override default memory limits for all the kie servers
-        resources:
-          memory:
-            limits: 2Gi
       # Kieserver sets will be named sequentially server, server-2
       - name: server
         deployments: 2
         env:
           - name: MY_VALUE
             value: "example"
+        # Override default memory limits for all the kie servers in this set
+        resources:
+          limits:
+            memory: 2Gi
     smartRouter:
       env:
         - name: MY_VALUE
