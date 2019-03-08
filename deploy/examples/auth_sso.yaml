@@ -1,22 +1,28 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: rhdm-sso
+  name: rhpam-sso
 spec:
-  environment: rhdm-trial
+  environment: rhpam-authoring
   auth:
     sso:
-      url: https://rh-sso.example.com:8443
-      realm: rhdm
+      url: https://rh-sso.example.com
+      realm: rhpam
+      adminUser: admin
+      adminPassword: secret
   objects:
     console:
       ssoClient:
-        name: rhdm-console
+        name: rhpam-console
+        secret: somePwd
     servers:
-      - name: one
+      - name: kieserver-one
         deployments: 2
         ssoClient:
           name: kieserver-one
-      - name: two
+          secret: otherPwd
+          hostnameHTTPS: kieserver-one.example.com
+      - name: kieserver-two
         ssoClient:
           name: kieserver-two
+          secret: yetOtherPwd
