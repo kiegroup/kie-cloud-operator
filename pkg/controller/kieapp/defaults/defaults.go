@@ -96,7 +96,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 }
 
 func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
-	appConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.ConsoleTemplate{}
 	if !hasEnv {
 		return template
@@ -107,25 +107,29 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 		template.KeystoreSecret = cr.Spec.Objects.Console.KeystoreSecret
 	}
 	// Set replicas
-	var denyScale bool
-	if replicaConstants, hasReplicas := constants.ReplicaConstants[cr.Spec.Environment]; hasReplicas {
-		template.Replicas, denyScale = setReplicas(cr.Spec.Objects.Console.KieAppObject, replicaConstants.Console, hasReplicas)
-	} else {
-		template.Replicas, denyScale = setReplicas(cr.Spec.Objects.Console.KieAppObject, v1.Replicas{}, false)
+	envReplicas := v1.Replicas{}
+	if hasEnv {
+		envReplicas = envConstants.ReplicaConstants.Console
 	}
+	replicas, denyScale := setReplicas(cr.Spec.Objects.Console.KieAppObject, envReplicas, hasEnv)
 	if denyScale {
-		cr.Spec.Objects.Console.Replicas = Pint32(template.Replicas)
+		cr.Spec.Objects.Console.Replicas = Pint32(replicas)
 	}
+	template.Replicas = replicas
 
-	template.Name = appConstants.Prefix
-	template.ImageName = appConstants.ImageName
-	template.ProbePage = appConstants.ConsoleProbePage
+	template.Name = envConstants.AppConstants.Prefix
+	template.ImageName = envConstants.AppConstants.ImageName
+	template.ProbePage = envConstants.AppConstants.ConsoleProbePage
 
 	return template
 }
 
 func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.SmartRouterTemplate{}
+	if !hasEnv {
+		return template
+	}
 	if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
 		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
 	} else {
@@ -133,28 +137,28 @@ func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 	}
 
 	// Set replicas
-	var denyScale bool
-	if replicaConstants, hasReplicas := constants.ReplicaConstants[cr.Spec.Environment]; hasReplicas {
-		template.Replicas, denyScale = setReplicas(cr.Spec.Objects.SmartRouter, replicaConstants.SmartRouter, hasReplicas)
-	} else {
-		template.Replicas, denyScale = setReplicas(cr.Spec.Objects.SmartRouter, v1.Replicas{}, false)
+	envReplicas := v1.Replicas{}
+	if hasEnv {
+		envReplicas = envConstants.ReplicaConstants.SmartRouter
 	}
+	replicas, denyScale := setReplicas(cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
 	if denyScale {
-		cr.Spec.Objects.SmartRouter.Replicas = Pint32(template.Replicas)
+		cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 	}
+	template.Replicas = replicas
 
 	return template
 }
 
-func setReplicas(object v1.KieAppObject, replicaConstant v1.Replicas, hasReplicas bool) (replicas int32, denyScale bool) {
+func setReplicas(object v1.KieAppObject, replicaConstant v1.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
 	if object.Replicas != nil {
-		if replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
+		if hasEnv && replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
 			log.Warnf("scaling not allowed for this environment, setting to default of %d", replicaConstant.Replicas)
 			return replicaConstant.Replicas, true
 		}
 		return *object.Replicas, false
 	}
-	if hasReplicas {
+	if hasEnv {
 		return replicaConstant.Replicas, false
 	}
 	log.Warnf("no replicas settings for this environment, defaulting to %d", replicas)
@@ -226,15 +230,16 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 		}
 
 		// Set replicas
-		var denyScale bool
-		if replicaConstants, hasReplicas := constants.ReplicaConstants[cr.Spec.Environment]; hasReplicas {
-			template.Replicas, denyScale = setReplicas(serverSet.KieAppObject, replicaConstants.Server, hasReplicas)
-		} else {
-			template.Replicas, denyScale = setReplicas(serverSet.KieAppObject, v1.Replicas{}, false)
+		envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+		envReplicas := v1.Replicas{}
+		if hasEnv {
+			envReplicas = envConstants.ReplicaConstants.Server
 		}
+		replicas, denyScale := setReplicas(serverSet.KieAppObject, envReplicas, hasEnv)
 		if denyScale {
-			serverSet.Replicas = Pint32(template.Replicas)
+			serverSet.Replicas = Pint32(replicas)
 		}
+		template.Replicas = replicas
 
 		template.KieName = serverSet.Name
 		if *serverSet.Deployments == 1 {
@@ -476,10 +481,11 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 // setAppConstants sets the application-related constants to use in the template processing
 func setAppConstants(spec *v1.KieAppSpec) {
 	env := spec.Environment
-	appConstants, hasEnv := constants.EnvironmentConstants[env]
+	envConstants, hasEnv := constants.EnvironmentConstants[env]
 	if !hasEnv {
 		return
 	}
+	appConstants := envConstants.AppConstants
 	if len(spec.CommonConfig.Version) == 0 {
 		pattern := regexp.MustCompile("[0-9]+")
 		spec.CommonConfig.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")

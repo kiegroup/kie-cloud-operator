@@ -56,6 +56,12 @@ const (
 	RhdmProductionImmutable EnvironmentType = "rhdm-production-immutable"
 )
 
+// EnvironmentConstants stores both the App and Replica Constants for a given environment
+type EnvironmentConstants struct {
+	AppConstants     AppConstants     `json:"appConstants,omitempty"`
+	ReplicaConstants ReplicaConstants `json:"replicaConstants,omitempty"`
+}
+
 // AppConstants data type to store application deployment constants
 type AppConstants struct {
 	Product          string `json:"name,omitempty"`
@@ -286,8 +292,8 @@ type SmartRouterTemplate struct {
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
 }
 
-// ReplicaSettings contains the default replica amounts for a component in a given environment type
-type ReplicaSettings struct {
+// ReplicaConstants contains the default replica amounts for a component in a given environment type
+type ReplicaConstants struct {
 	Console     Replicas `json:"console,omitempty"`
 	Server      Replicas `json:"server,omitempty"`
 	SmartRouter Replicas `json:"smartRouter,omitempty"`
