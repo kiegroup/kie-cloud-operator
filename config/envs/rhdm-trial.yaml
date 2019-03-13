@@ -1,46 +1,46 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
         template:
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
             volumes:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}-pvol"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 emptyDir: {}
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
         annotations:
           delete: "true"
   services:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
         ports:
           - name: git-ssh
             port: 8001
             targetPort: 8001
   routes:
-    - id: "{{.ApplicationName}}-{{.Console.Name}}-http"
+    - id: "[[.ApplicationName]]-[[.Console.Name]]-http"
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-http"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-http"
         labels:
-          app: "{{.ApplicationName}}"
-          application: "{{.ApplicationName}}"
-          service: "{{.ApplicationName}}-{{.Console.Name}}"
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           description: Route for Business Central's http service.
           haproxy.router.openshift.io/timeout: 60s
       spec:
         to:
-          name: "{{.ApplicationName}}-{{.Console.Name}}"
+          name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
           targetPort: http
 ## KIE smartrouter BEGIN
@@ -50,21 +50,21 @@ smartRouter:
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
-  #{{ range $index, $Map := .Servers }}
+  #[[ range $index, $Map := .Servers ]]
   - deploymentConfigs:
       ## KIE server deployment config BEGIN
       - metadata:
-          name: "{{.KieName}}{{.KieIndex}}"
+          name: "[[.KieName]][[.KieIndex]]"
         spec:
           template:
             metadata:
-              name: "{{.KieName}}{{.KieIndex}}"
+              name: "[[.KieName]][[.KieIndex]]"
             spec:
               containers:
-                - name: "{{.KieName}}{{.KieIndex}}"
+                - name: "[[.KieName]][[.KieIndex]]"
                   env:
                     - name: KIE_SERVER_ROUTE_NAME
-                      value: "{{.KieName}}{{.KieIndex}}-http"
+                      value: "[[.KieName]][[.KieIndex]]-http"
                     - name: KIE_SERVER_PROTOCOL
                     - name: KIE_SERVER_PORT
                     - name: FILTERS
@@ -92,22 +92,22 @@ servers:
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
-      - id: "{{.KieName}}{{.KieIndex}}-http"
+      - id: "[[.KieName]][[.KieIndex]]-http"
         metadata:
-          name: "{{.KieName}}{{.KieIndex}}-http"
+          name: "[[.KieName]][[.KieIndex]]-http"
           labels:
-            app: "{{$.ApplicationName}}"
-            application: "{{$.ApplicationName}}"
-            service: "{{.KieName}}{{.KieIndex}}"
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]][[.KieIndex]]"
           annotations:
             description: Route for KIE server's http service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.KieName}}{{.KieIndex}}"
+            name: "[[.KieName]][[.KieIndex]]"
           port:
             targetPort: http
     ## KIE server route END
-#{{end}}
+#[[end]]
 ## RANGE ends
 ## KIE Servers END

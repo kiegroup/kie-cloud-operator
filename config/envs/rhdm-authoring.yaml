@@ -1,21 +1,21 @@
 console:
   deploymentConfigs:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
         template:
           metadata:
-            name: "{{.ApplicationName}}-{{.Console.Name}}"
+            name: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
             containers:
-              - name: "{{.ApplicationName}}-{{.Console.Name}}"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 ports:
                   - name: git-ssh
                     containerPort: 8001
                     protocol: TCP
   persistentVolumeClaims:
     - metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}-claim"
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
         accessModes:
           - ReadWriteOnce
@@ -29,7 +29,7 @@ console:
             port: 8001
             targetPort: 8001
       metadata:
-        name: "{{.ApplicationName}}-{{.Console.Name}}"
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
 ## KIE smartrouter BEGIN
 smartRouter:
   omit: true

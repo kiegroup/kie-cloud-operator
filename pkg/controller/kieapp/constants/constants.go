@@ -39,20 +39,41 @@ const (
 	KeystoreSecret = "%s-app-secret"
 )
 
-var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
-var rhpamMonitorAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
-var rhdmAppConstants = &v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhpamMonitorAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhdmAppConstants = v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+
+var ReplicasTrial = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProductionImmutable = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 1},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProduction = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 3},
+	Server:      v1.Replicas{Replicas: 3},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasAuthoringHA = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 2},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
 
 // EnvironmentConstants contains
-var EnvironmentConstants = map[v1.EnvironmentType]*v1.AppConstants{
-	v1.RhpamProduction:          rhpamMonitorAppConstants,
-	v1.RhpamProductionImmutable: rhpamMonitorAppConstants,
-	v1.RhpamTrial:               rhpamAppConstants,
-	v1.RhpamAuthoring:           rhpamAppConstants,
-	v1.RhpamAuthoringHA:         rhpamAppConstants,
-	v1.RhdmTrial:                rhdmAppConstants,
-	v1.RhdmAuthoring:            rhdmAppConstants,
-	v1.RhdmAuthoringHA:          rhdmAppConstants,
-	v1.RhdmOptawebTrial:         rhdmAppConstants,
-	v1.RhdmProductionImmutable:  rhdmAppConstants,
+var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
+	v1.RhpamProduction:          &v1.EnvironmentConstants{AppConstants: rhpamMonitorAppConstants, ReplicaConstants: replicasRhpamProduction},
+	v1.RhpamProductionImmutable: &v1.EnvironmentConstants{AppConstants: rhpamMonitorAppConstants, ReplicaConstants: replicasRhpamProductionImmutable},
+	v1.RhpamTrial:               &v1.EnvironmentConstants{AppConstants: rhpamAppConstants, ReplicaConstants: ReplicasTrial},
+	v1.RhpamAuthoring:           &v1.EnvironmentConstants{AppConstants: rhpamAppConstants, ReplicaConstants: ReplicasTrial},
+	v1.RhpamAuthoringHA:         &v1.EnvironmentConstants{AppConstants: rhpamAppConstants, ReplicaConstants: replicasAuthoringHA},
+	v1.RhdmTrial:                &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
+	v1.RhdmAuthoring:            &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
+	v1.RhdmAuthoringHA:          &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: replicasAuthoringHA},
+	v1.RhdmOptawebTrial:         &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
+	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
 }

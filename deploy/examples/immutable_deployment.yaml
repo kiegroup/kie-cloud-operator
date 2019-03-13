@@ -12,6 +12,7 @@ spec:
     # Kieserver resources will be named sequentially rhpam-production-immutable-kieserver-0
     servers:
       - name: kieserver-a
+        replicas: 3
         # Replace the default image stream
         from:
           kind: ImageStreamTag

@@ -9,20 +9,17 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
-
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	buildv1 "github.com/openshift/api/build/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -416,15 +413,17 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 func TestConstructConsoleObject(t *testing.T) {
 	name := "test"
 	cr := buildKieApp(name, 1)
+	cr.Spec.Objects.Console.Replicas = Pint32(3)
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	object := shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
-	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), object.DeploymentConfigs[0].Name)
+	env = ConsolidateObjects(env, cr)
+	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, constants.ReplicasTrial.Console.Replicas, env.Console.DeploymentConfigs[0].Spec.Replicas)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
-		assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
 }
 
@@ -434,12 +433,13 @@ func TestConstructSmartRouterObject(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	object := shared.ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
-	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), object.DeploymentConfigs[0].Name)
+	env = ConsolidateObjects(env, cr)
+	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
+	assert.Equal(t, constants.ReplicasTrial.SmartRouter.Replicas, env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
-		assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
+		assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
 }
 
@@ -450,12 +450,13 @@ func TestConstructServerObject(t *testing.T) {
 		env, err := GetEnvironment(cr, test.MockService())
 		assert.Nil(t, err)
 
-		object := shared.ConstructObject(env.Servers[0], cr.Spec.Objects.Servers[0].KieAppObject)
-		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), object.DeploymentConfigs[0].Name)
+		env = ConsolidateObjects(env, cr)
+		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
+		assert.Equal(t, constants.ReplicasTrial.Server.Replicas, env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
 		re := regexp.MustCompile("[0-9]+")
 		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
-			assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
+			assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
 	}
 	{
@@ -463,18 +464,48 @@ func TestConstructServerObject(t *testing.T) {
 		env, err := GetEnvironment(cr, test.MockService())
 		assert.Nil(t, err)
 
-		for i := range env.Servers {
-			object := shared.ConstructObject(env.Servers[i], cr.Spec.Objects.Servers[0].KieAppObject)
+		env = ConsolidateObjects(env, cr)
+		for i, s := range env.Servers {
 			if i == 0 {
-				assert.Equal(t, fmt.Sprintf("%s-kieserver", name), object.DeploymentConfigs[0].Name)
+				assert.Equal(t, fmt.Sprintf("%s-kieserver", name), s.DeploymentConfigs[0].Name)
 			} else {
-				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), object.DeploymentConfigs[0].Name)
+				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
 			re := regexp.MustCompile("[0-9]+")
 			assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
-				assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
+				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
+		}
+	}
+}
+
+func TestSetReplicas(t *testing.T) {
+	name := "test"
+	replicas := Pint32(8)
+	cr := buildKieApp(name, 3)
+	cr.Spec.Objects.Console.Replicas = replicas
+	cr.Spec.Objects.SmartRouter.Replicas = replicas
+	for i := range cr.Spec.Objects.Servers {
+		cr.Spec.Objects.Servers[i].Replicas = replicas
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
+	env = ConsolidateObjects(env, cr)
+	assert.Equal(t, constants.ReplicasTrial.Console.Replicas, env.Console.DeploymentConfigs[0].Spec.Replicas, "Replicas scaling should be denied and use default instead")
+	assert.Equal(t, *replicas, env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
+	for i, s := range env.Servers {
+		if i == 0 {
+			assert.Equal(t, fmt.Sprintf("%s-kieserver", name), s.DeploymentConfigs[0].Name)
+		} else {
+			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
+		}
+		re := regexp.MustCompile("[0-9]+")
+		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
+		for i := range sampleEnv {
+			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
 	}
 }
@@ -494,6 +525,209 @@ var sampleResources = corev1.ResourceRequirements{
 	Limits: map[corev1.ResourceName]resource.Quantity{
 		"memory": *resource.NewQuantity(1, "Mi"),
 	},
+}
+
+func TestUnknownEnvironmentObjects(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "unknown",
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Equal(t, fmt.Sprintf("envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Environment, cr.Name), err.Error())
+
+	env = ConsolidateObjects(env, cr)
+	assert.NotNil(t, err)
+
+	log.Debug("Testing with environment ", cr.Spec.Environment)
+	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
+}
+
+func TestTrialServerEnv(t *testing.T) {
+	deployments := 6
+	name := "test"
+	envReplace := corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "replaced",
+	}
+	envAddition := corev1.EnvVar{
+		Name:  "SERVER_TEST",
+		Value: "test",
+	}
+	commonAddition := corev1.EnvVar{
+		Name:  "COMMON_TEST",
+		Value: "test",
+	}
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhpam-trial",
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							KieAppObject: v1.KieAppObject{
+								Env: []corev1.EnvVar{
+									envReplace,
+									envAddition,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	if !assert.Nil(t, err, "error should be nil") {
+		log.Error("Error getting environment. ", err)
+	}
+	env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env = append(env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition)
+	env = ConsolidateObjects(env, cr)
+
+	assert.Equal(t, deployments, len(env.Servers))
+	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
+	pattern := regexp.MustCompile("[0-9]+")
+	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
+	assert.Equal(t, expectedISTagName, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "replaced",
+	})
+	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+}
+
+func TestTrialServersEnv(t *testing.T) {
+	deployments := 3
+	name := "test"
+	envReplace := corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "replaced",
+	}
+	envAddition := corev1.EnvVar{
+		Name:  "SERVER_TEST",
+		Value: "test",
+	}
+	commonAddition := corev1.EnvVar{
+		Name:  "COMMON_TEST",
+		Value: "test",
+	}
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhpam-trial",
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Name: "server-a",
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							KieAppObject: v1.KieAppObject{
+								Env: []corev1.EnvVar{
+									envReplace,
+									envAddition,
+									commonAddition,
+								},
+							},
+						},
+						Deployments: Pint(1),
+					},
+					{
+						Name:        "server-b",
+						Deployments: Pint(deployments),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	if !assert.Nil(t, err, "error should be nil") {
+		log.Error("Error getting environment. ", err)
+	}
+	env = ConsolidateObjects(env, cr)
+
+	assert.Len(t, env.Servers, 4)
+	pattern := regexp.MustCompile("[0-9]+")
+	expectedISTagName := fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(pattern.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag)
+	for index := 0; index < 1; index++ {
+		s := env.Servers[index]
+		assert.Equal(t, expectedISTagName, s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  "KIE_ADMIN_PWD",
+			Value: "replaced",
+		})
+		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+	}
+	for index := 1; index < 1+deployments; index++ {
+		s := env.Servers[index]
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+		assert.NotContains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+	}
+}
+
+func TestTrialConsoleEnv(t *testing.T) {
+	name := "test"
+	envReplace := corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "RedHat",
+	}
+	envAddition := corev1.EnvVar{
+		Name:  "CONSOLE_TEST",
+		Value: "test",
+	}
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.KieAppSpec{
+			Environment: "rhdm-trial",
+			CommonConfig: v1.CommonConfig{
+				ApplicationName: "trial",
+			},
+			Objects: v1.KieAppObjects{
+				Console: v1.SecuredKieAppObject{
+					KieAppObject: v1.KieAppObject{
+						Env: []corev1.EnvVar{
+							envReplace,
+							envAddition,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	if !assert.Nil(t, err, "error should be nil") {
+		log.Error("Error getting environment. ", err)
+	}
+	env = ConsolidateObjects(env, cr)
+
+	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
+	re := regexp.MustCompile("[0-9]+")
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  "KIE_ADMIN_PWD",
+		Value: "RedHat",
+	})
 }
 
 func buildKieApp(name string, deployments int) *v1.KieApp {

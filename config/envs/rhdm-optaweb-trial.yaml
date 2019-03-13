@@ -4,18 +4,18 @@ smartrouter:
   omit: true
 ## KIE Servers BEGIN
 servers:
-  #{{ range $index, $Map := .Servers }}
+  #[[ range $index, $Map := .Servers ]]
   - omit: true
-  #{{end}}
+  #[[end]]
 others:
   ## Optaweb BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          name: "[[.ApplicationName]]-optaweb-employee-rostering"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-optaweb-employee-rostering"
         spec:
           strategy:
             type: Recreate
@@ -24,29 +24,29 @@ others:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "{{.ApplicationName}}-optaweb-employee-rostering"
+                  - "[[.ApplicationName]]-optaweb-employee-rostering"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "{{.Product}}{{.Version}}-optaweb-employee-rostering-openshift:{{.ImageTag}}"
+                  name: "[[.Product]][[.Version]]-optaweb-employee-rostering-openshift:[[.ImageTag]]"
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
+            deploymentConfig: "[[.ApplicationName]]-optaweb-employee-rostering"
           template:
             metadata:
-              name: "{{.ApplicationName}}-optaweb-employee-rostering"
+              name: "[[.ApplicationName]]-optaweb-employee-rostering"
               labels:
-                deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
-                app: "{{.ApplicationName}}"
-                application: "{{.ApplicationName}}"
-                service: "{{.ApplicationName}}-optaweb-employee-rostering"
+                deploymentConfig: "[[.ApplicationName]]-optaweb-employee-rostering"
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
+                service: "[[.ApplicationName]]-optaweb-employee-rostering"
             spec:
-              serviceAccountName: "{{.ApplicationName}}-{{.Product}}svc"
+              serviceAccountName: "[[.ApplicationName]]-[[.Product]]svc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "{{.ApplicationName}}-optaweb-employee-rostering"
-                  image: "{{.Product}}{{.Version}}-optaweb-employee-rostering-openshift"
+                - name: "[[.ApplicationName]]-optaweb-employee-rostering"
+                  image: "[[.Product]][[.Version]]-optaweb-employee-rostering-openshift"
                   imagePullPolicy: Always
                   resources:
                     limits:
@@ -81,7 +81,7 @@ others:
                     - name: KIE_ADMIN_USER
                       value: adminUser
                     - name: KIE_ADMIN_PWD
-                      value: "{{.AdminPassword}}"
+                      value: "[[.AdminPassword]]"
                     - name: OPTAWEB_EMPLOYEE_ROSTERING_PERSISTENCE_DATASOURCE
                       value: "java:jboss/datasources/ExampleDS"
                     - name: OPTAWEB_EMPLOYEE_ROSTERING_PERSISTENCE_DIALECT
@@ -95,44 +95,44 @@ others:
               port: 8080
               targetPort: 8080
           selector:
-            deploymentConfig: "{{.ApplicationName}}-optaweb-employee-rostering"
+            deploymentConfig: "[[.ApplicationName]]-optaweb-employee-rostering"
         metadata:
-          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          name: "[[.ApplicationName]]-optaweb-employee-rostering"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-optaweb-employee-rostering"
           annotations:
             description: All the Optaweb's ports. (KIE server)
     routes:
-      - id: "{{.ApplicationName}}-optaweb-employee-rostering-https"
+      - id: "[[.ApplicationName]]-optaweb-employee-rostering-https"
         metadata:
-          name: "{{.ApplicationName}}-optaweb-employee-rostering"
+          name: "[[.ApplicationName]]-optaweb-employee-rostering"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-optaweb-employee-rostering"
           annotations:
             description: Route for Optaweb's https service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.ApplicationName}}-optaweb-employee-rostering"
+            name: "[[.ApplicationName]]-optaweb-employee-rostering"
           port:
             targetPort: http
-      - id: "{{.ApplicationName}}-optaweb-employee-rostering-http"
+      - id: "[[.ApplicationName]]-optaweb-employee-rostering-http"
         metadata:
-          name: "{{.ApplicationName}}-optaweb-employee-rostering-http"
+          name: "[[.ApplicationName]]-optaweb-employee-rostering-http"
           labels:
-            app: "{{.ApplicationName}}"
-            application: "{{.ApplicationName}}"
-            service: "{{.ApplicationName}}-optaweb-employee-rostering"
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-optaweb-employee-rostering"
           annotations:
             description: Route for Optaweb's http service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "{{.ApplicationName}}-optaweb-employee-rostering"
+            name: "[[.ApplicationName]]-optaweb-employee-rostering"
           port:
             targetPort: http
 ## Optaweb END

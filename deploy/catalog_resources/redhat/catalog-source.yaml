@@ -260,6 +260,10 @@ items:
                             type: object
                             description: Configuration of the RHPAM workbench
                             properties:
+                              replicas:
+                                type: integer
+                                format: int32
+                                description: Replicas to set for the DeploymentConfig
                               keystoreSecret:
                                 type: string
                                 description: Keystore secret name
@@ -323,6 +327,10 @@ items:
                                   type: integer
                                   format: int
                                   description: Number of Server sets that will be deployed
+                                replicas:
+                                  type: integer
+                                  format: int32
+                                  description: Replicas to set for the DeploymentConfig
                                 keystoreSecret:
                                   type: string
                                   description: Keystore secret name
@@ -460,6 +468,10 @@ items:
                             type: object
                             description: Configuration of the RHPAM smart router
                             properties:
+                              replicas:
+                                type: integer
+                                format: int32
+                                description: Replicas to set for the DeploymentConfig
                               keystoreSecret:
                                 type: string
                                 description: Keystore secret name
