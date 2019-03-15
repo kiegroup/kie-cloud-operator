@@ -1,0 +1,13 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: server-mysqldb
+spec:
+  environment: rhpam-trial
+  objects:
+    servers:
+      - deployments: 2
+        database:
+          type: mysql
+          size: 30Gi
+

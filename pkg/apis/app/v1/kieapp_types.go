@@ -56,8 +56,9 @@ const (
 
 // EnvironmentConstants stores both the App and Replica Constants for a given environment
 type EnvironmentConstants struct {
-	AppConstants     AppConstants     `json:"appConstants,omitempty"`
-	ReplicaConstants ReplicaConstants `json:"replicaConstants,omitempty"`
+	App      AppConstants     `json:"app,omitempty"`
+	Replica  ReplicaConstants `json:"replica,omitempty"`
+	Database *DatabaseObject  `json:"database,omitempty"`
 }
 
 // AppConstants data type to store application deployment constants
@@ -113,6 +114,7 @@ type KieServerSet struct {
 	From                *corev1.ObjectReference `json:"from,omitempty"`
 	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
 	SecuredKieAppObject `json:",inline"`
+	Database            *DatabaseObject `json:"database,omitempty"`
 }
 
 // SecuredKieAppObject Generic object definition
@@ -251,6 +253,48 @@ type RoleMapperAuthConfig struct {
 	ReplaceRole     bool   `json:"replaceRole,omitempty"`
 }
 
+// DatabaseType to define what kind of database will be used for the Kie Servers
+type DatabaseType string
+
+const (
+	// DatabaseH2 H2 Embedded Database deployment
+	DatabaseH2 DatabaseType = "h2"
+	// DatabaseMySQL MySQL Database deployment
+	DatabaseMySQL DatabaseType = "mysql"
+	// DatabasePostgreSQL PostgreSQL Database deployment
+	DatabasePostgreSQL DatabaseType = "postgresql"
+	// DatabaseExternal External Database
+	DatabaseExternal DatabaseType = "external"
+)
+
+// DatabaseObject Defines how a KieServer will manage and create a new Database
+// or connect to an existing one
+type DatabaseObject struct {
+	Type           DatabaseType            `json:"type,omitempty"`
+	Size           string                  `json:"size,omitempty"`
+	ExternalConfig *ExternalDatabaseObject `json:"externalConfig,omitempty"`
+}
+
+// ExternalDatabaseObject configuration definition of an external database
+type ExternalDatabaseObject struct {
+	Driver                     string `json:"driver,omitempty"`
+	Dialect                    string `json:"dialect,omitempty"`
+	Name                       string `json:"name,omitempty"`
+	Host                       string `json:"host,omitempty"`
+	Port                       string `json:"port,omitempty"`
+	JdbcURL                    string `json:"jdbcURL,omitempty"`
+	NonXA                      string `json:"nonXA,omitempty"`
+	JndiName                   string `json:"jndiName,omitempty"`
+	Username                   string `json:"username,omitempty"`
+	Password                   string `json:"password,omitempty"`
+	MinPoolSize                string `json:"minPoolSize,omitempty"`
+	MaxPoolSize                string `json:"maxPoolSize,omitempty"`
+	ConnectionChecker          string `json:"connectionChecker,omitempty"`
+	ExceptionSorter            string `json:"exceptionSorter,omitempty"`
+	BackgroundValidation       string `json:"backgroundValidation,omitempty"`
+	BackgroundValidationMillis string `json:"backgroundValidationMillis,omitempty"`
+}
+
 type OpenShiftObject interface {
 	metav1.Object
 	runtime.Object
@@ -276,12 +320,12 @@ type ConsoleTemplate struct {
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
 	KieName        string                 `json:"kieName,omitempty"`
-	KieIndex       string                 `json:"kieIndex,omitempty"`
 	Replicas       int32                  `json:"replicas,omitempty"`
 	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
 	From           corev1.ObjectReference `json:"from,omitempty"`
 	Build          BuildTemplate          `json:"build,omitempty"`
 	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
+	Database       DatabaseObject         `json:"database,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates

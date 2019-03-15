@@ -9,17 +9,17 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
         spec:
           template:
             spec:
               containers:
-                - name: "[[.KieName]][[.KieIndex]]"
-                  image: "[[.KieName]][[.KieIndex]]"
+                - name: "[[.KieName]]"
+                  image: "[[.KieName]]"
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "[[.Build.KieServerContainerDeployment]]"
@@ -41,18 +41,18 @@ servers:
     #[[if .Build.KieServerContainerDeployment]]
     imageStreams:
       - metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
     buildConfigs:
       - metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
         spec:
           source:
             type: Git
@@ -78,7 +78,7 @@ servers:
           output:
             to:
               kind: ImageStreamTag
-              name: "[[.KieName]][[.KieIndex]]:latest"
+              name: "[[.KieName]]:latest"
           triggers:
             - type: GitHub
               github:
