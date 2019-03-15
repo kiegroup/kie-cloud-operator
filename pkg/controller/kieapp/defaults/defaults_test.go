@@ -187,6 +187,9 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	for i := 0; i < len(env.Servers); i++ {
+		assert.Equal(t, "PRODUCTION", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
+	}
 }
 
 func TestRhdmAuthoringHAEnvironment(t *testing.T) {
@@ -204,6 +207,9 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	for i := 0; i < len(env.Servers); i++ {
+		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
+	}
 }
 
 func TestRhpamAuthoringHAEnvironment(t *testing.T) {
