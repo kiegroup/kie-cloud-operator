@@ -295,9 +295,6 @@ items:
                               sso:
                                 type: object
                                 description: RH-SSO integration configuration
-                                required:
-                                  - url
-                                  - realm
                                 properties:
                                   url:
                                     type: string
@@ -321,8 +318,6 @@ items:
                               ldap:
                                 type: object
                                 description: LDAP integration configuration
-                                required:
-                                  - url
                                 properties:
                                   url:
                                     type: string
@@ -397,8 +392,6 @@ items:
                               roleMapper:
                                 type: object
                                 description: RoleMapper configuration
-                                required:
-                                  - rolesProperties
                                 properties:
                                   rolesProperties:
                                     type: string
