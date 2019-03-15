@@ -1,7 +1,7 @@
 package constants
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 )
 
 const (
@@ -74,6 +74,5 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 	v1.RhdmTrial:                &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
 	v1.RhdmAuthoring:            &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
 	v1.RhdmAuthoringHA:          &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: replicasAuthoringHA},
-	v1.RhdmOptawebTrial:         &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
 	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{AppConstants: rhdmAppConstants, ReplicaConstants: ReplicasTrial},
 }

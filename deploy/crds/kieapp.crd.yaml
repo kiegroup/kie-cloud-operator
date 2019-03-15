@@ -27,7 +27,6 @@ spec:
               enum:
                 - rhdm-authoring-ha
                 - rhdm-authoring
-                - rhdm-optaweb-trial
                 - rhdm-production-immutable
                 - rhdm-trial
                 - rhpam-authoring-ha

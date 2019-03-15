@@ -1,6 +1,0 @@
-apiVersion: app.kiegroup.org/v1
-kind: KieApp
-metadata:
-  name: rhdm-optaweb-trial
-spec:
-  environment: rhdm-optaweb-trial

@@ -50,8 +50,6 @@ const (
 	RhdmAuthoring EnvironmentType = "rhdm-authoring"
 	// RhdmAuthoringHA RHDM Authoring HA environment
 	RhdmAuthoringHA EnvironmentType = "rhdm-authoring-ha"
-	// RhdmOptawebTrial RHDM Optaweb Employee Rostering Trial environment
-	RhdmOptawebTrial EnvironmentType = "rhdm-optaweb-trial"
 	// RhdmProductionImmutable RHDM Production Immutable environment
 	RhdmProductionImmutable EnvironmentType = "rhdm-production-immutable"
 )
