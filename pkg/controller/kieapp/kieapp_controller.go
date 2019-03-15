@@ -433,12 +433,10 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			serverCN = cr.Spec.CommonConfig.ApplicationName
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
-		serverSet, relativeIndex := defaults.GetServerSet(cr, i)
-		kieName := serverSet.Name
-		kieIndex := defaults.GetKieIndex(&serverSet, relativeIndex)
+		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
 		if serverSet.KeystoreSecret == "" {
 			server.Secrets = append(server.Secrets, generateKeystoreSecret(
-				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{kieName, kieIndex}, "")),
+				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
 				cr,
 			))

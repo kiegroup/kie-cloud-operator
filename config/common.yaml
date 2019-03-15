@@ -426,11 +426,11 @@ servers:
   ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
         spec:
           strategy:
             rollingParams:
@@ -441,7 +441,7 @@ servers:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "[[.KieName]][[.KieIndex]]"
+                  - "[[.KieName]]"
                 from:
                   kind: "[[.From.Kind]]"
                   namespace: "[[.From.Namespace]]"
@@ -449,20 +449,20 @@ servers:
             - type: ConfigChange
           replicas: [[.Replicas]]
           selector:
-            deploymentConfig: "[[.KieName]][[.KieIndex]]"
+            deploymentConfig: "[[.KieName]]"
           template:
             metadata:
-              name: "[[.KieName]][[.KieIndex]]"
+              name: "[[.KieName]]"
               labels:
                 app: "[[$.ApplicationName]]"
                 application: "[[$.ApplicationName]]"
-                service: "[[.KieName]][[.KieIndex]]"
-                deploymentConfig: "[[.KieName]][[.KieIndex]]"
+                service: "[[.KieName]]"
+                deploymentConfig: "[[.KieName]]"
             spec:
               serviceAccountName: "[[$.ApplicationName]]-[[$.Product]]svc"
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "[[.KieName]][[.KieIndex]]"
+                - name: "[[.KieName]]"
                   image: "[[$.Product]][[$.Version]]-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
@@ -495,7 +495,7 @@ servers:
                         fieldRef:
                           fieldPath: status.podIP
                     - name: KIE_SERVER_ID
-                      value: "[[.KieName]][[.KieIndex]]"
+                      value: "[[.KieName]]"
                     - name: "[[$.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: mavenUser
                     - name: "[[$.MavenRepo]]_MAVEN_REPO_PASSWORD"
@@ -519,7 +519,7 @@ servers:
                     - name: JGROUPS_PING_PROTOCOL
                       value: "openshift.DNS_PING"
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "[[.KieName]][[.KieIndex]]-ping"
+                      value: "[[.KieName]]-ping"
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
@@ -660,17 +660,17 @@ servers:
               port: 8443
               targetPort: 8443
           selector:
-            deploymentConfig: "[[.KieName]][[.KieIndex]]"
+            deploymentConfig: "[[.KieName]]"
           sessionAffinity: ClientIP
           sessionAffinityConfig:
             clientIP:
               timeoutSeconds: 3600
         metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
       - spec:
@@ -680,32 +680,32 @@ servers:
               port: 8888
               targetPort: 8888
           selector:
-            deploymentConfig: "[[.KieName]][[.KieIndex]]"
+            deploymentConfig: "[[.KieName]]"
         metadata:
-          name: "[[.KieName]][[.KieIndex]]-ping"
+          name: "[[.KieName]]-ping"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
           annotations:
             service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
             description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "[[.KieName]][[.KieIndex]]-https"
+      - id: "[[.KieName]]-https"
         metadata:
-          name: "[[.KieName]][[.KieIndex]]"
+          name: "[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]][[.KieIndex]]"
+            service: "[[.KieName]]"
           annotations:
             description: Route for KIE server's https service.
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
-            name: "[[.KieName]][[.KieIndex]]"
+            name: "[[.KieName]]"
           port:
             targetPort: https
           tls:

@@ -463,6 +463,86 @@ items:
                                     hostnameHTTPS:
                                       type: string
                                       description: Secure hostname to set as redirect URL
+                                database:
+                                  type: object
+                                  required:
+                                    - type
+                                  properties:
+                                    type:
+                                      type: string
+                                      description: Database type to use
+                                      enum:
+                                        - mysql
+                                        - postgresql
+                                        - external
+                                        - h2
+                                    size:
+                                      type: string
+                                      description: Size of the PersistentVolumeClaim to create. For example, 100Gi
+                                    externalConfig:
+                                      type: object
+                                      description: External Database configuration
+                                      required:
+                                        - driver
+                                        - dialect
+                                        - jndiName
+                                        - username
+                                        - password
+                                      oneOf:
+                                        - required:
+                                            - name
+                                            - host
+                                        - required:
+                                            - jdbcURL
+                                      properties:
+                                        driver:
+                                          type: string
+                                          description: Driver name to use. For example, mysql
+                                        dialect:
+                                          type: string
+                                          description: Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL57Dialect
+                                        name:
+                                          type: string
+                                          description: Database Name. For example, rhpam
+                                        host:
+                                          type: string
+                                          description: Database Host. For example, mydb.example.com
+                                        port:
+                                          type: string
+                                          description: Database Port. For example, 3306
+                                        jdbcURL:
+                                          type: string
+                                          description: Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
+                                        nonXA:
+                                          type: string
+                                          description: Sets the datasources type. It can be XA or NONXA. For non XA set it to true. Default value is false.
+                                        jndiName:
+                                          type: string
+                                          description: Database JNDI name used by application to resolve the datasource, e.g. java:/jboss/datasources/ExampleDS
+                                        username:
+                                          type: string
+                                          description: External database username
+                                        password:
+                                          type: string
+                                          description: External database password
+                                        minPoolSize:
+                                          type: string
+                                          description: Sets xa-pool/min-pool-size for the configured datasource.
+                                        maxPoolSize:
+                                          type: string
+                                          description: Sets xa-pool/max-pool-size for the configured datasource.
+                                        connectionChecker:
+                                          type: string
+                                          description: An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid.
+                                        exceptionChecker:
+                                          type: string
+                                          description: An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred.
+                                        backgroundValidation:
+                                          type: string
+                                          description: Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used.
+                                        backgroundValidationMillis:
+                                          type: string
+                                          description: Defines the interval for the background-validation check for the jdbc connections.
                           smartRouter:
                             type: object
                             description: Configuration of the RHPAM smart router

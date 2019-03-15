@@ -129,8 +129,12 @@ func getEnvironment(environment v1.EnvironmentType, name string) (v1.Environment
 }
 
 func TestMergeServerDeploymentConfigs(t *testing.T) {
+	var dbEnv v1.Environment
+	err := getParsedTemplate("dbs/postgresql.yaml", "prod", &dbEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
 	var prodEnv v1.Environment
-	err := getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
+	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var common v1.Environment
@@ -141,6 +145,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	prodEnvCount := len(prodEnv.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 
 	mergedDCs := mergeDeploymentConfigs(common.Servers[0].DeploymentConfigs, prodEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Servers[0].DeploymentConfigs)
 
 	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
 	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors but got %v", len(mergedDCs))
