@@ -55,6 +55,8 @@ servers:
                       value: ""
                     - name: EXTERNAL_MAVEN_REPO_PASSWORD
                       value: ""
+                    - name: KIE_SERVER_MODE
+                      value: PRODUCTION
                     - name: KIE_SERVER_ROUTER_SERVICE
                       value: "[[$.ApplicationName]]-smartrouter"
                     - name: KIE_SERVER_ROUTER_PORT

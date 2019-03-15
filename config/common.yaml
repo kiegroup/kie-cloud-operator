@@ -486,6 +486,8 @@ servers:
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
                       value: ws
+                    - name: KIE_SERVER_MODE
+                      value: DEVELOPMENT
                     - name: KIE_MBEANS
                       value: enabled
                     - name: KIE_SERVER_HOST
