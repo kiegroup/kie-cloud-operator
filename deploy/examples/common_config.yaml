@@ -10,3 +10,10 @@ spec:
     adminPassword: example
     imageTag: 1.0-stage
     mavenRepo: INTERNAL
+    product: rhpam
+    auth:
+      sso:
+        url: https://rh-sso.example.com
+        realm: rhpam
+        adminUser: admin
+        adminPassword: secret
