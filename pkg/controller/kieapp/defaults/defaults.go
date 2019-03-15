@@ -13,6 +13,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr"
+	"github.com/imdario/mergo"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -58,7 +59,51 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	mergedEnv, err = mergeDB(service, cr, mergedEnv, envTemplate)
+	if err != nil {
+		return v1.Environment{}, err
+	}
 	return mergedEnv, nil
+}
+
+func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envTemplate v1.EnvTemplate) (v1.Environment, error) {
+	dbEnvs := make(map[v1.DatabaseType]v1.Environment)
+	for i := range env.Servers {
+		kieServerSet := envTemplate.Servers[i]
+		if kieServerSet.Database.Type == "" {
+			continue
+		}
+		dbType := kieServerSet.Database.Type
+		if _, loadedDB := dbEnvs[dbType]; !loadedDB {
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Namespace, envTemplate)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+			var dbEnv v1.Environment
+			err = yaml.Unmarshal(yamlBytes, &dbEnv)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+			dbEnvs[dbType] = dbEnv
+		}
+		dbServer, found := findCustomObjectByName(env.Servers[i], dbEnvs[dbType].Servers)
+		if found {
+			env.Servers[i] = mergeCustomObject(env.Servers[i], dbServer)
+		}
+	}
+	return env, nil
+}
+
+func findCustomObjectByName(template v1.CustomObject, objects []v1.CustomObject) (v1.CustomObject, bool) {
+	for i := range objects {
+		if len(objects[i].DeploymentConfigs) == 0 || len(template.DeploymentConfigs) == 0 {
+			return v1.CustomObject{}, false
+		}
+		if objects[i].DeploymentConfigs[0].ObjectMeta.Name == template.DeploymentConfigs[0].ObjectMeta.Name {
+			return objects[i], true
+		}
+	}
+	return v1.CustomObject{}, false
 }
 
 func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
@@ -95,7 +140,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 }
 
 func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
-	appConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.ConsoleTemplate{}
 	if !hasEnv {
 		return template
@@ -105,22 +150,63 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 	} else {
 		template.KeystoreSecret = cr.Spec.Objects.Console.KeystoreSecret
 	}
-	template.Name = appConstants.Prefix
-	template.ImageName = appConstants.ImageName
-	template.ProbePage = appConstants.ConsoleProbePage
+	// Set replicas
+	envReplicas := v1.Replicas{}
+	if hasEnv {
+		envReplicas = envConstants.Replica.Console
+	}
+	replicas, denyScale := setReplicas(cr.Spec.Objects.Console.KieAppObject, envReplicas, hasEnv)
+	if denyScale {
+		cr.Spec.Objects.Console.Replicas = Pint32(replicas)
+	}
+	template.Replicas = replicas
+
+	template.Name = envConstants.App.Prefix
+	template.ImageName = envConstants.App.ImageName
+	template.ProbePage = envConstants.App.ConsoleProbePage
 
 	return template
 }
 
 func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.SmartRouterTemplate{}
+	if !hasEnv {
+		return template
+	}
 	if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
 		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
 	} else {
 		template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
 	}
 
+	// Set replicas
+	envReplicas := v1.Replicas{}
+	if hasEnv {
+		envReplicas = envConstants.Replica.SmartRouter
+	}
+	replicas, denyScale := setReplicas(cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
+	if denyScale {
+		cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
+	}
+	template.Replicas = replicas
+
 	return template
+}
+
+func setReplicas(object v1.KieAppObject, replicaConstant v1.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
+	if object.Replicas != nil {
+		if hasEnv && replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
+			log.Warnf("scaling not allowed for this environment, setting to default of %d", replicaConstant.Replicas)
+			return replicaConstant.Replicas, true
+		}
+		return *object.Replicas, false
+	}
+	if hasEnv {
+		return replicaConstant.Replicas, false
+	}
+	log.Warnf("no replicas settings for this environment, defaulting to %d", replicas)
+	return int32(1), denyScale
 }
 
 // serverSortBlanks moves blank names to the end
@@ -154,79 +240,146 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 	}
 	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
 	usedNames := map[string]bool{}
+	unsetNames := 0
 	for index := range cr.Spec.Objects.Servers {
 		serverSet := &cr.Spec.Objects.Servers[index]
-		if serverSet.Name == "" {
-			if len(cr.Spec.Objects.Servers) == 1 {
-				serverSet.Name = fmt.Sprintf("%v-kieserver", cr.Spec.CommonConfig.ApplicationName)
-			} else {
-				serverSet.Name = fmt.Sprintf("%v-kieserver%v", cr.Spec.CommonConfig.ApplicationName, index)
-			}
-		} else if usedNames[serverSet.Name] {
-			return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", serverSet.Name)
-		} else {
-			usedNames[serverSet.Name] = true
-		}
 		if serverSet.Deployments == nil {
 			serverSet.Deployments = Pint(constants.DefaultKieDeployments)
 		}
-		crTemplate := v1.ServerTemplate{
-			Build:          getBuildConfig(commonConfig, serverSet.Build),
-			KeystoreSecret: serverSet.KeystoreSecret,
-		}
-		if serverSet.Build != nil {
-			if *serverSet.Deployments > 1 {
-				return []v1.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
-			}
-			crTemplate.From = corev1.ObjectReference{
-				Kind:      "ImageStreamTag",
-				Name:      fmt.Sprintf("%s-kieserver:latest", commonConfig.ApplicationName),
-				Namespace: "",
-			}
-		} else {
-			crTemplate.From = getDefaultKieServerImage(commonConfig, serverSet.From)
-		}
-		crTemplate.KieName = serverSet.Name
-		if *serverSet.Deployments == 1 {
-			crTemplate.KieIndex = GetKieIndex(serverSet, 0)
-			if crTemplate.KeystoreSecret == "" {
-				crTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{crTemplate.KieName, crTemplate.KieIndex}, ""))
-			}
-			servers = append(servers, crTemplate)
-		} else {
-			for i := 0; i < *serverSet.Deployments; i++ {
-				instanceTemplate := crTemplate.DeepCopy()
-				instanceTemplate.KieIndex = GetKieIndex(serverSet, i)
-				if instanceTemplate.KeystoreSecret == "" {
-					instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{instanceTemplate.KieName, instanceTemplate.KieIndex}, ""))
+		if serverSet.Name == "" {
+			for i := 0; i < len(cr.Spec.Objects.Servers); i++ {
+				serverSetName := getKieSetName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames)
+				if !usedNames[serverSetName] {
+					serverSet.Name = serverSetName
+					break
 				}
-				servers = append(servers, *instanceTemplate)
+				unsetNames++
 			}
+		}
+		for i := 0; i < *serverSet.Deployments; i++ {
+			name := getKieDeploymentName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames, i)
+			if usedNames[name] {
+				return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", name)
+			}
+			usedNames[name] = true
+			template := v1.ServerTemplate{
+				KieName:        name,
+				Build:          getBuildConfig(commonConfig, serverSet.Build),
+				KeystoreSecret: serverSet.KeystoreSecret,
+			}
+			if serverSet.Build != nil {
+				if *serverSet.Deployments > 1 {
+					return []v1.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
+				}
+				template.From = corev1.ObjectReference{
+					Kind:      "ImageStreamTag",
+					Name:      fmt.Sprintf("%s-kieserver:latest", commonConfig.ApplicationName),
+					Namespace: "",
+				}
+			} else {
+				template.From = getDefaultKieServerImage(commonConfig, serverSet.From)
+			}
+
+			// Set replicas
+			envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+			envReplicas := v1.Replicas{}
+			if hasEnv {
+				envReplicas = envConstants.Replica.Server
+			}
+			replicas, denyScale := setReplicas(serverSet.KieAppObject, envReplicas, hasEnv)
+			if denyScale {
+				serverSet.Replicas = Pint32(replicas)
+			}
+			template.Replicas = replicas
+
+			dbConfig, err := getDatabaseConfig(cr.Spec.Environment, serverSet.Database)
+			if err != nil {
+				return servers, err
+			}
+			if dbConfig != nil {
+				template.Database = *dbConfig
+			}
+			instanceTemplate := template.DeepCopy()
+			if instanceTemplate.KeystoreSecret == "" {
+				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
+			}
+			servers = append(servers, *instanceTemplate)
 		}
 	}
 	return servers, nil
 }
 
-func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet, relativeIndex int) {
+// GetServerSet retrieves to correct ServerSet for processing and the DeploymentName
+func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet, kieName string) {
 	count := 0
+	unnamedSets := 0
 	for _, thisServerSet := range cr.Spec.Objects.Servers {
-		for relativeIndex = 0; relativeIndex < *thisServerSet.Deployments; relativeIndex++ {
+		for relativeIndex := 0; relativeIndex < *thisServerSet.Deployments; relativeIndex++ {
 			if count == requestedIndex {
 				serverSet = thisServerSet
+				kieName = getKieDeploymentName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unnamedSets, relativeIndex)
 				return
 			}
 			count++
+		}
+		if thisServerSet.Name == "" {
+			unnamedSets++
 		}
 	}
 	return
 }
 
-func GetKieIndex(serverSet *v1.KieServerSet, relativeIndex int) string {
-	if *serverSet.Deployments == 1 || relativeIndex == 0 {
-		return ""
-	} else {
-		return fmt.Sprintf("%s%d", "-", relativeIndex+1)
+// ConsolidateObjects construct all CustomObjects prior to creation
+func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
+	env.Console = ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
+	env.SmartRouter = ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
+	for index := range env.Servers {
+		serverSet, _ := GetServerSet(cr, index)
+		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
 	}
+	return env
+}
+
+// ConstructObject returns an object after merging the environment object and the one defined in the CR
+func ConstructObject(object v1.CustomObject, appObject v1.KieAppObject) v1.CustomObject {
+	for dcIndex, dc := range object.DeploymentConfigs {
+		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
+			c.Env = shared.EnvOverride(c.Env, appObject.Env)
+			err := mergo.Merge(&c.Resources, appObject.Resources, mergo.WithOverride)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+			}
+			dc.Spec.Template.Spec.Containers[containerIndex] = c
+		}
+		object.DeploymentConfigs[dcIndex] = dc
+	}
+	return object
+}
+
+// getKieSetName aids in server indexing, depending on number of deployments and sets
+func getKieSetName(applicationName string, setName string, arrayIdx int) string {
+	return getKieDeploymentName(applicationName, setName, arrayIdx, 0)
+}
+
+func getKieDeploymentName(applicationName string, setName string, arrayIdx, deploymentsIdx int) string {
+	name := setName
+	if name == "" {
+		name = fmt.Sprintf("%v-kieserver%v", applicationName, getKieSetIndex(arrayIdx, deploymentsIdx))
+	} else {
+		name = fmt.Sprintf("%v%v", setName, getKieSetIndex(0, deploymentsIdx))
+	}
+	return name
+}
+
+func getKieSetIndex(arrayIdx, deploymentsIdx int) string {
+	var name bytes.Buffer
+	if arrayIdx > 0 {
+		name.WriteString(fmt.Sprintf("%d", arrayIdx+1))
+	}
+	if deploymentsIdx > 0 {
+		name.WriteString(fmt.Sprintf("-%d", deploymentsIdx+1))
+	}
+	return name.String()
 }
 
 func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
@@ -255,6 +408,27 @@ func getDefaultKieServerImage(config *v1.CommonConfig, from *corev1.ObjectRefere
 		Name:      imageName,
 		Namespace: constants.ImageStreamNamespace,
 	}
+}
+
+func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObject) (*v1.DatabaseObject, error) {
+	envConstants := constants.EnvironmentConstants[environment]
+	if envConstants == nil {
+		return nil, nil
+	}
+	defaultDB := envConstants.Database
+	if database == nil {
+		return defaultDB, nil
+	}
+
+	if database.Type == v1.DatabaseExternal && database.ExternalConfig == nil {
+		return nil, fmt.Errorf("external database configuration is mandatory for external database type")
+	}
+	if database.Size == "" && defaultDB != nil {
+		resultDB := *database.DeepCopy()
+		resultDB.Size = defaultDB.Size
+		return &resultDB, nil
+	}
+	return database, nil
 }
 
 func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
@@ -313,7 +487,7 @@ func loadYaml(service v1.PlatformService, filename, namespace string, env v1.Env
 func parseTemplate(env v1.EnvTemplate, objYaml string) []byte {
 	var b bytes.Buffer
 
-	tmpl, err := template.New(env.ApplicationName).Parse(objYaml)
+	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Parse(objYaml)
 	if err != nil {
 		log.Error("Error creating new Go template. ", err)
 	}
@@ -398,10 +572,11 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 // setAppConstants sets the application-related constants to use in the template processing
 func setAppConstants(spec *v1.KieAppSpec) {
 	env := spec.Environment
-	appConstants, hasEnv := constants.EnvironmentConstants[env]
+	envConstants, hasEnv := constants.EnvironmentConstants[env]
 	if !hasEnv {
 		return
 	}
+	appConstants := envConstants.App
 	if len(spec.CommonConfig.Version) == 0 {
 		pattern := regexp.MustCompile("[0-9]+")
 		spec.CommonConfig.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
@@ -419,5 +594,10 @@ func setAppConstants(spec *v1.KieAppSpec) {
 
 // Pint returns a pointer to an integer
 func Pint(i int) *int {
+	return &i
+}
+
+// Pint32 returns a pointer to an integer
+func Pint32(i int32) *int32 {
 	return &i
 }

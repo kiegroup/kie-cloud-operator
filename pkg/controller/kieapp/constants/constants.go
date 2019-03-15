@@ -1,7 +1,7 @@
 package constants
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 )
 
 const (
@@ -37,22 +37,51 @@ const (
 	DefaultKieDeployments = 1
 	// KeystoreSecret is the default format for keystore secret names
 	KeystoreSecret = "%s-app-secret"
+	// DefaultDatabaseSize Default Database Persistence size
+	DefaultDatabaseSize = "1Gi"
 )
 
-var rhpamAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
-var rhpamMonitorAppConstants = &v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
-var rhdmAppConstants = &v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhpamMonitorAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+var rhdmAppConstants = v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
+
+var ReplicasTrial = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProductionImmutable = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 1},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasRhpamProduction = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 3},
+	Server:      v1.Replicas{Replicas: 3},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+var replicasAuthoringHA = v1.ReplicaConstants{
+	Console:     v1.Replicas{Replicas: 2},
+	Server:      v1.Replicas{Replicas: 2},
+	SmartRouter: v1.Replicas{Replicas: 1},
+}
+
+// DefaultDatabaseConfig defines the default Database to use for each environment
+var databaseRhpamAuthoring = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: DefaultDatabaseSize}
+var databaseRhpamAuthoringHA = &v1.DatabaseObject{Type: v1.DatabaseMySQL, Size: DefaultDatabaseSize}
+var databaseRhpamProduction = &v1.DatabaseObject{Type: v1.DatabasePostgreSQL, Size: DefaultDatabaseSize}
+var databaseRhpamProductionImmutable = &v1.DatabaseObject{Type: v1.DatabasePostgreSQL, Size: DefaultDatabaseSize}
+var databaseRhpamTrial = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: ""}
 
 // EnvironmentConstants contains
-var EnvironmentConstants = map[v1.EnvironmentType]*v1.AppConstants{
-	v1.RhpamProduction:          rhpamMonitorAppConstants,
-	v1.RhpamProductionImmutable: rhpamMonitorAppConstants,
-	v1.RhpamTrial:               rhpamAppConstants,
-	v1.RhpamAuthoring:           rhpamAppConstants,
-	v1.RhpamAuthoringHA:         rhpamAppConstants,
-	v1.RhdmTrial:                rhdmAppConstants,
-	v1.RhdmAuthoring:            rhdmAppConstants,
-	v1.RhdmAuthoringHA:          rhdmAppConstants,
-	v1.RhdmOptawebTrial:         rhdmAppConstants,
-	v1.RhdmProductionImmutable:  rhdmAppConstants,
+var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
+	v1.RhpamProduction:          &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
+	v1.RhpamProductionImmutable: &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
+	v1.RhpamTrial:               &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: ReplicasTrial, Database: databaseRhpamTrial},
+	v1.RhpamAuthoring:           &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: ReplicasTrial, Database: databaseRhpamAuthoring},
+	v1.RhpamAuthoringHA:         &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
+	v1.RhdmTrial:                &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
+	v1.RhdmAuthoring:            &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
+	v1.RhdmAuthoringHA:          &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
 }

@@ -320,9 +320,13 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
+	if current.Spec.Replicas != new.Spec.Replicas {
+		log.Debug("Changes detected in replicas.", " OLD - ", current.Spec.Replicas, " NEW - ", new.Spec.Replicas)
+		update = true
+	}
+
 	cContainer := current.Spec.Template.Spec.Containers[0]
 	nContainer := new.Spec.Template.Spec.Containers[0]
-
 	if !shared.EnvVarCheck(cContainer.Env, nContainer.Env) {
 		log.Debug("Changes detected in 'Env' config.", " OLD - ", cContainer.Env, " NEW - ", nContainer.Env)
 		update = true
@@ -429,12 +433,10 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			serverCN = cr.Spec.CommonConfig.ApplicationName
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
-		serverSet, relativeIndex := defaults.GetServerSet(cr, i)
-		kieName := serverSet.Name
-		kieIndex := defaults.GetKieIndex(&serverSet, relativeIndex)
+		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
 		if serverSet.KeystoreSecret == "" {
 			server.Secrets = append(server.Secrets, generateKeystoreSecret(
-				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{kieName, kieIndex}, "")),
+				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
 				cr,
 			))
@@ -465,7 +467,7 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 			))
 		}
 	}
-	env = consolidateObjects(env, cr)
+	env = defaults.ConsolidateObjects(env, cr)
 
 	rResult, err := reconciler.CreateCustomObjects(env.Console, cr)
 	if err != nil {
@@ -505,16 +507,6 @@ func generateKeystoreSecret(secretName, keystoreCN string, cr *v1.KieApp) corev1
 			"keystore.jks": shared.GenerateKeystore(keystoreCN, "jboss", []byte(cr.Spec.CommonConfig.KeyStorePassword)),
 		},
 	}
-}
-
-func consolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
-	env.Console = shared.ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
-	env.SmartRouter = shared.ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
-	for index := range env.Servers {
-		serverSet, _ := defaults.GetServerSet(cr, index)
-		env.Servers[index] = shared.ConstructObject(env.Servers[index], serverSet.SecuredKieAppObject.KieAppObject)
-	}
-	return env
 }
 
 // CreateCustomObjects goes through all the different object types in the given CustomObject and creates them, if necessary
