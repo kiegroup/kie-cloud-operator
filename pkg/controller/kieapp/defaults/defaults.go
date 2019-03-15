@@ -247,8 +247,14 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			serverSet.Deployments = Pint(constants.DefaultKieDeployments)
 		}
 		if serverSet.Name == "" {
-			serverSet.Name = getKieSetName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames)
-			unsetNames++
+			for i := 0; i < len(cr.Spec.Objects.Servers); i++ {
+				serverSetName := getKieSetName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames)
+				if !usedNames[serverSetName] {
+					serverSet.Name = serverSetName
+					break
+				}
+				unsetNames++
+			}
 		}
 		for i := 0; i < *serverSet.Deployments; i++ {
 			name := getKieDeploymentName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames, i)
