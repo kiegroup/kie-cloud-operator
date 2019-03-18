@@ -23,13 +23,17 @@ console:
           requests:
             storage: 1Gi
   services:
-    - spec:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
+      spec:
         ports:
           - name: git-ssh
             port: 8001
             targetPort: 8001
-      metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]"
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
+        annotations:
+          delete: "true"
 ## KIE smartrouter BEGIN
 smartRouter:
   omit: true
