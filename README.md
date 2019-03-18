@@ -36,24 +36,9 @@ As cluster-admin and an OCP 3.11+ cluster with OLM installed, issue the followin
 
 This will create a new `CatalogSource` and `ConfigMap`, allowing the OLM Catalog to see this Operator's `ClusterServiceVersion`.
 
-## Deploy to OpenShift Manually
-
-Globally and only once for the whole cluster:
-
-```bash
-oc create -f deploy/crds/kieapp.crd.yaml
-```
-
-In a project:
-
-```bash
-oc create -f deploy/service_account.yaml
-oc create -f deploy/role.yaml
-oc create -f deploy/role_binding.yaml
-oc create -f deploy/operator.yaml
-```
-
 ### Trigger a KieApp deployment
+
+Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, use the console to `Create KieApp` or create one manually as seen below.
 
 ```bash
 $ oc create -f deploy/crs/kieapp_rhpam_trial.yaml
@@ -63,12 +48,7 @@ kieapp.app.kiegroup.org/rhpam-trial created
 ### Clean up a KieApp deployment
 
 ```bash
-# Using the KieApp name
 oc delete kieapp rhpam-trial
-# OR using the file name
-oc delete -f deploy/crs/kieapp_rhpam_trial.yaml
-# OR delete all the KieApp deployments
-oc delete kieapp --all
 ```
 
 ## Development
@@ -164,6 +144,7 @@ spec:
 ## Build rhel-based image for release
 
 Requires `cekit` and `rhpkg` -
+
 ```bash
 # local build
 make rhel

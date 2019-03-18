@@ -4,7 +4,7 @@ metadata:
   name: kiecloud-operator.v1.0.0
   namespace: placeholder
   annotations:
-    categories: kieapp, rhpam, rhdm, kie, cloud, pam, bpm, process, case, automation, operator
+    categories: "Integration & Delivery"
     certified: "false"
     description: Kie Cloud Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.0
@@ -19,9 +19,15 @@ spec:
   displayName: Kie Cloud
   description: Kie Cloud Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
   keywords:
-    [
-      kieapp rhpam rhdm kie cloud pam bpm process case automation decision operator,
-    ]
+    - kieapp
+    - pam
+    - decision
+    - kie
+    - cloud
+    - bpm
+    - process
+    - automation
+    - operator
   version: 1.0.0
   maturity: beta
   maintainers:
@@ -48,11 +54,11 @@ spec:
     - type: OwnNamespace
       supported: true
     - type: SingleNamespace
-      supported: true
+      supported: false
     - type: MultiNamespace
       supported: false
     - type: AllNamespaces
-      supported: true
+      supported: false
   customresourcedefinitions:
     owned:
       - version: v1
@@ -82,12 +88,12 @@ spec:
           - kind: ImageStream
             version: image.openshift.io/v1
         specDescriptors:
-          - description: Environment of PAM to deploy.
+          - description: Environment deployed.
             displayName: Environment
             path: environment
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:label"
-          - description: PAM version to be installed.
+          - description: Product version installed.
             displayName: Version
             path: commonConfig.version
             x-descriptors:
@@ -203,4 +209,6 @@ spec:
                           fieldRef:
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
-                        value: "kie-cloud-operator"
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.labels['name']

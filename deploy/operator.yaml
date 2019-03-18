@@ -42,7 +42,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "kie-cloud-operator"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['name']
             - name: DEBUG
               value: "false"
             #- name: INSECURE
