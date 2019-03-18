@@ -17,8 +17,8 @@ labels:
     value: "rhpam,rhdm,operator"
 artifacts:
   - name: kie-cloud-operator.tar.gz
-    url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.x.tar.gz
-    md5: 645b82a59a7d563052656f1d05e07eb2
+    url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.0.CR1.tar.gz
+    md5: 71511b5be0f2a1276381af1af7c7db7f
 packages:
   content_sets:
     x86_64:
