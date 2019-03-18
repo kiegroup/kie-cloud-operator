@@ -104,10 +104,10 @@ servers:
                       value: "rhpam7"
                   volumeMounts:
                     - mountPath: "/var/lib/mysql/data"
-                      name: "[[.KieName]]-mysql-pvol"
+                      name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
 ## [[ if ne .Database.Size "" ]]
               volumes:
-                - name: "[[.KieName]]-mysql-pvol"
+                - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
                     claimName: "[[.KieName]]-mysql-claim"
   ## MySQL persistent volume claim BEGIN
@@ -127,7 +127,7 @@ servers:
   ## MySQL persistent volume claim END
 ## [[ else ]]
               volumes:
-                - name: "[[.KieName]]-mysql-pvol"
+                - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
 ## [[ end ]]
 ## MySQL deployment END

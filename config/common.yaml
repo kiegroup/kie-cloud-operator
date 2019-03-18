@@ -18,7 +18,7 @@ console:
               from:
                 kind: ImageStreamTag
                 namespace: openshift
-                name: "[[.Product]][[.Version]]-[[.Console.ImageName]]-openshift:[[.ImageTag]]"
+                name: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-openshift:[[.ImageTag]]"
           - type: ConfigChange
         replicas: [[.Console.Replicas]]
         selector:
@@ -32,11 +32,11 @@ console:
               application: "[[.ApplicationName]]"
               service: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
-            serviceAccountName: "[[.ApplicationName]]-[[.Product]]svc"
+            serviceAccountName: "[[.ApplicationName]]-[[.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
-                image: "[[.Product]][[.Version]]-[[.Console.ImageName]]-openshift"
+                image: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -199,13 +199,13 @@ console:
                   ## RoleMapping config END
                   # Auth config END
                 volumeMounts:
-                  - name: "[[.ApplicationName]]-[[.Console.Name]]-keystore-volume"
+                  - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/eap/standalone/data/kie"
             volumes:
-              - name: "[[.ApplicationName]]-[[.Console.Name]]-keystore-volume"
+              - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
@@ -310,7 +310,7 @@ smartRouter:
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "[[.Product]][[.Version]]-smartrouter-openshift:[[.ImageTag]]"
+                name: "[[.Constants.Product]][[.Version]]-smartrouter-openshift:[[.ImageTag]]"
           - type: ConfigChange
         replicas: [[.SmartRouter.Replicas]]
         selector:
@@ -327,7 +327,7 @@ smartRouter:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-smartrouter"
-                image: "[[.Product]][[.Version]]-smartrouter-openshift"
+                image: "[[.Constants.Product]][[.Version]]-smartrouter-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -364,20 +364,20 @@ smartRouter:
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
                     value: "http"
                   - name: KIE_SERVER_ROUTER_REPO
-                    value: "/opt/[[.Product]]-smartrouter/data"
+                    value: "/opt/[[.Constants.Product]]-smartrouter/data"
                   - name: KIE_SERVER_ROUTER_CONFIG_WATCHER_ENABLED
                     value: "true"
                 volumeMounts:
                   - name: "[[.ApplicationName]]-smartrouter"
-                    mountPath: "/opt/[[.Product]]-smartrouter/data"
-                  - name: smartrouter-keystore-volume
+                    mountPath: "/opt/[[.Constants.Product]]-smartrouter/data"
+                  - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
             volumes:
               - name: "[[.ApplicationName]]-smartrouter"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-smartrouter-claim"
-              - name: smartrouter-keystore-volume
+              - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                 secret:
                   secretName: "[[.SmartRouter.KeystoreSecret]]"
   services:
@@ -459,11 +459,11 @@ servers:
                 service: "[[.KieName]]"
                 deploymentConfig: "[[.KieName]]"
             spec:
-              serviceAccountName: "[[$.ApplicationName]]-[[$.Product]]svc"
+              serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "[[.KieName]]"
-                  image: "[[$.Product]][[$.Version]]-kieserver-openshift"
+                  image: "[[$.Constants.Product]][[$.Version]]-kieserver-openshift"
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
@@ -496,15 +496,15 @@ servers:
                           fieldPath: status.podIP
                     - name: KIE_SERVER_ID
                       value: "[[.KieName]]"
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_USERNAME"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: mavenUser
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_PASSWORD"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
                       value: "[[$.MavenPassword]]"
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_SERVICE"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_SERVICE"
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: MAVEN_REPOS
-                      value: "[[$.MavenRepo]],EXTERNAL"
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_PATH"
+                      value: "[[$.Constants.MavenRepo]],EXTERNAL"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PATH"
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
@@ -642,10 +642,10 @@ servers:
                       protocol: TCP
                   volumeMounts:
                     - mountPath: /etc/kieserver-secret-volume
-                      name: kieserver-keystore-volume
+                      name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
               volumes:
-                - name: kieserver-keystore-volume
+                - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
       ## KIE server deployment config END
@@ -720,7 +720,7 @@ servers:
 others:
   - roles:
       - metadata:
-          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]svc-edit"
         rules:
           - apiGroups:
               - ""
@@ -740,18 +740,18 @@ others:
 
     serviceAccounts:
       - metadata:
-          name: "[[.ApplicationName]]-[[.Product]]svc"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]svc"
           labels:
             app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
 
     rolebindings:
       - metadata:
-          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]svc-edit"
         subjects:
           - kind: ServiceAccount
-            name: "[[.ApplicationName]]-[[.Product]]svc"
+            name: "[[.ApplicationName]]-[[.Constants.Product]]svc"
         roleRef:
           kind: Role
-          name: "[[.ApplicationName]]-[[.Product]]svc-edit"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]svc-edit"
 # Other required resources END

@@ -130,6 +130,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
+		Constants:    *getTemplateConstants(cr.Spec.Environment),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -137,6 +138,15 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	}
 
 	return envTemplate, nil
+}
+
+func getTemplateConstants(env v1.EnvironmentType) *v1.TemplateConstants {
+	c := constants.TemplateConstants.DeepCopy()
+	if envConstants, found := constants.EnvironmentConstants[env]; found {
+		c.Product = envConstants.App.Product
+		c.MavenRepo = envConstants.App.MavenRepo
+	}
+	return c
 }
 
 func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
@@ -239,6 +249,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 		cr.Spec.Objects.Servers = []v1.KieServerSet{{}}
 	}
 	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
+	product := GetProduct(cr.Spec.Environment)
 	usedNames := map[string]bool{}
 	unsetNames := 0
 	for index := range cr.Spec.Objects.Servers {
@@ -264,7 +275,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			usedNames[name] = true
 			template := v1.ServerTemplate{
 				KieName:        name,
-				Build:          getBuildConfig(commonConfig, serverSet.Build),
+				Build:          getBuildConfig(product, commonConfig, serverSet.Build),
 				KeystoreSecret: serverSet.KeystoreSecret,
 			}
 			if serverSet.Build != nil {
@@ -277,7 +288,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 					Namespace: "",
 				}
 			} else {
-				template.From = getDefaultKieServerImage(commonConfig, serverSet.From)
+				template.From = getDefaultKieServerImage(product, commonConfig, serverSet.From)
 			}
 
 			// Set replicas
@@ -382,7 +393,7 @@ func getKieSetIndex(arrayIdx, deploymentsIdx int) string {
 	return name.String()
 }
 
-func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
+func getBuildConfig(product string, config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
 	if build == nil {
 		return v1.BuildTemplate{}
 	}
@@ -394,15 +405,15 @@ func getBuildConfig(config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.Bui
 		MavenMirrorURL:               build.MavenMirrorURL,
 		ArtifactDir:                  build.ArtifactDir,
 	}
-	buildTemplate.From = getDefaultKieServerImage(config, build.From)
+	buildTemplate.From = getDefaultKieServerImage(product, config, build.From)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(config *v1.CommonConfig, from *corev1.ObjectReference) corev1.ObjectReference {
+func getDefaultKieServerImage(product string, config *v1.CommonConfig, from *corev1.ObjectReference) corev1.ObjectReference {
 	if from != nil {
 		return *from
 	}
-	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", config.Product, config.Version, constants.ImageStreamTag)
+	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, config.Version, constants.ImageStreamTag)
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
 		Name:      imageName,
@@ -571,24 +582,12 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 
 // setAppConstants sets the application-related constants to use in the template processing
 func setAppConstants(spec *v1.KieAppSpec) {
-	env := spec.Environment
-	envConstants, hasEnv := constants.EnvironmentConstants[env]
-	if !hasEnv {
-		return
-	}
-	appConstants := envConstants.App
 	if len(spec.CommonConfig.Version) == 0 {
 		pattern := regexp.MustCompile("[0-9]+")
 		spec.CommonConfig.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
 	}
 	if len(spec.CommonConfig.ImageTag) == 0 {
 		spec.CommonConfig.ImageTag = constants.ImageStreamTag
-	}
-	if len(spec.CommonConfig.Product) == 0 {
-		spec.CommonConfig.Product = appConstants.Product
-	}
-	if len(spec.CommonConfig.MavenRepo) == 0 {
-		spec.CommonConfig.MavenRepo = appConstants.MavenRepo
 	}
 }
 
@@ -600,4 +599,12 @@ func Pint(i int) *int {
 // Pint32 returns a pointer to an integer
 func Pint32(i int32) *int32 {
 	return &i
+}
+
+func GetProduct(env v1.EnvironmentType) (product string) {
+	envConstants := constants.EnvironmentConstants[env]
+	if envConstants != nil {
+		product = envConstants.App.Product
+	}
+	return
 }
