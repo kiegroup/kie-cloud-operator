@@ -47,7 +47,7 @@ var rhdmAppConstants = v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr",
 
 var ReplicasTrial = v1.ReplicaConstants{
 	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
-	Server:      v1.Replicas{Replicas: 2},
+	Server:      v1.Replicas{Replicas: 1},
 	SmartRouter: v1.Replicas{Replicas: 1},
 }
 var replicasRhpamProductionImmutable = v1.ReplicaConstants{

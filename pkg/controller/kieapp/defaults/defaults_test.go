@@ -130,8 +130,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 
 	pingService := getService(wbServices, "test-rhpamcentr-ping")
 	assert.NotNil(t, pingService, "Ping service not found")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+	assert.False(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -164,9 +163,7 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.True(t, hasPort(mainService, 8001), "The rhdmcentr service should listen on port 8001")
 
 	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.Equal(t, int32(8888), pingService.Spec.Ports[0].Port, "The ping service should listen on port 8888")
+	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -189,6 +186,10 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
+	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "PRODUCTION", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -229,6 +230,10 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
+	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+
 }
 
 func TestRhdmProdImmutableEnvironment(t *testing.T) {
@@ -781,7 +786,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 		Name:  "KIE_ADMIN_PWD",
 		Value: "RedHat",
 	})
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "KIE_SERVER_PROTOCOL",
 		Value: "",
 	})
@@ -1461,7 +1466,6 @@ func TestDatabaseH2(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "h2", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
@@ -1509,7 +1513,6 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "h2", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
