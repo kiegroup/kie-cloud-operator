@@ -14,7 +14,7 @@ items:
             name: businessautomation-operator.v1.0.0
             namespace: placeholder
             annotations:
-              categories: kieapp, rhpam, rhdm, kie, cloud, pam, bpm, process, case, business, automation, operator
+              categories: "Integration & Delivery"
               certified: "false"
               description: Business Automation Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
               containerImage: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.0
@@ -29,9 +29,15 @@ items:
             displayName: Business Automation
             description: Business Automation Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
             keywords:
-              [
-                kieapp rhpam rhdm kie cloud pam bpm process case business automation decision operator,
-              ]
+              - kieapp
+              - pam
+              - decision
+              - kie
+              - cloud
+              - bpm
+              - process
+              - automation
+              - operator
             version: 1.0.0
             maturity: beta
             maintainers:
@@ -43,7 +49,7 @@ items:
               - name: Product Page
                 url: https://access.redhat.com/products/red-hat-process-automation-manager
               - name: Documentation
-                url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.2/html-single/installing_and_configuring_red_hat_process_automation_manager_on_red_hat_jboss_eap_7.2/
+                url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.3/html-single/installing_and_configuring_red_hat_process_automation_manager_on_red_hat_jboss_eap_7.3/
             icon:
               - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2Q3MWUwMH0uY2xzLTJ7ZmlsbDojYzIxYTAwfS5jbHMtM3tmaWxsOiNmZmZ9LmNscy00e2ZpbGw6I2VhZWFlYX0uY2xzLTV7ZmlsbDojYjdiN2I3fS5jbHMtNntmaWxsOiNjZGNkY2R9PC9zdHlsZT48L2RlZnM+PHRpdGxlPkxvZ288L3RpdGxlPjxnIGlkPSJMYXllcl8xIiBkYXRhLW5hbWU9IkxheWVyIDEiPjxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIHRyYW5zZm9ybT0icm90YXRlKC00NSA1MCA1MCkiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik04NS4zNiAxNC42NGE1MCA1MCAwIDAgMS03MC43MiA3MC43MnoiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik02NS43NiAzNC4yOEwxNS42IDQzLjE1djEuMTNhLjM0LjM0IDAgMCAwIC4zLjM0YzEuNDcuMTcgNy45MyAyLjExIDggMjMuNDlhLjQ2LjQ2IDAgMCAwIC4zNS40NGwyLjU5LjU3cy0xLjIxLTI1LjU0IDguNzctMjcuMDYgMTEuMiAyNy4yNyAxMS4zMyAzMS4xYS41NC41NCAwIDAgMCAuNDMuNTFsMy41MS43OHMuMDYtMzQuNTQgMTQuOTItMzYuODJ2LTMuMzV6Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNjUuMzUgMjcuNTZMMTYuMTggMzguNDJhLjc1Ljc1IDAgMCAwLS41OS43M3Y0bDUwLjE3LTguODd2LTYuNzZhMS42OCAxLjY4IDAgMCAwLS40MS4wNHoiLz48cGF0aCBjbGFzcz0iY2xzLTUiIGQ9Ik0zNS42MSA0Mi4wNWMtNC42MS43LTYuODMgNi41NC03Ljg5IDEyLjYxbDEzLjY1LTEuMzNjMC0uMTcuMDktLjM0LjEzLS41MXMuMTQtLjUzLjIxLS44bC4yLS42OHEuMTItLjQuMjUtLjhsLjItLjYyYy4xMi0uMzYuMjUtLjcxLjM5LTEuMDZsLjEyLS4zMmMtMS42NC00LjE3LTMuOTgtNi45OS03LjI2LTYuNDl6TTgyLjIzIDMxLjE5bC0xNi0zLjYyYTEuOSAxLjkgMCAwIDAtLjQyIDB2Ni43NmwxNy4wNiAyLjgzdi01LjIzYS43Ni43NiAwIDAgMC0uNjQtLjc0ek01My40MyA1My42MmwxOC40MS0xLjEzYzIuMS02LjA1IDUuNTEtMTEuNzUgMTEtMTIuOGwtMTctMi4wOGMtNi42OCAxLjEyLTEwLjM2IDguMjktMTIuNDEgMTYuMDF6Ii8+PHBhdGggY2xhc3M9ImNscy02IiBkPSJNNDEuNzEgNTJsLjEzLS40NS0uMTMuNDZ6TTQxLjkxIDUxLjM0bC0uMDYuMjIuMDctLjIzek0yNy43MiA1NC42NmE2OC4yNiA2OC4yNiAwIDAgMC0uOTMgMTJ2Mi40MkwzOSA2Ni4xYTEuMDYgMS4wNiAwIDAgMCAuODEtMSA1OC43MiA1OC43MiAwIDAgMSAxLjY5LTEyLjI2YzAgLjE2LS4wOS4zMy0uMTMuNDl6TTY1Ljc4IDM0LjI4bC4wMSAzLjM0IDE3LjAzIDIuMDd2LTIuNThsLTE3LjA0LTIuODN6TTUwLjg3IDc0LjQ0TDY4IDY4LjY4YS45Mi45MiAwIDAgMCAuNjMtLjc5IDcyLjQ2IDcyLjQ2IDAgMCAxIDMuMTgtMTUuNGwtMTguMzggMS4xM2E5MC45MSA5MC45MSAwIDAgMC0yLjU2IDIwLjgyek01My40MyA1My42MnoiLz48L2c+PC9zdmc+
                 mediatype: image/svg+xml
@@ -58,11 +64,11 @@ items:
               - type: OwnNamespace
                 supported: true
               - type: SingleNamespace
-                supported: true
+                supported: false
               - type: MultiNamespace
                 supported: false
               - type: AllNamespaces
-                supported: true
+                supported: false
             customresourcedefinitions:
               owned:
                 - version: v1
@@ -92,12 +98,12 @@ items:
                     - kind: ImageStream
                       version: image.openshift.io/v1
                   specDescriptors:
-                    - description: Environment of PAM to deploy.
+                    - description: Environment deployed.
                       displayName: Environment
                       path: environment
                       x-descriptors:
                         - "urn:alm:descriptor:com.tectonic.ui:label"
-                    - description: PAM version to be installed.
+                    - description: Product version installed.
                       displayName: Version
                       path: commonConfig.version
                       x-descriptors:
@@ -213,7 +219,9 @@ items:
                                     fieldRef:
                                       fieldPath: metadata.name
                                 - name: OPERATOR_NAME
-                                  value: "business-automation-operator"
+                                  valueFrom:
+                                    fieldRef:
+                                      fieldPath: metadata.labels['name']
       customResourceDefinitions: |
         - apiVersion: apiextensions.k8s.io/v1beta1
           kind: CustomResourceDefinition
