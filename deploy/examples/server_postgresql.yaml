@@ -1,7 +1,7 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: server-mysqldb
+  name: server-postgresql
 spec:
   environment: rhpam-trial
   objects:

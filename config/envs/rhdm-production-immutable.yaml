@@ -27,11 +27,11 @@ servers:
                       value: "true"
                     - name: KIE_SERVER_STARTUP_STRATEGY
                       value: LocalContainersStartupStrategy
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_USERNAME"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: ""
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_PASSWORD"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
                       value: ""
-                    - name: "[[$.MavenRepo]]_MAVEN_REPO_SERVICE"
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_SERVICE"
                       value: ""
                     - name: MAVEN_REPOS
                       value: "EXTERNAL"

@@ -266,14 +266,15 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
+	product := defaults.GetProduct(cr.Spec.Environment)
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	version := []byte(cr.Spec.CommonConfig.Version)
 	imageName := tagName
-	regContext := fmt.Sprintf("%s-%s", cr.Spec.CommonConfig.Product, string(version[0]))
+	regContext := fmt.Sprintf("%s-%s", product, string(version[0]))
 
 	registryAddress := cr.Spec.ImageRegistry.Registry
 	if strings.Contains(result[0], "indexing-openshift") {
-		regContext = fmt.Sprintf("%s-7-tech-preview", cr.Spec.CommonConfig.Product)
+		regContext = fmt.Sprintf("%s-7-tech-preview", product)
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"
@@ -335,7 +336,6 @@ func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfi
 		log.Debug("Changes detected in 'Resource' config.", " OLD - ", cContainer.Resources, " NEW - ", nContainer.Resources)
 		update = true
 	}
-
 	if update {
 		dcnew := new
 		err := controllerutil.SetControllerReference(cr, &dcnew, reconciler.Service.GetScheme())

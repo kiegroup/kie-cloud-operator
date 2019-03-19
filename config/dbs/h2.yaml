@@ -14,12 +14,12 @@ servers:
               containers:
                 - name: "[[.KieName]]"
                   volumeMounts:
-                    - name: "[[.KieName]]-h2-pvol"
+                    - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
                       mountPath: "/opt/eap/standalone/data"
 ## [[ if ne .Database.Size "" ]]
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "[[.KieName]]-h2-pvol"
+                - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
                     claimName: "[[.KieName]]-h2-claim"
     ## KIE server deployment config END
@@ -41,7 +41,7 @@ servers:
 ## [[ else ]]
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "[[.KieName]]-h2-pvol"
+                - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
 ## [[ end ]]
 #[[end]]

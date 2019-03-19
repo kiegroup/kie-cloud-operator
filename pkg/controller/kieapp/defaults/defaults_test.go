@@ -432,7 +432,7 @@ func TestConstructConsoleObject(t *testing.T) {
 
 	env = ConsolidateObjects(env, cr)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), env.Console.DeploymentConfigs[0].Name)
-	assert.Equal(t, constants.ReplicasTrial.Console.Replicas, env.Console.DeploymentConfigs[0].Spec.Replicas)
+	assert.Equal(t, int32(1), env.Console.DeploymentConfigs[0].Spec.Replicas)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
@@ -448,7 +448,7 @@ func TestConstructSmartRouterObject(t *testing.T) {
 
 	env = ConsolidateObjects(env, cr)
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
-	assert.Equal(t, constants.ReplicasTrial.SmartRouter.Replicas, env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
+	assert.Equal(t, int32(1), env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
 	re := regexp.MustCompile("[0-9]+")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
@@ -465,7 +465,7 @@ func TestConstructServerObject(t *testing.T) {
 
 		env = ConsolidateObjects(env, cr)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
-		assert.Equal(t, constants.ReplicasTrial.Server.Replicas, env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
+		assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
 		re := regexp.MustCompile("[0-9]+")
 		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", strings.Join(re.FindAllString(constants.ProductVersion, -1), ""), constants.ImageStreamTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
@@ -506,7 +506,7 @@ func TestSetReplicas(t *testing.T) {
 	assert.Nil(t, err)
 
 	env = ConsolidateObjects(env, cr)
-	assert.Equal(t, constants.ReplicasTrial.Console.Replicas, env.Console.DeploymentConfigs[0].Spec.Replicas, "Replicas scaling should be denied and use default instead")
+	assert.Equal(t, int32(1), env.Console.DeploymentConfigs[0].Spec.Replicas, "Replicas scaling should be denied and use default instead")
 	assert.Equal(t, *replicas, env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
 	for i, s := range env.Servers {
 		if i == 0 {
