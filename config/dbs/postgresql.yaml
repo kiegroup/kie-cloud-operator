@@ -103,10 +103,10 @@ servers:
                       value: "100"
                   volumeMounts:
                     - mountPath: "/var/lib/pgsql/data"
-                      name: "[[.KieName]]-postgresql-pvol"
+                      name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
 ## [[ if ne .Database.Size "" ]]
               volumes:
-                - name: "[[.KieName]]-postgresql-pvol"
+                - name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
                     claimName: "[[.KieName]]-postgresql-claim"
     ## PostgreSQL deployment config END
@@ -127,7 +127,7 @@ servers:
     ## PostgreSQL persistent volume claim END
 ## [[ else ]]
               volumes:
-                - name: "[[.KieName]]-postgresql-pvol"
+                - name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
 ## [[ end ]]
     services:

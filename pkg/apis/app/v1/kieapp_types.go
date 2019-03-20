@@ -305,6 +305,16 @@ type EnvTemplate struct {
 	Console       ConsoleTemplate     `json:"console,omitempty"`
 	Servers       []ServerTemplate    `json:"servers,omitempty"`
 	SmartRouter   SmartRouterTemplate `json:"smartRouter,omitempty"`
+	Auth          AuthTemplate        `json:"auth,omitempty"`
+	Constants     TemplateConstants   `json:"constants,omitempty"`
+}
+
+// TemplateConstants constant values that are used within the different configuration templates
+type TemplateConstants struct {
+	Product              string `json:"product,omitempty"`
+	MavenRepo            string `json:"mavenRepo,omitempty"`
+	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
+	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates
@@ -359,17 +369,14 @@ type BuildTemplate struct {
 }
 
 type CommonConfig struct {
-	ApplicationName    string       `json:"applicationName,omitempty"`
-	Auth               AuthTemplate `json:"auth,omitempty"`
-	Version            string       `json:"version,omitempty"`
-	ImageTag           string       `json:"imageTag,omitempty"`
-	Product            string       `json:"product,omitempty"`
-	KeyStorePassword   string       `json:"keyStorePassword,omitempty"`
-	AdminPassword      string       `json:"adminPassword,omitempty"`
-	ControllerPassword string       `json:"controllerPassword,omitempty"`
-	ServerPassword     string       `json:"serverPassword,omitempty"`
-	MavenRepo          string       `json:"mavenRepo,omitempty"`
-	MavenPassword      string       `json:"mavenPassword,omitempty"`
+	ApplicationName    string `json:"applicationName,omitempty"`
+	Version            string `json:"version,omitempty"`
+	ImageTag           string `json:"imageTag,omitempty"`
+	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
+	AdminPassword      string `json:"adminPassword,omitempty"`
+	ControllerPassword string `json:"controllerPassword,omitempty"`
+	ServerPassword     string `json:"serverPassword,omitempty"`
+	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

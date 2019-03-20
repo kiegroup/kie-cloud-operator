@@ -37,6 +37,10 @@ const (
 	DefaultKieDeployments = 1
 	// KeystoreSecret is the default format for keystore secret names
 	KeystoreSecret = "%s-app-secret"
+	// KeystoreVolumeSuffix Suffix for the keystore volumes and volumeMounts name
+	KeystoreVolumeSuffix = "keystore-volume"
+	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
+	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
 )
@@ -45,7 +49,7 @@ var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcent
 var rhpamMonitorAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR", ConsoleProbePage: "kie-wb.jsp"}
 var rhdmAppConstants = v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR", ConsoleProbePage: "kie-wb.jsp"}
 
-var ReplicasTrial = v1.ReplicaConstants{
+var replicasTrial = v1.ReplicaConstants{
 	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
 	Server:      v1.Replicas{Replicas: 1},
 	SmartRouter: v1.Replicas{Replicas: 1},
@@ -77,11 +81,17 @@ var databaseRhpamTrial = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: ""}
 var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 	v1.RhpamProduction:          &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
 	v1.RhpamProductionImmutable: &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
-	v1.RhpamTrial:               &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: ReplicasTrial, Database: databaseRhpamTrial},
-	v1.RhpamAuthoring:           &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: ReplicasTrial, Database: databaseRhpamAuthoring},
+	v1.RhpamTrial:               &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
+	v1.RhpamAuthoring:           &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
 	v1.RhpamAuthoringHA:         &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
-	v1.RhdmTrial:                &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
-	v1.RhdmAuthoring:            &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
+	v1.RhdmTrial:                &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
+	v1.RhdmAuthoring:            &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
 	v1.RhdmAuthoringHA:          &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: ReplicasTrial},
+	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
+}
+
+// TemplateConstants set of constant values to use in templates
+var TemplateConstants = v1.TemplateConstants{
+	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
+	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
 }

@@ -31,7 +31,7 @@ console:
                     protocol: TCP
                 env:
                   - name: APPFORMER_ELASTIC_HOST
-                    value: "[[.ApplicationName]]-[[.Product]]index"
+                    value: "[[.ApplicationName]]-[[.Constants.Product]]index"
                   - name: APPFORMER_JMS_BROKER_ADDRESS
                     value: "[[.ApplicationName]]-amq-tcp"
                   - name: APPFORMER_JMS_BROKER_USER
@@ -60,7 +60,7 @@ smartRouter:
 others:
   - persistentVolumeClaims:
       - metadata:
-          name: "[[.ApplicationName]]-[[.Product]]index-claim"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]index-claim"
           labels:
             app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
@@ -73,10 +73,10 @@ others:
 
     deploymentConfigs:
       - metadata:
-          name: "[[.ApplicationName]]-[[.Product]]index"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
           labels:
             app: "[[.ApplicationName]]"
-            service: "[[.ApplicationName]]-[[.Product]]index"
+            service: "[[.ApplicationName]]-[[.Constants.Product]]index"
         spec:
           strategy:
             type: Recreate
@@ -85,30 +85,30 @@ others:
               imageChangeParams:
                 automatic: true
                 containerNames:
-                  - "[[.ApplicationName]]-[[.Product]]index"
+                  - "[[.ApplicationName]]-[[.Constants.Product]]index"
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "[[.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift:[[.ImageTag]]"
+                  name: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift:[[.ImageTag]]"
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
+            deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
           template:
             metadata:
-              name: "[[.ApplicationName]]-[[.Product]]index"
+              name: "[[.ApplicationName]]-[[.Constants.Product]]index"
               labels:
-                deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
+                deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
                 app: "[[.ApplicationName]]"
                 application: "[[.ApplicationName]]"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "[[.ApplicationName]]-[[.Product]]index"
-                  image: "[[.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift"
+                - name: "[[.ApplicationName]]-[[.Constants.Product]]index"
+                  image: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift"
                   imagePullPolicy: Always
                   volumeMounts:
-                    - name: "[[.ApplicationName]]-[[.Product]]index-pvol"
+                    - name: "[[.ApplicationName]]-[[.Constants.Product]]index-pvol"
                       mountPath: "/opt/elasticsearch/data"
                   livenessProbe:
                     tcpSocket:
@@ -130,9 +130,9 @@ others:
                       containerPort: 9200
                       protocol: TCP
               volumes:
-                - name: "[[.ApplicationName]]-[[.Product]]index-pvol"
+                - name: "[[.ApplicationName]]-[[.Constants.Product]]index-pvol"
                   persistentVolumeClaim:
-                    claimName: "[[.ApplicationName]]-[[.Product]]index-claim"
+                    claimName: "[[.ApplicationName]]-[[.Constants.Product]]index-claim"
 
       - metadata:
           labels:
@@ -237,20 +237,20 @@ others:
               port: 9300
               targetPort: 9300
           selector:
-            deploymentConfig: "[[.ApplicationName]]-[[.Product]]index"
+            deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
         metadata:
-          name: "[[.ApplicationName]]-[[.Product]]index"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
           labels:
             app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
-            service: "[[.ApplicationName]]-[[.Product]]index"
+            service: "[[.ApplicationName]]-[[.Constants.Product]]index"
           annotations:
             description: All the Business Central Indexing Elasticsearch ports.
 
     routes:
-      - id: "[[.ApplicationName]]-[[.Product]]index-http"
+      - id: "[[.ApplicationName]]-[[.Constants.Product]]index-http"
         metadata:
-          name: "[[.ApplicationName]]-[[.Product]]index"
+          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
           labels:
             app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
@@ -259,7 +259,7 @@ others:
         spec:
           host: ""
           to:
-            name: "[[.ApplicationName]]-[[.Product]]index"
+            name: "[[.ApplicationName]]-[[.Constants.Product]]index"
           port:
             targetPort: rest
 
