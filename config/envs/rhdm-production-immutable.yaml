@@ -1,3 +1,5 @@
+console:
+  omit: true
 ## KIE smartrouter BEGIN
 smartRouter:
   omit: true
