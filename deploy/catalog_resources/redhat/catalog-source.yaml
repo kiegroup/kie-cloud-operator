@@ -79,6 +79,8 @@ items:
                   resources:
                     - kind: DeploymentConfig
                       version: apps.openshift.io/v1
+                    - kind: StatefulSet
+                      version: apps/v1
                     - kind: Secret
                       version: v1
                     - kind: PersistentVolumeClaim

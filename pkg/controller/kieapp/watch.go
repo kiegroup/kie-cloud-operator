@@ -54,6 +54,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 
 	watchOwnedObjects = []runtime.Object{
 		&oappsv1.DeploymentConfig{},
+		&appsv1.StatefulSet{},
 		&corev1.PersistentVolumeClaim{},
 		&rbacv1.RoleBinding{},
 		&rbacv1.Role{},

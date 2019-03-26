@@ -209,6 +209,7 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
