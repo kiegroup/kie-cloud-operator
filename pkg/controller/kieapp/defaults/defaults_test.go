@@ -230,6 +230,7 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
