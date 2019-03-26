@@ -7,11 +7,12 @@ import (
 	"github.com/imdario/mergo"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	appsv1 "github.com/openshift/api/apps/v1"
+	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
@@ -61,6 +62,7 @@ func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.C
 	object.Roles = mergeRoles(baseline.Roles, overwrite.Roles)
 	object.RoleBindings = mergeRoleBindings(baseline.RoleBindings, overwrite.RoleBindings)
 	object.DeploymentConfigs = mergeDeploymentConfigs(baseline.DeploymentConfigs, overwrite.DeploymentConfigs)
+	object.StatefulSets = mergeStatefulSets(baseline.StatefulSets, overwrite.StatefulSets)
 	object.ImageStreams = mergeImageStreams(baseline.ImageStreams, overwrite.ImageStreams)
 	object.BuildConfigs = mergeBuildConfigs(baseline.BuildConfigs, overwrite.BuildConfigs)
 	object.Services = mergeServices(baseline.Services, overwrite.Services)
@@ -198,7 +200,7 @@ func getRoleBindingReferenceSlice(objects []rbacv1.RoleBinding) []v1.OpenShiftOb
 	return slice
 }
 
-func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []appsv1.DeploymentConfig) []appsv1.DeploymentConfig {
+func mergeDeploymentConfigs(baseline []oappsv1.DeploymentConfig, overwrite []oappsv1.DeploymentConfig) []oappsv1.DeploymentConfig {
 	if len(overwrite) == 0 {
 		return baseline
 	}
@@ -217,7 +219,7 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 				log.Error("Error merging interfaces. ", err)
 				return nil
 			}
-			mergedSpec, err := mergeSpec(baselineItem.Spec, overwriteItem.Spec)
+			mergedSpec, err := mergeDCSpec(baselineItem.Spec, overwriteItem.Spec)
 			if err != nil {
 				log.Error("Error merging DeploymentConfig Specs. ", err)
 				return nil
@@ -225,7 +227,44 @@ func mergeDeploymentConfigs(baseline []appsv1.DeploymentConfig, overwrite []apps
 			overwriteItem.Spec = mergedSpec
 		}
 	}
-	slice := make([]appsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
+	slice := make([]oappsv1.DeploymentConfig, combinedSize(baselineRefs, overwriteRefs))
+	err := mergeObjects(baselineRefs, overwriteRefs, slice)
+	if err != nil {
+		log.Error("Error merging objects. ", err)
+		return nil
+	}
+	return slice
+
+}
+
+func mergeStatefulSets(baseline []appsv1.StatefulSet, overwrite []appsv1.StatefulSet) []appsv1.StatefulSet {
+	if len(overwrite) == 0 {
+		return baseline
+	}
+	if len(baseline) == 0 {
+		return overwrite
+	}
+	baselineRefs := getStatefulSetReferenceSlice(baseline)
+	overwriteRefs := getStatefulSetReferenceSlice(overwrite)
+	for overwriteIndex := range overwrite {
+		overwriteItem := &overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(overwriteItem, baselineRefs)
+		if baselineIndex >= 0 {
+			baselineItem := baseline[baselineIndex]
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+				return nil
+			}
+			mergedSpec, err := mergeStatefulSpec(baselineItem.Spec, overwriteItem.Spec)
+			if err != nil {
+				log.Error("Error merging DeploymentConfig Specs. ", err)
+				return nil
+			}
+			overwriteItem.Spec = mergedSpec
+		}
+	}
+	slice := make([]appsv1.StatefulSet, combinedSize(baselineRefs, overwriteRefs))
 	err := mergeObjects(baselineRefs, overwriteRefs, slice)
 	if err != nil {
 		log.Error("Error merging objects. ", err)
@@ -297,22 +336,36 @@ func mergeBuildConfigs(baseline, overwrite []buildv1.BuildConfig) []buildv1.Buil
 	return slice
 }
 
-func mergeSpec(baseline appsv1.DeploymentConfigSpec, overwrite appsv1.DeploymentConfigSpec) (appsv1.DeploymentConfigSpec, error) {
+func mergeDCSpec(baseline oappsv1.DeploymentConfigSpec, overwrite oappsv1.DeploymentConfigSpec) (oappsv1.DeploymentConfigSpec, error) {
 	mergedTemplate, err := mergeTemplate(baseline.Template, overwrite.Template)
 	if err != nil {
-		return appsv1.DeploymentConfigSpec{}, err
+		return oappsv1.DeploymentConfigSpec{}, err
 	}
 	overwrite.Template = mergedTemplate
 
 	mergedTriggers, err := mergeTriggers(baseline.Triggers, overwrite.Triggers)
 	if err != nil {
-		return appsv1.DeploymentConfigSpec{}, err
+		return oappsv1.DeploymentConfigSpec{}, err
 	}
 	overwrite.Triggers = mergedTriggers
 
 	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
 	if err != nil {
-		return appsv1.DeploymentConfigSpec{}, nil
+		return oappsv1.DeploymentConfigSpec{}, nil
+	}
+	return baseline, nil
+}
+
+func mergeStatefulSpec(baseline appsv1.StatefulSetSpec, overwrite appsv1.StatefulSetSpec) (appsv1.StatefulSetSpec, error) {
+	mergedTemplate, err := mergeTemplate(&baseline.Template, &overwrite.Template)
+	if err != nil {
+		return appsv1.StatefulSetSpec{}, err
+	}
+	overwrite.Template = *mergedTemplate
+
+	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
+	if err != nil {
+		return appsv1.StatefulSetSpec{}, nil
 	}
 	return baseline, nil
 }
@@ -354,8 +407,8 @@ func mergeTemplate(baseline *corev1.PodTemplateSpec, overwrite *corev1.PodTempla
 	return baseline, nil
 }
 
-func mergeTriggers(baseline appsv1.DeploymentTriggerPolicies, overwrite appsv1.DeploymentTriggerPolicies) (appsv1.DeploymentTriggerPolicies, error) {
-	var mergedTriggers []appsv1.DeploymentTriggerPolicy
+func mergeTriggers(baseline oappsv1.DeploymentTriggerPolicies, overwrite oappsv1.DeploymentTriggerPolicies) (oappsv1.DeploymentTriggerPolicies, error) {
+	var mergedTriggers []oappsv1.DeploymentTriggerPolicy
 	for baselineIndex, baselineItem := range baseline {
 		idx, found := findDeploymentTriggerPolicy(baselineItem, overwrite)
 		if idx == -1 {
@@ -411,11 +464,11 @@ func mergeBuildTriggers(baseline []buildv1.BuildTriggerPolicy, overwrite []build
 
 // findDeploymentTriggerPolicy Finds a deploymentTrigger by Type. In case type == ImageChange
 // the match will be returned if both are not empty
-func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []appsv1.DeploymentTriggerPolicy) (int, appsv1.DeploymentTriggerPolicy) {
-	emptyImageChangeParams := &appsv1.DeploymentTriggerImageChangeParams{}
+func findDeploymentTriggerPolicy(object oappsv1.DeploymentTriggerPolicy, slice []oappsv1.DeploymentTriggerPolicy) (int, oappsv1.DeploymentTriggerPolicy) {
+	emptyImageChangeParams := &oappsv1.DeploymentTriggerImageChangeParams{}
 	for index, candidate := range slice {
 		if candidate.Type == object.Type {
-			if object.Type == appsv1.DeploymentTriggerOnImageChange {
+			if object.Type == oappsv1.DeploymentTriggerOnImageChange {
 				if !cmp.Equal(object.ImageChangeParams, emptyImageChangeParams) && !cmp.Equal(candidate.ImageChangeParams, emptyImageChangeParams) {
 					return index, candidate
 				}
@@ -424,7 +477,7 @@ func findDeploymentTriggerPolicy(object appsv1.DeploymentTriggerPolicy, slice []
 			}
 		}
 	}
-	return -1, appsv1.DeploymentTriggerPolicy{}
+	return -1, oappsv1.DeploymentTriggerPolicy{}
 }
 
 // findBuildTriggerPolicy Finds a buildTrigger by Type
@@ -584,7 +637,15 @@ func findVolumeMount(object corev1.VolumeMount, slice []corev1.VolumeMount) (int
 	return -1, corev1.VolumeMount{}
 }
 
-func getDeploymentConfigReferenceSlice(objects []appsv1.DeploymentConfig) []v1.OpenShiftObject {
+func getDeploymentConfigReferenceSlice(objects []oappsv1.DeploymentConfig) []v1.OpenShiftObject {
+	slice := make([]v1.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
+}
+
+func getStatefulSetReferenceSlice(objects []appsv1.StatefulSet) []v1.OpenShiftObject {
 	slice := make([]v1.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]

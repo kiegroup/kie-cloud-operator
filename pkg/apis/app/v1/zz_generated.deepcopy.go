@@ -25,6 +25,7 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	apiappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -174,6 +175,13 @@ func (in *CustomObject) DeepCopyInto(out *CustomObject) {
 	if in.DeploymentConfigs != nil {
 		in, out := &in.DeploymentConfigs, &out.DeploymentConfigs
 		*out = make([]appsv1.DeploymentConfig, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.StatefulSets != nil {
+		in, out := &in.StatefulSets, &out.StatefulSets
+		*out = make([]apiappsv1.StatefulSet, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

@@ -554,6 +554,10 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 		object.Services[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
 		allObjects = append(allObjects, &object.Services[index])
 	}
+	for index := range object.StatefulSets {
+		object.StatefulSets[index].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
+		allObjects = append(allObjects, &object.StatefulSets[index])
+	}
 	for index := range object.Routes {
 		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 		allObjects = append(allObjects, &object.Routes[index])

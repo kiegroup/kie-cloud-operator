@@ -3,11 +3,12 @@ package v1
 import (
 	"context"
 
-	appsv1 "github.com/openshift/api/apps/v1"
+	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -145,7 +146,8 @@ type CustomObject struct {
 	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
 	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
 	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
-	DeploymentConfigs      []appsv1.DeploymentConfig      `json:"deploymentConfigs,omitempty"`
+	DeploymentConfigs      []oappsv1.DeploymentConfig     `json:"deploymentConfigs,omitempty"`
+	StatefulSets           []appsv1.StatefulSet           `json:"statefulSets,omitempty"`
 	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
 	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
