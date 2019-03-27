@@ -9,6 +9,17 @@ servers:
         spec:
           template:
             spec:
+              initContainers:
+                - command:
+                    [
+                      "sh",
+                      "-c",
+                      "until nslookup [[.KieName]]-postgresql && nc -vz [[.KieName]]-postgresql 5432; do echo waiting for [[.KieName]]-postgresql; sleep 2; done;",
+                    ]
+                  image: busybox
+                  imagePullPolicy: IfNotPresent
+                  name: "[[.KieName]]-postgresql-init"
+                  terminationMessagePolicy: FallbackToLogsOnError
               containers:
                 - name: "[[.KieName]]"
                   env:
