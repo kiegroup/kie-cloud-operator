@@ -119,47 +119,15 @@ spec:
           rules:
             - apiGroups:
                 - ""
-              resources:
-                - "*"
-              verbs:
-                - "*"
-            - apiGroups:
-                - ""
-              resources:
-                - pods
-                - services
-                - endpoints
-                - persistentvolumeclaims
-                - events
-                - configmaps
-                - secrets
-                - serviceaccounts
-              verbs:
-                - "*"
-            - apiGroups:
                 - apps
-              resources:
-                - deployments
-                - daemonsets
-                - replicasets
-                - statefulsets
-              verbs:
-                - "*"
-            - apiGroups:
                 - app.kiegroup.org
+                - rbac.authorization.k8s.io
                 - apps.openshift.io
                 - image.openshift.io
                 - build.openshift.io
                 - route.openshift.io
               resources:
                 - "*"
-              verbs:
-                - "*"
-            - apiGroups:
-                - rbac.authorization.k8s.io
-              resources:
-                - roles
-                - rolebindings
               verbs:
                 - "*"
             - apiGroups:
