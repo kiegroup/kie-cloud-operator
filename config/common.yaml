@@ -724,11 +724,6 @@ others:
         rules:
           - apiGroups:
               - ""
-            resources:
-              - "*"
-            verbs:
-              - "*"
-          - apiGroups:
               - app.kiegroup.org
               - apps.openshift.io
               - image.openshift.io
