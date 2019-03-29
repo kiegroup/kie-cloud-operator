@@ -13,10 +13,37 @@ servers:
             spec:
               containers:
                 - name: "[[.KieName]]"
+                  env:
+                    ## H2 driver settings BEGIN
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: RHPAM_DRIVER
+                      value: "h2"
+                    - name: KIE_SERVER_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.H2Dialect"
+                    - name: RHPAM_USERNAME
+                      value: "rhpam"
+                    - name: RHPAM_PASSWORD
+                      value: "[[$.AdminPassword]]"
+                    - name: RHPAM_SERVICE_HOST
+                      value: "dummy_ignored"
+                    - name: RHPAM_SERVICE_PORT
+                      value: "12345"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_XA_CONNECTION_PROPERTY_URL
+                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
+                    ## H2 driver settings END
                   volumeMounts:
                     - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
                       mountPath: "/opt/eap/standalone/data"
-## [[ if ne .Database.Size "" ]]
+              ## [[ if ne .Database.Size "" ]]
               volumes:
                 ## H2 volume settings BEGIN
                 - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
@@ -37,8 +64,8 @@ servers:
           resources:
             requests:
               storage: "[[.Database.Size]]"
-      ## H2 persistent volume claim END
-## [[ else ]]
+              ## H2 persistent volume claim END
+              ## [[ else ]]
               volumes:
                 ## H2 volume settings BEGIN
                 - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
