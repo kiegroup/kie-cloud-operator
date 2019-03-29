@@ -2,7 +2,7 @@
 servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
-    ## KIE server deployment config BEGIN
+  ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
           name: "[[.KieName]]"
@@ -41,7 +41,7 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.DBPassword]]"
                     - name: RHPAM_SERVICE_HOST
                       value: "[[.KieName]]-postgresql"
                     - name: RHPAM_SERVICE_PORT
@@ -107,7 +107,7 @@ servers:
                     - name: POSTGRESQL_USER
                       value: "rhpam"
                     - name: POSTGRESQL_PASSWORD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.DBPassword]]"
                     - name: POSTGRESQL_DATABASE
                       value: "rhpam7"
                     - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
@@ -115,13 +115,13 @@ servers:
                   volumeMounts:
                     - mountPath: "/var/lib/pgsql/data"
                       name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
-## [[ if ne .Database.Size "" ]]
+              ## [[ if ne .Database.Size "" ]]
               volumes:
                 - name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
                     claimName: "[[.KieName]]-postgresql-claim"
     ## PostgreSQL deployment config END
-  ## PostgreSQL persistent volume claim BEGIN
+    ## PostgreSQL persistent volume claim BEGIN
     persistentVolumeClaims:
       - metadata:
           name: "[[.KieName]]-postgresql-claim"
@@ -135,12 +135,12 @@ servers:
           resources:
             requests:
               storage: "[[.Database.Size]]"
-    ## PostgreSQL persistent volume claim END
-## [[ else ]]
+              ## PostgreSQL persistent volume claim END
+              ## [[ else ]]
               volumes:
                 - name: "[[.KieName]]-postgresql-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
-## [[ end ]]
+    ## [[ end ]]
     services:
       ## PostgreSQL service BEGIN
       - metadata:

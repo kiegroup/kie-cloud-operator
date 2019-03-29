@@ -30,7 +30,7 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.DBPassword]]"
                     - name: RHPAM_SERVICE_HOST
                       value: "dummy_ignored"
                     - name: RHPAM_SERVICE_PORT

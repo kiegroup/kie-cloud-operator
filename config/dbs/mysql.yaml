@@ -41,7 +41,7 @@ servers:
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.DBPassword]]"
                     - name: RHPAM_SERVICE_HOST
                       value: "[[.KieName]]-mysql"
                     - name: RHPAM_SERVICE_PORT
@@ -49,8 +49,8 @@ servers:
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
                     ## MySQL driver settings END
-  ## KIE server deployment config END
-  ## MySQL deployment BEGIN
+      ## KIE server deployment config END
+      ## MySQL deployment BEGIN
       - metadata:
           name: "[[.KieName]]-mysql"
           labels:
@@ -110,18 +110,18 @@ servers:
                     - name: MYSQL_USER
                       value: "rhpam"
                     - name: MYSQL_PASSWORD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.DBPassword]]"
                     - name: MYSQL_DATABASE
                       value: "rhpam7"
                   volumeMounts:
                     - mountPath: "/var/lib/mysql/data"
                       name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
-## [[ if ne .Database.Size "" ]]
+              ## [[ if ne .Database.Size "" ]]
               volumes:
                 - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
                     claimName: "[[.KieName]]-mysql-claim"
-  ## MySQL persistent volume claim BEGIN
+    ## MySQL persistent volume claim BEGIN
     persistentVolumeClaims:
       - metadata:
           name: "[[.KieName]]-mysql-claim"
@@ -135,13 +135,13 @@ servers:
           resources:
             requests:
               storage: "[[.Database.Size]]"
-  ## MySQL persistent volume claim END
-## [[ else ]]
+              ## MySQL persistent volume claim END
+              ## [[ else ]]
               volumes:
                 - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
-## [[ end ]]
-## MySQL deployment END
+    ## [[ end ]]
+    ## MySQL deployment END
     services:
       - spec:
           ports:

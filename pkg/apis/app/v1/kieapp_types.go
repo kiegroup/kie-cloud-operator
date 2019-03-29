@@ -376,6 +376,9 @@ type CommonConfig struct {
 	ImageTag           string `json:"imageTag,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
+	DBPassword         string `json:"dbPassword,omitempty"`
+	AMQPassword        string `json:"amqPassword,omitempty"`
+	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
 	ControllerPassword string `json:"controllerPassword,omitempty"`
 	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
