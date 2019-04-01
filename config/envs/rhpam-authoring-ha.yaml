@@ -58,7 +58,119 @@ smartRouter:
 ## KIE smartrouter END
 # ES/AMQ BEGIN
 others:
-  - persistentVolumeClaims:
+  - roles:
+      - metadata:
+          name: "[[.ApplicationName]]-amq-role"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+        rules:
+          - apiGroups:
+              - ""
+            resources:
+              - endpoints
+            verbs:
+              - create
+              - delete
+              - deletecollection
+              - get
+              - list
+              - patch
+              - update
+              - watch
+          - apiGroups:
+              - ""
+            resources:
+              - namespaces
+            verbs:
+              - get
+              - list
+
+      - metadata:
+          name: "[[.ApplicationName]]-amq-scaledown-controller-role"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+        rules:
+          - apiGroups:
+              - apps
+            resources:
+              - statefulsets
+            verbs:
+              - get
+              - list
+              - watch
+          - apiGroups:
+              - ""
+            resources:
+              - pods
+            verbs:
+              - get
+              - list
+              - watch
+              - create
+              - delete
+              - patch
+              - update
+          - apiGroups:
+              - ""
+            resources:
+              - persistentvolumeclaims
+            verbs:
+              - get
+              - list
+              - watch
+              - delete
+          - apiGroups:
+              - ""
+            resources:
+              - events
+            verbs:
+              - get
+              - list
+              - watch
+
+    rolebindings:
+      - metadata:
+          name: "[[.ApplicationName]]-amq-scaledown-controller-openshift-rb"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+        subjects:
+          - kind: ServiceAccount
+            name: "[[.ApplicationName]]-amq-scaledown-controller-sa"
+        roleRef:
+          kind: Role
+          name: "[[.ApplicationName]]-amq-scaledown-controller-role"
+          apiGroup: rbac.authorization.k8s.io
+
+      - metadata:
+          name: "[[.ApplicationName]]-amq-rb"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+        subjects:
+          - kind: ServiceAccount
+            name: "[[.ApplicationName]]-amq-sa"
+        roleRef:
+          kind: Role
+          name: "[[.ApplicationName]]-amq-role"
+          apiGroup: rbac.authorization.k8s.io
+
+    serviceaccounts:
+      - metadata:
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+          name: "[[.ApplicationName]]-amq-sa"
+
+      - metadata:
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+          name: "[[.ApplicationName]]-amq-scaledown-controller-sa"
+
+    persistentVolumeClaims:
       - metadata:
           name: "[[.ApplicationName]]-[[.Constants.Product]]index-claim"
           labels:
@@ -138,17 +250,172 @@ others:
           labels:
             app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
-          name: "[[.ApplicationName]]-amq"
+            service: "[[.ApplicationName]]-amq-scaledown-controller"
+          name: "[[.ApplicationName]]-amq-scaledown-controller"
+          annotations:
+            deployment.kubernetes.io/revision: "1"
+            template.alpha.openshift.io/wait-for-ready: "true"
         spec:
           replicas: 1
           selector:
-            deploymentConfig: "[[.ApplicationName]]-amq"
+            deploymentConfig: "[[.ApplicationName]]-amq-scaledown-controller"
           strategy:
             rollingParams:
               maxSurge: 0
             type: Rolling
           template:
             metadata:
+              labels:
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
+                deploymentConfig: "[[.ApplicationName]]-amq-scaledown-controller"
+              name: "[[.ApplicationName]]-amq-scaledown-controller"
+            spec:
+              serviceAccountName: "[[.ApplicationName]]-amq-scaledown-controller-sa"
+              containers:
+                - args:
+                    - --localOnly
+                    - --v
+                    - "3"
+                  image: "amq-broker-72-scaledown-controller-openshift"
+                  imagePullPolicy: IfNotPresent
+                  name: "[[.ApplicationName]]-amq"
+              terminationGracePeriodSeconds: 30
+          triggers:
+            - imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "[[.ApplicationName]]-amq"
+                from:
+                  kind: ImageStreamTag
+                  namespace: "openshift"
+                  name: "amq-broker-72-scaledown-controller-openshift:1.0"
+              type: ImageChange
+            - type: ConfigChange
+
+    statefulsets:
+      - metadata:
+          annotations:
+            alpha.image.policy.openshift.io/resolve-names: "*"
+            statefulsets.kubernetes.io/drainer-pod-template: |
+              {
+                "metadata": {
+                  "labels": {
+                    "app": "[[.ApplicationName]]",
+                    "application": "[[.ApplicationName]]"
+                  },
+                  "name": "[[.ApplicationName]]-amq-drainer-pod"
+                },
+                "spec": {
+                  "serviceAccount": "[[.ApplicationName]]-amq-sa",
+                  "serviceAccountName": "[[.ApplicationName]]-amq-sa",
+                  "terminationGracePeriodSeconds": 5,
+                  "containers": [
+                    {
+                      "env": [
+                        {
+                          "name": "AMQ_EXTRA_ARGS",
+                          "value": "--no-autotune"
+                        },
+                        {
+                          "name": "AMQ_USER",
+                          "value": "jmsBrokserUser"
+                        },
+                        {
+                          "name": "AMQ_PASSWORD",
+                          "value": "[[.AdminPassword]]"
+                        },
+                        {
+                          "name": "AMQ_ROLE",
+                          "value": "admin"
+                        },
+                        {
+                          "name": "AMQ_NAME",
+                          "value": "broker"
+                        },
+                        {
+                          "name": "AMQ_TRANSPORTS",
+                          "value": "openwire"
+                        },
+                        {
+                          "name": "AMQ_QUEUES",
+                          "value": ""
+                        },
+                        {
+                          "name": "AMQ_GLOBAL_MAX_SIZE",
+                          "value": "100 gb"
+                        },
+                        {
+                          "name": "AMQ_ALLOW_ANONYMOUS",
+                          "value": ""
+                        },
+                        {
+                          "name": "AMQ_DATA_DIR",
+                          "value": "/opt/amq/data"
+                        },
+                        {
+                          "name": "AMQ_DATA_DIR_LOGGING",
+                          "value": "true"
+                        },
+                        {
+                          "name": "AMQ_CLUSTERED",
+                          "value": "true"
+                        },
+                        {
+                          "name": "AMQ_REPLICAS",
+                          "value": "2"
+                        },
+                        {
+                          "name": "AMQ_CLUSTER_USER",
+                          "value": "jmsBrokserUser"
+                        },
+                        {
+                          "name": "AMQ_CLUSTER_PASSWORD",
+                          "value": "[[.AdminPassword]]"
+                        },
+                        {
+                          "name": "POD_NAMESPACE",
+                          "valueFrom": {
+                            "fieldRef": {
+                              "fieldPath": "metadata.namespace"
+                            }
+                          }
+                        },
+                        {
+                          "name": "OPENSHIFT_DNS_PING_SERVICE_PORT",
+                          "value": "8888"
+                        }
+                      ],
+                      "image": "amq-broker-72-openshift:1.1",
+                      "name": "[[.ApplicationName]]-amq",
+                      "command": ["/bin/sh", "-c", "echo \"Starting the drainer\" ; /opt/amq/bin/drain.sh; echo \"Drain completed! Exit code $?\""],
+                      "volumeMounts": [
+                        {
+                          "name": "[[.ApplicationName]]-amq-pvol",
+                          "mountPath": "/opt/amq/data"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+          creationTimestamp: null
+          generation: 3
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+          name: "[[.ApplicationName]]-amq"
+        spec:
+          podManagementPolicy: OrderedReady
+          replicas: 2
+          revisionHistoryLimit: 10
+          selector:
+            matchLabels:
+              app: "[[.ApplicationName]]"
+          serviceName: "[[.ApplicationName]]-amq-tcp"
+          template:
+            metadata:
+              creationTimestamp: null
               labels:
                 app: "[[.ApplicationName]]"
                 application: "[[.ApplicationName]]"
@@ -169,20 +436,32 @@ others:
                       value: "openwire"
                     - name: AMQ_GLOBAL_MAX_SIZE
                       value: "100 gb"
-                  image: "amq-broker-72-openshift"
-                  imagePullPolicy: Always
-                  readinessProbe:
-                    exec:
-                      command:
-                        - "/bin/bash"
-                        - "-c"
-                        - "/opt/amq/bin/readinessProbe.sh"
-                  lifecycle:
-                    preStop:
-                      exec:
-                        command:
-                          - /opt/amq/bin/shutdownHook.sh
-                  name: "[[.ApplicationName]]-amq"
+                    - name: AMQ_REQUIRE_LOGIN
+                    - name: AMQ_DATA_DIR
+                      value: /opt/amq/data
+                    - name: AMQ_DATA_DIR_LOGGING
+                      value: "true"
+                    - name: AMQ_CLUSTERED
+                      value: "true"
+                    - name: AMQ_REPLICAS
+                      value: "0"
+                    - name: AMQ_CLUSTER_USER
+                      value: "jmsBrokserUser"
+                    - name: AMQ_CLUSTER_PASSWORD
+                      value: "[[.AdminPassword]]"
+                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+                      value: "[[.ApplicationName]]-amq-ping"
+                    - name: AMQ_EXTRA_ARGS
+                    - name: AMQ_ANYCAST_PREFIX
+                    - name: AMQ_MULTICAST_PREFIX
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                          apiVersion: v1
+                          fieldPath: metadata.namespace
+                  image: "amq-broker-72-openshift:1.1"
+                  imagePullPolicy: IfNotPresent
+                  name: broker-amq
                   ports:
                     - containerPort: 8161
                       name: jolokia
@@ -199,21 +478,43 @@ others:
                     - containerPort: 61616
                       name: artemis
                       protocol: TCP
+                  readinessProbe:
+                    exec:
+                      command:
+                        - /bin/bash
+                        - -c
+                        - /opt/amq/bin/readinessProbe.sh
+                    failureThreshold: 3
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 1
+                  resources: {}
+                  terminationMessagePath: /dev/termination-log
+                  terminationMessagePolicy: File
+                  volumeMounts:
+                    - mountPath: /opt/amq/data
+                      name: "[[.ApplicationName]]-amq-pvol"
+              dnsPolicy: ClusterFirst
+              restartPolicy: Always
+              schedulerName: default-scheduler
+              securityContext: {}
               terminationGracePeriodSeconds: 60
-          triggers:
-            - imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "[[.ApplicationName]]-amq"
-                from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "amq-broker-72-openshift:1.0"
-              type: ImageChange
-            - type: ConfigChange
+          updateStrategy:
+            type: OnDelete
+          volumeClaimTemplates:
+            - metadata:
+                creationTimestamp: null
+                name: "[[.ApplicationName]]-amq-pvol"
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
 
     services:
       - spec:
+          clusterIP: None
           ports:
             - port: 61616
               targetPort: 61616
@@ -227,6 +528,23 @@ others:
             service: "[[.ApplicationName]]-amq"
           annotations:
             description: The broker's OpenWire port.
+
+      - spec:
+          clusterIP: None
+          ports:
+            - port: 8888
+              protocol: TCP
+              targetPort: 8888
+          selector:
+            deploymentConfig: "[[.ApplicationName]]-amq"
+        metadata:
+          name: "[[.ApplicationName]]-amq-ping"
+          annotations:
+            description: The JGroups ping port for clustering.
+            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
 
       - spec:
           ports:
@@ -262,6 +580,5 @@ others:
             name: "[[.ApplicationName]]-[[.Constants.Product]]index"
           port:
             targetPort: rest
-
 ## ES/AMQ END
 

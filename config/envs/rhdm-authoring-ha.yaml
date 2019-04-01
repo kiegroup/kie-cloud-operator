@@ -290,7 +290,7 @@ others:
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "amq-broker-72-scaledown-controller-openshift:0.4"
+                  name: "amq-broker-72-scaledown-controller-openshift:1.0"
               type: ImageChange
             - type: ConfigChange
 
