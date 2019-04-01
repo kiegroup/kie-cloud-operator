@@ -104,6 +104,7 @@ servers:
             service: "[[.KieName]]"
           annotations:
             description: Route for KIE server's http service.
+            haproxy.router.openshift.io/balance: source
             haproxy.router.openshift.io/timeout: 60s
         spec:
           to:
