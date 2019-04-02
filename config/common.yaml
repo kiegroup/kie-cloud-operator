@@ -434,6 +434,7 @@ servers:
         spec:
           strategy:
             rollingParams:
+              maxSurge: 100%
               maxUnavailable: 0
             type: Rolling
           triggers:
