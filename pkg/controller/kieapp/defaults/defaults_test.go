@@ -13,6 +13,7 @@ import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -223,6 +224,10 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 		},
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamAuthoringHA,
+			CommonConfig: v1.CommonConfig{
+				AMQPassword:        "amq",
+				AMQClusterPassword: "cluster",
+			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -232,6 +237,12 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
+	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
+	amqPassword := getEnvVariable(env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
+	assert.Equal(t, "amq", amqPassword, "Expected provided password to take effect, but found %v", amqPassword)
+	amqClusterPassword = getEnvVariable(env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0], "AMQ_CLUSTER_PASSWORD")
+	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
@@ -402,11 +413,17 @@ func TestAuthoringEnvironment(t *testing.T) {
 		},
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamAuthoring,
+			CommonConfig: v1.CommonConfig{
+				DBPassword: "Database",
+			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting authoring environment")
+	dbPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
+	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRecreate), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Recreate strategy when using the H2 DB")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
 }
 

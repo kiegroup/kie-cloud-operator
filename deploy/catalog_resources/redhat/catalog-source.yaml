@@ -248,6 +248,15 @@ items:
                           adminPassword:
                             type: string
                             description: The password to use for the adminUser.
+                          dbPassword:
+                            type: string
+                            description: The password to use for databases.
+                          amqPassword:
+                            type: string
+                            description: The password to use for amq user.
+                          amqClusterPassword:
+                            type: string
+                            description: The password to use for amq cluster user.
                           controllerPassword:
                             type: string
                             description: The password to use for the controllerUser.

@@ -446,6 +446,9 @@ func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
 	passwords := []*string{
 		&config.KeyStorePassword,
 		&config.AdminPassword,
+		&config.DBPassword,
+		&config.AMQPassword,
+		&config.AMQClusterPassword,
 		&config.ControllerPassword,
 		&config.MavenPassword,
 		&config.ServerPassword}

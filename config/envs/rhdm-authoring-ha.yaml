@@ -35,9 +35,9 @@ console:
                   - name: APPFORMER_JMS_BROKER_ADDRESS
                     value: "[[.ApplicationName]]-amq-tcp"
                   - name: APPFORMER_JMS_BROKER_USER
-                    value: "jmsBrokserUser"
+                    value: "jmsBrokerUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
-                    value: "[[.AdminPassword]]"
+                    value: "[[.AMQClusterPassword]]"
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
@@ -320,11 +320,11 @@ others:
                         },
                         {
                           "name": "AMQ_USER",
-                          "value": "jmsBrokserUser"
+                          "value": "jmsBrokerUser"
                         },
                         {
                           "name": "AMQ_PASSWORD",
-                          "value": "[[.AdminPassword]]"
+                          "value": "[[.AMQPassword]]"
                         },
                         {
                           "name": "AMQ_ROLE",
@@ -368,11 +368,11 @@ others:
                         },
                         {
                           "name": "AMQ_CLUSTER_USER",
-                          "value": "jmsBrokserUser"
+                          "value": "jmsBrokerUser"
                         },
                         {
                           "name": "AMQ_CLUSTER_PASSWORD",
-                          "value": "[[.AdminPassword]]"
+                          "value": "[[.AMQClusterPassword]]"
                         },
                         {
                           "name": "POD_NAMESPACE",
@@ -426,9 +426,9 @@ others:
               containers:
                 - env:
                     - name: AMQ_USER
-                      value: "jmsBrokserUser"
+                      value: "jmsBrokerUser"
                     - name: AMQ_PASSWORD
-                      value: "[[.AdminPassword]]"
+                      value: "[[.AMQPassword]]"
                     - name: AMQ_ROLE
                       value: admin
                     - name: AMQ_NAME
@@ -447,9 +447,9 @@ others:
                     - name: AMQ_REPLICAS
                       value: "0"
                     - name: AMQ_CLUSTER_USER
-                      value: "jmsBrokserUser"
+                      value: "jmsBrokerUser"
                     - name: AMQ_CLUSTER_PASSWORD
-                      value: "[[.AdminPassword]]"
+                      value: "[[.AMQClusterPassword]]"
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
                       value: "[[.ApplicationName]]-amq-ping"
                     - name: AMQ_EXTRA_ARGS
