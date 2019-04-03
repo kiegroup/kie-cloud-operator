@@ -1,0 +1,12 @@
+[[constraint]]
+  name = "golang.org/x/text"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  # revision for tag "kubernetes-1.12.3"
+  revision = "d082d5923d3cc0bfbb066ee5fbdea3d0ca79acf8"
+
+[prune]
+  go-tests = true
+  unused-packages = true

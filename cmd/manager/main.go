@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	openshiftutil "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -73,6 +74,17 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace, SyncPeriod: &syncPeriod})
 	if err != nil {
 		log.Error("Error getting Manager. ", err)
+		os.Exit(1)
+	}
+
+	// Check for OpenShift cluster
+	isOpenShift, err := openshiftutil.IsOpenShift(mgr.GetConfig())
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
+	if !isOpenShift {
+		log.Error("OpenShift not detected, exiting")
 		os.Exit(1)
 	}
 

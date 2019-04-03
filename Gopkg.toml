@@ -41,6 +41,10 @@ required = [
   version = "=v0.1.8"
 
 [[constraint]]
+  name = "github.com/RHsyseng/operator-utils"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
   # branch = "master" #osdk_branch_annotation
