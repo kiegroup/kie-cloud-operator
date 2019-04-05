@@ -58,21 +58,6 @@ required = [
   name = "github.com/pavel-v-chernykh/keystore-go"
   version = "=v2.1.0"
 
-[[constraint]]
-  name = "github.com/go-openapi/spec"
-  # revision for branch "kubernetes-1.11"
-  revision = "1de3e0542de65ad8d75452a595886fdd0befb363"
-
-[[constraint]]
-  name = "github.com/go-openapi/strfmt"
-  # revision for branch "kubernetes-1.11"
-  revision = "d65c7fdb29eca313476e529628176fe17e58c488"
-
-[[constraint]]
-  name = "github.com/go-openapi/validate"
-  # revision for branch "kubernetes-1.11"
-  revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
-
 [prune]
 #  go-tests = true
 #  non-go = true
