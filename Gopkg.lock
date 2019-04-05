@@ -27,11 +27,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4de697da2b930b14db7449fc8b0c34c5619cea1ea225fdc7c1d903d8b4baf291"
+  digest = "1:10488f076013a89d44ee9cad0692938a93164f084645de907496e1e4cba87b1e"
   name = "github.com/RHsyseng/operator-utils"
-  packages = ["pkg/utils/openshift"]
+  packages = [
+    "pkg/utils/openshift",
+    "pkg/validation",
+  ]
   pruneopts = ""
-  revision = "156464202e3b79e0d20dbc0ad0c394db2dc74fdb"
+  revision = "e2d845521eae6618c425ead99f1bbc9656a57e69"
 
 [[projects]]
   branch = "master"
@@ -1054,11 +1057,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/RHsyseng/operator-utils/pkg/utils/openshift",
+    "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/ghodss/yaml",
     "github.com/go-logr/logr",
-    "github.com/go-openapi/spec",
-    "github.com/go-openapi/strfmt",
-    "github.com/go-openapi/validate",
     "github.com/gobuffalo/packr",
     "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
