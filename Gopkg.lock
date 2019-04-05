@@ -27,6 +27,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:4de697da2b930b14db7449fc8b0c34c5619cea1ea225fdc7c1d903d8b4baf291"
+  name = "github.com/RHsyseng/operator-utils"
+  packages = ["pkg/utils/openshift"]
+  pruneopts = ""
+  revision = "156464202e3b79e0d20dbc0ad0c394db2dc74fdb"
+
+[[projects]]
+  branch = "master"
   digest = "1:a74730e052a45a3fab1d310fdef2ec17ae3d6af16228421e238320846f2aaec8"
   name = "github.com/alecthomas/template"
   packages = [
@@ -681,6 +689,7 @@
     "internal/triegen",
     "internal/ucd",
     "language",
+    "search",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -1044,6 +1053,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/RHsyseng/operator-utils/pkg/utils/openshift",
     "github.com/ghodss/yaml",
     "github.com/go-logr/logr",
     "github.com/go-openapi/spec",
