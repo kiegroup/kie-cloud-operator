@@ -1,6 +1,6 @@
 #!/bin/sh
 
-go fmt ./...
+gofmt -s -l -w cmd/ pkg/ version/
 
 if [[ -n ${CI} ]]; then
     git diff --exit-code

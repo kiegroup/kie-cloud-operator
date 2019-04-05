@@ -79,15 +79,15 @@ var databaseRhpamTrial = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: ""}
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
-	v1.RhpamProduction:          &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
-	v1.RhpamProductionImmutable: &v1.EnvironmentConstants{App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
-	v1.RhpamTrial:               &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
-	v1.RhpamAuthoring:           &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
-	v1.RhpamAuthoringHA:         &v1.EnvironmentConstants{App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
-	v1.RhdmTrial:                &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
-	v1.RhdmAuthoring:            &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
-	v1.RhdmAuthoringHA:          &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	v1.RhdmProductionImmutable:  &v1.EnvironmentConstants{App: rhdmAppConstants, Replica: replicasTrial},
+	v1.RhpamProduction:          {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
+	v1.RhpamProductionImmutable: {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
+	v1.RhpamTrial:               {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
+	v1.RhpamAuthoring:           {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
+	v1.RhpamAuthoringHA:         {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
+	v1.RhdmTrial:                {App: rhdmAppConstants, Replica: replicasTrial},
+	v1.RhdmAuthoring:            {App: rhdmAppConstants, Replica: replicasTrial},
+	v1.RhdmAuthoringHA:          {App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	v1.RhdmProductionImmutable:  {App: rhdmAppConstants, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates
