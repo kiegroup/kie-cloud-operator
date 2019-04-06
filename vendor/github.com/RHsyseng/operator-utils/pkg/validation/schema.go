@@ -8,6 +8,7 @@ import (
 )
 
 type Schema interface {
+	GetMissingEntries(crInstance interface{}) []SchemaEntry
 	Validate(data interface{}) error
 }
 
@@ -22,6 +23,10 @@ func New(crd []byte) (Schema, error) {
 
 type openAPIV3Schema struct {
 	schema *spec.Schema
+}
+
+func (schema *openAPIV3Schema) GetMissingEntries(crInstance interface{}) []SchemaEntry {
+	return getMissingEntries(schema.schema, crInstance)
 }
 
 func (schema *openAPIV3Schema) Validate(data interface{}) error {
