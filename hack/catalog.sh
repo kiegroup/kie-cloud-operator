@@ -6,7 +6,7 @@ else
     CATALOG_NS=${1}
 fi
 
-CSV=`cat deploy/catalog_resources/community/kiecloud-operator.v1.0.0.clusterserviceversion.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
+CSV=`cat deploy/catalog_resources/community/kiecloud-operator.1.0.0.clusterserviceversion.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 CRD=`cat deploy/crds/kieapp.crd.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 PKG=`cat deploy/catalog_resources/community/kiecloud.package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 
