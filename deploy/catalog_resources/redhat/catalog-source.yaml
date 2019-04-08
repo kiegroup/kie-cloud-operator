@@ -11,7 +11,7 @@ items:
         - apiVersion: operators.coreos.com/v1alpha1
           kind: ClusterServiceVersion
           metadata:
-            name: businessautomation-operator.v1.0.0
+            name: businessautomation-operator.1.0.0
             namespace: placeholder
             annotations:
               categories: "Integration & Delivery"
@@ -55,11 +55,11 @@ items:
                 mediatype: image/svg+xml
             labels:
               alm-owner-businessautomation: businessautomation-operator
-              operated-by: businessautomation-operator.v1.0.0
+              operated-by: businessautomation-operator.1.0.0
             selector:
               matchLabels:
                 alm-owner-businessautomation: businessautomation-operator
-                operated-by: businessautomation-operator.v1.0.0
+                operated-by: businessautomation-operator.1.0.0
             installModes:
               - type: OwnNamespace
                 supported: true
@@ -726,11 +726,11 @@ items:
                                 type: boolean
                                 description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.
       packages: >
-        - #! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.v1.0.0.clusterserviceversion.yaml
+        - #! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.1.0.0.clusterserviceversion.yaml
           packageName: businessautomation-operator
           channels:
             - name: beta
-              currentCSV: businessautomation-operator.v1.0.0
+              currentCSV: businessautomation-operator.1.0.0
 
   - apiVersion: operators.coreos.com/v1alpha1
     kind: CatalogSource
