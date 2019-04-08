@@ -2,6 +2,8 @@ package test
 
 import (
 	"github.com/RHsyseng/operator-utils/pkg/validation"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"strings"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -105,6 +107,28 @@ spec:
 
 	deleteNestedMapEntry(input, "spec", "objects")
 	assert.NoError(t, schema.Validate(input))
+}
+
+func TestCompleteCRD(t *testing.T) {
+	schema := getSchema(t)
+	missingEntries := schema.GetMissingEntries(&v1.KieApp{})
+	for _, missing := range missingEntries {
+		if strings.HasPrefix(missing.Path, "/status") {
+			//Not using subresources, so status is not expected to appear in CRD
+		} else if strings.Contains(missing.Path, "/env/valueFrom/") {
+			//The valueFrom is not expected to be used and is not fully defined TODO: verify
+		} else if strings.HasSuffix(missing.Path, "/from/uid") {
+			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
+		} else if strings.HasSuffix(missing.Path, "/from/apiVersion") {
+			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
+		} else if strings.HasSuffix(missing.Path, "/from/resourceVersion") {
+			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
+		} else if strings.HasSuffix(missing.Path, "/from/fieldPath") {
+			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
+		} else {
+			assert.Fail(t, "Discrepancy between CRD and Struct", "Missing or incorrect schema validation at %v, expected type %v", missing.Path, missing.Type)
+		}
+	}
 }
 
 func deleteNestedMapEntry(object map[string]interface{}, keys ...string) {

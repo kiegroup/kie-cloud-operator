@@ -354,7 +354,7 @@ spec:
                               connectionChecker:
                                 type: string
                                 description: An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid.
-                              exceptionChecker:
+                              exceptionSorter:
                                 type: string
                                 description: An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred.
                               backgroundValidation:

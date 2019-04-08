@@ -200,7 +200,7 @@ type SSOAuthConfig struct {
 	Realm                    string `json:"realm,omitempty"`
 	AdminUser                string `json:"adminUser,omitempty"`
 	AdminPassword            string `json:"adminPassword,omitempty"`
-	DisableSSLCertValidation bool   `json:"disableSSLCertValication,omitempty"`
+	DisableSSLCertValidation bool   `json:"disableSSLCertValidation,omitempty"`
 	PrincipalAttribute       string `json:"principalAttribute,omitempty"`
 }
 

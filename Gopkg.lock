@@ -27,14 +27,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:10488f076013a89d44ee9cad0692938a93164f084645de907496e1e4cba87b1e"
+  digest = "1:f2aaf5dbb9e7af6b32ca675324597d2193ce6f7840d044bb97a726401fc7ec68"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/utils/openshift",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "e2d845521eae6618c425ead99f1bbc9656a57e69"
+  revision = "3725530e9c7aeff1e1c5dee00574200940360370"
 
 [[projects]]
   branch = "master"
