@@ -1,8 +1,3 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// Package packagesdriver fetches type sizes for go/packages and go/analysis.
 package packagesdriver
 
 import (
@@ -30,18 +25,16 @@ func GetSizes(ctx context.Context, buildFlags, env []string, dir string, usesExp
 			tool = val
 		}
 	}
+	if tool != "" && tool == "off" {
+		return GetSizesGolist(ctx, buildFlags, env, dir, usesExportData)
+	}
 
 	if tool == "" {
 		var err error
 		tool, err = exec.LookPath("gopackagesdriver")
 		if err != nil {
-			// We did not find the driver, so use "go list".
-			tool = "off"
+			return nil, nil
 		}
-	}
-
-	if tool == "off" {
-		return GetSizesGolist(ctx, buildFlags, env, dir, usesExportData)
 	}
 
 	req, err := json.Marshal(struct {
@@ -86,9 +79,6 @@ func GetSizesGolist(ctx context.Context, buildFlags, env []string, dir string, u
 		return nil, err
 	}
 	fields := strings.Fields(stdout.String())
-	if len(fields) < 2 {
-		return nil, fmt.Errorf("could not determine GOARCH and Go compiler")
-	}
 	goarch := fields[0]
 	compiler := fields[1]
 	return types.SizesFor(compiler, goarch), nil

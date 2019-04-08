@@ -29,13 +29,8 @@
                 "valid": true
             },
             {
-                "description": "ignores arrays",
+                "description": "ignores non-objects",
                 "data": [],
-                "valid": true
-            },
-            {
-                "description": "ignores other non-objects",
-                "data": 12,
                 "valid": true
             }
         ]

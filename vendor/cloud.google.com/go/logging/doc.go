@@ -21,6 +21,9 @@ This client uses Logging API v2.
 See https://cloud.google.com/logging/docs/api/v2/ for an introduction to the API.
 
 
+Note: This package is in beta.  Some backwards-incompatible changes may occur.
+
+
 Creating a Client
 
 Use a Client to interact with the Stackdriver Logging API.
@@ -62,10 +65,7 @@ For critical errors, you may want to send your log entries immediately.
 LogSync is slow and will block until the log entry has been sent, so it is
 not recommended for normal use.
 
-	err = lg.LogSync(ctx, logging.Entry{Payload: "ALERT! Something critical happened!"})
-	if err != nil {
-		// TODO: Handle error.
-	}
+	lg.LogSync(ctx, logging.Entry{Payload: "ALERT! Something critical happened!"})
 
 
 Payloads

@@ -364,92 +364,68 @@ func TestCondition(t *testing.T) {
 	obj := c.Bucket("buck").Object("obj")
 	dst := c.Bucket("dstbuck").Object("dst")
 	tests := []struct {
-		fn   func() error
+		fn   func()
 		want string
 	}{
 		{
-			func() error {
-				_, err := obj.Generation(1234).NewReader(ctx)
-				return err
-			},
+			func() { obj.Generation(1234).NewReader(ctx) },
 			"GET /buck/obj?generation=1234",
 		},
 		{
-			func() error {
-				_, err := obj.If(Conditions{GenerationMatch: 1234}).NewReader(ctx)
-				return err
-			},
+			func() { obj.If(Conditions{GenerationMatch: 1234}).NewReader(ctx) },
 			"GET /buck/obj?ifGenerationMatch=1234",
 		},
 		{
-			func() error {
-				_, err := obj.If(Conditions{GenerationNotMatch: 1234}).NewReader(ctx)
-				return err
-			},
+			func() { obj.If(Conditions{GenerationNotMatch: 1234}).NewReader(ctx) },
 			"GET /buck/obj?ifGenerationNotMatch=1234",
 		},
 		{
-			func() error {
-				_, err := obj.If(Conditions{MetagenerationMatch: 1234}).NewReader(ctx)
-				return err
-			},
+			func() { obj.If(Conditions{MetagenerationMatch: 1234}).NewReader(ctx) },
 			"GET /buck/obj?ifMetagenerationMatch=1234",
 		},
 		{
-			func() error {
-				_, err := obj.If(Conditions{MetagenerationNotMatch: 1234}).NewReader(ctx)
-				return err
-			},
+			func() { obj.If(Conditions{MetagenerationNotMatch: 1234}).NewReader(ctx) },
 			"GET /buck/obj?ifMetagenerationNotMatch=1234",
 		},
 		{
-			func() error {
-				_, err := obj.If(Conditions{MetagenerationNotMatch: 1234}).Attrs(ctx)
-				return err
-			},
+			func() { obj.If(Conditions{MetagenerationNotMatch: 1234}).Attrs(ctx) },
 			"GET /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationNotMatch=1234&prettyPrint=false&projection=full",
 		},
+
 		{
-			func() error {
-				_, err := obj.If(Conditions{MetagenerationMatch: 1234}).Update(ctx, ObjectAttrsToUpdate{})
-				return err
-			},
+			func() { obj.If(Conditions{MetagenerationMatch: 1234}).Update(ctx, ObjectAttrsToUpdate{}) },
 			"PATCH /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationMatch=1234&prettyPrint=false&projection=full",
 		},
 		{
-			func() error { return obj.Generation(1234).Delete(ctx) },
+			func() { obj.Generation(1234).Delete(ctx) },
 			"DELETE /storage/v1/b/buck/o/obj?alt=json&generation=1234&prettyPrint=false",
 		},
 		{
-			func() error {
+			func() {
 				w := obj.If(Conditions{GenerationMatch: 1234}).NewWriter(ctx)
 				w.ContentType = "text/plain"
-				return w.Close()
+				w.Close()
 			},
 			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=1234&prettyPrint=false&projection=full&uploadType=multipart",
 		},
 		{
-			func() error {
+			func() {
 				w := obj.If(Conditions{DoesNotExist: true}).NewWriter(ctx)
 				w.ContentType = "text/plain"
-				return w.Close()
+				w.Close()
 			},
 			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=0&prettyPrint=false&projection=full&uploadType=multipart",
 		},
 		{
-			func() error {
-				_, err := dst.If(Conditions{MetagenerationMatch: 5678}).CopierFrom(obj.If(Conditions{GenerationMatch: 1234})).Run(ctx)
-				return err
+			func() {
+				dst.If(Conditions{MetagenerationMatch: 5678}).CopierFrom(obj.If(Conditions{GenerationMatch: 1234})).Run(ctx)
 			},
 			"POST /storage/v1/b/buck/o/obj/rewriteTo/b/dstbuck/o/dst?alt=json&ifMetagenerationMatch=5678&ifSourceGenerationMatch=1234&prettyPrint=false&projection=full",
 		},
 	}
 
 	for i, tt := range tests {
-		if err := tt.fn(); err != nil && err != io.EOF {
-			t.Error(err)
-			continue
-		}
+		tt.fn()
 		select {
 		case r := <-gotReq:
 			got := r.Method + " " + r.RequestURI

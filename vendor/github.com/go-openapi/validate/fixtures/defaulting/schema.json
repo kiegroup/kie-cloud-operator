@@ -4,10 +4,6 @@
       "type": "integer",
       "default": 42
     },
-    "existing": {
-      "type": "integer",
-      "default": 42
-    },
     "str": {
       "type": "string",
       "minLength": 4,

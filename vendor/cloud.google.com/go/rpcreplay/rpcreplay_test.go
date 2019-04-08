@@ -255,11 +255,7 @@ func TestReplay(t *testing.T) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
 	// Replay the test.
-	conn, err := rep.Connection()
-	if err != nil {
-		t.Fatal(err)
-	}
-	testService(t, conn)
+	testService(t, srv.Addr, rep.DialOptions())
 }
 
 func record(t *testing.T, srv *intStoreServer) *bytes.Buffer {
@@ -268,20 +264,20 @@ func record(t *testing.T, srv *intStoreServer) *bytes.Buffer {
 	if err != nil {
 		t.Fatal(err)
 	}
-	conn, err := grpc.Dial(srv.Addr,
-		append([]grpc.DialOption{grpc.WithInsecure()}, rec.DialOptions()...)...)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-	testService(t, conn)
+	testService(t, srv.Addr, rec.DialOptions())
 	if err := rec.Close(); err != nil {
 		t.Fatal(err)
 	}
 	return buf
 }
 
-func testService(t *testing.T, conn *grpc.ClientConn) {
+func testService(t *testing.T, addr string, opts []grpc.DialOption) {
+	conn, err := grpc.Dial(addr,
+		append([]grpc.DialOption{grpc.WithInsecure()}, opts...)...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
 	client := ipb.NewIntStoreClient(conn)
 	ctx := context.Background()
 	item := &ipb.Item{Name: "a", Value: 1}

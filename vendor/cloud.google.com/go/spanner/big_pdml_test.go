@@ -24,11 +24,11 @@ import (
 	"testing"
 )
 
-func TestIntegration_BigPDML(t *testing.T) {
+func TestBigPDML(t *testing.T) {
 	const nRows int = 1e4
 
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	columns := []string{"SingerId", "FirstName", "LastName"}

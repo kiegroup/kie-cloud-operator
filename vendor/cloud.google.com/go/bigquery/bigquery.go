@@ -23,7 +23,7 @@ import (
 
 	"cloud.google.com/go/internal"
 	"cloud.google.com/go/internal/version"
-	gax "github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go"
 	bq "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"

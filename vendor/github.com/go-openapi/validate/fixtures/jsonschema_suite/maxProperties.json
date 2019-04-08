@@ -19,18 +19,8 @@
                 "valid": false
             },
             {
-                "description": "ignores arrays",
-                "data": [1, 2, 3],
-                "valid": true
-            },
-            {
-                "description": "ignores strings",
+                "description": "ignores non-objects",
                 "data": "foobar",
-                "valid": true
-            },
-            {
-                "description": "ignores other non-objects",
-                "data": 12,
                 "valid": true
             }
         ]

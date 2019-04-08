@@ -648,6 +648,15 @@ func expand(match map[string]string, s string) string {
 
 // vcsPaths lists the known vcs paths.
 var vcsPaths = []*vcsPath{
+	// go.googlesource.com
+	{
+		prefix: "go.googlesource.com",
+		re:     `^(?P<root>go\.googlesource\.com/[A-Za-z0-9_.\-]+/?)$`,
+		vcs:    "git",
+		repo:   "https://{root}",
+		check:  noVCSSuffix,
+	},
+
 	// Github
 	{
 		prefix: "github.com/",
@@ -722,7 +731,7 @@ func bitbucketVCS(match map[string]string) error {
 	var resp struct {
 		SCM string `json:"scm"`
 	}
-	url := expand(match, "https://api.bitbucket.org/2.0/repositories/{bitname}?fields=scm")
+	url := expand(match, "https://api.bitbucket.org/1.0/repositories/{bitname}")
 	data, err := httpGET(url)
 	if err != nil {
 		return err

@@ -18,10 +18,12 @@ import (
 	"context"
 	"testing"
 
-	pb "google.golang.org/genproto/googleapis/firestore/v1"
+	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
 )
 
 func TestWriteBatch(t *testing.T) {
+	type update struct{ A int }
+
 	c, srv := newMock(t)
 	docPrefix := c.Collection("C").Path + "/"
 	srv.addRPC(

@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/internal/testutil"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/api/googleapi"
 	raw "google.golang.org/api/storage/v1"
 )
@@ -38,7 +39,6 @@ func TestBucketAttrsToRawBucket(t *testing.T) {
 		RetentionPolicy: &RetentionPolicy{
 			RetentionPeriod: 3 * time.Second,
 		},
-		BucketPolicyOnly:  BucketPolicyOnly{Enabled: true},
 		VersioningEnabled: false,
 		// should be ignored:
 		MetaGeneration: 39,
@@ -102,11 +102,6 @@ func TestBucketAttrsToRawBucket(t *testing.T) {
 		StorageClass: "class",
 		RetentionPolicy: &raw.BucketRetentionPolicy{
 			RetentionPeriod: 3,
-		},
-		IamConfiguration: &raw.BucketIamConfiguration{
-			BucketPolicyOnly: &raw.BucketIamConfigurationBucketPolicyOnly{
-				Enabled: true,
-			},
 		},
 		Versioning: nil, // ignore VersioningEnabled if false
 		Labels:     map[string]string{"label": "value"},
@@ -174,7 +169,6 @@ func TestBucketAttrsToUpdateToRawBucket(t *testing.T) {
 	au := &BucketAttrsToUpdate{
 		VersioningEnabled:     false,
 		RequesterPays:         false,
-		BucketPolicyOnly:      &BucketPolicyOnly{Enabled: false},
 		DefaultEventBasedHold: false,
 		RetentionPolicy:       &RetentionPolicy{RetentionPeriod: time.Hour},
 		Encryption:            &BucketEncryption{DefaultKMSKeyName: "key2"},
@@ -208,13 +202,8 @@ func TestBucketAttrsToUpdateToRawBucket(t *testing.T) {
 		},
 		DefaultEventBasedHold: false,
 		RetentionPolicy:       &raw.BucketRetentionPolicy{RetentionPeriod: 3600},
-		IamConfiguration: &raw.BucketIamConfiguration{
-			BucketPolicyOnly: &raw.BucketIamConfigurationBucketPolicyOnly{
-				Enabled: false,
-			},
-		},
-		Encryption: &raw.BucketEncryption{DefaultKmsKeyName: "key2"},
-		NullFields: []string{"Labels.b"},
+		Encryption:            &raw.BucketEncryption{DefaultKmsKeyName: "key2"},
+		NullFields:            []string{"Labels.b"},
 		Lifecycle: &raw.BucketLifecycle{
 			Rule: []*raw.BucketLifecycleRule{
 				{
@@ -354,7 +343,6 @@ func TestCallBuilders(t *testing.T) {
 func TestNewBucket(t *testing.T) {
 	labels := map[string]string{"a": "b"}
 	matchClasses := []string{"MULTI_REGIONAL", "REGIONAL", "STANDARD"}
-	aTime := time.Date(2017, 1, 2, 0, 0, 0, 0, time.UTC)
 	rb := &raw.Bucket{
 		Name:                  "name",
 		Location:              "loc",
@@ -382,13 +370,7 @@ func TestNewBucket(t *testing.T) {
 		},
 		RetentionPolicy: &raw.BucketRetentionPolicy{
 			RetentionPeriod: 3,
-			EffectiveTime:   aTime.Format(time.RFC3339),
-		},
-		IamConfiguration: &raw.BucketIamConfiguration{
-			BucketPolicyOnly: &raw.BucketIamConfigurationBucketPolicyOnly{
-				Enabled:    true,
-				LockedTime: aTime.Format(time.RFC3339),
-			},
+			EffectiveTime:   time.Now().Format(time.RFC3339),
 		},
 		Cors: []*raw.BucketCors{
 			{
@@ -433,10 +415,8 @@ func TestNewBucket(t *testing.T) {
 			},
 		},
 		RetentionPolicy: &RetentionPolicy{
-			EffectiveTime:   aTime,
 			RetentionPeriod: 3 * time.Second,
 		},
-		BucketPolicyOnly: BucketPolicyOnly{Enabled: true, LockedTime: aTime},
 		CORS: []CORS{
 			{
 				MaxAge:          time.Hour,
@@ -455,7 +435,7 @@ func TestNewBucket(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := testutil.Diff(got, want); diff != "" {
+	if diff := testutil.Diff(got, want, cmpopts.IgnoreTypes(time.Time{})); diff != "" {
 		t.Errorf("got=-, want=+:\n%s", diff)
 	}
 }

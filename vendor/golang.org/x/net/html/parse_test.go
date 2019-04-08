@@ -367,8 +367,7 @@ var renderTestBlacklist = map[string]bool{
 	`<script><!--<script </s`:                      true,
 	// Reconstructing the active formatting elements results in a <plaintext>
 	// element that contains an <a> element.
-	`<!doctype html><p><a><plaintext>b`:         true,
-	`<table><math><select><mi><select></table>`: true,
+	`<!doctype html><p><a><plaintext>b`: true,
 }
 
 func TestNodeConsistency(t *testing.T) {

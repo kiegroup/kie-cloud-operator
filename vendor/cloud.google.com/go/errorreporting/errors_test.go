@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/internal/testutil"
-	gax "github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go"
 	"google.golang.org/api/option"
 	pb "google.golang.org/genproto/googleapis/devtools/clouderrorreporting/v1beta1"
 )

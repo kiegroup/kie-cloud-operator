@@ -50,7 +50,7 @@
         ]
     },
     {
-        "description": "base URI change",
+        "description": "change resolution scope",
         "schema": {
             "id": "http://localhost:1234/",
             "items": {
@@ -60,12 +60,12 @@
         },
         "tests": [
             {
-                "description": "base URI change ref valid",
+                "description": "changed scope ref valid",
                 "data": [[1]],
                 "valid": true
             },
             {
-                "description": "base URI change ref invalid",
+                "description": "changed scope ref invalid",
                 "data": [["a"]],
                 "valid": false
             }

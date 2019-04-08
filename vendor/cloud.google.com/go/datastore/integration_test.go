@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"reflect"
 	"sort"
@@ -31,7 +32,6 @@ import (
 
 	"cloud.google.com/go/internal/testutil"
 	"cloud.google.com/go/rpcreplay"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -119,7 +119,7 @@ func initReplay() {
 	}
 	timeNow = ri.Time.In(time.Local)
 
-	conn, err := rep.Connection()
+	conn, err := replayConn(rep)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -131,6 +131,27 @@ func initReplay() {
 		return client
 	}
 	log.Printf("replaying from %s", replayFilename)
+}
+
+func replayConn(rep *rpcreplay.Replayer) (*grpc.ClientConn, error) {
+	// If we make a real connection we need creds from somewhere, and they
+	// might not be available, for instance on Travis.
+	// Replaying doesn't require a connection live at all, but we need
+	// something to attach gRPC interceptors to.
+	// So we start a local listener and connect to it, then close them down.
+	// TODO(jba): build something like this into the replayer?
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return nil, err
+	}
+	conn, err := grpc.Dial(l.Addr().String(),
+		append([]grpc.DialOption{grpc.WithInsecure()}, rep.DialOptions()...)...)
+	if err != nil {
+		return nil, err
+	}
+	conn.Close()
+	l.Close()
+	return conn, nil
 }
 
 func newClient(ctx context.Context, t *testing.T, dialOpts []grpc.DialOption) *Client {
@@ -1256,34 +1277,4 @@ func testMutate(t *testing.T, mutate func(ctx context.Context, client *Client, m
 	if got, want := status.Code(err), codes.NotFound; got != want {
 		t.Errorf("Update non-existing key: got %s, want %s", got, want)
 	}
-}
-
-func TestDetectProjectID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Integration tests skipped in short mode")
-	}
-	ctx := context.Background()
-
-	creds := testutil.Credentials(ctx, ScopeDatastore)
-	ts := fakets{}
-	if creds == nil {
-		t.Skip("Integration tests skipped. See CONTRIBUTING.md for details")
-	}
-
-	// Use creds with project ID.
-	if _, err := NewClient(ctx, DetectProjectID, option.WithCredentials(creds)); err != nil {
-		t.Errorf("NewClient: %v", err)
-	}
-
-	// Try to use creds without project ID.
-	_, err := NewClient(ctx, DetectProjectID, option.WithTokenSource(ts))
-	if err == nil && err.Error() != "datastore: see the docs on DetectProjectID" {
-		t.Errorf("expected an error while using TokenSource that does not have a project ID")
-	}
-}
-
-type fakets struct{}
-
-func (f fakets) Token() (*oauth2.Token, error) {
-	return nil, errors.New("shouldn't see this")
 }
