@@ -37,6 +37,8 @@ const (
 	// across Google Cloud Platform services.
 	ScopeCloudPlatform = "https://www.googleapis.com/auth/cloud-platform"
 
+	prodAddr = "https://pubsub.googleapis.com/"
+
 	maxAckDeadline = 10 * time.Minute
 )
 

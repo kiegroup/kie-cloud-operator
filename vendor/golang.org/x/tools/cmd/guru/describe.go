@@ -162,9 +162,6 @@ func findInterestingNode(pkginfo *loader.PackageInfo, path []ast.Node) ([]ast.No
 			path = append([]ast.Node{n.Name}, path...)
 			continue
 
-		case *ast.Comment, *ast.CommentGroup, *ast.File, *ast.KeyValueExpr, *ast.CommClause:
-			return path, actionUnknown // uninteresting
-
 		case ast.Stmt:
 			return path, actionStmt
 
@@ -175,6 +172,9 @@ func findInterestingNode(pkginfo *loader.PackageInfo, path []ast.Node) ([]ast.No
 			*ast.MapType,
 			*ast.ChanType:
 			return path, actionType
+
+		case *ast.Comment, *ast.CommentGroup, *ast.File, *ast.KeyValueExpr, *ast.CommClause:
+			return path, actionUnknown // uninteresting
 
 		case *ast.Ellipsis:
 			// Continue to enclosing node.

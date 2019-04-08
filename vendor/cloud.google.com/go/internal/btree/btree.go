@@ -47,6 +47,7 @@
 package btree
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 )
@@ -203,6 +204,13 @@ func (n *node) computeSize() int {
 		sz += c.size
 	}
 	return sz
+}
+
+func (n *node) checkSize() {
+	sz := n.computeSize()
+	if n.size != sz {
+		panic(fmt.Sprintf("n.size = %d, computed size = %d", n.size, sz))
+	}
 }
 
 func (n *node) mutableFor(cow *copyOnWriteContext) *node {

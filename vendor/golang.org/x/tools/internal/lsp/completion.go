@@ -6,63 +6,37 @@ package lsp
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"sort"
 	"strings"
 
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
-	"golang.org/x/tools/internal/span"
 )
 
-func (s *Server) completion(ctx context.Context, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	uri := span.NewURI(params.TextDocument.URI)
-	view := s.findView(ctx, uri)
-	f, m, err := newColumnMap(ctx, view, uri)
-	if err != nil {
-		return nil, err
-	}
-	spn, err := m.PointSpan(params.Position)
-	if err != nil {
-		return nil, err
-	}
-	rng, err := spn.Range(m.Converter)
-	if err != nil {
-		return nil, err
-	}
-	items, prefix, err := source.Completion(ctx, f, rng.Start)
-	if err != nil {
-		return nil, err
-	}
-	return &protocol.CompletionList{
-		IsIncomplete: false,
-		Items:        toProtocolCompletionItems(items, prefix, params.Position, s.snippetsSupported, s.usePlaceholders),
-	}, nil
-}
-
-func toProtocolCompletionItems(candidates []source.CompletionItem, prefix string, pos protocol.Position, snippetsSupported, usePlaceholders bool) []protocol.CompletionItem {
-	insertTextFormat := protocol.PlainTextTextFormat
+func toProtocolCompletionItems(items []source.CompletionItem, prefix string, pos protocol.Position, snippetsSupported, signatureHelpEnabled bool) []protocol.CompletionItem {
+	var results []protocol.CompletionItem
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Score > items[j].Score
+	})
+	insertTextFormat := protocol.PlainTextFormat
 	if snippetsSupported {
 		insertTextFormat = protocol.SnippetTextFormat
 	}
-	sort.SliceStable(candidates, func(i, j int) bool {
-		return candidates[i].Score > candidates[j].Score
-	})
-	items := []protocol.CompletionItem{}
-	for i, candidate := range candidates {
-		// Match against the label.
-		if !strings.HasPrefix(candidate.Label, prefix) {
+	for i, item := range items {
+		// Matching against the label.
+		if !strings.HasPrefix(item.Label, prefix) {
 			continue
 		}
-		insertText := labelToInsertText(candidate.Label, candidate.Kind, insertTextFormat, usePlaceholders)
+		insertText, triggerSignatureHelp := labelToProtocolSnippets(item.Label, item.Kind, insertTextFormat, signatureHelpEnabled)
 		if strings.HasPrefix(insertText, prefix) {
 			insertText = insertText[len(prefix):]
 		}
-		item := protocol.CompletionItem{
-			Label:  candidate.Label,
-			Detail: candidate.Detail,
-			Kind:   toProtocolCompletionItemKind(candidate.Kind),
+		i := protocol.CompletionItem{
+			Label:            item.Label,
+			Detail:           item.Detail,
+			Kind:             float64(toProtocolCompletionItemKind(item.Kind)),
+			InsertTextFormat: insertTextFormat,
 			TextEdit: &protocol.TextEdit{
 				NewText: insertText,
 				Range: protocol.Range{
@@ -70,17 +44,22 @@ func toProtocolCompletionItems(candidates []source.CompletionItem, prefix string
 					End:   pos,
 				},
 			},
-			InsertTextFormat: insertTextFormat,
+			// InsertText is deprecated in favor of TextEdit.
+			InsertText: insertText,
 			// This is a hack so that the client sorts completion results in the order
 			// according to their score. This can be removed upon the resolution of
 			// https://github.com/Microsoft/language-server-protocol/issues/348.
-			SortText:   fmt.Sprintf("%05d", i),
-			FilterText: insertText,
-			Preselect:  i == 0,
+			SortText: fmt.Sprintf("%05d", i),
 		}
-		items = append(items, item)
+		// If we are completing a function, we should trigger signature help if possible.
+		if triggerSignatureHelp && signatureHelpEnabled {
+			i.Command = &protocol.Command{
+				Command: "editor.action.triggerParameterHints",
+			}
+		}
+		results = append(results, i)
 	}
-	return items
+	return results
 }
 
 func toProtocolCompletionItemKind(kind source.CompletionItemKind) protocol.CompletionItemKind {
@@ -108,13 +87,13 @@ func toProtocolCompletionItemKind(kind source.CompletionItemKind) protocol.Compl
 	}
 }
 
-func labelToInsertText(label string, kind source.CompletionItemKind, insertTextFormat protocol.InsertTextFormat, usePlaceholders bool) string {
+func labelToProtocolSnippets(label string, kind source.CompletionItemKind, insertTextFormat protocol.InsertTextFormat, signatureHelpEnabled bool) (string, bool) {
 	switch kind {
 	case source.ConstantCompletionItem:
 		// The label for constants is of the format "<identifier> = <value>".
 		// We should not insert the " = <value>" part of the label.
 		if i := strings.Index(label, " ="); i >= 0 {
-			return label[:i]
+			return label[:i], false
 		}
 	case source.FunctionCompletionItem, source.MethodCompletionItem:
 		var trimmed, params string
@@ -123,16 +102,16 @@ func labelToInsertText(label string, kind source.CompletionItemKind, insertTextF
 			params = strings.Trim(label[i:], "()")
 		}
 		if params == "" || trimmed == "" {
-			return label
+			return label, true
 		}
 		// Don't add parameters or parens for the plaintext insert format.
-		if insertTextFormat == protocol.PlainTextTextFormat {
-			return trimmed
+		if insertTextFormat == protocol.PlainTextFormat {
+			return trimmed, true
 		}
-		// If we don't want to use placeholders, just add 2 parentheses with
-		// the cursor in the middle.
-		if !usePlaceholders {
-			return trimmed + "($1)"
+		// If we do have signature help enabled, the user can see parameters as
+		// they type in the function, so we just return empty parentheses.
+		if signatureHelpEnabled {
+			return trimmed + "($1)", true
 		}
 		// If signature help is not enabled, we should give the user parameters
 		// that they can tab through. The insert text format follows the
@@ -149,12 +128,11 @@ func labelToInsertText(label string, kind source.CompletionItemKind, insertTextF
 			if i != 0 {
 				b.WriteString(", ")
 			}
-			p = strings.Split(strings.Trim(p, " "), " ")[0]
-			fmt.Fprintf(b, "${%v:%v}", i+1, r.Replace(p))
+			fmt.Fprintf(b, "${%v:%v}", i+1, r.Replace(strings.Trim(p, " ")))
 		}
 		b.WriteByte(')')
-		return b.String()
+		return b.String(), false
 
 	}
-	return label
+	return label, false
 }

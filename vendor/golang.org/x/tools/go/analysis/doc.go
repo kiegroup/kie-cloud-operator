@@ -246,7 +246,7 @@ An Analyzer that uses facts must declare their types:
 
 	var Analyzer = &analysis.Analyzer{
 		Name:       "printf",
-		FactTypes: []analysis.Fact{new(isWrapper)},
+		FactTypes: []reflect.Type{reflect.TypeOf(new(isWrapper))},
 		...
 	}
 

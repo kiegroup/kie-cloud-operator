@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	gax "github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go"
 	pb "google.golang.org/genproto/googleapis/pubsub/v1"
 	"google.golang.org/grpc"
 )
@@ -95,14 +95,13 @@ func (s *pullStream) get(spc *pb.Subscriber_StreamingPullClient) (*pb.Subscriber
 }
 
 func (s *pullStream) openWithRetry() (pb.Subscriber_StreamingPullClient, error) {
-	r := defaultRetryer{}
+	var bo gax.Backoff
 	for {
 		recordStat(s.ctx, StreamOpenCount, 1)
 		spc, err := s.open()
-		bo, shouldRetry := r.Retry(err)
-		if err != nil && shouldRetry {
+		if err != nil && isRetryable(err) {
 			recordStat(s.ctx, StreamRetryCount, 1)
-			if err := gax.Sleep(s.ctx, bo); err != nil {
+			if err := gax.Sleep(s.ctx, bo.Pause()); err != nil {
 				return nil, err
 			}
 			continue
@@ -111,19 +110,11 @@ func (s *pullStream) openWithRetry() (pb.Subscriber_StreamingPullClient, error) 
 	}
 }
 
-func (s *pullStream) call(f func(pb.Subscriber_StreamingPullClient) error, opts ...gax.CallOption) error {
-	var settings gax.CallSettings
-	for _, opt := range opts {
-		opt.Resolve(&settings)
-	}
-	var r gax.Retryer = &defaultRetryer{}
-	if settings.Retry != nil {
-		r = settings.Retry()
-	}
-
+func (s *pullStream) call(f func(pb.Subscriber_StreamingPullClient) error) error {
 	var (
 		spc *pb.Subscriber_StreamingPullClient
 		err error
+		bo  gax.Backoff
 	)
 	for {
 		spc, err = s.get(spc)
@@ -133,11 +124,10 @@ func (s *pullStream) call(f func(pb.Subscriber_StreamingPullClient) error, opts 
 		start := time.Now()
 		err = f(*spc)
 		if err != nil {
-			bo, shouldRetry := r.Retry(err)
-			if shouldRetry {
+			if isRetryable(err) {
 				recordStat(s.ctx, StreamRetryCount, 1)
 				if time.Since(start) < 30*time.Second { // don't sleep if we've been blocked for a while
-					if err := gax.Sleep(s.ctx, bo); err != nil {
+					if err := gax.Sleep(s.ctx, bo.Pause()); err != nil {
 						return err
 					}
 				}
@@ -177,7 +167,7 @@ func (s *pullStream) Recv() (*pb.StreamingPullResponse, error) {
 			recordStat(s.ctx, PullCount, int64(len(res.ReceivedMessages)))
 		}
 		return err
-	}, gax.WithRetry(func() gax.Retryer { return &streamingPullRetryer{defaultRetryer: &defaultRetryer{}} }))
+	})
 	return res, err
 }
 

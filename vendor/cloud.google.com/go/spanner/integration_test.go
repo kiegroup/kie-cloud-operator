@@ -38,7 +38,6 @@ import (
 	"google.golang.org/api/option"
 	adminpb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
@@ -124,31 +123,21 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	cleanup := initIntegrationTests()
-	res := m.Run()
-	cleanup()
-	os.Exit(res)
-}
-
-func initIntegrationTests() func() {
-	ctx := context.Background()
 	flag.Parse() // needed for testing.Short()
-	noop := func() {}
-
 	if testing.Short() {
 		log.Println("Integration tests skipped in -short mode.")
-		return noop
+		return
 	}
-
 	if testProjectID == "" {
 		log.Println("Integration tests skipped: GCLOUD_TESTS_GOLANG_PROJECT_ID is missing")
-		return noop
+		return
 	}
+	ctx := context.Background()
 
 	ts := testutil.TokenSource(ctx, AdminScope, Scope)
 	if ts == nil {
 		log.Printf("Integration test skipped: cannot get service account credential from environment variable %v", "GCLOUD_TESTS_GOLANG_KEY")
-		return noop
+		return
 	}
 	var err error
 
@@ -158,18 +147,17 @@ func initIntegrationTests() func() {
 		log.Fatalf("cannot create admin client: %v", err)
 	}
 
-	return func() {
-		cleanupDatabases()
-		admin.Close()
-	}
+	res := m.Run()
+	cleanupDatabases()
+	os.Exit(res)
 }
 
 // Test SingleUse transaction.
-func TestIntegration_SingleUse(t *testing.T) {
+func TestSingleUse(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	// Set up testing environment.
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	writes := []struct {
@@ -375,11 +363,11 @@ func TestIntegration_SingleUse(t *testing.T) {
 
 // Test ReadOnlyTransaction. The testsuite is mostly like SingleUse, except it
 // also tests for a single timestamp across multiple reads.
-func TestIntegration_ReadOnlyTransaction(t *testing.T) {
+func TestReadOnlyTransaction(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Set up testing environment.
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	writes := []struct {
@@ -558,10 +546,10 @@ func TestIntegration_ReadOnlyTransaction(t *testing.T) {
 }
 
 // Test ReadOnlyTransaction with different timestamp bound when there's an update at the same time.
-func TestIntegration_UpdateDuringRead(t *testing.T) {
+func TestUpdateDuringRead(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	for i, tb := range []TimestampBound{
@@ -588,11 +576,11 @@ func TestIntegration_UpdateDuringRead(t *testing.T) {
 }
 
 // Test ReadWriteTransaction.
-func TestIntegration_ReadWriteTransaction(t *testing.T) {
+func TestReadWriteTransaction(t *testing.T) {
 	// Give a longer deadline because of transaction backoffs.
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	// Set up two accounts
@@ -677,11 +665,11 @@ func TestIntegration_ReadWriteTransaction(t *testing.T) {
 	}
 }
 
-func TestIntegration_Reads(t *testing.T) {
+func TestReads(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Set up testing environment.
-	client, _, cleanup := prepareIntegrationTest(ctx, t, readDBStatements)
+	client, _, cleanup := prepare(ctx, t, readDBStatements)
 	defer cleanup()
 
 	// Includes k0..k14. Strings sort lexically, eg "k1" < "k10" < "k2".
@@ -741,13 +729,13 @@ func TestIntegration_Reads(t *testing.T) {
 	indexRangeReads(ctx, t, client)
 }
 
-func TestIntegration_EarlyTimestamp(t *testing.T) {
+func TestEarlyTimestamp(t *testing.T) {
 	// Test that we can get the timestamp from a read-only transaction as
 	// soon as we have read at least one row.
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	// Set up testing environment.
-	client, _, cleanup := prepareIntegrationTest(ctx, t, readDBStatements)
+	client, _, cleanup := prepare(ctx, t, readDBStatements)
 	defer cleanup()
 
 	var ms []*Mutation
@@ -787,10 +775,10 @@ func TestIntegration_EarlyTimestamp(t *testing.T) {
 	}
 }
 
-func TestIntegration_NestedTransaction(t *testing.T) {
+func TestNestedTransaction(t *testing.T) {
 	// You cannot use a transaction from inside a read-write transaction.
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) error {
@@ -817,10 +805,10 @@ func TestIntegration_NestedTransaction(t *testing.T) {
 }
 
 // Test client recovery on database recreation.
-func TestIntegration_DbRemovalRecovery(t *testing.T) {
+func TestDbRemovalRecovery(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	client, dbPath, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, dbPath, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	// Drop the testing database.
@@ -866,10 +854,10 @@ func TestIntegration_DbRemovalRecovery(t *testing.T) {
 }
 
 // Test encoding/decoding non-struct Cloud Spanner types.
-func TestIntegration_BasicTypes(t *testing.T) {
+func TestBasicTypes(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	t1, _ := time.Parse(time.RFC3339Nano, "2016-11-15T15:04:05.999999999Z")
@@ -1012,10 +1000,10 @@ func TestIntegration_BasicTypes(t *testing.T) {
 }
 
 // Test decoding Cloud Spanner STRUCT type.
-func TestIntegration_StructTypes(t *testing.T) {
+func TestStructTypes(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	tests := []struct {
@@ -1097,9 +1085,9 @@ func TestIntegration_StructTypes(t *testing.T) {
 	}
 }
 
-func TestIntegration_StructParametersUnsupported(t *testing.T) {
+func TestStructParametersUnsupported(t *testing.T) {
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, nil)
+	client, _, cleanup := prepare(ctx, t, nil)
 	defer cleanup()
 
 	for _, test := range []struct {
@@ -1139,9 +1127,9 @@ func TestIntegration_StructParametersUnsupported(t *testing.T) {
 }
 
 // Test queries of the form "SELECT expr".
-func TestIntegration_QueryExpressions(t *testing.T) {
+func TestQueryExpressions(t *testing.T) {
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, nil)
+	client, _, cleanup := prepare(ctx, t, nil)
 	defer cleanup()
 
 	newRow := func(vals []interface{}) *Row {
@@ -1192,9 +1180,9 @@ func TestIntegration_QueryExpressions(t *testing.T) {
 	}
 }
 
-func TestIntegration_QueryStats(t *testing.T) {
+func TestQueryStats(t *testing.T) {
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	accounts := []*Mutation{
@@ -1233,7 +1221,7 @@ func TestIntegration_QueryStats(t *testing.T) {
 	}
 }
 
-func TestIntegration_InvalidDatabase(t *testing.T) {
+func TestInvalidDatabase(t *testing.T) {
 	if testProjectID == "" {
 		t.Skip("Integration tests skipped: GCLOUD_TESTS_GOLANG_PROJECT_ID is missing")
 	}
@@ -1250,9 +1238,9 @@ func TestIntegration_InvalidDatabase(t *testing.T) {
 	}
 }
 
-func TestIntegration_ReadErrors(t *testing.T) {
+func TestReadErrors(t *testing.T) {
 	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, readDBStatements)
+	client, _, cleanup := prepare(ctx, t, readDBStatements)
 	defer cleanup()
 
 	// Read over invalid table fails
@@ -1292,10 +1280,10 @@ func TestIntegration_ReadErrors(t *testing.T) {
 }
 
 // Test TransactionRunner. Test that transactions are aborted and retried as expected.
-func TestIntegration_TransactionRunner(t *testing.T) {
+func TestTransactionRunner(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	// Test 1: User error should abort the transaction.
@@ -1424,7 +1412,7 @@ func TestIntegration_TransactionRunner(t *testing.T) {
 // Test PartitionQuery of BatchReadOnlyTransaction, create partitions then
 // serialize and deserialize both transaction and partition to be used in
 // execution on another client, and compare results.
-func TestIntegration_BatchQuery(t *testing.T) {
+func TestBatchQuery(t *testing.T) {
 	// Set up testing environment.
 	var (
 		client2 *Client
@@ -1432,7 +1420,7 @@ func TestIntegration_BatchQuery(t *testing.T) {
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, dbPath, cleanup := prepareIntegrationTest(ctx, t, simpleDBStatements)
+	client, dbPath, cleanup := prepare(ctx, t, simpleDBStatements)
 	defer cleanup()
 
 	if err = populate(ctx, client); err != nil {
@@ -1508,7 +1496,7 @@ func TestIntegration_BatchQuery(t *testing.T) {
 }
 
 // Test PartitionRead of BatchReadOnlyTransaction, similar to TestBatchQuery
-func TestIntegration_BatchRead(t *testing.T) {
+func TestBatchRead(t *testing.T) {
 	// Set up testing environment.
 	var (
 		client2 *Client
@@ -1516,7 +1504,7 @@ func TestIntegration_BatchRead(t *testing.T) {
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, dbPath, cleanup := prepareIntegrationTest(ctx, t, simpleDBStatements)
+	client, dbPath, cleanup := prepare(ctx, t, simpleDBStatements)
 	defer cleanup()
 
 	if err = populate(ctx, client); err != nil {
@@ -1591,7 +1579,7 @@ func TestIntegration_BatchRead(t *testing.T) {
 }
 
 // Test normal txReadEnv method on BatchReadOnlyTransaction.
-func TestIntegration_BROTNormal(t *testing.T) {
+func TestBROTNormal(t *testing.T) {
 	// Set up testing environment and create txn.
 	var (
 		txn *BatchReadOnlyTransaction
@@ -1601,7 +1589,7 @@ func TestIntegration_BROTNormal(t *testing.T) {
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, simpleDBStatements)
+	client, _, cleanup := prepare(ctx, t, simpleDBStatements)
 	defer cleanup()
 
 	if txn, err = client.BatchReadOnlyTransaction(ctx, StrongRead()); err != nil {
@@ -1625,10 +1613,10 @@ func TestIntegration_BROTNormal(t *testing.T) {
 	}
 }
 
-func TestIntegration_CommitTimestamp(t *testing.T) {
+func TestCommitTimestamp(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, ctsDBStatements)
+	client, _, cleanup := prepare(ctx, t, ctsDBStatements)
 	defer cleanup()
 
 	type testTableRow struct {
@@ -1692,10 +1680,10 @@ func TestIntegration_CommitTimestamp(t *testing.T) {
 	}
 }
 
-func TestIntegration_DML(t *testing.T) {
+func TestDML(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	// Function that reads a single row's first name from within a transaction.
@@ -1857,178 +1845,10 @@ func TestIntegration_DML(t *testing.T) {
 	}
 }
 
-func TestIntegration_StructParametersBind(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, nil)
-	defer cleanup()
-
-	type tRow []interface{}
-	type tRows []struct{ trow tRow }
-
-	type allFields struct {
-		Stringf string
-		Intf    int
-		Boolf   bool
-		Floatf  float64
-		Bytef   []byte
-		Timef   time.Time
-		Datef   civil.Date
-	}
-	allColumns := []string{
-		"Stringf",
-		"Intf",
-		"Boolf",
-		"Floatf",
-		"Bytef",
-		"Timef",
-		"Datef",
-	}
-	s1 := allFields{"abc", 300, false, 3.45, []byte("foo"), t1, d1}
-	s2 := allFields{"def", -300, false, -3.45, []byte("bar"), t2, d2}
-
-	dynamicStructType := reflect.StructOf([]reflect.StructField{
-		{Name: "A", Type: reflect.TypeOf(t1), Tag: `spanner:"ff1"`},
-	})
-	s3 := reflect.New(dynamicStructType)
-	s3.Elem().Field(0).Set(reflect.ValueOf(t1))
-
-	for i, test := range []struct {
-		param interface{}
-		sql   string
-		cols  []string
-		trows tRows
-	}{
-		// Struct value.
-		{
-			s1,
-			"SELECT" +
-				" @p.Stringf," +
-				" @p.Intf," +
-				" @p.Boolf," +
-				" @p.Floatf," +
-				" @p.Bytef," +
-				" @p.Timef," +
-				" @p.Datef",
-			allColumns,
-			tRows{
-				{tRow{"abc", 300, false, 3.45, []byte("foo"), t1, d1}},
-			},
-		},
-		// Array of struct value.
-		{
-			[]allFields{s1, s2},
-			"SELECT * FROM UNNEST(@p)",
-			allColumns,
-			tRows{
-				{tRow{"abc", 300, false, 3.45, []byte("foo"), t1, d1}},
-				{tRow{"def", -300, false, -3.45, []byte("bar"), t2, d2}},
-			},
-		},
-		// Null struct.
-		{
-			(*allFields)(nil),
-			"SELECT @p IS NULL",
-			[]string{""},
-			tRows{
-				{tRow{true}},
-			},
-		},
-		// Null Array of struct.
-		{
-			[]allFields(nil),
-			"SELECT @p IS NULL",
-			[]string{""},
-			tRows{
-				{tRow{true}},
-			},
-		},
-		// Empty struct.
-		{
-			struct{}{},
-			"SELECT @p IS NULL ",
-			[]string{""},
-			tRows{
-				{tRow{false}},
-			},
-		},
-		// Empty array of struct.
-		{
-			[]allFields{},
-			"SELECT * FROM UNNEST(@p) ",
-			allColumns,
-			tRows{},
-		},
-		// Struct with duplicate fields.
-		{
-			struct {
-				A int `spanner:"field"`
-				B int `spanner:"field"`
-			}{10, 20},
-			"SELECT * FROM UNNEST([@p]) ",
-			[]string{"field", "field"},
-			tRows{
-				{tRow{10, 20}},
-			},
-		},
-		// Struct with unnamed fields.
-		{
-			struct {
-				A string `spanner:""`
-			}{"hello"},
-			"SELECT * FROM UNNEST([@p]) ",
-			[]string{""},
-			tRows{
-				{tRow{"hello"}},
-			},
-		},
-		// Mixed struct.
-		{
-			struct {
-				DynamicStructField interface{}  `spanner:"f1"`
-				ArrayStructField   []*allFields `spanner:"f2"`
-			}{
-				DynamicStructField: s3.Interface(),
-				ArrayStructField:   []*allFields{nil},
-			},
-			"SELECT @p.f1.ff1, ARRAY_LENGTH(@p.f2), @p.f2[OFFSET(0)] IS NULL ",
-			[]string{"ff1", "", ""},
-			tRows{
-				{tRow{t1, 1, true}},
-			},
-		},
-	} {
-		iter := client.Single().Query(ctx, Statement{
-			SQL:    test.sql,
-			Params: map[string]interface{}{"p": test.param},
-		})
-		var gotRows []*Row
-		err := iter.Do(func(r *Row) error {
-			gotRows = append(gotRows, r)
-			return nil
-		})
-		if err != nil {
-			t.Errorf("Failed to execute test case %d, error: %v", i, err)
-		}
-
-		var wantRows []*Row
-		for j, row := range test.trows {
-			r, err := NewRow(test.cols, row.trow)
-			if err != nil {
-				t.Errorf("Invalid row %d in test case %d", j, i)
-			}
-			wantRows = append(wantRows, r)
-		}
-		if !testEqual(gotRows, wantRows) {
-			t.Errorf("%d: Want result %v, got result %v", i, wantRows, gotRows)
-		}
-	}
-}
-
-func TestIntegration_PDML(t *testing.T) {
+func TestPDML(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
+	client, _, cleanup := prepare(ctx, t, singerDBStatements)
 	defer cleanup()
 
 	columns := []string{"SingerId", "FirstName", "LastName"}
@@ -2070,184 +1890,8 @@ func TestIntegration_PDML(t *testing.T) {
 	}
 }
 
-func TestBatchDML(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
-	defer cleanup()
-
-	columns := []string{"SingerId", "FirstName", "LastName"}
-
-	// Populate the Singers table.
-	var muts []*Mutation
-	for _, row := range [][]interface{}{
-		{1, "Umm", "Kulthum"},
-		{2, "Eduard", "Khil"},
-		{3, "Audra", "McDonald"},
-	} {
-		muts = append(muts, Insert("Singers", columns, row))
-	}
-	if _, err := client.Apply(ctx, muts); err != nil {
-		t.Fatal(err)
-	}
-
-	var counts []int64
-	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) (err error) {
-		counts, err = tx.BatchUpdate(ctx, []Statement{
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 1" WHERE Singers.SingerId = 1`},
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 2" WHERE Singers.SingerId = 2`},
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 3" WHERE Singers.SingerId = 3`},
-		})
-		return err
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := []int64{1, 1, 1}; !testEqual(counts, want) {
-		t.Fatalf("got %d, want %d", counts, want)
-	}
-	got, err := readAll(client.Single().Read(ctx, "Singers", AllKeys(), columns))
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := [][]interface{}{
-		{int64(1), "changed 1", "Kulthum"},
-		{int64(2), "changed 2", "Khil"},
-		{int64(3), "changed 3", "McDonald"},
-	}
-	if !testEqual(got, want) {
-		t.Errorf("\ngot %v\nwant%v", got, want)
-	}
-}
-
-func TestBatchDML_NoStatements(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
-	defer cleanup()
-
-	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) (err error) {
-		_, err = tx.BatchUpdate(ctx, []Statement{})
-		return err
-	})
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-	if s, ok := status.FromError(err); ok {
-		if s.Code() != codes.InvalidArgument {
-			t.Fatalf("expected InvalidArgument, got %v", err)
-		}
-	} else {
-		t.Fatalf("expected InvalidArgument, got %v", err)
-	}
-}
-
-func TestBatchDML_TwoStatements(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
-	defer cleanup()
-
-	columns := []string{"SingerId", "FirstName", "LastName"}
-
-	// Populate the Singers table.
-	var muts []*Mutation
-	for _, row := range [][]interface{}{
-		{1, "Umm", "Kulthum"},
-		{2, "Eduard", "Khil"},
-		{3, "Audra", "McDonald"},
-	} {
-		muts = append(muts, Insert("Singers", columns, row))
-	}
-	if _, err := client.Apply(ctx, muts); err != nil {
-		t.Fatal(err)
-	}
-
-	var updateCount int64
-	var batchCounts []int64
-	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) (err error) {
-		batchCounts, err = tx.BatchUpdate(ctx, []Statement{
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 1" WHERE Singers.SingerId = 1`},
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 2" WHERE Singers.SingerId = 2`},
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 3" WHERE Singers.SingerId = 3`},
-		})
-		if err != nil {
-			return err
-		}
-
-		updateCount, err = tx.Update(ctx, Statement{SQL: `UPDATE Singers SET Singers.FirstName = "changed 1" WHERE Singers.SingerId = 1`})
-		return err
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := []int64{1, 1, 1}; !testEqual(batchCounts, want) {
-		t.Fatalf("got %d, want %d", batchCounts, want)
-	}
-	if updateCount != 1 {
-		t.Fatalf("got %v, want 1", updateCount)
-	}
-}
-
-// TODO(deklerk) this currently does not work because the transaction appears to
-// get rolled back after a single statement fails. b/120158761
-func TestBatchDML_Error(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	client, _, cleanup := prepareIntegrationTest(ctx, t, singerDBStatements)
-	defer cleanup()
-
-	columns := []string{"SingerId", "FirstName", "LastName"}
-
-	// Populate the Singers table.
-	var muts []*Mutation
-	for _, row := range [][]interface{}{
-		{1, "Umm", "Kulthum"},
-		{2, "Eduard", "Khil"},
-		{3, "Audra", "McDonald"},
-	} {
-		muts = append(muts, Insert("Singers", columns, row))
-	}
-	if _, err := client.Apply(ctx, muts); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) (err error) {
-		counts, err := tx.BatchUpdate(ctx, []Statement{
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 1" WHERE Singers.SingerId = 1`},
-			{SQL: `some illegal statement`},
-			{SQL: `UPDATE Singers SET Singers.FirstName = "changed 3" WHERE Singers.SingerId = 3`},
-		})
-		if err == nil {
-			t.Fatal("expected err, got nil")
-		}
-		if want := []int64{1}; !testEqual(counts, want) {
-			t.Fatalf("got %d, want %d", counts, want)
-		}
-
-		got, err := readAll(tx.Read(ctx, "Singers", AllKeys(), columns))
-		if err != nil {
-			t.Fatal(err)
-		}
-		want := [][]interface{}{
-			{int64(1), "changed 1", "Kulthum"},
-			{int64(2), "Eduard", "Khil"},
-			{int64(3), "Audra", "McDonald"},
-		}
-		if !testEqual(got, want) {
-			t.Errorf("\ngot %v\nwant%v", got, want)
-		}
-
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 // Prepare initializes Cloud Spanner testing DB and clients.
-func prepareIntegrationTest(ctx context.Context, t *testing.T, statements []string) (*Client, string, func()) {
+func prepare(ctx context.Context, t *testing.T, statements []string) (*Client, string, func()) {
 	if admin == nil {
 		t.Skip("Integration tests skipped")
 	}

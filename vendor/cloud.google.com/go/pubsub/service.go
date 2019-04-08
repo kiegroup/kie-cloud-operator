@@ -18,9 +18,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
-	gax "github.com/googleapis/gax-go/v2"
 	pb "google.golang.org/genproto/googleapis/pubsub/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -63,45 +61,18 @@ func trunc32(i int64) int32 {
 	return int32(i)
 }
 
-type defaultRetryer struct {
-	bo gax.Backoff
-}
-
-// Logic originally from
-// https://github.com/GoogleCloudPlatform/google-cloud-java/blob/master/google-cloud-clients/google-cloud-pubsub/src/main/java/com/google/cloud/pubsub/v1/StatusUtil.java
-func (r *defaultRetryer) Retry(err error) (pause time.Duration, shouldRetry bool) {
+// Logic from https://github.com/GoogleCloudPlatform/google-cloud-java/blob/master/google-cloud-clients/google-cloud-pubsub/src/main/java/com/google/cloud/pubsub/v1/StatusUtil.java
+func isRetryable(err error) bool {
 	s, ok := status.FromError(err)
 	if !ok { // includes io.EOF, normal stream close, which causes us to reopen
-		return r.bo.Pause(), true
+		return true
 	}
 	switch s.Code() {
-	case codes.DeadlineExceeded, codes.Internal, codes.ResourceExhausted, codes.Aborted:
-		return r.bo.Pause(), true
+	case codes.DeadlineExceeded, codes.Internal, codes.ResourceExhausted:
+		return true
 	case codes.Unavailable:
-		c := strings.Contains(s.Message(), "Server shutdownNow invoked")
-		if !c {
-			return r.bo.Pause(), true
-		}
-		return 0, false
+		return !strings.Contains(s.Message(), "Server shutdownNow invoked")
 	default:
-		return 0, false
-	}
-}
-
-type streamingPullRetryer struct {
-	defaultRetryer gax.Retryer
-}
-
-// Does not retry ResourceExhausted. See: https://github.com/GoogleCloudPlatform/google-cloud-go/issues/1166#issuecomment-443744705
-func (r *streamingPullRetryer) Retry(err error) (pause time.Duration, shouldRetry bool) {
-	s, ok := status.FromError(err)
-	if !ok { // call defaultRetryer so that its backoff can be used
-		return r.defaultRetryer.Retry(err)
-	}
-	switch s.Code() {
-	case codes.ResourceExhausted:
-		return 0, false
-	default:
-		return r.defaultRetryer.Retry(err)
+		return false
 	}
 }

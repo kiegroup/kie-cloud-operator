@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	gax "github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

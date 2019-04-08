@@ -132,7 +132,10 @@ func TestStreamingPullError(t *testing.T) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
 	err := sub.Receive(ctx, func(ctx context.Context, m *Message) {
 		defer close(callbackDone)
-		<-ctx.Done()
+		select {
+		case <-ctx.Done():
+			return
+		}
 	})
 	select {
 	case <-callbackDone:

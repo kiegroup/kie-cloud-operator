@@ -29,17 +29,7 @@
                 "valid": false
             },
             {
-                "description": "ignores arrays",
-                "data": [],
-                "valid": true
-            },
-            {
-                "description": "ignores strings",
-                "data": "",
-                "valid": true
-            },
-            {
-                "description": "ignores other non-objects",
+                "description": "ignores non-objects",
                 "data": 12,
                 "valid": true
             }

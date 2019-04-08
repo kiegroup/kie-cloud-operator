@@ -76,7 +76,6 @@ func TestBQToTableMetadata(t *testing.T) {
 				CreationTime:       aTime.Truncate(time.Millisecond),
 				LastModifiedTime:   aTime.Truncate(time.Millisecond),
 				NumBytes:           123,
-				NumLongTermBytes:   23,
 				NumRows:            7,
 				TimePartitioning: &TimePartitioning{
 					Expiration: 7890 * time.Millisecond,
@@ -220,7 +219,6 @@ func TestTableMetadataToBQ(t *testing.T) {
 		{CreationTime: aTime},
 		{LastModifiedTime: aTime},
 		{NumBytes: 1},
-		{NumLongTermBytes: 1},
 		{NumRows: 1},
 		{StreamingBuffer: &StreamingBuffer{}},
 		{ETag: "x"},
@@ -312,26 +310,6 @@ func TestTableMetadataToUpdateToBQ(t *testing.T) {
 			tm: TableMetadataToUpdate{ExpirationTime: NeverExpire},
 			want: &bq.Table{
 				NullFields: []string{"ExpirationTime"},
-			},
-		},
-		{
-			tm: TableMetadataToUpdate{TimePartitioning: &TimePartitioning{Expiration: 0}},
-			want: &bq.Table{
-				TimePartitioning: &bq.TimePartitioning{
-					Type:            "DAY",
-					ForceSendFields: []string{"RequirePartitionFilter"},
-					NullFields:      []string{"ExpirationMs"},
-				},
-			},
-		},
-		{
-			tm: TableMetadataToUpdate{TimePartitioning: &TimePartitioning{Expiration: time.Duration(time.Hour)}},
-			want: &bq.Table{
-				TimePartitioning: &bq.TimePartitioning{
-					ExpirationMs:    3600000,
-					Type:            "DAY",
-					ForceSendFields: []string{"RequirePartitionFilter"},
-				},
 			},
 		},
 	} {
