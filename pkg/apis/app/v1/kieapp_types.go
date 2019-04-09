@@ -64,11 +64,10 @@ type EnvironmentConstants struct {
 
 // AppConstants data type to store application deployment constants
 type AppConstants struct {
-	Product          string `json:"name,omitempty"`
-	Prefix           string `json:"prefix,omitempty"`
-	ImageName        string `json:"imageName,omitempty"`
-	MavenRepo        string `json:"mavenRepo,omitempty"`
-	ConsoleProbePage string `json:"consoleProbePage,omitemtpy"`
+	Product   string `json:"name,omitempty"`
+	Prefix    string `json:"prefix,omitempty"`
+	ImageName string `json:"imageName,omitempty"`
+	MavenRepo string `json:"mavenRepo,omitempty"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
@@ -326,7 +325,6 @@ type ConsoleTemplate struct {
 	Name           string        `json:"name,omitempty"`
 	Replicas       int32         `json:"replicas,omitempty"`
 	ImageName      string        `json:"imageName,omitempty"`
-	ProbePage      string        `json:"probePage,omitempty"`
 	KeystoreSecret string        `json:"keystoreSecret,omitempty"`
 }
 
