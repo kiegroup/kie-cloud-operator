@@ -1,9 +1,9 @@
 #!/bin/sh
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=1.0.x
+BRANCH=1.1.x
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
-TAG=1.0
+TAG=1.1
 TAR=${BRANCH}.tar.gz
 URL=${REPO}/archive/${TAR}
 CFLAGS="--redhat --build-tech-preview"
@@ -14,7 +14,7 @@ if [[ -z ${CI} ]]; then
     operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
     if [[ ${1} == "rhel" ]]; then
         if [[ ${LOCAL} != true ]]; then
-            CFLAGS+=" --build-engine=osbs --build-osbs-target=rhba-7.3-openshift-containers-candidate" # rhpam-7-rhel-7-containers-candidate
+            CFLAGS+=" --build-engine=osbs --build-osbs-target=rhba-7.4-openshift-containers-candidate" # rhpam-7-rhel-7-containers-candidate
             if [[ ${2} == "release" ]]; then
                 CFLAGS+=" --build-osbs-release"
             fi

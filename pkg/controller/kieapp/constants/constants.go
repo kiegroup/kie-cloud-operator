@@ -16,9 +16,9 @@ const (
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
 	// ProductVersion default version
-	ProductVersion = "7.3"
+	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.1"
+	ImageStreamTag = "1.0"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
 	// DefaultAdminUser default admin user

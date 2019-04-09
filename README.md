@@ -22,16 +22,15 @@ e.g.
 docker push quay.io/kiegroup/kie-cloud-operator:<version>
 ```
 
-## Deploy to OpenShift using OLM
-
-### OpenShift 4
+## Deploy to OpenShift 4 using OLM
 
 To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) instructions for Operator Courier to obtain an account token. This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
 
 Push the operator bundle to your quay application repository as follows:
 
 ```bash
-operator-courier push deploy/catalog_resources/courier/bundle_dir/1.0.1 kiegroup kiecloud-operator 1.0.1 "basic XXXXXXXXX"
+operator-courier push deploy/catalog_resources/courier/bundle_dir/1.1.0 kiegroup kiecloud-operator 1.1.0 "basic XXXXXXXXX"
+# operator-courier push deploy/catalog_resources/courier/bundle_dir/1.0.1 kiegroup kiecloud-operator 1.0.1 "basic XXXXXXXXX"
 ```
 
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
@@ -43,20 +42,6 @@ oc create -f deploy/catalog_resources/courier/kiecloud-operatorsource.yaml
 Remember to replace _registryNamespace_ with your quay namespace. The name, display name and publisher of the operator are the only other attributes that may be modified.
 
 It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
-
-### OpenShift 3.11
-
-As cluster-admin and an OCP 3.11+ cluster with OLM installed, issue the following command:
-
-```bash
-# If using the default OLM namespace "operator-lifecycle-manager"
-./hack/catalog.sh
-
-# If using a different namespace for OLM
-./hack/catalog.sh <namespace>
-```
-
-This will create a new `CatalogSource` and `ConfigMap`, allowing the OLM Catalog to see this Operator's `ClusterServiceVersion`.
 
 ### Trigger a KieApp deployment
 
