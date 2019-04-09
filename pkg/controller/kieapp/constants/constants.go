@@ -21,6 +21,8 @@ const (
 	ImageStreamTag = "1.0"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
+	// KieServerCMLabel the label to modify when replicas is set to 0
+	KieServerCMLabel = "services.server.kie.org/kie-server-state"
 	// DefaultAdminUser default admin user
 	DefaultAdminUser = "adminUser"
 	// DefaultPassword default password to use for test environments

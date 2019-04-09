@@ -1159,10 +1159,8 @@ func TestDefaultKieServerID(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "test-kieserver"}
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
-	kieServerID2 := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "test-kieserver-2"}
-	assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID2)
+	assert.Equal(t, env.Servers[0].DeploymentConfigs[0].Labels["services.server.kie.org/kie-server-id"], cr.Spec.Objects.Servers[0].Name)
+	assert.Equal(t, env.Servers[1].DeploymentConfigs[0].Labels["services.server.kie.org/kie-server-id"], strings.Join([]string{cr.Spec.Objects.Servers[0].Name, "2"}, "-"))
 }
 
 func TestSetKieServerID(t *testing.T) {
@@ -1176,6 +1174,7 @@ func TestSetKieServerID(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Name: "alpha",
+						ID:   "omega",
 					},
 					{
 						Name: "beta",
@@ -1187,10 +1186,8 @@ func TestSetKieServerID(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	kieServerID := corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "alpha"}
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
-	kieServerID = corev1.EnvVar{Name: "KIE_SERVER_ID", Value: "beta"}
-	assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, kieServerID)
+	assert.Equal(t, env.Servers[0].DeploymentConfigs[0].Labels["services.server.kie.org/kie-server-id"], cr.Spec.Objects.Servers[0].ID)
+	assert.Equal(t, env.Servers[1].DeploymentConfigs[0].Labels["services.server.kie.org/kie-server-id"], cr.Spec.Objects.Servers[1].Name)
 }
 
 func TestSetKieServerFrom(t *testing.T) {

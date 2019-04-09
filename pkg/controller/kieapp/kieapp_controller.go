@@ -82,7 +82,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	dcUpdated, err := reconciler.updateDeploymentConfigs(instance, env)
-
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -96,6 +95,9 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	if bcUpdated && status.SetProvisioning(instance) {
 		return reconciler.UpdateObj(instance)
 	}
+
+	// Check the KieServer ConfigMaps for necessary changes
+	reconciler.checkKieServerConfigMap(instance, env)
 
 	// Fetch the cached KieApp instance
 	cachedInstance := &v1.KieApp{}
@@ -321,6 +323,10 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
+	if !reflect.DeepEqual(current.Spec.Template.Labels, new.Spec.Template.Labels) {
+		log.Debug("Changes detected in labels.", " OLD - ", current.Spec.Template.Labels, " NEW - ", new.Spec.Template.Labels)
+		update = true
+	}
 	if current.Spec.Replicas != new.Spec.Replicas {
 		log.Debug("Changes detected in replicas.", " OLD - ", current.Spec.Replicas, " NEW - ", new.Spec.Replicas)
 		update = true
@@ -383,7 +389,7 @@ func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bc
 	return bcUpdates
 }
 
-// NewEnv creates an Environment generated from the given KieApp
+// newEnv creates an Environment generated from the given KieApp
 func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
@@ -768,4 +774,43 @@ func (reconciler *Reconciler) createConfigMap(obj v1.OpenShiftObject) (*corev1.C
 		return &corev1.ConfigMap{}, false
 	}
 	return emptyObj, true
+}
+
+// checkKieServerConfigMap checks ConfigMaps owned by Kie Servers
+func (reconciler *Reconciler) checkKieServerConfigMap(instance *v1.KieApp, env v1.Environment) {
+	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	cmList := &corev1.ConfigMapList{}
+	if err := reconciler.Service.List(context.TODO(), listOps, cmList); err != nil {
+		log.Warn("Failed to list ConfigMaps. ", err)
+	} else {
+		serverDcList := make(map[string]int32)
+		for _, server := range env.Servers {
+			for _, sDc := range server.DeploymentConfigs {
+				serverDcList[sDc.Name] = sDc.Spec.Replicas
+			}
+		}
+		// sort through ConfigMap list, focus on ones owned by kie servers whose replicas setting is zero
+		for _, cm := range cmList.Items {
+			for _, ownerRef := range cm.OwnerReferences {
+				if serverDcList[ownerRef.Name] == 0 && ownerRef.Kind == "DeploymentConfig" && cm.Labels[constants.KieServerCMLabel] != "" && cm.Labels[constants.KieServerCMLabel] != "DETACHED" {
+					dcObj := &oappsv1.DeploymentConfig{}
+					if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, dcObj); err != nil {
+						log.Error(err)
+					}
+					// if server DC replicas equal zero, execute DELETE against console
+					if dcObj.Status.AvailableReplicas == 0 {
+						cmObj := &corev1.ConfigMap{}
+						if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, cmObj); err != nil {
+							log.Error(err)
+						}
+						cmObj.Labels[constants.KieServerCMLabel] = "DETACHED"
+						log.Infof("%s replicas set to zero so relabeling associated ConfigMap as DETACHED", cm.Name)
+						if _, err = reconciler.UpdateObj(cmObj); err != nil {
+							log.Error(err)
+						}
+					}
+				}
+			}
+		}
+	}
 }

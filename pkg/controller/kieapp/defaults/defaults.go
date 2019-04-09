@@ -275,8 +275,12 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			usedNames[name] = true
 			template := v1.ServerTemplate{
 				KieName:        name,
+				KieServerID:    name,
 				Build:          getBuildConfig(product, commonConfig, serverSet.Build),
 				KeystoreSecret: serverSet.KeystoreSecret,
+			}
+			if serverSet.ID != "" {
+				template.KieServerID = serverSet.ID
 			}
 			if serverSet.Build != nil {
 				if *serverSet.Deployments > 1 {
