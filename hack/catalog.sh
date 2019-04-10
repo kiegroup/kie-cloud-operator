@@ -10,7 +10,7 @@ CSV=`cat deploy/catalog_resources/community/kiecloud-operator.1.0.0.clusterservi
 CRD=`cat deploy/crds/kieapp.crd.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 PKG=`cat deploy/catalog_resources/community/kiecloud.package.yaml | sed -e 's/^/      /' | sed '0,/ /{s/      /    - /}'`
 
-cat <<EOF | kubectl apply -f -
+cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -25,7 +25,7 @@ ${CRD}
 ${PKG}
 EOF
 
-cat <<EOF | kubectl apply -f -
+cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:

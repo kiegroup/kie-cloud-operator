@@ -173,7 +173,6 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 
 	template.Name = envConstants.App.Prefix
 	template.ImageName = envConstants.App.ImageName
-	template.ProbePage = envConstants.App.ConsoleProbePage
 
 	return template
 }
