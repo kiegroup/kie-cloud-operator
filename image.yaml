@@ -18,12 +18,14 @@ labels:
 artifacts:
   - name: kie-cloud-operator.tar.gz
     url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.x.tar.gz
-    md5: f2f9ff3269b723254e5ac295d7b88843
+    md5: 2b442efe6cea6cb50f7742f14afdbadd
 packages:
   content_sets:
     x86_64:
       - rhel-7-server-rpms
       - rhel-7-server-devtools-rpms
+  install:
+    - go-toolset-1.10
 modules:
   repositories:
     - path: modules

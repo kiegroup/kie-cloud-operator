@@ -1,8 +1,6 @@
 #!/bin/sh
 
 INSTALL_PKGS="go-toolset-1.10"
-yum install -y ${INSTALL_PKGS} --setopt=tsflags=nodocs \
-    && rpm -q ${INSTALL_PKGS}
 
 scl enable go-toolset-1.10 - << \EOF
 REPO=kie-cloud-operator
