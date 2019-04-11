@@ -18,7 +18,7 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.3"
 	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.0"
+	ImageStreamTag = "1.1"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
 	// DefaultPassword default password to use for test environments
