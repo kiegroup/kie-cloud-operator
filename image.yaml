@@ -2,7 +2,7 @@ schema_version: 1
 
 name: "rhpam-7/rhpam73-operator"
 description: "Red Hat Business Automation Operator"
-version: "1.0"
+version: "1.1"
 from: "rhel7:7-released"
 labels:
   - name: "maintainer"
@@ -17,7 +17,7 @@ labels:
     value: "rhpam,rhdm,operator"
 artifacts:
   - name: kie-cloud-operator.tar.gz
-    url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.0.CR1.tar.gz
+    url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.x.tar.gz
     md5: 71511b5be0f2a1276381af1af7c7db7f
 packages:
   content_sets:
