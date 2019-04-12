@@ -11,13 +11,13 @@ items:
         - apiVersion: operators.coreos.com/v1alpha1
           kind: ClusterServiceVersion
           metadata:
-            name: businessautomation-operator.v1.0.0
+            name: businessautomation-operator.1.0.1
             namespace: placeholder
             annotations:
               categories: "Integration & Delivery"
               certified: "false"
               description: Business Automation Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
-              containerImage: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.0
+              containerImage: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.1
               createdAt: 2019-01-25T20:48:22Z
               support: Red Hat, Inc.
               tectonic-visibility: ocs
@@ -38,7 +38,7 @@ items:
               - process
               - automation
               - operator
-            version: 1.0.0
+            version: 1.0.1
             maturity: beta
             maintainers:
               - name: Red Hat, Inc.
@@ -55,11 +55,11 @@ items:
                 mediatype: image/svg+xml
             labels:
               alm-owner-businessautomation: businessautomation-operator
-              operated-by: businessautomation-operator.v1.0.0
+              operated-by: businessautomation-operator.1.0.1
             selector:
               matchLabels:
                 alm-owner-businessautomation: businessautomation-operator
-                operated-by: businessautomation-operator.v1.0.0
+                operated-by: businessautomation-operator.1.0.1
             installModes:
               - type: OwnNamespace
                 supported: true
@@ -164,7 +164,7 @@ items:
                           serviceAccountName: business-automation-operator
                           containers:
                             - name: business-automation-operator
-                              image: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.0
+                              image: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.1
                               ports:
                                 - containerPort: 60000
                                   name: metrics
@@ -726,11 +726,11 @@ items:
                                 type: boolean
                                 description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.
       packages: >
-        - #! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.v1.0.0.clusterserviceversion.yaml
+        - #! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.1.0.1.clusterserviceversion.yaml
           packageName: businessautomation-operator
           channels:
             - name: beta
-              currentCSV: businessautomation-operator.v1.0.0
+              currentCSV: businessautomation-operator.1.0.1
 
   - apiVersion: operators.coreos.com/v1alpha1
     kind: CatalogSource
