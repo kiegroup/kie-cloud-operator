@@ -15,15 +15,13 @@ labels:
     value: "Red Hat Business Automation Operator"
   - name: "io.openshift.tags"
     value: "rhpam,rhdm,operator"
-artifacts:
-  - name: kie-cloud-operator.tar.gz
-    url: https://github.com/kiegroup/kie-cloud-operator/archive/1.0.x.tar.gz
-    md5: 71511b5be0f2a1276381af1af7c7db7f
 packages:
   content_sets:
     x86_64:
       - rhel-7-server-rpms
       - rhel-7-server-devtools-rpms
+  install:
+    - go-toolset-1.10
 modules:
   repositories:
     - path: modules
