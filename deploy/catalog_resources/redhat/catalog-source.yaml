@@ -726,7 +726,7 @@ items:
                                 type: boolean
                                 description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.
       packages: >
-        - #! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.1.0.1.clusterserviceversion.yaml
+        - #! package-manifest: deploy/catalog_resources/redhat/1.0.1/businessautomation-operator.1.0.1.clusterserviceversion.yaml
           packageName: businessautomation-operator
           channels:
             - name: beta
