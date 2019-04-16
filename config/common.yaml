@@ -75,7 +75,7 @@ console:
                     protocol: TCP
                 env:
                   - name: KIE_ADMIN_USER
-                    value: adminUser
+                    value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
                   - name: KIE_MAVEN_USER
@@ -468,7 +468,7 @@ servers:
                   imagePullPolicy: Always
                   env:
                     - name: KIE_ADMIN_USER
-                      value: adminUser
+                      value: "[[$.AdminUser]]"
                     - name: KIE_ADMIN_PWD
                       value: "[[$.AdminPassword]]"
                     #- name: KIE_SERVER_STARTUP_STRATEGY

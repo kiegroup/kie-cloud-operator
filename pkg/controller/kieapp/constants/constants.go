@@ -21,6 +21,8 @@ const (
 	ImageStreamTag = "1.1"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
+	// DefaultAdminUser default admin user
+	DefaultAdminUser = "adminUser"
 	// DefaultPassword default password to use for test environments
 	DefaultPassword = "RedHat"
 	// SSODefaultPrincipalAttribute default PrincipalAttribute to use for SSO integration

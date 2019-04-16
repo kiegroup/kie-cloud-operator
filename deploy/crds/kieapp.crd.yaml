@@ -50,6 +50,9 @@ spec:
                 keyStorePassword:
                   type: string
                   description: The password to use for keystore generation.
+                adminUser:
+                  type: string
+                  description: The user to use for the admin.
                 adminPassword:
                   type: string
                   description: The password to use for the adminUser.
