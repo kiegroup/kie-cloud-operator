@@ -1,5 +1,0 @@
-#! package-manifest: deploy/catalog_resources/redhat/businessautomation-operator.1.0.1.clusterserviceversion.yaml
-packageName: businessautomation-operator
-channels:
-  - name: beta
-    currentCSV: businessautomation-operator.1.0.1
