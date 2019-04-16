@@ -370,11 +370,13 @@ type BuildTemplate struct {
 	ArtifactDir                  string                 `json:"artifactDir,omitempty"`
 }
 
+// CommonConfig variables used in the templates
 type CommonConfig struct {
 	ApplicationName    string `json:"applicationName,omitempty"`
 	Version            string `json:"version,omitempty"`
 	ImageTag           string `json:"imageTag,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
+	AdminUser          string `json:"adminUser,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
 	DBPassword         string `json:"dbPassword,omitempty"`
 	AMQPassword        string `json:"amqPassword,omitempty"`

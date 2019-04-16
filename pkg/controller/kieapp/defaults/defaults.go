@@ -111,13 +111,13 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		cr.Spec.ImageRegistry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry) // default to red hat registry
 		cr.Spec.ImageRegistry.Insecure = logs.GetBoolEnv("INSECURE")
 	}
+	setAppConstants(&cr.Spec.CommonConfig)
 
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
 	if config.ApplicationName == "" {
 		config.ApplicationName = cr.Name
 	}
-	setAppConstants(&cr.Spec)
 	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(config, isTrialEnv)
 
@@ -584,13 +584,16 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 }
 
 // setAppConstants sets the application-related constants to use in the template processing
-func setAppConstants(spec *v1.KieAppSpec) {
-	if len(spec.CommonConfig.Version) == 0 {
+func setAppConstants(common *v1.CommonConfig) {
+	if len(common.Version) == 0 {
 		pattern := regexp.MustCompile("[0-9]+")
-		spec.CommonConfig.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
+		common.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
 	}
-	if len(spec.CommonConfig.ImageTag) == 0 {
-		spec.CommonConfig.ImageTag = constants.ImageStreamTag
+	if len(common.ImageTag) == 0 {
+		common.ImageTag = constants.ImageStreamTag
+	}
+	if len(common.AdminUser) == 0 {
+		common.AdminUser = constants.DefaultAdminUser
 	}
 }
 
