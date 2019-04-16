@@ -17,6 +17,9 @@ go generate ./...
 go vet ./...
 go test ./...
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o /usr/local/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
+
+mv deploy/catalog_resources/redhat/${OPERATOR_VERSION} /manifests
+mv deploy/crds/kieapp.crd.yaml /manifests
 EOF
 
 BINARY=/usr/local/bin/kie-cloud-operator

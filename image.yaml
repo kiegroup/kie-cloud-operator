@@ -15,6 +15,11 @@ labels:
     value: "Red Hat Business Automation Operator"
   - name: "io.openshift.tags"
     value: "rhpam,rhdm,operator"
+  - name: "com.redhat.delivery.appregistry"
+    value: "true"
+envs:
+  - name: "OPERATOR_VERSION"
+    value: "1.0.1"
 packages:
   content_sets:
     x86_64:
@@ -33,8 +38,6 @@ osbs:
       platforms:
         only:
           - x86_64
-      compose:
-        pulp_repos: true
   repository:
     name: containers/rhpam-7-operator
     branch: rhpam-7.3-openshift-rhel-7
