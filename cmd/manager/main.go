@@ -4,9 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/operator-framework/operator-sdk/pkg/log/zap"
+	"github.com/operator-framework/operator-sdk/pkg/metrics"
+	"github.com/spf13/pflag"
 	"os"
 	"runtime"
 	"time"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	openshiftutil "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
@@ -16,25 +22,36 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
+// Change below variables to serve metrics on different host or port.
+var (
+	metricsHost       = "0.0.0.0"
+	metricsPort int32 = 8383
+)
 var log = logs.GetLogger("cmd")
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
+	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 	log.Info(fmt.Sprintf("Kie Operator Version: %v", version.Version))
 	log.Info("")
 }
 
 func main() {
+	// Add the zap logger flag set to the CLI. The flag set must
+	// be added before calling pflag.Parse().
+	pflag.CommandLine.AddFlagSet(zap.FlagSet())
+
+	// Add flags registered by imported packages (e.g. glog and
+	// controller-runtime)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+
 	flag.Parse()
 
 	printVersion()
@@ -52,26 +69,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Become the leader before proceeding
-	if err := leader.Become(context.TODO(), "kie-cloud-operator-lock"); err != nil {
-		log.Warnf("Error becoming leader: %v", err)
-	}
+	ctx := context.TODO()
 
-	r := ready.NewFileReady()
-	err = r.Set()
-	if err != nil {
-		log.Error("Error on NewFileReady(). ", err)
+	// Become the leader before proceeding
+	if err := leader.Become(ctx, "kie-cloud-operator-lock"); err != nil {
+		log.Error("Error becoming leader: %v", err)
 		os.Exit(1)
 	}
-	defer func() {
-		if err := r.Unset(); err != nil {
-			log.Warnf("Error on unset: %v", err)
-		}
-	}()
 
 	// Create a new Cmd to provide shared dependencies and start components
 	syncPeriod := time.Duration(2) * time.Hour
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace, SyncPeriod: &syncPeriod})
+	mgr, err := manager.New(cfg, manager.Options{
+		Namespace:          namespace,
+		SyncPeriod:         &syncPeriod,
+		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+	})
 	if err != nil {
 		log.Error("Error getting Manager. ", err)
 		os.Exit(1)
@@ -100,6 +112,12 @@ func main() {
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Error("Error adding controllers to Manager. ", err)
 		os.Exit(1)
+	}
+
+	// Create Service object to expose the metrics port.
+	_, err = metrics.ExposeMetricsPort(ctx, metricsPort)
+	if err != nil {
+		log.Info("Error exposing metrics. ", err)
 	}
 
 	log.Info("Starting the Operator.")

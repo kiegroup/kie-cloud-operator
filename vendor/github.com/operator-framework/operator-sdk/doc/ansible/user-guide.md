@@ -13,10 +13,10 @@ powered by Ansible using tools and libraries provided by the Operator SDK.
 - [ansible-runner-http][ansible_runner_http_plugin] version v1.0.0+
 - [dep][dep_tool] version v0.5.0+. (Optional if you aren't installing from source)
 - [go][go_tool] version v1.10+. (Optional if you aren't installing from source)
-- Access to a kubernetes v.1.9.0+ cluster.
+- Access to a Kubernetes v.1.9.0+ cluster.
 
 **Note**: This guide uses [minikube][minikube_tool] version v0.25.0+ as the
-local kubernetes cluster and quay.io for the public registry.
+local Kubernetes cluster and [quay.io][quay_link] for the public registry.
 
 ## Install the Operator SDK CLI
 
@@ -36,6 +36,12 @@ $ make install
 ```
 
 This installs the CLI binary `operator-sdk` at `$GOPATH/bin`.
+
+Alternatively, if you are using [Homebrew][homebrew_tool], you can install the SDK CLI tool with the following command:
+
+```sh
+$ brew install operator-sdk
+```
 
 ## Create a new project
 
@@ -67,6 +73,7 @@ Using `--cluster-scoped` will scaffold the new operator with the following modif
 * `deploy/role.yaml` - Use `ClusterRole` instead of `Role`
 * `deploy/role_binding.yaml`:
   * Use `ClusterRoleBinding` instead of `RoleBinding`
+  * Use `ClusterRole` instead of `Role` for roleRef
   * Set the subject namespace to `REPLACE_NAMESPACE`. This must be changed to the namespace in which the operator is deployed.
 
 ### Watches file
@@ -106,14 +113,14 @@ An example Watches file:
 - version: v1alpha1
   group: bar.example.com
   kind: Bar
-  playbook: /opt/ansible/playbook.yaml
+  playbook: /opt/ansible/playbook.yml
 
 # More complex example for our Baz kind
 # Here we will disable requeuing and be managing the CR status in the playbook
 - version: v1alpha1
   group: baz.example.com
   kind: Baz
-  playbook: /opt/ansible/baz.yaml
+  playbook: /opt/ansible/baz.yml
   reconcilePeriod: 0
   manageStatus: false
 ```
@@ -129,7 +136,7 @@ CR
 ### Watch the Memcached CR
 
 By default, the memcached-operator watches `Memcached` resource events as shown
-in `watches.yaml` and executes Ansible Role `Memached`:
+in `watches.yaml` and executes Ansible Role `Memcached`:
 
 ```yaml
 ---
@@ -149,7 +156,7 @@ should go.
 - version: v1alpha1
   group: cache.example.com
   kind: Memcached
-  role: /opt/ansible/roles/Memcached
+  role: /opt/ansible/roles/memcached
 ```
 
 **Playbook**
@@ -167,7 +174,7 @@ Playbook
 ## Building the Memcached Ansible Role
 
 The first thing to do is to modify the generated Ansible role under
-`roles/Memcached`. This Ansible Role controls the logic that is executed when a
+`roles/memcached`. This Ansible Role controls the logic that is executed when a
 resource is modified.
 
 ### Define the Memcached spec
@@ -177,13 +184,13 @@ Ansible Operator will simply pass all key value pairs listed in the Custom
 Resource spec field along to Ansible as
 [variables](https://docs.ansible.com/ansible/2.5/user_guide/playbooks_variables.html#passing-variables-on-the-command-line).
 The names of all variables in the spec field are converted to snake_case
-by the operator before running ansible. For example, `serviceAccount` in 
+by the operator before running ansible. For example, `serviceAccount` in
 the spec becomes `service_account` in ansible.
 It is recommended that you perform some type validation in Ansible on the
 variables to ensure that your application is receiving expected input.
 
 First, set a default in case the user doesn't set the `spec` field by modifying
-`roles/Memcached/defaults/main.yml`:
+`roles/memcached/defaults/main.yml`:
 ```yaml
 size: 1
 ```
@@ -192,13 +199,13 @@ size: 1
 
 Now that we have the spec defined, we can define what Ansible is actually
 executed on resource changes. Since this is an Ansible Role, the default
-behavior will be to execute the tasks in `roles/Memcached/tasks/main.yml`. We
+behavior will be to execute the tasks in `roles/memcached/tasks/main.yml`. We
 want Ansible to create a deployment if it does not exist which runs the
 `memcached:1.4.36-alpine` image. Ansible 2.5+ supports the [k8s Ansible
 Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
 will leverage to control the deployment definition.
 
-Modify `roles/Memcached/tasks/main.yml` to look like the following:
+Modify `roles/memcached/tasks/main.yml` to look like the following:
 ```yaml
 ---
 - name: start memcached
@@ -313,7 +320,7 @@ on your machine. Since we are normally used to using a container where the Role
 is put on disk for us, we need to manually copy our role to the configured
 Ansible Roles path (e.g `/etc/ansible/roles`.
 
-Run the operator locally with the default kubernetes config file present at
+Run the operator locally with the default Kubernetes config file present at
 `$HOME/.kube/config`:
 
 ```sh
@@ -323,7 +330,7 @@ INFO[0000] Go OS/Arch: darwin/amd64
 INFO[0000] operator-sdk Version: 0.0.5+git
 ```
 
-Run the operator locally with a provided kubernetes config file:
+Run the operator locally with a provided Kubernetes config file:
 
 ```sh
 $ operator-sdk up local --kubeconfig=config
@@ -334,10 +341,10 @@ INFO[0000] operator-sdk Version: 0.0.5+git
 
 ### Create a Memcached CR
 
-Modify `deploy/cr.yaml` as shown and create a `Memcached` custom resource:
+Modify `deploy/crds/cache_v1alpha1_memcached_cr.yaml` as shown and create a `Memcached` custom resource:
 
 ```sh
-$ cat deploy/cr.yaml
+$ cat deploy/crds/cache_v1alpha1_memcached_cr.yaml
 apiVersion: "cache.example.com/v1alpha1"
 kind: "Memcached"
 metadata:
@@ -365,8 +372,22 @@ NAME                                  READY     STATUS    RESTARTS   AGE
 example-memcached-6fd7c98d8-7dqdr     1/1       Running   0          1m
 example-memcached-6fd7c98d8-g5k7v     1/1       Running   0          1m
 example-memcached-6fd7c98d8-m7vn7     1/1       Running   0          1m
-memcached-operator-7cc7cfdf86-vvjqk   1/1       Running   0          2m
+memcached-operator-7cc7cfdf86-vvjqk   2/2       Running   0          2m
 ```
+
+### View the Ansible logs
+
+The `memcached-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
+The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
+users will be familiar with. In order to see the logs from a particular container, you can run
+
+```sh
+kubectl logs deployment/memcached-operator -c ansible
+kubectl logs deployment/memcached-operator -c operator
+```
+
+The `ansible` logs contain all of the information about the Ansible run and will make it much easier to debug issues within your Ansible tasks,
+whereas the `operator` logs will contain much more detailed information about the Ansible Operator's internals and interface with Kubernetes.
 
 ### Update the size
 
@@ -374,7 +395,7 @@ Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
 change:
 
 ```sh
-$ cat deploy/cr.yaml
+$ cat deploy/crds/cache_v1alpha1_memcached_cr.yaml
 apiVersion: "cache.example.com/v1alpha1"
 kind: "Memcached"
 metadata:
@@ -407,6 +428,7 @@ $ kubectl delete -f deploy/crds/cache_v1alpha1_memcached_cr.yaml
 ```
 
 [layout_doc]:./project_layout.md
+[homebrew_tool]:https://brew.sh/
 [dep_tool]:https://golang.github.io/dep/docs/installation.html
 [git_tool]:https://git-scm.com/downloads
 [go_tool]:https://golang.org/dl/
@@ -416,3 +438,4 @@ $ kubectl delete -f deploy/crds/cache_v1alpha1_memcached_cr.yaml
 [ansible_tool]:https://docs.ansible.com/ansible/latest/index.html
 [ansible_runner_tool]:https://ansible-runner.readthedocs.io/en/latest/install.html
 [ansible_runner_http_plugin]:https://github.com/ansible/ansible-runner-http
+[quay_link]:https://quay.io

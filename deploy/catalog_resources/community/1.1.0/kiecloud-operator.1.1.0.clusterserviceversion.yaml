@@ -137,6 +137,14 @@ spec:
               verbs:
                 - get
                 - create
+            - apiGroups:
+                - apps
+              resourceNames:
+                - kie-cloud-operator
+              resources:
+                - deployments/finalizers
+              verbs:
+                - update
       deployments:
         - name: kie-cloud-operator
           spec:
@@ -161,14 +169,6 @@ spec:
                     command:
                       - kie-cloud-operator
                     imagePullPolicy: Always
-                    readinessProbe:
-                      exec:
-                        command:
-                          - stat
-                          - /tmp/operator-sdk-ready
-                      initialDelaySeconds: 4
-                      periodSeconds: 10
-                      failureThreshold: 1
                     env:
                       - name: WATCH_NAMESPACE
                         valueFrom:
