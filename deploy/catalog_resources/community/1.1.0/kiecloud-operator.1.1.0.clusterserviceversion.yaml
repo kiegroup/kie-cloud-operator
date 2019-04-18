@@ -6,7 +6,7 @@ metadata:
   annotations:
     categories: "Integration & Delivery"
     certified: "false"
-    description: Kie Cloud Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
+    description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.1
     createdAt: 2019-01-25T20:48:22Z
     support: Red Hat, Inc.
@@ -17,7 +17,7 @@ metadata:
     operator-kiecloud: "true"
 spec:
   displayName: Kie Cloud
-  description: Kie Cloud Operator can deploy RHPAM/RHDM environments in the form of KieApp objects.
+  description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
   keywords:
     - kieapp
     - pam
@@ -63,7 +63,7 @@ spec:
     owned:
       - version: v1
         kind: KieApp
-        description: An instance of KieApp
+        description: A project prescription running an RHPAM/RHDM environment.
         displayName: KieApp
         name: kieapps.app.kiegroup.org
         resources:
@@ -106,8 +106,8 @@ spec:
             path: deployments
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
-          - description: The address for accessing workbench, if it is deployed.
-            displayName: Workbench URL
+          - description: The address for accessing Business Central, if it is deployed.
+            displayName: Business/Decision Central URL
             path: consoleHost
             x-descriptors:
               - "urn:alm:descriptor:org.w3:link"
