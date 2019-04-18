@@ -10,7 +10,7 @@ spec:
         - name: MY_VALUE
           value: "example"
     servers:
-      # Kieserver sets will be named sequentially server-config-kieserver1, server-config-kieserver1-2
+      # Kieserver sets will be named sequentially server-config-kieserver, server-config-kieserver-2
       - deployments: 2
         # Env variables that will be added to all the kie servers in this set
         env:

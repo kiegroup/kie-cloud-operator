@@ -76,5 +76,19 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		}
 	}
 
+	watchOwnedObjects = []runtime.Object{
+		&corev1.ConfigMap{},
+	}
+	ownerHandler = &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &oappsv1.DeploymentConfig{},
+	}
+	for _, watchObject := range watchOwnedObjects {
+		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

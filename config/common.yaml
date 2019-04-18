@@ -93,12 +93,14 @@ console:
                   - name: KIE_MBEANS
                     value: enabled
                   ## OpenShift Enhancement BEGIN
-                  #- name: KIE_CONTROLLER_OCP_ENABLED
+                  #- name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
                   #  value: "true"
-                  #- name: KIE_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                  #- name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                   #  value: "true"
-                  #- name: KIE_CONTROLLER_TEMPLATE_CACHE_TTL
+                  #- name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
                   #  value: "60000"
+                  #- name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
+                  #  value: "true"
                   ## OpenShift Enhancement END
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
@@ -431,6 +433,7 @@ servers:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
             service: "[[.KieName]]"
+            services.server.kie.org/kie-server-id: "[[.KieServerID]]"
         spec:
           strategy:
             rollingParams:
@@ -459,6 +462,7 @@ servers:
                 application: "[[$.ApplicationName]]"
                 service: "[[.KieName]]"
                 deploymentConfig: "[[.KieName]]"
+                services.server.kie.org/kie-server-id: "[[.KieServerID]]"
             spec:
               serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
               terminationGracePeriodSeconds: 60
@@ -496,7 +500,9 @@ servers:
                         fieldRef:
                           fieldPath: status.podIP
                     - name: KIE_SERVER_ID
-                      value: "[[.KieName]]"
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: metadata.labels['services.server.kie.org/kie-server-id']
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: mavenUser
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"

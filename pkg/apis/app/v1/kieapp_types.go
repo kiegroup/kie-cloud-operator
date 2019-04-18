@@ -112,6 +112,7 @@ type KieAppObjects struct {
 type KieServerSet struct {
 	Deployments         *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
 	Name                string                  `json:"name,omitempty"`
+	ID                  string                  `json:"id,omitempty"`
 	From                *corev1.ObjectReference `json:"from,omitempty"`
 	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
 	SecuredKieAppObject `json:",inline"`
@@ -332,6 +333,7 @@ type ConsoleTemplate struct {
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
 	KieName        string                 `json:"kieName,omitempty"`
+	KieServerID    string                 `json:"kieServerID,omitempty"`
 	Replicas       int32                  `json:"replicas,omitempty"`
 	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
 	From           corev1.ObjectReference `json:"from,omitempty"`
