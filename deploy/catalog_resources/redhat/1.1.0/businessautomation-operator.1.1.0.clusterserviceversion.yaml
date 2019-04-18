@@ -137,6 +137,14 @@ spec:
               verbs:
                 - get
                 - create
+            - apiGroups:
+                - apps
+              resourceNames:
+                - kie-cloud-operator
+              resources:
+                - deployments/finalizers
+              verbs:
+                - update
       deployments:
         - name: business-automation-operator
           spec:
@@ -155,20 +163,9 @@ spec:
                 containers:
                   - name: business-automation-operator
                     image: registry.redhat.io/rhpam-7-tech-preview/rhpam74-operator:1.0
-                    ports:
-                      - containerPort: 60000
-                        name: metrics
                     command:
                       - kie-cloud-operator
                     imagePullPolicy: Always
-                    readinessProbe:
-                      exec:
-                        command:
-                          - stat
-                          - /tmp/operator-sdk-ready
-                      initialDelaySeconds: 4
-                      periodSeconds: 10
-                      failureThreshold: 1
                     env:
                       - name: WATCH_NAMESPACE
                         valueFrom:

@@ -23,3 +23,11 @@ rules:
     verbs:
       - get
       - create
+  - apiGroups:
+      - apps
+    resourceNames:
+      - kie-cloud-operator
+    resources:
+      - deployments/finalizers
+    verbs:
+      - update
