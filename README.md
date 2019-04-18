@@ -6,7 +6,7 @@
 
 - go v1.10+
 - dep v0.5.0+
-- operator-sdk v0.3.0
+- operator-sdk v0.7.0
 
 ## Build
 
