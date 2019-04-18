@@ -417,7 +417,7 @@ func getDefaultKieServerImage(product string, config *v1.CommonConfig, from *cor
 	if from != nil {
 		return *from
 	}
-	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, config.Version, constants.ImageStreamTag)
+	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, config.Version, config.ImageTag)
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
 		Name:      imageName,

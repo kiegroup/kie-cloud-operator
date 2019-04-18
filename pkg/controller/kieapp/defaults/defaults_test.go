@@ -1875,6 +1875,45 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 	}
 }
 
+func TestCustomImageTag(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prod",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProduction,
+			CommonConfig: v1.CommonConfig{
+				ImageTag: "1.2",
+			},
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Deployments: Pint(2),
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
+
+	assert.True(t, strings.HasSuffix(getImageChangeName(env.Console.DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
+	assert.True(t, strings.HasSuffix(getImageChangeName(env.Servers[0].DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
+	assert.True(t, strings.HasSuffix(getImageChangeName(env.Servers[1].DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
+	assert.True(t, strings.HasSuffix(getImageChangeName(env.SmartRouter.DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
+}
+
+func getImageChangeName(dc appsv1.DeploymentConfig) string {
+	for _, trigger := range dc.Spec.Triggers {
+		if trigger.Type == appsv1.DeploymentTriggerOnImageChange {
+			return trigger.ImageChangeParams.From.Name
+		}
+	}
+	return ""
+}
+
 func LoadKieApp(t *testing.T, folder string, fileName string) v1.KieApp {
 	box := packr.NewBox("../../../../deploy/" + folder)
 	yamlString, err := box.FindString(fileName)
