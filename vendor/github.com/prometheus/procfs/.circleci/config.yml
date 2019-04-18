@@ -2,16 +2,18 @@
 version: 2.1
 
 commands:
-  linux:
+  default:
     steps:
     - run: make style check_license vet test staticcheck
-  windows:
+  no-test:
     steps:
     - run: make style check_license vet staticcheck
 
 jobs:
   test:
     parameters:
+      command:
+        type: string
       go_version:
         type: string
       os:
@@ -23,25 +25,29 @@ jobs:
     working_directory: /go/src/github.com/prometheus/procfs
     steps:
     - checkout
-    - << parameters.os >>
+    - << parameters.command >>
 
 workflows:
   version: 2
   procfs:
     jobs:
     - test:
-        name: linux-1-10
-        os: linux
-        go_version: "1.10"
-    - test:
+        command: default
         name: linux-1-11
         os: linux
         go_version: "1.11"
     - test:
-        name: windows-1-10
-        os: windows
-        go_version: "1.10"
+        command: default
+        name: linux-1-12
+        os: linux
+        go_version: "1.12"
     - test:
+        command: no-test
         name: windows-1-11
         os: windows
         go_version: "1.11"
+    - test:
+        command: no-test
+        name: windows-1-12
+        os: windows
+        go_version: "1.12"

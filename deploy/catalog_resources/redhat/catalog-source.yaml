@@ -147,6 +147,14 @@ items:
                         verbs:
                           - get
                           - create
+                      - apiGroups:
+                          - apps
+                        resourceNames:
+                          - kie-cloud-operator
+                        resources:
+                          - deployments/finalizers
+                        verbs:
+                          - update
                 deployments:
                   - name: business-automation-operator
                     spec:
@@ -165,20 +173,9 @@ items:
                           containers:
                             - name: business-automation-operator
                               image: registry.redhat.io/rhpam-7-tech-preview/rhpam73-operator:1.1
-                              ports:
-                                - containerPort: 60000
-                                  name: metrics
                               command:
                                 - kie-cloud-operator
                               imagePullPolicy: Always
-                              readinessProbe:
-                                exec:
-                                  command:
-                                    - stat
-                                    - /tmp/operator-sdk-ready
-                                initialDelaySeconds: 4
-                                periodSeconds: 10
-                                failureThreshold: 1
                               env:
                                 - name: WATCH_NAMESPACE
                                   valueFrom:
@@ -206,11 +203,29 @@ items:
               singular: kieapp
             scope: Namespaced
             version: v1
+            versions:
+              - name: v1
+                served: true
+                storage: true
             validation:
               openAPIV3Schema:
                 required:
                   - spec
                 properties:
+                  apiVersion:
+                    description: 'APIVersion defines the versioned schema of this representation
+                      of an object. Servers should convert recognized schemas to the latest
+                      internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                    type: string
+                  kind:
+                    description: 'Kind is a string value representing the REST resource this
+                      object represents. Servers may infer this from the endpoint the client
+                      submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                    type: string
+                  metadata:
+                    type: object
+                  status:
+                    type: object
                   spec:
                     type: object
                     required:
