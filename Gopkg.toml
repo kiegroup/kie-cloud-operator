@@ -69,7 +69,7 @@ required = [
 
 [[constraint]]
   name = "github.com/gobuffalo/packr"
-  version = "=v1.19.0"
+  version = "=v2.2.0"
 
 [[constraint]]
   name = "github.com/pavel-v-chernykh/keystore-go"

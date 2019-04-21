@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"github.com/gobuffalo/packr"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/gobuffalo/packr/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -1915,7 +1915,7 @@ func getImageChangeName(dc appsv1.DeploymentConfig) string {
 }
 
 func LoadKieApp(t *testing.T, folder string, fileName string) v1.KieApp {
-	box := packr.NewBox("../../../../deploy/" + folder)
+	box := packr.New("deploy/"+folder, "../../../../deploy/"+folder)
 	yamlString, err := box.FindString(fileName)
 	assert.NoError(t, err, "Error reading yaml %v/%v", folder, fileName)
 	var kieApp v1.KieApp
