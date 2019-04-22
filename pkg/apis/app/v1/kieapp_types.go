@@ -428,7 +428,18 @@ type Condition struct {
 type KieAppStatus struct {
 	Conditions  []Condition `json:"conditions"`
 	ConsoleHost string      `json:"consoleHost,omitempty"`
-	Deployments []string    `json:"deployments"`
+	Deployments Deployments `json:"deployments"`
+}
+
+type Deployments struct {
+	// Deployments are ready to serve requests
+	Ready []string `json:"ready,omitempty"`
+	// Deployments are starting, may or may not succeed
+	Starting []string `json:"starting,omitempty"`
+	// Deployments are not starting, unclear what next step will be
+	Stopped []string `json:"stopped,omitempty"`
+	// Deployments failed
+	Failed []string `json:"failed,omitempty"`
 }
 
 type PlatformService interface {
