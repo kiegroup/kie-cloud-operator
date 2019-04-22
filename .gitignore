@@ -2,6 +2,7 @@
 build/_output/
 build/_test/
 target/
+pkg/controller/kieapp/defaults/packrd
 *-packr.go
 *.tar.gz
 
