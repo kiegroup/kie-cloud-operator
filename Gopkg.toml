@@ -10,6 +10,7 @@ required = [
   "k8s.io/gengo/args",
   "sigs.k8s.io/controller-tools/pkg/crd/generator",
   "golang.org/x/sync/errgroup",
+  "github.com/gobuffalo/packr/v2/file/resolver",
 ]
 
 [[override]]
