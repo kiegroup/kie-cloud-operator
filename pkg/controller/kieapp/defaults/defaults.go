@@ -1,6 +1,6 @@
 package defaults
 
-//go:generate go run github.com/gobuffalo/packr/v2/packr2
+//go:generate go run .packr/packr.go
 
 import (
 	"bytes"
