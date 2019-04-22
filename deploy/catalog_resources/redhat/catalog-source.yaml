@@ -64,7 +64,7 @@ items:
               - type: OwnNamespace
                 supported: true
               - type: SingleNamespace
-                supported: false
+                supported: true
               - type: MultiNamespace
                 supported: false
               - type: AllNamespaces
