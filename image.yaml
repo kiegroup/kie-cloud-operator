@@ -26,7 +26,7 @@ packages:
       - rhel-7-server-rpms
       - rhel-7-server-devtools-rpms
   install:
-    - go-toolset-1.10
+    - go-toolset-1.11
 modules:
   repositories:
     - path: modules

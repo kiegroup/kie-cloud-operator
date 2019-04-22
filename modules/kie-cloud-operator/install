@@ -1,8 +1,8 @@
 #!/bin/sh
 
-INSTALL_PKGS="go-toolset-1.10"
+GO_TOOLSET="go-toolset-1.11"
 
-scl enable go-toolset-1.10 - << \EOF
+scl enable ${GO_TOOLSET} - << \EOF
 REPO=kie-cloud-operator
 GHORG=github.com/kiegroup
 GHFULL=${GHORG}/${REPO}
@@ -29,7 +29,7 @@ if [[ ! -f ${BINARY} ]] ; then
 fi
 stat ${BINARY}
 
-yum -y autoremove ${INSTALL_PKGS} \
+yum -y autoremove ${GO_TOOLSET} \
     && yum -y update-minimal --setopt=tsflags=nodocs --security --sec-severity=Important --sec-severity=Critical \
     && yum clean all \
     && rm -rf /var/cache/yum
