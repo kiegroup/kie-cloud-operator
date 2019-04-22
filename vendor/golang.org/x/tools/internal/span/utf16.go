@@ -35,14 +35,9 @@ func ToUTF16Column(p Point, content []byte) (int, error) {
 	if lineOffset < 0 || offset > len(content) {
 		return -1, fmt.Errorf("ToUTF16Column: offsets %v-%v outside file contents (%v)", lineOffset, offset, len(content))
 	}
-	// Use the offset to pick out the line start.
-	// This cannot panic:  offset > len(content) and lineOffset < offset.
+	// use the offset to pick out the line start
 	start := content[lineOffset:]
-
-	// Now, truncate down to the supplied column.
-	if col >= len(start) {
-		return -1, fmt.Errorf("ToUTF16Column: line (%v) is shorter than column (%v)", len(start), col)
-	}
+	// now truncate down to the supplied column
 	start = start[:col]
 	// and count the number of utf16 characters
 	// in theory we could do this by hand more efficiently...

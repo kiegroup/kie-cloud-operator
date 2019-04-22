@@ -1,5 +1,4 @@
 *.log
-./packr2
 .DS_Store
 doc
 tmp
@@ -32,5 +31,3 @@ gin-bin
 .vscode/
 debug.test
 .grifter/
-*-packr.go
-

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -38,7 +39,7 @@ func (b *Builder) Run() error {
 	wg := &errgroup.Group{}
 	root, err := filepath.EvalSymlinks(b.RootPath)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
@@ -66,10 +67,10 @@ func (b *Builder) Run() error {
 		return nil
 	})
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	if err := wg.Wait(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return b.dump()
 }
@@ -80,16 +81,16 @@ func (b *Builder) dump() error {
 		f, err := os.Create(name)
 		defer f.Close()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		t, err := template.New("").Parse(tmpl)
 
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		err = t.Execute(f, p)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -103,7 +104,7 @@ func (b *Builder) process(path string) error {
 
 	v := newVisitor(path)
 	if err := v.Run(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	pk := pkg{
@@ -132,7 +133,7 @@ func (b *Builder) process(path string) error {
 		DebugLog("building box %s\n", bx.Name)
 		p := filepath.Join(pk.Dir, bx.Name)
 		if err := bx.Walk(p); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		if len(bx.Files) > 0 {
 			pk.Boxes = append(pk.Boxes, *bx)

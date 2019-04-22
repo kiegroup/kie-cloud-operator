@@ -9,6 +9,7 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/gobuffalo/packr/builder"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ var installCmd = &cobra.Command{
 			if !strings.HasPrefix(input, ".") {
 				input = filepath.Join(packr.GoPath(), "src", input)
 				if _, err := os.Stat(input); err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 			}
 		}
@@ -31,7 +32,7 @@ var installCmd = &cobra.Command{
 		b := builder.New(context.Background(), input)
 		err := b.Run()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		cargs := []string{"install"}

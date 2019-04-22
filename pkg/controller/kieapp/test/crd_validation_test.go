@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"github.com/gobuffalo/packr/v2"
+	"github.com/gobuffalo/packr"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSampleCustomResources(t *testing.T) {
 	schema := getSchema(t)
-	box := packr.New("deploy/crs", "../../../../deploy/crs")
+	box := packr.NewBox("../../../../deploy/crs")
 	for _, file := range box.List() {
 		yamlString, err := box.FindString(file)
 		assert.NoError(t, err, "Error reading %v CR yaml", file)
@@ -25,7 +25,7 @@ func TestSampleCustomResources(t *testing.T) {
 
 func TestExampleCustomResources(t *testing.T) {
 	schema := getSchema(t)
-	box := packr.New("deploy/examples", "../../../../deploy/examples")
+	box := packr.NewBox("../../../../deploy/examples")
 	for _, file := range box.List() {
 		yamlString, err := box.FindString(file)
 		assert.NoError(t, err, "Error reading %v CR yaml", file)
@@ -139,7 +139,7 @@ func deleteNestedMapEntry(object map[string]interface{}, keys ...string) {
 }
 
 func getSchema(t *testing.T) validation.Schema {
-	box := packr.New("deploy/crds", "../../../../deploy/crds")
+	box := packr.NewBox("../../../../deploy/crds")
 	crdFile := "kieapp.crd.yaml"
 	assert.True(t, box.Has(crdFile))
 	yamlString, err := box.FindString(crdFile)

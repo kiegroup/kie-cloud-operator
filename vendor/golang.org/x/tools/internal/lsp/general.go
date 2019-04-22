@@ -164,10 +164,6 @@ func (s *Server) processConfig(view *cache.View, config interface{}) error {
 	if usePlaceholders, ok := c["usePlaceholders"].(bool); ok {
 		s.usePlaceholders = usePlaceholders
 	}
-	// Check if enhancedHover is enabled.
-	if enhancedHover, ok := c["enhancedHover"].(bool); ok {
-		s.enhancedHover = enhancedHover
-	}
 	return nil
 }
 

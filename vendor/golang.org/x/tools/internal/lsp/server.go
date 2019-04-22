@@ -74,7 +74,6 @@ type Server struct {
 	// Configurations.
 	// TODO(rstambler): Separate these into their own struct?
 	usePlaceholders               bool
-	enhancedHover                 bool
 	insertTextFormat              protocol.InsertTextFormat
 	configurationSupported        bool
 	dynamicConfigurationSupported bool

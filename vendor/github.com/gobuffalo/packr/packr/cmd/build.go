@@ -7,6 +7,7 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/gobuffalo/packr/builder"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +21,7 @@ var buildCmd = &cobra.Command{
 		b := builder.New(context.Background(), input)
 		err := b.Run()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		cargs := []string{"build"}

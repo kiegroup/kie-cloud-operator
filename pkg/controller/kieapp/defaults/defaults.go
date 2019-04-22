@@ -1,6 +1,6 @@
 package defaults
 
-//go:generate go run github.com/gobuffalo/packr/v2/packr2
+//go:generate sh -c "CGO_ENABLED=0 go run .packr/packr.go $PWD"
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/gobuffalo/packr/v2"
+	"github.com/gobuffalo/packr"
 	"github.com/imdario/mergo"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -481,7 +481,7 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 // important to parse template first with this function, before unmarshalling into object
 func loadYaml(service v1.PlatformService, filename, namespace string, env v1.EnvTemplate) ([]byte, error) {
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
-		box := packr.New("config", "../../../../config")
+		box := packr.NewBox("../../../../config")
 		if box.Has(filename) {
 			yamlString, err := box.FindString(filename)
 			if err != nil {
@@ -533,7 +533,7 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 // ConfigMapsFromFile reads the files under the config folder and creates
 // configmaps in the given namespace. It sets OwnerRef to operator deployment.
 func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) []corev1.ConfigMap {
-	box := packr.New("config", "../../../../config")
+	box := packr.NewBox("../../../../config")
 	cmList := map[string][]map[string]string{}
 	for _, filename := range box.List() {
 		s, err := box.FindString(filename)

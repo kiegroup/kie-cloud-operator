@@ -1,13 +1,14 @@
 package builder
 
 import (
-	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type visitor struct {
@@ -28,13 +29,13 @@ func newVisitor(path string) *visitor {
 func (v *visitor) Run() error {
 	b, err := ioutil.ReadFile(v.Path)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, v.Path, string(b), parser.ParseComments)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	v.Package = file.Name.Name
@@ -80,7 +81,7 @@ func (v *visitor) eval(node ast.Node) error {
 	case *ast.GenDecl:
 		for _, n := range t.Specs {
 			if err := v.eval(n); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	case *ast.FuncDecl:
@@ -89,14 +90,14 @@ func (v *visitor) eval(node ast.Node) error {
 		}
 		for _, b := range t.Body.List {
 			if err := v.evalStmt(b); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 		return nil
 	case *ast.ValueSpec:
 		for _, e := range t.Values {
 			if err := v.evalExpr(e); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	}
@@ -110,7 +111,7 @@ func (v *visitor) evalStmt(stmt ast.Stmt) error {
 	case *ast.AssignStmt:
 		for _, e := range t.Rhs {
 			if err := v.evalArgs(e); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	}
@@ -131,12 +132,12 @@ func (v *visitor) evalExpr(expr ast.Expr) error {
 				}
 
 				if err := v.evalArgs(at); err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 			case *ast.CompositeLit:
 				for _, e := range at.Elts {
 					if err := v.evalExpr(e); err != nil {
-						return err
+						return errors.WithStack(err)
 					}
 				}
 			}
@@ -155,7 +156,7 @@ func (v *visitor) evalArgs(expr ast.Expr) error {
 	case *ast.CompositeLit:
 		for _, e := range at.Elts {
 			if err := v.evalExpr(e); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	// case *ast.BasicLit:
@@ -168,14 +169,14 @@ func (v *visitor) evalArgs(expr ast.Expr) error {
 		switch st := at.Fun.(type) {
 		case *ast.SelectorExpr:
 			if err := v.evalSelector(at, st); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		case *ast.Ident:
 			return v.evalIdent(st)
 		}
 		for _, a := range at.Args {
 			if err := v.evalArgs(a); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	}

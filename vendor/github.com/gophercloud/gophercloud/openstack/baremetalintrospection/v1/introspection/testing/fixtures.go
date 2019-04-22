@@ -101,7 +101,7 @@ const IntrospectionDataJSONSample = `
       "bmc_address":"192.167.2.134",
       "interfaces":[
          {
-            "lldp":[],
+            "lldp":null,
             "product":"0x0001",
             "vendor":"0x1af4",
             "name":"eth1",
@@ -111,10 +111,7 @@ const IntrospectionDataJSONSample = `
             "mac_address":"52:54:00:47:20:4d"
          },
          {
-            "lldp": [
-              [1, "04112233aabbcc"],
-              [5, "737730312d646973742d31622d623132"]
-            ],
+            "lldp":null,
             "product":"0x0001",
             "vendor":"0x1af4",
             "name":"eth0",
@@ -177,12 +174,8 @@ const IntrospectionDataJSONSample = `
          "ip":"172.24.42.100",
          "mac":"52:54:00:4e:3d:30",
          "pxe":true,
-         "client_id":null,
-         "lldp_processed":{
-           "switch_chassis_id":"11:22:33:aa:bb:cc",
-           "switch_system_name":"sw01-dist-1b-b12"
-         }
-      }
+         "client_id":null
+     }
    }
 }
 `
@@ -277,7 +270,6 @@ var (
 					Name:        "eth1",
 					Product:     "0x0001",
 					IPV4Address: "172.24.42.101",
-					LLDP:        []introspection.LLDPTLVType{},
 				},
 				introspection.InterfaceType{
 					IPV4Address: "172.24.42.100",
@@ -286,16 +278,6 @@ var (
 					Product:     "0x0001",
 					HasCarrier:  true,
 					Vendor:      "0x1af4",
-					LLDP: []introspection.LLDPTLVType{
-						introspection.LLDPTLVType{
-							Type:  1,
-							Value: "04112233aabbcc",
-						},
-						introspection.LLDPTLVType{
-							Type:  5,
-							Value: "737730312d646973742d31622d623132",
-						},
-					},
 				},
 			},
 			Memory: introspection.MemoryType{
@@ -315,10 +297,6 @@ var (
 				IP:  "172.24.42.100",
 				MAC: "52:54:00:4e:3d:30",
 				PXE: true,
-				LLDPProcessed: map[string]interface{}{
-					"switch_chassis_id":  "11:22:33:aa:bb:cc",
-					"switch_system_name": "sw01-dist-1b-b12",
-				},
 			},
 		},
 	}
