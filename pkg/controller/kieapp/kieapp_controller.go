@@ -113,8 +113,14 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Update CR if needed
-	if reconciler.hasChanged(instance, cachedInstance) {
+	if reconciler.hasSpecChanges(instance, cachedInstance) {
 		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+	if reconciler.hasStatusChanges(instance, cachedInstance) {
+		if instance.ResourceVersion == cachedInstance.ResourceVersion {
 			return reconciler.UpdateObj(instance)
 		}
 		return reconcile.Result{Requeue: true}, nil
@@ -168,6 +174,7 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 			}
 		}
 	}
+	log.Debugf("There are %d updated DCs", len(dcUpdates))
 	if len(dcUpdates) > 0 {
 		for _, uDc := range dcUpdates {
 			_, err := reconciler.UpdateObj(&uDc)
@@ -215,10 +222,7 @@ func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Env
 	return false, nil
 }
 
-func (reconciler *Reconciler) hasChanged(instance, cached *v1.KieApp) bool {
-	if !reflect.DeepEqual(instance.Status, cached.Status) {
-		return true
-	}
+func (reconciler *Reconciler) hasSpecChanges(instance, cached *v1.KieApp) bool {
 	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
 		return true
 	}
@@ -231,6 +235,13 @@ func (reconciler *Reconciler) hasChanged(instance, cached *v1.KieApp) bool {
 				return true
 			}
 		}
+	}
+	return false
+}
+
+func (reconciler *Reconciler) hasStatusChanges(instance, cached *v1.KieApp) bool {
+	if !reflect.DeepEqual(instance.Status, cached.Status) {
+		return true
 	}
 	return false
 }
@@ -680,6 +691,7 @@ func getDeploymentsStatuses(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) v1.De
 			}
 		}
 	}
+	log.Debugf("Found DCs with status stopped [%s], starting [%s], and ready [%s]", stopped, starting, ready)
 	return v1.Deployments{
 		Stopped:  stopped,
 		Starting: starting,
