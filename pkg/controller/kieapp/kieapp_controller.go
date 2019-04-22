@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -115,8 +115,14 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Update CR if needed
-	if reconciler.hasChanged(instance, cachedInstance) {
+	if reconciler.hasSpecChanges(instance, cachedInstance) {
 		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
+			return reconciler.UpdateObj(instance)
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+	if reconciler.hasStatusChanges(instance, cachedInstance) {
+		if instance.ResourceVersion == cachedInstance.ResourceVersion {
 			return reconciler.UpdateObj(instance)
 		}
 		return reconcile.Result{Requeue: true}, nil
@@ -141,8 +147,7 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return false, err
 	}
-	dcNames := getDcNames(dcList.Items, instance)
-	instance.Status.Deployments = dcNames
+	instance.Status.Deployments = getDeploymentsStatuses(dcList.Items, instance)
 
 	var dcUpdates []oappsv1.DeploymentConfig
 	for _, dc := range dcList.Items {
@@ -171,6 +176,7 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 			}
 		}
 	}
+	log.Debugf("There are %d updated DCs", len(dcUpdates))
 	if len(dcUpdates) > 0 {
 		for _, uDc := range dcUpdates {
 			_, err := reconciler.UpdateObj(&uDc)
@@ -218,10 +224,7 @@ func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Env
 	return false, nil
 }
 
-func (reconciler *Reconciler) hasChanged(instance, cached *v1.KieApp) bool {
-	if !reflect.DeepEqual(instance.Status, cached.Status) {
-		return true
-	}
+func (reconciler *Reconciler) hasSpecChanges(instance, cached *v1.KieApp) bool {
 	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
 		return true
 	}
@@ -234,6 +237,13 @@ func (reconciler *Reconciler) hasChanged(instance, cached *v1.KieApp) bool {
 				return true
 			}
 		}
+	}
+	return false
+}
+
+func (reconciler *Reconciler) hasStatusChanges(instance, cached *v1.KieApp) bool {
+	if !reflect.DeepEqual(instance.Status, cached.Status) {
+		return true
 	}
 	return false
 }
@@ -670,16 +680,29 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 	return false
 }
 
-func getDcNames(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) []string {
-	var dcNames []string
+func getDeploymentsStatuses(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) v1.Deployments {
+	var ready, starting, stopped []string
 	for _, dc := range dcs {
 		for _, ownerRef := range dc.GetOwnerReferences() {
 			if ownerRef.UID == cr.UID {
-				dcNames = append(dcNames, dc.Name)
+				if dc.Spec.Replicas == 0 {
+					stopped = append(stopped, dc.Name)
+				} else if dc.Status.Replicas == 0 {
+					stopped = append(stopped, dc.Name)
+				} else if dc.Status.ReadyReplicas < dc.Status.Replicas {
+					starting = append(starting, dc.Name)
+				} else {
+					ready = append(ready, dc.Name)
+				}
 			}
 		}
 	}
-	return dcNames
+	log.Debugf("Found DCs with status stopped [%s], starting [%s], and ready [%s]", stopped, starting, ready)
+	return v1.Deployments{
+		Stopped:  stopped,
+		Starting: starting,
+		Ready:    ready,
+	}
 }
 
 // GetRouteHost returns the Hostname of the route provided
