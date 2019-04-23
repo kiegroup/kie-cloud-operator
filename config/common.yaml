@@ -91,14 +91,14 @@ console:
                   - name: KIE_MBEANS
                     value: enabled
                   ## OpenShift Enhancement BEGIN
-                  #- name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
-                  #  value: "true"
-                  #- name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
-                  #  value: "true"
-                  #- name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
-                  #  value: "60000"
-                  #- name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
-                  #  value: "true"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
+                    value: "true"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                    value: "true"
+                  - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
+                    value: "60000"
+                  - name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
+                    value: "true"
                   ## OpenShift Enhancement END
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
@@ -433,6 +433,7 @@ servers:
             service: "[[.KieName]]"
             services.server.kie.org/kie-server-id: "[[.KieServerID]]"
         spec:
+          revisionHistoryLimit: 10
           strategy:
             rollingParams:
               maxSurge: 100%
@@ -473,8 +474,8 @@ servers:
                       value: "[[$.AdminUser]]"
                     - name: KIE_ADMIN_PWD
                       value: "[[$.AdminPassword]]"
-                    #- name: KIE_SERVER_STARTUP_STRATEGY
-                    #  value: "OpenShiftStartupStrategy"
+                    - name: KIE_SERVER_STARTUP_STRATEGY
+                      value: "OpenShiftStartupStrategy"
                     - name: KIE_SERVER_USER
                       value: executionUser
                     - name: KIE_SERVER_PWD
