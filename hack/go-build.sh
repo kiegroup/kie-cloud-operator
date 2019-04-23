@@ -6,7 +6,7 @@ IMAGE=kie-cloud-operator
 TAG=1.1
 TAR=${BRANCH}.tar.gz
 URL=${REPO}/archive/${TAR}
-CFLAGS="--redhat --build-tech-preview"
+CFLAGS="--redhat"
 
 go generate ./...
 if [[ -z ${CI} ]]; then
