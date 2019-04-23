@@ -27,8 +27,6 @@ servers:
                       value: "[[.Build.KieServerContainerDeployment]]"
                     - name: KIE_SERVER_MGMT_DISABLED
                       value: "true"
-                    - name: KIE_SERVER_STARTUP_STRATEGY
-                      value: LocalContainersStartupStrategy
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: ""
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
