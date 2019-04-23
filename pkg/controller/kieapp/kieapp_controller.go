@@ -50,6 +50,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		if err == nil {
 			// Reconcile ConfigMaps
 			reconciler.CreateConfigMaps(myDep)
+			deployConsole(reconciler, myDep)
 		} else {
 			log.Error("Can't properly create ConfigMaps. ", err)
 		}
