@@ -5,10 +5,10 @@ metadata:
   namespace: placeholder
   annotations:
     categories: "Integration & Delivery"
-    certified: "false"
+    certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
-    containerImage: registry.redhat.io/rhpam-7-tech-preview/rhpam74-operator:1.0
-    createdAt: 2019-01-25T20:48:22Z
+    containerImage: registry.redhat.io/rhpam-7/rhpam74-operator:1.0
+    createdAt: 2019-04-23
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
@@ -29,7 +29,7 @@ spec:
     - automation
     - operator
   version: 1.1.0
-  maturity: beta
+  maturity: stable
   maintainers:
     - name: Red Hat, Inc.
       email: bsig-cloud@redhat.com
@@ -162,7 +162,7 @@ spec:
                 serviceAccountName: business-automation-operator
                 containers:
                   - name: business-automation-operator
-                    image: registry.redhat.io/rhpam-7-tech-preview/rhpam74-operator:1.0
+                    image: registry.redhat.io/rhpam-7/rhpam74-operator:1.0
                     command:
                       - kie-cloud-operator
                     imagePullPolicy: Always
