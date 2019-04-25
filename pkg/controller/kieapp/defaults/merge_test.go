@@ -157,6 +157,40 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
 }
 
+func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
+	var dbEnv v1.Environment
+	err := getParsedTemplate("dbs/h2.yaml", "immutable-prod", &dbEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var jmsEnv v1.Environment
+	err = getParsedTemplate("jms/activemq-jms-config.yaml", "immutable-prod", &jmsEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var prodEnv v1.Environment
+	err = getParsedTemplate("envs/rhpam-production-immutable.yaml", "immutable-prod", &prodEnv)
+	assert.Nil(t, err, "Error: %v", err)
+
+	var common v1.Environment
+	err = getParsedTemplate("common.yaml", "immutable-prod", &common)
+	assert.Nil(t, err, "Error: %v", err)
+
+	baseEnvCount := len(common.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	prodEnvCount := len(prodEnv.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+
+	mergedDCs := mergeDeploymentConfigs(common.Servers[0].DeploymentConfigs, prodEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, jmsEnv.Servers[0].DeploymentConfigs)
+
+	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
+	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors but got %v", len(mergedDCs))
+
+	mergedEnvCount := len(mergedDCs[0].Spec.Template.Spec.Containers[0].Env)
+	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")
+	assert.True(t, mergedEnvCount > prodEnvCount, "Merged DC should have a higher number of environment variables than the server")
+
+	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
+}
+
 func TestMergeConfigsWithoutOverrides(t *testing.T) {
 	var authEnv v1.Environment
 	err := getParsedTemplate("envs/rhdm-authoring.yaml", "authoring", &authEnv)

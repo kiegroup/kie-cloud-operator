@@ -1,7 +1,7 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: rhdm-production-immutable
+  name: rhdm-production-immutable-jms
 spec:
   environment: rhdm-production-immutable
   objects:
@@ -12,4 +12,7 @@ spec:
             uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
             reference: master
             contextDir: quickstarts/hello-rules/hellorules
-
+        jms:
+          enableKieServerJMSIntegration: true
+          kieServerJmsEnableSignal: true
+          kieServerJmsEnableAudit: true

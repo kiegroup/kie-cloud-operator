@@ -1,7 +1,7 @@
 apiVersion: app.kiegroup.org/v1
 kind: KieApp
 metadata:
-  name: rhpam-production-immutable
+  name: rhpam-production-immutable-jms
 spec:
   environment: rhpam-production-immutable
   objects:
@@ -12,3 +12,7 @@ spec:
             uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
             reference: master
             contextDir: quickstarts/library-process/library
+        jms:
+          enableKieServerJMSIntegration: true
+          kieServerJmsEnableSignal: true
+          kieServerJmsEnableAudit: true

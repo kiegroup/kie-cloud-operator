@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -60,6 +59,7 @@ type EnvironmentConstants struct {
 	App      AppConstants     `json:"app,omitempty"`
 	Replica  ReplicaConstants `json:"replica,omitempty"`
 	Database *DatabaseObject  `json:"database,omitempty"`
+	Jms      *KieAppJmsObject `json:"jms,omitempty"`
 }
 
 // AppConstants data type to store application deployment constants
@@ -115,13 +115,33 @@ type KieServerSet struct {
 	From                *corev1.ObjectReference `json:"from,omitempty"`
 	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
 	SecuredKieAppObject `json:",inline"`
-	Database            *DatabaseObject `json:"database,omitempty"`
+	Database            *DatabaseObject  `json:"database,omitempty"`
+	Jms                 *KieAppJmsObject `json:"jms,omitempty"`
 }
 
 // SecuredKieAppObject Generic object definition
 type SecuredKieAppObject struct {
 	SSOClient    *SSOAuthClient `json:"ssoClient,omitempty"`
 	KieAppObject `json:",inline"`
+}
+
+// KieAppJmsObject messaging specification to be used by the KieApp
+type KieAppJmsObject struct {
+	EnableKieServerJMSIntegration  bool   `json:"enableKieServerJMSIntegration,omitempty"`
+	KieServerJmsExecutor           bool   `json:"kieServerJmsExecutor,omitempty"`
+	KieServerJmsExecutorTransacted bool   `json:"kieServerJmsExecutorTransacted,omitempty"`
+	KieServerJmsQueueRequest       string `json:"kieServerJmsQueueRequest,omitempty"`
+	KieServerJmsQueueResponse      string `json:"kieServerJmsQueueResponse,omitempty"`
+	KieServerJmsQueueExecutor      string `json:"kieServerJmsQueueExecutor,omitempty"`
+	KieServerJmsEnableSignal       bool   `json:"kieServerJmsEnableSignal,omitempty"`
+	KieServerJmsQueueSignal        string `json:"kieServerJmsQueueSignal,omitempty"`
+	KieServerJmsEnableAudit        bool   `json:"kieServerJmsEnableAudit,omitempty"`
+	KieServerJmsQueueAudit         string `json:"kieServerJmsQueueAudit,omitempty"`
+	KieServerJmsAuditTransacted    bool   `json:"kieServerJmsAuditTransacted,omitempty"`
+	KieServerJmsUsername           string `json:"kieServerJmsUsername,omitempty"`
+	KieServerJmsPassword           string `json:"kieServerJmsPassword,omitempty"`
+	// It will receives the default value for the Executor, Request, Response, Signal and Audit queues.
+	KieServerJmsAMQQueues string `json:"kieServerJmsAMQQueues,omitempty"`
 }
 
 // KieAppObject Generic object definition
@@ -338,6 +358,7 @@ type ServerTemplate struct {
 	Build          BuildTemplate          `json:"build,omitempty"`
 	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
 	Database       DatabaseObject         `json:"database,omitempty"`
+	Jms            KieAppJmsObject        `json:"jms,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
