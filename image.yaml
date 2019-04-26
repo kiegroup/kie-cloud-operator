@@ -3,7 +3,7 @@ schema_version: 1
 name: "rhpam-7/rhpam74-operator"
 description: "Red Hat Business Automation Operator"
 version: "1.0"
-from: "rhel7:7-released"
+from: "ubi8:8-released"
 labels:
   - name: "maintainer"
     value: "bsig-cloud@redhat.com"
@@ -18,15 +18,17 @@ labels:
   - name: "com.redhat.delivery.appregistry"
     value: "true"
 envs:
+  - name: "USER_UID"
+    value: "1001"
+  - name: "USER_NAME"
+    value: "kie-cloud-operator"
   - name: "OPERATOR_VERSION"
     value: "1.1.0"
 packages:
   content_sets:
     x86_64:
-      - rhel-7-server-rpms
-      - rhel-7-server-devtools-rpms
-  install:
-    - go-toolset-1.11
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
 modules:
   repositories:
     - path: modules
@@ -39,7 +41,9 @@ osbs:
         only:
           - x86_64
   repository:
-    name: containers/rhpam-7-operator
-    branch: rhpam-7.4-openshift-rhel-7
+    name: containers/rhpam-7-operator-openshift
+    branch: rhba-7.4-openshift-rhel-8
 run:
-  user: nobody
+  entrypoint:
+    - "/usr/local/bin/entrypoint"
+  user: "1001"
