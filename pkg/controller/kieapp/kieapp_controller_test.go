@@ -1,16 +1,22 @@
 package kieapp
 
 import (
+	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
 
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	oappsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestGenerateSecret(t *testing.T) {
@@ -156,7 +162,8 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
@@ -182,7 +189,8 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
@@ -208,7 +216,8 @@ func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
@@ -234,10 +243,100 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift", cr.Spec.CommonConfig.Version), cr)
+	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7-tech-preview/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
+}
+
+func TestStatusDeploymentsProgression(t *testing.T) {
+	crNamespacedName := getNamespacedName("namespace", "cr")
+	cr := getInstance(crNamespacedName)
+	cr.Spec = v1.KieAppSpec{
+		Environment: "rhpam-trial",
+	}
+	service := test.MockService()
+	err := service.Create(context.TODO(), cr)
+	assert.Nil(t, err)
+	reconciler := Reconciler{Service: service}
+	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
+
+	//Let's now assume console pod is starting
+	service.ListFunc = func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
+		err := service.Client.List(ctx, opts, list)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				if dc.Name == "cr-rhpamcentr" {
+					dc.Status.Replicas = 1
+				}
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
+
+	//Let's now assume both pods have started
+	service.ListFunc = func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
+		err := service.Client.List(ctx, opts, list)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				dc.Status.Replicas = 1
+				dc.Status.ReadyReplicas = 1
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
+	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
+}
+
+func getNamespacedName(namespace string, name string) types.NamespacedName {
+	return types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}
+}
+
+func reloadCR(t *testing.T, service *test.MockPlatformService, namespacedName types.NamespacedName) *v1.KieApp {
+	cr := getInstance(namespacedName)
+	err := service.Get(context.TODO(), namespacedName, cr)
+	assert.Nil(t, err)
+	return cr
+}
+
+func getInstance(namespacedName types.NamespacedName) *v1.KieApp {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      namespacedName.Name,
+			Namespace: namespacedName.Namespace,
+		},
+	}
+	return cr
 }
