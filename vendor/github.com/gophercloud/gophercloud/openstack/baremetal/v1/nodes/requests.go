@@ -34,7 +34,7 @@ const (
 	CleanFail                   = "clean failed"
 	Error                       = "error"
 	Rebuild                     = "rebuild"
-	Inpsecting                  = "inspecting"
+	Inspecting                  = "inspecting"
 	InspectFail                 = "inspect failed"
 	InspectWait                 = "inspect wait"
 	Adopting                    = "adopting"
@@ -301,19 +301,10 @@ func Update(client *gophercloud.ServiceClient, id string, opts UpdateOpts) (r Up
 
 		body[i] = result
 	}
-
-	resp, err := client.Request("PATCH", updateURL(client, id), &gophercloud.RequestOpts{
+	_, r.Err = client.Patch(updateURL(client, id), body, &r.Body, &gophercloud.RequestOpts{
 		JSONBody: &body,
 		OkCodes:  []int{200},
 	})
-
-	if err != nil {
-		r.Err = err
-	} else {
-		r.Body = resp.Body
-		r.Header = resp.Header
-	}
-
 	return
 }
 
