@@ -1,6 +1,6 @@
 #!/bin/sh
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=1.1.x
+BRANCH=1.1.0
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
 TAG=1.1
