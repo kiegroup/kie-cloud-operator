@@ -4,9 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/operator-framework/operator-sdk/pkg/log/zap"
-	"github.com/operator-framework/operator-sdk/pkg/metrics"
-	"github.com/spf13/pflag"
 	"os"
 	"runtime"
 	"time"
@@ -14,7 +11,6 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	openshiftutil "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -22,7 +18,10 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
+	"github.com/operator-framework/operator-sdk/pkg/log/zap"
+	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -89,16 +88,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Check for OpenShift cluster
-	isOpenShift, err := openshiftutil.IsOpenShift(mgr.GetConfig())
-	if err != nil {
-		log.Error(err.Error())
-		os.Exit(1)
-	}
-	if !isOpenShift {
-		log.Error("OpenShift not detected, exiting")
-		os.Exit(1)
-	}
+	/*
+		// Check for OpenShift cluster
+		isOpenShift, err := openshiftutil.IsOpenShift(mgr.GetConfig())
+		if err != nil {
+			log.Error(err.Error())
+			os.Exit(1)
+		}
+		if !isOpenShift {
+			log.Error("OpenShift not detected, exiting")
+			os.Exit(1)
+		}
+	*/
 
 	log.Info("Registering Components.")
 
