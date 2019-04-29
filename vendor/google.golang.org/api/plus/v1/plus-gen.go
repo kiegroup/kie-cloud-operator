@@ -83,7 +83,7 @@ const (
 	// View your basic profile info, including your age range and language
 	PlusLoginScope = "https://www.googleapis.com/auth/plus.login"
 
-	// Know who you are on Google
+	// Associate you with your personal info on Google
 	PlusMeScope = "https://www.googleapis.com/auth/plus.me"
 
 	// View your email address
