@@ -63,6 +63,10 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	mergedEnv, err = mergeJms(service, cr, mergedEnv, envTemplate)
+	if err != nil {
+		return v1.Environment{}, err
+	}
 	return mergedEnv, nil
 }
 
@@ -89,6 +93,32 @@ func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envT
 		dbServer, found := findCustomObjectByName(env.Servers[i], dbEnvs[dbType].Servers)
 		if found {
 			env.Servers[i] = mergeCustomObject(env.Servers[i], dbServer)
+		}
+	}
+	return env, nil
+}
+
+func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envTemplate v1.EnvTemplate) (v1.Environment, error) {
+	var jmsEnv v1.Environment
+	for i := range env.Servers {
+		kieServerSet := envTemplate.Servers[i]
+
+		isJmsEnabled := kieServerSet.Jms.EnableKieServerJMSIntegration
+
+		if isJmsEnabled {
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Namespace, envTemplate)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+			err = yaml.Unmarshal(yamlBytes, &jmsEnv)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+		}
+
+		jmsServer, found := findCustomObjectByName(env.Servers[i], jmsEnv.Servers)
+		if found {
+			env.Servers[i] = mergeCustomObject(env.Servers[i], jmsServer)
 		}
 	}
 	return env, nil
@@ -313,6 +343,15 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			if dbConfig != nil {
 				template.Database = *dbConfig
 			}
+
+			jmsConfig, err := getJmsConfig(cr.Spec.Environment, serverSet.Jms)
+			if err != nil {
+				return servers, err
+			}
+			if jmsConfig != nil {
+				template.Jms = *jmsConfig
+			}
+
 			instanceTemplate := template.DeepCopy()
 			if instanceTemplate.KeystoreSecret == "" {
 				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
@@ -443,6 +482,61 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 		return &resultDB, nil
 	}
 	return database, nil
+}
+
+func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.KieAppJmsObject, error) {
+
+	envConstants := constants.EnvironmentConstants[environment]
+	if envConstants == nil || jms == nil || !jms.EnableKieServerJMSIntegration {
+		return nil, nil
+	}
+	// if enabled, prepare the default values
+	defaultJms := &v1.KieAppJmsObject{
+		KieServerJmsExecutor:           true,
+		KieServerJmsExecutorTransacted: false,
+		KieServerJmsQueueExecutor:      "queue/KIE.SERVER.EXECUTOR",
+		KieServerJmsQueueRequest:       "queue/KIE.SERVER.REQUEST",
+		KieServerJmsQueueResponse:      "queue/KIE.SERVER.RESPONSE",
+		KieServerJmsEnableSignal:       false,
+		KieServerJmsQueueSignal:        "queue/KIE.SERVER.SIGNAL",
+		KieServerJmsEnableAudit:        false,
+		KieServerJmsQueueAudit:         "queue/KIE.SERVER.AUDIT",
+		KieServerJmsAuditTransacted:    true,
+		KieServerJmsUsername:           "user" + string(shared.GeneratePassword(4)),
+		KieServerJmsPassword:           string(shared.GeneratePassword(8)),
+	}
+
+	queuesList := []string{
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueExecutor, jms.KieServerJmsQueueExecutor),
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueRequest, jms.KieServerJmsQueueRequest),
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueResponse, jms.KieServerJmsQueueResponse),
+		getDefaultQueue(jms.KieServerJmsEnableSignal, defaultJms.KieServerJmsQueueSignal, jms.KieServerJmsQueueSignal),
+		getDefaultQueue(jms.KieServerJmsEnableAudit, defaultJms.KieServerJmsQueueAudit, jms.KieServerJmsQueueAudit)}
+
+	// clean empty values
+	for i, queue := range queuesList {
+		if queue == "" {
+			queuesList = append(queuesList[:i], queuesList[i+1:]...)
+			break
+		}
+	}
+	defaultJms.KieServerJmsAMQQueues = strings.Join(queuesList[:], ", ")
+
+	// merge the defaultJms into jms, preserving the values set by cr
+	mergo.Merge(jms, defaultJms)
+
+	return jms, nil
+}
+
+func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) string {
+	if append {
+		if jmsQueue == "" {
+			return defaultJmsQueue
+		} else {
+			return jmsQueue
+		}
+	}
+	return ""
 }
 
 func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {

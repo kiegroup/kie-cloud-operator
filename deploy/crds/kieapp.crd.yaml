@@ -205,7 +205,7 @@ spec:
                         properties:
                           kieServerContainerDeployment:
                             type: string
-                            description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT
+                            description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
                           mavenMirrorURL:
                             type: string
                             description: Maven mirror to use for S2I builds
@@ -387,6 +387,54 @@ spec:
                               backgroundValidationMillis:
                                 type: string
                                 description: Defines the interval for the background-validation check for the jdbc connections.
+                      jms:
+                        type: object
+                        description: Configuration for JMS integration with KIE Server.
+                        required:
+                        - enableKieServerJMSIntegration
+                        properties:
+                          enableKieServerJMSIntegration:
+                            type: boolean
+                            description: When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.
+                          kieServerJmsExecutor:
+                            type: boolean
+                            description: Set false to disable the JMS executor, it is enabled by default.
+                          kieServerJmsQueueExecutor:
+                            type: string
+                            description: JNDI name of executor queue for JMS, example queue/CUSTOM.KIE.SERVER.EXECUTOR, default is queue/KIE.SERVER.EXECUTOR.
+                          kieServerJmsExecutorTransacted:
+                            type: boolean
+                            description: Enable transactions for JMS executor, disabled by default.
+                          kieServerJmsQueueRequest:
+                            type: string
+                            description: JNDI name of request queue for JMS, example queue/CUSTOM.KIE.SERVER.REQUEST, default is queue/KIE.SERVER.REQUEST.
+                          kieServerJmsQueueResponse:
+                            type: string
+                            description: JNDI name of response queue for JMS, example queue/CUSTOM.KIE.SERVER.RESPONSE, default is queue/KIE.SERVER.RESPONSE.
+                          kieServerJmsEnableSignal:
+                            type: boolean
+                            description: Enable the Signal configuration through JMS. Default is false.
+                          kieServerJmsQueueSignal:
+                            type: string
+                            description: JNDI name of signal queue for JMS, example queue/CUSTOM.KIE.SERVER.SIGNAL, default is queue/KIE.SERVER.SIGNAL.
+                          kieServerJmsEnableAudit:
+                            type: boolean
+                            description: Enable the Audit logging through JMS. Default is false.
+                          kieServerJmsQueueAudit:
+                            type: string
+                            description: JNDI name of audit logging queue for JMS, example queue/CUSTOM.KIE.SERVER.AUDIT, default is queue/KIE.SERVER.AUDIT.
+                          kieServerJmsAuditTransacted:
+                            type: boolean
+                            description: Determines if JMS session is transacted or not - default true.
+                          kieServerJmsUsername:
+                            type: string
+                            description: AMQ broker username to connect do the AMQ, generated if empty.
+                          kieServerJmsPassword:
+                            type: string
+                            description: AMQ broker password to connect do the AMQ, generated if empty.
+                          kieServerJmsAMQQueues:
+                            type: string
+                            description: AMQ broker broker comma separated queues, if empty the values from default queues will be used.
                 smartRouter:
                   type: object
                   description: Configuration of the RHPAM smart router
