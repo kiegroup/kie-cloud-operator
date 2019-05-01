@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 	"text/template"
 )
@@ -23,9 +24,9 @@ func RunWebServer(config Configuration) error {
 	http.Handle("/fonts/", http.FileServer(box))
 	http.Handle("/favicon.ico", http.FileServer(box))
 	http.Handle("/health", checkHealth(box))
+	logrus.SetLevel(logrus.DebugLevel)
 
-	//For anything else, including index.html and root requests, send back the processed index.html
-	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+	returnIndex := func(writer http.ResponseWriter, reader *http.Request){
 		templateString, err := box.FindString("index.html")
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -46,6 +47,30 @@ func RunWebServer(config Configuration) error {
 		}
 		if err := templates.ExecuteTemplate(writer, "template", goTemplate); err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	processYaml := func(writer http.ResponseWriter, reader *http.Request) {
+		body, err := ioutil.ReadAll(reader.Body)
+		if err != nil {
+			logrus.Errorf("Error reading message %v", err)
+			http.Error(writer, "Error reading request", http.StatusInternalServerError)
+		} else {
+			request := string(body)
+			logrus.Debugf("Request is %v", request)
+			config.Apply(request)
+			writer.WriteHeader(http.StatusOK)
+		}
+	}
+
+	//For anything else:
+	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+		if reader.Method == "POST" {
+			//Receive and handle posted yaml separately
+			processYaml(writer, reader)
+		} else {
+			//For index.html and root GET requests, send back the processed index.html
+			returnIndex(writer, reader)
 		}
 	})
 

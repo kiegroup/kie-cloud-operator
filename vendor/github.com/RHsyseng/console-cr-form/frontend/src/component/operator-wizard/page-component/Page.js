@@ -49,16 +49,8 @@ export default class Page extends Component {
    * @param {int} startIndex
    * @param {Element} element
    */
-  addElements(
-    startIndex,
-    newElements,
-    objectkey,
-    elementAddCount,
-    parentjsonpath
-  ) {
-    //alert(parentjsonpath + elementAddCount);
+  addElements(startIndex, newElements, objectkey) {
     this.state.elements.forEach((element, i) => {
-      // console.log(element.page.props.key);
       if (element.props != undefined && element.props.ids != undefined) {
         if (element.props.ids.fieldGroupId === objectkey) {
           startIndex = startIndex + i;
@@ -66,29 +58,16 @@ export default class Page extends Component {
       }
     });
 
-    //startIndex=startIndex+newElements
     if (Array.isArray(newElements)) {
       var elements = this.state.elements;
       newElements.forEach((element, count) => {
-        if (elementAddCount !== undefined) {
-          //console.log("22this.props.elementAddCount" + elementAddCount);
-          var jsonpath = element.props.fieldDef.jsonPath;
-          if (jsonpath !== undefined) {
-            var res = "";
-            //console.log(">>>>>>>>>>>>>"+res);
-            if (parentjsonpath.length < jsonpath.length) {
-              res = jsonpath.substring(parentjsonpath.length, jsonpath.length);
-              res = parentjsonpath.concat(res);
-              // console.log(">>>>>>>>>>>>>" + res);
-              jsonpath = res.replace(/\*/g, elementAddCount);
-            } else {
-              jsonpath = jsonpath.replace(/\*/g, elementAddCount);
-            }
-            // this.props.fieldDef.jsonPath = jsonpath;
-            element.props.fieldDef.jsonPath = jsonpath;
-            //console.log("jsonPath *** " + jsonpath);
-          }
-        }
+        // update the json state
+        this.props.pageDef.fields.splice(
+          startIndex + count - 1,
+          0,
+          JSON.parse(JSON.stringify(element.props.fieldDef))
+        );
+        // add the elements dynamically
         elements.splice(startIndex + count, 0, element);
       });
 
@@ -117,6 +96,7 @@ export default class Page extends Component {
       }
     });
     var elements = this.state.elements;
+    this.props.pageDef.fields.splice(startIndex - 1, elementCount);
     elements.splice(startIndex, elementCount);
     this.setState({ elements: elements });
   }
@@ -175,6 +155,16 @@ export default class Page extends Component {
     });
     var result = this.createResultYaml(jsonObject);
     console.log(result);
+    fetch("/", {
+      method: "POST",
+      body: JSON.stringify(result),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+      .then(res => res.json())
+      .then(response => console.log("Success:", JSON.stringify(response)))
+      .catch(error => console.error("Error:", error));
   }
 
   getJsonSchemaPathForYaml(jsonPath) {

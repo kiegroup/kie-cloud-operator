@@ -7,6 +7,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
+    repository: https://github.com/kiegroup/kie-cloud-operator    
     containerImage: registry.redhat.io/rhpam-7/rhpam74-operator:1.0
     createdAt: 2019-04-23
     support: Red Hat, Inc.
