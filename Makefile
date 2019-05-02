@@ -69,6 +69,8 @@ clean:
 	rm -rf build/_output \
 		pkg/controller/kieapp/defaults/defaults-packr.go \
 		pkg/controller/kieapp/defaults/packrd \
+		pkg/ui/ui-packr.go \
+		pkg/ui/packrd \
 		target/
 
 # test/ci-go: test/sanity test/unit test/subcommand test/e2e/go

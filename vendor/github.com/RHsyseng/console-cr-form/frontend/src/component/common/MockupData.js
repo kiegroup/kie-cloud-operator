@@ -386,8 +386,8 @@ export const MockupData_JSON = {
               required: false,
               jsonPath: "$.spec.objects.console.env",
               type: "object",
-              min: 0,
-              max: 100,
+              min: 1,
+              max: 2,
               fields: [
                 {
                   label: "name",

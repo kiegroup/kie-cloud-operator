@@ -9,6 +9,7 @@ type Configuration interface {
 	Port() int
 	Schema() spec.Schema
 	Form() Form
+	Apply(yaml string)
 }
 
 type ConfigurationHolder struct {
@@ -16,6 +17,7 @@ type ConfigurationHolder struct {
 	PortField   int
 	SchemaField spec.Schema
 	FormField   Form
+	ApplyFunc   func(yaml string)
 }
 
 func (config *ConfigurationHolder) Host() string {
@@ -32,4 +34,8 @@ func (config *ConfigurationHolder) Schema() spec.Schema {
 
 func (config *ConfigurationHolder) Form() Form {
 	return config.FormField
+}
+
+func (config *ConfigurationHolder) Apply(yaml string) {
+	config.ApplyFunc(yaml)
 }
