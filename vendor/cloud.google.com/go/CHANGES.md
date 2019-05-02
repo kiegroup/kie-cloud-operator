@@ -1,9 +1,51 @@
 # Changes
 
+## 0.38.0
+
+This update includes a substantial reduction in our transitive dependency list
+by way of updating to opencensus@v0.21.0.
+
+- spanner:
+  - Error implements GRPCStatus, allowing status.Convert.
+- bigtable:
+  - Fix a bug in bttest that prevents single column queries returning results
+  that match other filters.
+  - Remove verbose retry logging.
+- logging:
+  - Ensure RequestUrl has proper UTF-8, removing the need for users to wrap and
+  rune replace manually.
+- recaptchaenterprise:
+  - Add v1beta1 client.
+- phishingprotection:
+  - Add v1beta1 client.
+
 ## 0.37.4
 
 This patch releases re-builds the go.sum. This was not possible in the
 previous release.
+
+- firestore:
+  - Add sentinel value DetectProjectID for auto-detecting project ID.
+  - Add OpenCensus tracing for public methods.
+  - Marked stable. All future changes come with a backwards compatibility
+  guarantee.
+  - Removed firestore/apiv1beta1. All users relying on this low-level library
+  should migrate to firestore/apiv1. Note that most users should use the
+  high-level firestore package instead.
+- pubsub:
+  - Allow large messages in synchronous pull case.
+  - Cap bundler byte limit. This should prevent OOM conditions when there are
+  a very large number of message publishes occurring.
+- storage:
+  - Add ETag to BucketAttrs and ObjectAttrs.
+- datastore:
+  - Removed some non-sensical OpenCensus traces.
+- webrisk:
+  - Add v1 client.
+- asset:
+  - Add v1 client.
+- cloudtasks:
+  - Add v2 client.
 
 ## 0.37.3
 

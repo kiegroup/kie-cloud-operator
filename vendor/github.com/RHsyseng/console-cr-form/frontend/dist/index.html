@@ -10,6 +10,8 @@
 
 <body>
   <div id="mount"></div>
+  <input type="hidden" id="apiVersion" value="{{.ApiVersion}}">
+  <input type="hidden" id="kind" value="{{.Kind}}">
   <script type="application/json" id="golang_json_form">
     {{.Form}}
   </script>
