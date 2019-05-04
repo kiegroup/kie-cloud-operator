@@ -8,6 +8,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"os"
+	"strings"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	routev1 "github.com/openshift/api/route/v1"
@@ -21,6 +22,17 @@ import (
 
 var name = "console-cr-form"
 var operatorName string
+
+func shouldDeployConsole() bool {
+	shouldDeploy := os.Getenv(constants.OpUiEnv)
+	if strings.ToLower(shouldDeploy) == "false" {
+		log.Debugf("Environment variable %s set to %s, so will not deploy operator UI", constants.OpUiEnv, shouldDeploy)
+		return false
+	} else {
+		//Default to deploying, if env var not set to false
+		return true
+	}
+}
 
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	log.Debugf("Will deploy operator-ui")

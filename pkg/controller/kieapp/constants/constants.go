@@ -35,6 +35,9 @@ const (
 	// OpNameEnv is an environment variable of the operator name
 	// set when the code is running via deployment
 	OpNameEnv = "OPERATOR_NAME"
+	// OpUiEnv is an environment variable indicating whether the UI should be deployed
+	// Default behavior is to deploy the UI, unless this variable is provided with a false value
+	OpUiEnv = "OPERATOR_UI"
 	// TrialEnvSuffix is the suffix for trial environments
 	TrialEnvSuffix = "trial"
 	// DefaultKieDeployments default number of Kie Server deployments
