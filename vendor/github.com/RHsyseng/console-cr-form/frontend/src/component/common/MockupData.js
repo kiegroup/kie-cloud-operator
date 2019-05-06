@@ -46,12 +46,6 @@ export const MockupData_JSON = {
           jsonPath: "$.spec.commonConfig.adminPassword",
           type: "password"
         }
-      ],
-      buttons: [
-        {
-          label: "Edit Yaml",
-          action: "editYaml"
-        }
       ]
     },
     {
@@ -279,7 +273,7 @@ export const MockupData_JSON = {
                 " If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
             }
           ]
-        } /*,
+        },
         {
           label: "Roles Properties",
           type: "text",
@@ -297,13 +291,13 @@ export const MockupData_JSON = {
             " Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
         },
 
-        {
-          label: "version",
-          type: "text",
-          jsonPath: "$.spec.commonConfig.version",
-          default: "",
-          description: "The version of the application deployment"
-        },
+        // {
+        //   label: "version",
+        //   type: "text",
+        //   jsonPath: "$.spec.commonConfig.version",
+        //   default: "",
+        //   description: "The version of the application deployment"
+        // },
         {
           label: "ImageTag",
           type: "text",
@@ -359,7 +353,7 @@ export const MockupData_JSON = {
           jsonPath: "$.spec.commonConfig.mavenPassword",
           default: "",
           description: "The password to use for the mavenUser."
-        }*/
+        }
       ]
     },
     {
@@ -455,12 +449,6 @@ export const MockupData_JSON = {
               default: "",
               description: "Secure hostname to set as redirect URL"
             }
-          ],
-          buttons: [
-            {
-              label: "Edit Yaml",
-              action: "editYaml"
-            }
           ]
         },
         {
@@ -525,6 +513,102 @@ export const MockupData_JSON = {
                   description: "Namespace where the object is located"
                 },
                 {
+                  label: "kieServerContainerDeployment",
+                  type: "text",
+                  required: true,
+                  jsonPath:
+                    "$.spec.objects.servers[*].build.kieServerContainerDeployment",
+                  default: ""
+                },
+                {
+                  label: "mavenMirrorURL",
+                  type: "text",
+                  jsonPath: "$.spec.objects.servers[*].build.mavenMirrorURL",
+                  default: ""
+                },
+                {
+                  label: "artifactDir",
+                  type: "text",
+                  jsonPath: "$.spec.objects.servers[*].build.artifactDir",
+                  default: ""
+                },
+                {
+                  label: "uri",
+                  type: "text",
+                  jsonPath: "$.spec.objects.servers[*].build.gitSource.uri",
+                  default: "",
+                  required: true,
+                  description: "Git URI for the s2i source"
+                },
+                {
+                  label: "Reference",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].build.gitSource.reference",
+                  default: "",
+                  required: true,
+                  description: "Branch to use in the git repository"
+                },
+                {
+                  label: "contextDir",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].build.gitSource.contextDir",
+                  default: "",
+                  description:
+                    "Context/subdirectory where the code is located, relatively to repo root"
+                },
+                {
+                  label: "Webhooks",
+                  required: false,
+                  jsonPath: "$.spec.objects.servers[*].build.webhooks",
+                  type: "object",
+                  min: 1,
+                  max: 1,
+                  fields: [
+                    {
+                      label: "Type",
+                      type: "dropDown",
+                      jsonPath:
+                        "$.spec.objects.servers[*].build.webhooks[*].type",
+                      default: "",
+                      required: false,
+                      description: " WebHook type, either GitHub or Generic"
+                    },
+                    {
+                      label: "Secret",
+                      type: "password",
+                      jsonPath:
+                        "$.spec.objects.servers[*].build.webhooks.secret",
+                      default: "",
+                      required: true,
+                      description: "Secret value for webhook"
+                    }
+                  ]
+                },
+
+                {
+                  label: "kind",
+                  type: "dropDown",
+                  required: true,
+                  jsonPath: "$.spec.objects.servers[*].from.kind",
+                  default: ""
+                },
+                {
+                  label: "name",
+                  type: "text",
+                  required: true,
+                  jsonPath: "$.spec.objects.servers[*].from.name",
+                  default: ""
+                },
+                {
+                  label: "namespace",
+                  type: "text",
+                  jsonPath: "$.spec.objects.servers[*].from.namespace",
+                  default: "",
+                  description: "Namespace where the object is located"
+                },
+                {
                   label: "Env",
                   required: false,
                   jsonPath: "$.spec.objects.servers[*].env",
@@ -548,22 +632,203 @@ export const MockupData_JSON = {
                     }
                   ]
                 },
-
                 {
-                  label: "kieServerContainerDeployment",
+                  label: "Request(Memory)",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.resources.request.memory",
+                  default: "2Gi"
+                },
+                {
+                  label: "Request(CPU)",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.resources.request.cpu",
+                  default: "500m"
+                },
+                {
+                  label: "Limits(Memory)",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.resources.limits.memory",
+                  default: "2Gi"
+                },
+                {
+                  label: "Limits(CPU)",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.resources.limits.cpu",
+                  default: "500m"
+                },
+                {
+                  label: "Client Name",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.ssoClient.name",
+                  default: ""
+                },
+                {
+                  label: "Client Secret",
+                  type: "password",
+                  jsonPath: "$.spec.objects.console.ssoClient.secret",
+                  default: ""
+                },
+                {
+                  label: "Hostname Http",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.ssoClient.hostnameHTTP",
+                  default: "",
+                  description: "Hostname to set as redirect URL"
+                },
+                {
+                  label: "Hostname Https",
+                  type: "text",
+                  jsonPath: "$.spec.objects.console.ssoClient.hostnameHTTPS",
+                  default: "",
+                  description: "Secure hostname to set as redirect URL"
+                },
+                {
+                  label: "Type",
+                  type: "dropDown",
+                  required: true,
+                  jsonPath: "$.spec.objects.servers[*].database.type",
+                  default: ""
+                },
+                {
+                  label: "Size",
+                  type: "text",
+                  jsonPath: "$.spec.objects.servers[*].database.size",
+                  default: "100Gi",
+                  description:
+                    "Size of the PersistentVolumeClaim to create. For example, 100Gi"
+                },
+                {
+                  label: "Driver",
                   type: "text",
                   required: true,
                   jsonPath:
-                    "$.spec.objects.servers[*].build.kieServerContainerDeployment",
+                    "$.spec.objects.servers[*].database.type.externalConfig.driver",
+                  default: ""
+                },
+                {
+                  label: "Dialect",
+                  type: "text",
+                  required: true,
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.dialect",
+                  default: ""
+                },
+                {
+                  label: "Name",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.name",
+                  default: ""
+                },
+                {
+                  label: "Host",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.host",
+                  default: ""
+                },
+                {
+                  label: "Port",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.port",
+                  default: ""
+                },
+                {
+                  label: "jdbc URL",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.jdbcURL",
+                  default: ""
+                },
+                {
+                  label: "NonXA",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.nonXA",
+                  default: ""
+                },
+                {
+                  label: "jndiName",
+                  type: "text",
+                  required: true,
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.jndiName",
+                  default: ""
+                },
+                {
+                  label: "User Name",
+                  type: "text",
+                  required: true,
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.username",
+                  default: ""
+                },
+                {
+                  label: "Password",
+                  type: "password",
+                  required: true,
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.password",
+                  default: ""
+                },
+                {
+                  label: "minPoolSize",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
+                  default: ""
+                },
+                {
+                  label: "minPoolSize",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
+                  default: ""
+                },
+                {
+                  label: "minPoolSize",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
+                  default: ""
+                },
+                {
+                  label: "maxPoolSize",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.maxPoolSize",
+                  default: ""
+                },
+                {
+                  label: "connectionChecker",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.connectionChecker",
+                  default: ""
+                },
+                {
+                  label: "exceptionChecker",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.exceptionChecker",
+                  default: ""
+                },
+                {
+                  label: "backgroundValidation",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.backgroundValidation",
+                  default: ""
+                },
+                {
+                  label: "backgroundValidationMillis",
+                  type: "text",
+                  jsonPath:
+                    "$.spec.objects.servers[*].database.type.externalConfig.backgroundValidationMillis",
                   default: ""
                 }
               ]
-            }
-          ],
-          buttons: [
-            {
-              label: "Edit Yaml",
-              action: "editYaml"
             }
           ]
         },
@@ -632,12 +897,6 @@ export const MockupData_JSON = {
               type: "text",
               jsonPath: "$.spec.objects.smartRouter.resources.limits.cpu",
               default: "500m"
-            }
-          ],
-          buttons: [
-            {
-              label: "Edit Yaml",
-              action: "editYaml"
             }
           ]
         }
@@ -877,7 +1136,6 @@ export const MockupData_JSON_SCHEMA = {
           enum: [
             "rhdm-authoring-ha",
             "rhdm-authoring",
-            "rhdm-optaweb-trial",
             "rhdm-production-immutable",
             "rhdm-trial",
             "rhpam-authoring-ha",

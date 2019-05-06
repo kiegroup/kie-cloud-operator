@@ -21,8 +21,17 @@ export class PasswordField {
           name={this.props.fieldDef.label}
           //onChange={this.onChange}
           jsonpath={this.props.fieldDef.jsonPath}
+          defaultValue={this.props.fieldDef.value}
+          onBlur={this.onBlurPwd}
         />
       </FormGroup>
     );
   }
+
+  onBlurPwd = event => {
+    let value = event.target.value;
+    if (value !== undefined && value !== null && value !== "") {
+      this.props.fieldDef.value = value;
+    }
+  };
 }

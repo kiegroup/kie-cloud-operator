@@ -20,8 +20,17 @@ export class TextAreaField {
           id={this.props.ids.fieldId}
           key={this.props.ids.fieldKey}
           jsonpath={this.props.fieldDef.jsonPath}
+          defaultValue={this.props.fieldDef.value}
+          onBlur={this.onBlurTextArea}
         />
       </FormGroup>
     );
   }
+
+  onBlurTextArea = event => {
+    let value = event.target.value;
+    if (value !== undefined && value !== null && value !== "") {
+      this.props.fieldDef.value = value;
+    }
+  };
 }

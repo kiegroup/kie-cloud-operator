@@ -8,14 +8,17 @@ import (
 )
 
 func main() {
-	config := &web.ConfigurationHolder{
-		PortField:   8080,
-		SchemaField: getSchema(),
-		FormField:   getForm(),
+	config, err := web.NewConfiguration("", 8080, getSchema(), "app.kiegroup.org/v1", "KieApp", getForm(), callback)
+	if err != nil {
+		logrus.Errorf("Failed to configure web server: %v", err)
 	}
 	if err := web.RunWebServer(config); err != nil {
 		logrus.Errorf("Failed to run web server: %v", err)
 	}
+}
+
+func callback(yamlString string) {
+	logrus.Infof("Mock deploy yaml:\n%s", yamlString)
 }
 
 func getForm() web.Form {

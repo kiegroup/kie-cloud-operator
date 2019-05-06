@@ -9,12 +9,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"text/template"
 )
 
 type GoTemplate struct {
-	Schema string
-	Form   string
+	ApiVersion string
+	Kind       string
+	Schema     string
+	Form       string
 }
 
 func RunWebServer(config Configuration) error {
@@ -26,7 +29,7 @@ func RunWebServer(config Configuration) error {
 	http.Handle("/health", checkHealth(box))
 	logrus.SetLevel(logrus.DebugLevel)
 
-	returnIndex := func(writer http.ResponseWriter, reader *http.Request){
+	returnIndex := func(writer http.ResponseWriter, reader *http.Request) {
 		templateString, err := box.FindString("index.html")
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -42,8 +45,10 @@ func RunWebServer(config Configuration) error {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 		}
 		goTemplate := GoTemplate{
-			Form:   string(formBytes),
-			Schema: string(schemaBytes),
+			ApiVersion: config.ApiVersion(),
+			Kind:       config.Kind(),
+			Form:       string(formBytes),
+			Schema:     string(schemaBytes),
 		}
 		if err := templates.ExecuteTemplate(writer, "template", goTemplate); err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -57,8 +62,23 @@ func RunWebServer(config Configuration) error {
 			http.Error(writer, "Error reading request", http.StatusInternalServerError)
 		} else {
 			request := string(body)
-			logrus.Debugf("Request is %v", request)
-			config.Apply(request)
+			//TODO temporary fixes to yaml, which should not be a problem to begin with:
+			if strings.Contains(request, "\\n") {
+				logrus.Infof("Request was %s", request)
+				request = strings.Replace(request, "\\n", "\n", -1)
+				logrus.Infof("Request is now %s", request)
+			}
+			if strings.HasPrefix(request, "\"") {
+				logrus.Infof("Request was %s", request)
+				request = strings.TrimLeft(request, "\"")
+				logrus.Infof("Request is now %s", request)
+			}
+			if strings.HasSuffix(request, "\"") {
+				logrus.Infof("Request was %s", request)
+				request = strings.TrimRight(request, "\"")
+				logrus.Infof("Request is now %s", request)
+			}
+			config.CallBack(request)
 			writer.WriteHeader(http.StatusOK)
 		}
 	}

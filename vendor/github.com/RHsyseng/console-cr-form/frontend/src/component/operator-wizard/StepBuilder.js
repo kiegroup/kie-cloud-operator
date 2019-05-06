@@ -59,6 +59,7 @@ export default class StepBuilder {
           pageDef={pageDef}
           jsonSchema={this.loader.jsonSchema}
           pageNumber={id}
+          pages={this.loader.jsonForm.pages}
         />
       ),
       enableNext: true //TODO: need to add logic - will enable next only if all fields are valid

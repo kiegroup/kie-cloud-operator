@@ -21,12 +21,14 @@ export class EmailField {
           name={this.props.fieldDef.label}
           onChange={this.onChangeEmail}
           jsonpath={this.props.fieldDef.jsonPath}
+          defaultValue={this.props.fieldDef.vaue}
         />
       </FormGroup>
     );
   }
 
   onChangeEmail = value => {
+    this.props.fieldDef.vaue = value;
     if (value != null && value != "" && !validator.isEmail(value)) {
       console.log("not valid email address: " + value);
       /*TODO: fix

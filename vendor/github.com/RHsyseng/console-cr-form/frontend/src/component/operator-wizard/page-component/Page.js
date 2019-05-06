@@ -28,6 +28,8 @@ export default class Page extends Component {
         isModalOpen: !isModalOpen
       }));
     };
+    this.editYaml = this.editYaml.bind(this);
+    this.formId = "form-page-" + this.props.pageNumber;
   }
 
   loadPageChildren() {
@@ -110,13 +112,20 @@ export default class Page extends Component {
     return this.state.elements;
   }
   editYaml() {
-    this.createSampleYaml();
-
+    var sampleYaml = this.createSampleYaml();
+    this.createResultYaml(sampleYaml);
     this.handleModalToggle();
     //alert(YAML.safeDump(Dot.object(jsonObject)));
   }
   createResultYaml = jsonObject => {
-    var resultYaml = YAML.safeDump(Dot.object(jsonObject));
+    var resultYaml =
+      "apiVersion: " +
+      document.getElementById("apiVersion").value +
+      "\n" +
+      "kind: " +
+      document.getElementById("kind").value +
+      "\n" +
+      YAML.safeDump(Dot.object(jsonObject));
     this.setState({
       resultYaml
     });
@@ -129,7 +138,19 @@ export default class Page extends Component {
 
   deploy = () => {
     //alert("deploy here");
-    this.createSampleYaml();
+    var sampleYaml = this.createSampleYaml();
+    var result = this.createResultYaml(sampleYaml);
+    console.log(result);
+    fetch("/", {
+      method: "POST",
+      body: JSON.stringify(result),
+      headers: {
+        "Content-Type": "application/yaml"
+      }
+    })
+      .then(res => res.json())
+      .then(response => console.log("Success:", JSON.stringify(response)))
+      .catch(error => console.error("Error:", error));
   };
 
   setResultYaml = resultYaml => {
@@ -138,33 +159,94 @@ export default class Page extends Component {
     });
   };
 
-  createSampleYaml() {
-    const jsonObject = {};
-    this.state.elements.forEach(element => {
-      if (element.props != undefined && element.props.ids != undefined) {
+  createSampleYamlfromForm(sampleYaml) {
+    //var str = "";
+
+    var elem = document.getElementById(this.formId).elements;
+    for (var i = 0; i < elem.length; i++) {
+      if (elem[i].type != "button" && elem[i].type != "div") {
+        var jsonpath = document
+          .getElementById(elem[i].id)
+          .getAttribute("jsonpath");
         if (
-          element.props.fieldDef.value !== undefined &&
-          element.props.fieldDef.value !== ""
+          elem[i].value != null &&
+          elem[i].value != "" &&
+          elem[i].name != "alt-form-checkbox-1" &&
+          jsonpath != "$.spec.auth.sso" &&
+          jsonpath != "$.spec.auth.ldap" &&
+          jsonpath != null &&
+          elem[i].style.display !== "none"
         ) {
-          let jsonPath = this.getJsonSchemaPathForYaml(
-            element.props.fieldDef.jsonPath
-          );
-          jsonObject[jsonPath] = element.props.fieldDef.value;
+          // str += "Name: " + elem[i].name + " ";
+          // str += "Type: " + elem[i].type + " ";
+          // str += "Value: " + elem[i].value + " ";
+          // str += "                                                 ";
+
+          var tmpJsonPath = this.getJsonSchemaPathForYaml(jsonpath);
+          const value =
+            elem[i].type === "checkbox" ? elem[i].checked : elem[i].value;
+          // if (tmpJsonPath.search(/\*/g) != -1) {
+          //   tmpJsonPath = utils.replaceStarwithPos(elem[i], jsonpath);
+          // }
+          //
+
+          sampleYaml[tmpJsonPath] = value;
         }
       }
-    });
-    var result = this.createResultYaml(jsonObject);
-    console.log(result);
-    fetch("/", {
-      method: "POST",
-      body: JSON.stringify(result),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-      .then(res => res.json())
-      .then(response => console.log("Success:", JSON.stringify(response)))
-      .catch(error => console.error("Error:", error));
+    }
+
+    return sampleYaml;
+  }
+  createSampleYamlfromPages(jsonObject) {
+    // const jsonObject = {};
+
+    if (Array.isArray(this.props.pages)) {
+      this.props.pages.forEach(page => {
+        //  let pageFields = JSON.parse(JSON.stringify(pages.fields));
+
+        let pageFields = page.fields;
+
+        if (Array.isArray(pageFields)) {
+          pageFields.forEach(field => {
+            const value =
+              field.type === "checkbox" ? field.checked : field.value;
+            if (value !== undefined) {
+              let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
+
+              jsonObject[jsonPath] = value;
+            }
+          });
+        }
+        if (
+          page.subPages !== undefined &&
+          Array.isArray(page.subPages) &&
+          page.subPages.length > 0
+        ) {
+          page.subPages.forEach(subPage => {
+            let subPageFields = subPage.fields;
+
+            subPageFields.forEach(field => {
+              const value =
+                field.type === "checkbox" ? field.checked : field.value;
+              if (value !== undefined) {
+                let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
+
+                jsonObject[jsonPath] = value;
+              }
+            });
+          });
+        }
+      });
+    }
+
+    return jsonObject;
+  }
+
+  createSampleYaml() {
+    var sampleYaml = {};
+    sampleYaml = this.createSampleYamlfromForm(sampleYaml);
+    sampleYaml = this.createSampleYamlfromPages(sampleYaml);
+    return sampleYaml;
   }
 
   getJsonSchemaPathForYaml(jsonPath) {
@@ -222,6 +304,15 @@ export default class Page extends Component {
     return (
       <Form id={"form-page-" + this.props.pageNumber}>
         <div key={"page" + this.props.pageNumber}>
+          <Button
+            key="try"
+            variant="secondary"
+            onClick={this.editYaml}
+            //className="pf-u-float-right"
+            //onClick={this.togglePopup}
+          >
+            Edit YAML
+          </Button>
           {this.state.elements.map(element => {
             return element.getJsx();
           })}

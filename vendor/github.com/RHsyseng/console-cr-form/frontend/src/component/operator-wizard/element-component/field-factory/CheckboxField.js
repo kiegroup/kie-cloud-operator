@@ -9,9 +9,6 @@ export class CheckboxField {
 
   getJsx() {
     var name = "checkbox-" + this.props.fieldNumber;
-    var isChecked =
-      this.props.fieldDef.default == "true" ||
-      this.props.fieldDef.default == "TRUE";
 
     return (
       <FormGroup
@@ -20,7 +17,7 @@ export class CheckboxField {
         key={this.props.ids.fieldGroupKey}
       >
         <Checkbox
-          isChecked={isChecked}
+          defaultChecked={this.props.fieldDef.checked}
           onChange={this.onChangeCheckBox}
           id={this.props.ids.fieldId}
           key={this.props.ids.fieldKey}
@@ -35,7 +32,7 @@ export class CheckboxField {
   onChangeCheckBox = (_, event) => {
     const target = event.target;
     const value = target.type === "checkbox" ? target.checked : target.value;
-
-    this.setParentState({ [event.target.name]: value });
+    this.props.fieldDef.checked = value;
+    //  this.setParentState({ [event.target.name]: value });
   };
 }

@@ -180,3 +180,5 @@ spec:
                         valueFrom:
                           fieldRef:
                             fieldPath: metadata.labels['name']
+                      - name: OPERATOR_UI
+                        value: "true"

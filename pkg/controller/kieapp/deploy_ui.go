@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"os"
+	"strings"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	routev1 "github.com/openshift/api/route/v1"
@@ -19,12 +23,53 @@ import (
 var name = "console-cr-form"
 var operatorName string
 
+func shouldDeployConsole() bool {
+	shouldDeploy := os.Getenv(constants.OpUiEnv)
+	if strings.ToLower(shouldDeploy) == "false" {
+		log.Debugf("Environment variable %s set to %s, so will not deploy operator UI", constants.OpUiEnv, shouldDeploy)
+		return false
+	} else {
+		//Default to deploying, if env var not set to false
+		return true
+	}
+}
+
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	log.Debugf("Will deploy operator-ui")
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	operatorName = os.Getenv(constants.OpNameEnv)
+	role := getRole(namespace)
+	err := controllerutil.SetControllerReference(operator, role, reconciler.Service.GetScheme())
+	if err != nil {
+		log.Error("Failed to set owner reference for role. ", err)
+		return
+	}
+	err = reconciler.Service.Create(context.TODO(), role)
+	if err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Debug("Could not create role as it already exists", role)
+		} else {
+			log.Error("Failed to create role. ", err)
+			return
+		}
+	}
+	roleBinding := getRoleBinding(namespace)
+	err = controllerutil.SetControllerReference(operator, roleBinding, reconciler.Service.GetScheme())
+	if err != nil {
+		log.Error("Failed to set owner reference for roleBinding. ", err)
+		return
+	}
+	err = reconciler.Service.Create(context.TODO(), roleBinding)
+	if err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Debug("Could not create roleBinding as it already exists", roleBinding)
+		} else {
+			log.Error("Failed to create roleBinding. ", err)
+			return
+		}
+	}
 	sa := getServiceAccount(namespace)
-	err := controllerutil.SetControllerReference(operator, sa, reconciler.Service.GetScheme())
+	err = controllerutil.SetControllerReference(operator, sa, reconciler.Service.GetScheme())
 	if err != nil {
 		log.Error("Failed to set owner reference for serviceaccount. ", err)
 		return
@@ -39,7 +84,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		}
 	}
 	image := getImage(operator)
-	pod := getPod(namespace, image, sa.Name)
+	pod := getPod(namespace, image, sa.Name, operator)
 	err = controllerutil.SetControllerReference(operator, pod, reconciler.Service.GetScheme())
 	if err != nil {
 		log.Error("Failed to set owner reference for pod. ", err)
@@ -86,7 +131,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	}
 }
 
-func getPod(namespace string, image string, sa string) *corev1.Pod {
+func getPod(namespace string, image string, sa string, operator *appsv1.Deployment) *corev1.Pod {
 	labels := map[string]string{
 		"app":  operatorName,
 		"name": name,
@@ -101,6 +146,11 @@ func getPod(namespace string, image string, sa string) *corev1.Pod {
 	})
 	if err != nil {
 		log.Error("Failed to marshal sar config to json. ", err)
+	}
+	debug := "false"
+	debugIndex := shared.GetEnvVar("DEBUG", operator.Spec.Template.Spec.Containers[0].Env)
+	if debugIndex >= 0 {
+		debug = operator.Spec.Template.Spec.Containers[0].Env[debugIndex].Value
 	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
@@ -133,12 +183,19 @@ func getPod(namespace string, image string, sa string) *corev1.Pod {
 					VolumeMounts: []corev1.VolumeMount{{Name: volume.Name, MountPath: "/etc/tls/private"}},
 				},
 				{
-					Name:  name,
-					Image: image,
+					Name:            name,
+					Image:           image,
+					ImagePullPolicy: operator.Spec.Template.Spec.Containers[0].ImagePullPolicy,
 					Command: []string{
 						"console-cr-form",
 					},
 					Ports: []corev1.ContainerPort{{Name: "http", ContainerPort: httpPort}},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "DEBUG",
+							Value: debug,
+						},
+					},
 					ReadinessProbe: &corev1.Probe{
 						Handler: corev1.Handler{
 							HTTPGet: &corev1.HTTPGetAction{
@@ -217,6 +274,51 @@ func getRoute(namespace string) *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination: routev1.TLSTerminationReencrypt,
+			},
+		},
+	}
+}
+
+func getRole(namespace string) *rbacv1.Role {
+	labels := map[string]string{
+		"app":  operatorName,
+		"name": name,
+	}
+	return &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{v1.SchemeGroupVersion.Group},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
+		},
+	}
+}
+
+func getRoleBinding(namespace string) *rbacv1.RoleBinding {
+	labels := map[string]string{
+		"app":  operatorName,
+		"name": name,
+	}
+	return &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind: "Role",
+			Name: name,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind: "ServiceAccount",
+				Name: name,
 			},
 		},
 	}

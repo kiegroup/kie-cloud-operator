@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"go/token"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
@@ -340,10 +341,15 @@ func (r *runner) Definition(t *testing.T, data tests.Definitions) {
 			Position:     loc.Range.Start,
 		}
 		var locs []protocol.Location
+		var hover *protocol.Hover
 		if d.IsType {
 			locs, err = r.server.TypeDefinition(context.Background(), params)
 		} else {
 			locs, err = r.server.Definition(context.Background(), params)
+			if err != nil {
+				t.Fatalf("failed for %v: %v", d.Src, err)
+			}
+			hover, err = r.server.Hover(context.Background(), params)
 		}
 		if err != nil {
 			t.Fatalf("failed for %v: %v", d.Src, err)
@@ -357,6 +363,19 @@ func (r *runner) Definition(t *testing.T, data tests.Definitions) {
 			t.Fatalf("failed for %v: %v", locs[0], err)
 		} else if def != d.Def {
 			t.Errorf("for %v got %v want %v", d.Src, def, d.Def)
+		}
+		if hover != nil {
+			tag := fmt.Sprintf("hover-%d-%d", d.Def.Start().Line(), d.Def.Start().Column())
+			filename, err := d.Def.URI().Filename()
+			if err != nil {
+				t.Fatalf("failed for %v: %v", d.Def, err)
+			}
+			expectHover := string(r.data.Golden(tag, filename, func(golden string) error {
+				return ioutil.WriteFile(golden, []byte(hover.Contents.Value), 0666)
+			}))
+			if hover.Contents.Value != expectHover {
+				t.Errorf("for %v got %q want %q", d.Src, hover.Contents.Value, expectHover)
+			}
 		}
 	}
 }
@@ -515,6 +534,41 @@ func diffSignatures(spn span.Span, want source.SignatureInformation, got *protoc
 	}
 
 	return ""
+}
+
+func (r *runner) Link(t *testing.T, data tests.Links) {
+	for uri, wantLinks := range data {
+		m := r.mapper(uri)
+		gotLinks, err := r.server.DocumentLink(context.Background(), &protocol.DocumentLinkParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: protocol.NewURI(uri),
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		links := make(map[span.Span]string, len(wantLinks))
+		for _, link := range wantLinks {
+			links[link.Src] = link.Target
+		}
+		for _, link := range gotLinks {
+			spn, err := m.RangeSpan(link.Range)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if target, ok := links[spn]; ok {
+				delete(links, spn)
+				if target != link.Target {
+					t.Errorf("for %v want %v, got %v\n", spn, link.Target, target)
+				}
+			} else {
+				t.Errorf("unexpected link %v:%v\n", spn, link.Target)
+			}
+		}
+		for spn, target := range links {
+			t.Errorf("missing link %v:%v\n", spn, target)
+		}
+	}
 }
 
 func (r *runner) mapper(uri span.URI) *protocol.ColumnMapper {
