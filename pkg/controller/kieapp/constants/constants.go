@@ -2,6 +2,7 @@ package constants
 
 import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -101,4 +102,14 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 var TemplateConstants = v1.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
+}
+
+var DebugTrue = corev1.EnvVar{
+	Name:  "DEBUG",
+	Value: "true",
+}
+
+var DebugFalse = corev1.EnvVar{
+	Name:  "DEBUG",
+	Value: "false",
 }

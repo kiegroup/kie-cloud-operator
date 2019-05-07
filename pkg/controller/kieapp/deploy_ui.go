@@ -147,10 +147,9 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 	if err != nil {
 		log.Error("Failed to marshal sar config to json. ", err)
 	}
-	debug := "false"
-	debugIndex := shared.GetEnvVar("DEBUG", operator.Spec.Template.Spec.Containers[0].Env)
-	if debugIndex >= 0 {
-		debug = operator.Spec.Template.Spec.Containers[0].Env[debugIndex].Value
+	debug := constants.DebugFalse
+	if shared.EnvVarSet(constants.DebugTrue, operator.Spec.Template.Spec.Containers[0].Env) {
+		debug = constants.DebugTrue
 	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
@@ -190,12 +189,7 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 						"console-cr-form",
 					},
 					Ports: []corev1.ContainerPort{{Name: "http", ContainerPort: httpPort}},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "DEBUG",
-							Value: debug,
-						},
-					},
+					Env:   []corev1.EnvVar{debug},
 					ReadinessProbe: &corev1.Probe{
 						Handler: corev1.Handler{
 							HTTPGet: &corev1.HTTPGetAction{
