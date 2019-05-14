@@ -1,5 +1,6 @@
 # Temporary Build Files
 frontend/dist/bundle.js
+frontend/dist/*.jpg
 build
 target/
 

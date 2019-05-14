@@ -5,12 +5,13 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gobuffalo/packr/v2"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/gobuffalo/packr/v2"
+	"github.com/sirupsen/logrus"
 )
 
 type GoTemplate struct {
@@ -80,18 +81,43 @@ func RunWebServer(config Configuration) error {
 			}
 			config.CallBack(request)
 			writer.WriteHeader(http.StatusOK)
+			writer.Write([]byte("{\"Result\": \"Success\"}"))
 		}
 	}
 
 	//For anything else:
 	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+		//For index.html and root GET requests, send back the processed index.html
+		returnIndex(writer, reader)
+	})
+
+	http.HandleFunc("/api", func(writer http.ResponseWriter, reader *http.Request) {
 		if reader.Method == "POST" {
-			//Receive and handle posted yaml separately
 			processYaml(writer, reader)
 		} else {
-			//For index.html and root GET requests, send back the processed index.html
-			returnIndex(writer, reader)
+			http.Error(writer, "Unable to handle request", http.StatusNotFound)
 		}
+	})
+
+	http.HandleFunc("/api/form", func(writer http.ResponseWriter, reader *http.Request) {
+		js, err := json.Marshal(config.Form())
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+		}
+		writer.Write(js)
+	})
+
+	http.HandleFunc("/api/schema", func(writer http.ResponseWriter, reader *http.Request) {
+		js, err := json.Marshal(config.Schema())
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+		}
+		writer.Write(js)
+	})
+
+	http.HandleFunc("/api/spec", func(writer http.ResponseWriter, reader *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(writer, "{\"kind\": \"%v\", \"apiVersion\": \"%v\"}", config.Kind(), config.ApiVersion())
 	})
 
 	//Start the web server, set the port to listen to 8080. Without a path it assumes localhost

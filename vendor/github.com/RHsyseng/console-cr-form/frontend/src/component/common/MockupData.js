@@ -1,6 +1,7 @@
 export const MockupData_JSON = {
   pages: [
     {
+      label: "Information",
       fields: [
         {
           label: "Application Name",
@@ -15,7 +16,7 @@ export const MockupData_JSON = {
           required: true,
           description: "The name of the environment used as a baseline",
           jsonPath: "$.spec.environment",
-
+          originalJsonPath: "$.spec.environment",
           type: "dropDown"
         },
         {
@@ -49,228 +50,240 @@ export const MockupData_JSON = {
       ]
     },
     {
+      label: "Security",
       fields: [
         {
-          label: "SSO",
+          label: "Security",
           type: "section_radio",
-          required: true,
-          jsonPath: "$.spec.objects.console.env.sso",
-          default: "Some text here",
+          jsonPath: "",
           fields: [
             {
-              label: "url",
-              type: "text",
-              jsonPath: "$.spec.auth.sso.url",
-              default: "",
-              description: "RH-SSO URL"
+              label: "SSO",
+              type: "radioButton",
+              required: false,
+              jsonPath: "$.spec.objects.console.env.sso",
+              default: "Some text here",
+              fields: [
+                {
+                  label: "url",
+                  type: "text",
+                  required: true,
+                  jsonPath: "$.spec.auth.sso.url",
+                  default: "",
+                  description: "RH-SSO URL"
+                },
+                {
+                  label: "realm",
+                  type: "text",
+                  required: true,
+                  jsonPath: "$.spec.auth.sso.realm",
+                  default: "",
+                  description: "RH-SSO Realm name"
+                },
+                {
+                  label: "Admin User",
+                  type: "text",
+                  jsonPath: "$.spec.auth.sso.adminuser",
+                  default: "",
+                  description:
+                    "RH-SSO Realm Admin Username used to create the Client if it doesn't exist"
+                },
+                {
+                  label: "Admin Password",
+                  type: "password",
+                  jsonPath: "$.spec.auth.sso.adminPassword",
+                  default: "",
+                  description:
+                    "RH-SSO Realm Admin Password used to create the Client"
+                },
+                {
+                  label: "Disable SSL Cert Validation",
+                  type: "checkbox",
+                  jsonPath: "$.spec.auth.sso.disableSSLCertValidation",
+                  default: false,
+                  description: "RH-SSO Disable SSL Certificate Validation"
+                },
+                {
+                  label: "Principal Attribute",
+                  type: "text",
+                  jsonPath: "$.spec.auth.sso.principalAttribute",
+                  default: "",
+                  description: "RH-SSO Principal Attribute to use as username"
+                }
+              ]
             },
             {
-              label: "realm",
-              type: "text",
-              jsonPath: "$.spec.auth.sso.realm",
-              default: "",
-              description: "RH-SSO Realm name"
-            },
-            {
-              label: "Admin User",
-              type: "text",
-              jsonPath: "$.spec.auth.sso.adminuser",
-              default: "",
-              description:
-                "RH-SSO Realm Admin Username used to create the Client if it doesn't exist"
-            },
-            {
-              label: "Admin Password",
-              type: "password",
-              jsonPath: "$.spec.auth.sso.adminPassword",
-              default: "",
-              description:
-                "RH-SSO Realm Admin Password used to create the Client"
-            },
-            {
-              label: "Disable SSL Cert Validation",
-              type: "checkbox",
-              jsonPath: "$.spec.auth.sso.disableSSLCertValidation",
-              default: false,
-              description: "RH-SSO Disable SSL Certificate Validation"
-            },
-            {
-              label: "Principal Attribute",
-              type: "text",
-              jsonPath: "$.spec.auth.sso.principalAttribute",
-              default: "",
-              description: "RH-SSO Principal Attribute to use as username"
-            }
-          ]
-        },
-        {
-          label: "LDAP",
-          type: "section_radio",
-          required: true,
-          jsonPath: "$.spec.objects.console.env.ldap",
-          default: "Some text here",
-          fields: [
-            {
-              label: "url",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.url",
-              default: "",
-              description: " LDAP Endpoint to connect for authentication"
-            },
-            {
-              label: "bindDN",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.bindDN",
-              default: "",
-              description: "Bind DN used for authentication"
-            },
-            {
-              label: "bind Credential",
-              type: "password",
-              jsonPath: "$.spec.auth.ldap.bindCredential",
-              default: "",
-              description: "LDAP Credentials used for authentication"
-            },
-            {
-              label: "jaasSecurityDomain",
-              type: "password",
-              jsonPath: "$.spec.auth.ldap.jaasSecurityDomain",
-              default: "",
-              description:
-                "The JMX ObjectName of the JaasSecurityDomain used to decrypt the password."
-            },
-            {
-              label: "baseCtxDN",
-              type: "checkbox",
-              jsonPath: "$.spec.auth.ldap.baseCtxDN",
-              default: false,
-              description:
-                "LDAP Base DN of the top-level context to begin the user search."
-            },
-            {
-              label: "baseFilter",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.baseFilter",
-              default: "",
-              description:
-                "LDAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
-            },
-            {
-              label: "searchScope",
-              type: "dropDown",
-              jsonPath: "$.spec.auth.ldap.searchScope",
-              default: "",
-              description: "The search scope to use."
-            },
-            {
-              label: "searchTimeLimit",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.searchTimeLimit",
-              default: "",
-              description:
-                "The timeout in milliseconds for user or role searches."
-            },
-            {
-              label: "distinguishedNameAttribute",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.distinguishedNameAttribute",
-              default: "",
-              description:
-                "The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used."
-            },
-            {
-              label: "parseUsername",
-              type: "checkbox",
-              jsonPath: "$.spec.auth.ldap.parseUsername",
-              default: false,
-              description:
-                "A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString."
-            },
-            {
-              label: "usernameBeginString",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.usernameBeginString",
-              default: "",
-              description:
-                "Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true."
-            },
-            {
-              label: "usernameBeginString",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.usernameBeginString",
-              default: "",
-              description:
-                "Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true."
-            },
-            {
-              label: "roleAttributeID",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.roleAttributeID",
-              default: "",
-              description: "Name of the attribute containing the user roles"
-            },
-            {
-              label: "rolesCtxDN",
-              type: "password",
-              jsonPath: "$.spec.auth.ldap.rolesCtxDN",
-              default: "",
-              description:
-                "The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is."
-            },
-            {
-              label: "roleFilter",
-              type: "password",
-              jsonPath: "$.spec.auth.ldap.roleFilter",
-              default: "",
-              description:
-                "A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1})."
-            },
-            {
-              label: "roleRecursion",
-              type: "number",
-              jsonPath: "$.spec.auth.ldap.baseCtxDN",
-              default: "false",
-              description:
-                "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
-            },
-            {
-              label: "defaultRole",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.defaultRole",
-              default: "",
-              description: "A role included for all authenticated users"
-            },
-            {
-              label: "roleNameAttributeID",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.roleNameAttributeID",
-              default: "",
-              description:
-                "Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute."
-            },
-            {
-              label: "parseRoleNameFromDN",
-              type: "checkbox",
-              jsonPath: "$.spec.auth.ldap.parseRoleNameFromDN",
-              default: false,
-              description:
-                "A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries."
-            },
-            {
-              label: "roleAttributeIsDN",
-              type: "checkbox",
-              jsonPath: "$.spec.auth.ldap.roleAttributeIsDN",
-              default: false,
-              description:
-                "Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true."
-            },
-            {
-              label: "referralUserAttributeIDToCheck",
-              type: "text",
-              jsonPath: "$.spec.auth.ldap.referralUserAttributeIDToCheck",
-              default: "",
-              description:
-                " If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
+              label: "LDAP",
+              type: "radioButton",
+              required: false,
+              jsonPath: "$.spec.objects.console.env.ldap",
+              default: "Some text here",
+              fields: [
+                {
+                  label: "url",
+                  type: "text",
+                  required: true,
+                  jsonPath: "$.spec.auth.ldap.url",
+                  default: "",
+                  description: " LDAP Endpoint to connect for authentication"
+                },
+                {
+                  label: "bindDN",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.bindDN",
+                  default: "",
+                  description: "Bind DN used for authentication"
+                },
+                {
+                  label: "bind Credential",
+                  type: "password",
+                  jsonPath: "$.spec.auth.ldap.bindCredential",
+                  default: "",
+                  description: "LDAP Credentials used for authentication"
+                },
+                {
+                  label: "jaasSecurityDomain",
+                  type: "password",
+                  jsonPath: "$.spec.auth.ldap.jaasSecurityDomain",
+                  default: "",
+                  description:
+                    "The JMX ObjectName of the JaasSecurityDomain used to decrypt the password."
+                },
+                {
+                  label: "baseCtxDN",
+                  type: "checkbox",
+                  jsonPath: "$.spec.auth.ldap.baseCtxDN",
+                  default: false,
+                  description:
+                    "LDAP Base DN of the top-level context to begin the user search."
+                },
+                {
+                  label: "baseFilter",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.baseFilter",
+                  default: "",
+                  description:
+                    "LDAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
+                },
+                {
+                  label: "searchScope",
+                  type: "dropDown",
+                  jsonPath: "$.spec.auth.ldap.searchScope",
+                  originalJsonPath: "$.spec.auth.ldap.searchScope",
+                  default: "",
+                  description: "The search scope to use."
+                },
+                {
+                  label: "searchTimeLimit",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.searchTimeLimit",
+                  default: "",
+                  description:
+                    "The timeout in milliseconds for user or role searches."
+                },
+                {
+                  label: "distinguishedNameAttribute",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.distinguishedNameAttribute",
+                  default: "",
+                  description:
+                    "The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used."
+                },
+                {
+                  label: "parseUsername",
+                  type: "checkbox",
+                  jsonPath: "$.spec.auth.ldap.parseUsername",
+                  default: false,
+                  description:
+                    "A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString."
+                },
+                {
+                  label: "usernameBeginString",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.usernameBeginString",
+                  default: "",
+                  description:
+                    "Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true."
+                },
+                {
+                  label: "usernameBeginString",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.usernameBeginString",
+                  default: "",
+                  description:
+                    "Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true."
+                },
+                {
+                  label: "roleAttributeID",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.roleAttributeID",
+                  default: "",
+                  description: "Name of the attribute containing the user roles"
+                },
+                {
+                  label: "rolesCtxDN",
+                  type: "password",
+                  jsonPath: "$.spec.auth.ldap.rolesCtxDN",
+                  default: "",
+                  description:
+                    "The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is."
+                },
+                {
+                  label: "roleFilter",
+                  type: "password",
+                  jsonPath: "$.spec.auth.ldap.roleFilter",
+                  default: "",
+                  description:
+                    "A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1})."
+                },
+                {
+                  label: "roleRecursion",
+                  type: "number",
+                  jsonPath: "$.spec.auth.ldap.baseCtxDN",
+                  default: "false",
+                  description:
+                    "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
+                },
+                {
+                  label: "defaultRole",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.defaultRole",
+                  default: "",
+                  description: "A role included for all authenticated users"
+                },
+                {
+                  label: "roleNameAttributeID",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.roleNameAttributeID",
+                  default: "",
+                  description:
+                    "Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute."
+                },
+                {
+                  label: "parseRoleNameFromDN",
+                  type: "checkbox",
+                  jsonPath: "$.spec.auth.ldap.parseRoleNameFromDN",
+                  default: false,
+                  description:
+                    "A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries."
+                },
+                {
+                  label: "roleAttributeIsDN",
+                  type: "checkbox",
+                  jsonPath: "$.spec.auth.ldap.roleAttributeIsDN",
+                  default: false,
+                  description:
+                    "Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true."
+                },
+                {
+                  label: "referralUserAttributeIDToCheck",
+                  type: "text",
+                  jsonPath: "$.spec.auth.ldap.referralUserAttributeIDToCheck",
+                  default: "",
+                  description:
+                    " If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
+                }
+              ]
             }
           ]
         },
@@ -357,6 +370,7 @@ export const MockupData_JSON = {
       ]
     },
     {
+      label: "Components",
       subPages: [
         {
           label: "Console",
@@ -380,8 +394,8 @@ export const MockupData_JSON = {
               required: false,
               jsonPath: "$.spec.objects.console.env",
               type: "object",
-              min: 1,
-              max: 2,
+              min: 0,
+              max: 100,
               fields: [
                 {
                   label: "name",
@@ -460,7 +474,7 @@ export const MockupData_JSON = {
               required: false,
               jsonPath: "$.spec.objects.servers",
               type: "object",
-              min: 1,
+              min: 0,
               max: 100,
               fields: [
                 {
@@ -496,6 +510,7 @@ export const MockupData_JSON = {
                   type: "dropDown",
                   required: true,
                   jsonPath: "$.spec.objects.servers[*].from.kind",
+                  originalJsonPath: "$.spec.objects.servers[*].from.kind",
                   default: ""
                 },
                 {
@@ -563,13 +578,15 @@ export const MockupData_JSON = {
                   required: false,
                   jsonPath: "$.spec.objects.servers[*].build.webhooks",
                   type: "object",
-                  min: 1,
-                  max: 1,
+                  min: 0,
+                  max: 100,
                   fields: [
                     {
                       label: "Type",
                       type: "dropDown",
                       jsonPath:
+                        "$.spec.objects.servers[*].build.webhooks[*].type",
+                      originalJsonPath:
                         "$.spec.objects.servers[*].build.webhooks[*].type",
                       default: "",
                       required: false,
@@ -579,7 +596,7 @@ export const MockupData_JSON = {
                       label: "Secret",
                       type: "password",
                       jsonPath:
-                        "$.spec.objects.servers[*].build.webhooks.secret",
+                        "$.spec.objects.servers[*].build.webhooks[*].secret",
                       default: "",
                       required: true,
                       description: "Secret value for webhook"
@@ -592,6 +609,7 @@ export const MockupData_JSON = {
                   type: "dropDown",
                   required: true,
                   jsonPath: "$.spec.objects.servers[*].from.kind",
+                  originalJsonPath: "$.spec.objects.servers[*].from.kind",
                   default: ""
                 },
                 {
@@ -635,58 +653,60 @@ export const MockupData_JSON = {
                 {
                   label: "Request(Memory)",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.resources.request.memory",
+                  jsonPath:
+                    "$.spec.objects.servers[*].resources.request.memory",
                   default: "2Gi"
                 },
                 {
                   label: "Request(CPU)",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.resources.request.cpu",
+                  jsonPath: "$.spec.objects.servers[*].resources.request.cpu",
                   default: "500m"
                 },
                 {
                   label: "Limits(Memory)",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.resources.limits.memory",
+                  jsonPath: "$.spec.objects.servers[*].resources.limits.memory",
                   default: "2Gi"
                 },
                 {
                   label: "Limits(CPU)",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.resources.limits.cpu",
+                  jsonPath: "$.spec.objects.servers[*].resources.limits.cpu",
                   default: "500m"
                 },
                 {
                   label: "Client Name",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.ssoClient.name",
+                  jsonPath: "$.spec.objects.servers[*].ssoClient.name",
                   default: ""
                 },
                 {
                   label: "Client Secret",
                   type: "password",
-                  jsonPath: "$.spec.objects.console.ssoClient.secret",
+                  jsonPath: "$.spec.objects.servers[*].ssoClient.secret",
                   default: ""
                 },
                 {
                   label: "Hostname Http",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.ssoClient.hostnameHTTP",
+                  jsonPath: "$.spec.objects.servers[*].ssoClient.hostnameHTTP",
                   default: "",
                   description: "Hostname to set as redirect URL"
                 },
                 {
                   label: "Hostname Https",
                   type: "text",
-                  jsonPath: "$.spec.objects.console.ssoClient.hostnameHTTPS",
+                  jsonPath: "$.spec.objects.servers[*].ssoClient.hostnameHTTPS",
                   default: "",
                   description: "Secure hostname to set as redirect URL"
                 },
                 {
                   label: "Type",
                   type: "dropDown",
-                  required: true,
+                  required: false,
                   jsonPath: "$.spec.objects.servers[*].database.type",
+                  originalJsonPath: "$.spec.objects.servers[*].database.type",
                   default: ""
                 },
                 {
@@ -700,7 +720,7 @@ export const MockupData_JSON = {
                 {
                   label: "Driver",
                   type: "text",
-                  required: true,
+                  required: false,
                   jsonPath:
                     "$.spec.objects.servers[*].database.type.externalConfig.driver",
                   default: ""
@@ -708,7 +728,7 @@ export const MockupData_JSON = {
                 {
                   label: "Dialect",
                   type: "text",
-                  required: true,
+                  required: false,
                   jsonPath:
                     "$.spec.objects.servers[*].database.type.externalConfig.dialect",
                   default: ""
@@ -751,7 +771,7 @@ export const MockupData_JSON = {
                 {
                   label: "jndiName",
                   type: "text",
-                  required: true,
+                  required: false,
                   jsonPath:
                     "$.spec.objects.servers[*].database.type.externalConfig.jndiName",
                   default: ""
@@ -759,7 +779,7 @@ export const MockupData_JSON = {
                 {
                   label: "User Name",
                   type: "text",
-                  required: true,
+                  required: false,
                   jsonPath:
                     "$.spec.objects.servers[*].database.type.externalConfig.username",
                   default: ""
@@ -767,7 +787,7 @@ export const MockupData_JSON = {
                 {
                   label: "Password",
                   type: "password",
-                  required: true,
+                  required: false,
                   jsonPath:
                     "$.spec.objects.servers[*].database.type.externalConfig.password",
                   default: ""

@@ -31,7 +31,14 @@ export default class FieldFactory {
   /**
    * Creates a single instance of a field
    */
-  static newInstance(fieldDef, fieldNumber, pageNumber, jsonSchema, page) {
+  static newInstance(
+    fieldDef,
+    fieldNumber,
+    pageNumber,
+    jsonSchema,
+    page,
+    parentid
+  ) {
     var fieldReference;
     var props = {
       page: page,
@@ -39,7 +46,13 @@ export default class FieldFactory {
       fieldNumber: fieldNumber,
       pageNumber: pageNumber,
       jsonSchema: jsonSchema,
-      ids: FieldUtils.generateIds(pageNumber, fieldNumber, fieldDef.label)
+      ids: FieldUtils.generateIds(
+        pageNumber,
+        fieldNumber,
+        fieldDef.label,
+        parentid
+      ),
+      parentid: parentid
     };
     //TODO: rethink when we have the time
     switch (fieldDef.type) {
@@ -74,6 +87,10 @@ export default class FieldFactory {
         fieldReference = new SectionRadioField(props);
         break;
       case FIELD_TYPE.object:
+        if (props.parentid === undefined) {
+          props.parentid = -1;
+        }
+
         fieldReference = new ObjectField(props);
         break;
       default:
@@ -86,7 +103,7 @@ export default class FieldFactory {
   /**
    * Creates all instances based on a field array
    */
-  static newInstances(fieldDefs, jsonSchema, pageNumber, page) {
+  static newInstances(fieldDefs, jsonSchema, pageNumber, page, parentid) {
     var children = [];
     if (fieldDefs !== undefined && fieldDefs !== null && fieldDefs !== "") {
       fieldDefs.forEach((field, fieldNumber) => {
@@ -95,7 +112,8 @@ export default class FieldFactory {
           fieldNumber,
           pageNumber,
           jsonSchema,
-          page
+          page,
+          parentid
         );
         if (fieldGenerator !== null) {
           children.push(fieldGenerator);
@@ -108,12 +126,13 @@ export default class FieldFactory {
   /**
    * Same as newInstances, but return an array of instances in the form of JSX.
    */
-  static newInstancesAsJsx(fieldDefs, jsonSchema, pageNumber, page) {
+  static newInstancesAsJsx(fieldDefs, jsonSchema, pageNumber, page, parentId) {
     var children = FieldFactory.newInstances(
       fieldDefs,
       jsonSchema,
       pageNumber,
-      page
+      page,
+      parentId
     );
     var childrenJsx = [];
     children.forEach(child => {

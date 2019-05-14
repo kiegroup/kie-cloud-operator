@@ -1015,7 +1015,7 @@ func TestCompanyServiceGetCompany(t *testing.T) {
 
 	mockCompany.resps = append(mockCompany.resps[:0], expectedResponse)
 
-	var formattedName string = fmt.Sprintf("projects/%s/companies/%s", "[PROJECT]", "[COMPANY]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/companies/%s", "[PROJECT]", "[TENANT]", "[COMPANY]")
 	var request = &talentpb.GetCompanyRequest{
 		Name: formattedName,
 	}
@@ -1044,7 +1044,7 @@ func TestCompanyServiceGetCompanyError(t *testing.T) {
 	errCode := codes.PermissionDenied
 	mockCompany.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = fmt.Sprintf("projects/%s/companies/%s", "[PROJECT]", "[COMPANY]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/companies/%s", "[PROJECT]", "[TENANT]", "[COMPANY]")
 	var request = &talentpb.GetCompanyRequest{
 		Name: formattedName,
 	}
@@ -1148,7 +1148,7 @@ func TestCompanyServiceDeleteCompany(t *testing.T) {
 
 	mockCompany.resps = append(mockCompany.resps[:0], expectedResponse)
 
-	var formattedName string = fmt.Sprintf("projects/%s/companies/%s", "[PROJECT]", "[COMPANY]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/companies/%s", "[PROJECT]", "[TENANT]", "[COMPANY]")
 	var request = &talentpb.DeleteCompanyRequest{
 		Name: formattedName,
 	}
@@ -1174,7 +1174,7 @@ func TestCompanyServiceDeleteCompanyError(t *testing.T) {
 	errCode := codes.PermissionDenied
 	mockCompany.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = fmt.Sprintf("projects/%s/companies/%s", "[PROJECT]", "[COMPANY]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/companies/%s", "[PROJECT]", "[TENANT]", "[COMPANY]")
 	var request = &talentpb.DeleteCompanyRequest{
 		Name: formattedName,
 	}
@@ -1513,7 +1513,7 @@ func TestJobServiceGetJob(t *testing.T) {
 
 	mockJob.resps = append(mockJob.resps[:0], expectedResponse)
 
-	var formattedName string = fmt.Sprintf("projects/%s/jobs/%s", "[PROJECT]", "[JOBS]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/jobs/%s", "[PROJECT]", "[TENANT]", "[JOBS]")
 	var request = &talentpb.GetJobRequest{
 		Name: formattedName,
 	}
@@ -1542,7 +1542,7 @@ func TestJobServiceGetJobError(t *testing.T) {
 	errCode := codes.PermissionDenied
 	mockJob.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = fmt.Sprintf("projects/%s/jobs/%s", "[PROJECT]", "[JOBS]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/jobs/%s", "[PROJECT]", "[TENANT]", "[JOBS]")
 	var request = &talentpb.GetJobRequest{
 		Name: formattedName,
 	}
@@ -1650,7 +1650,7 @@ func TestJobServiceDeleteJob(t *testing.T) {
 
 	mockJob.resps = append(mockJob.resps[:0], expectedResponse)
 
-	var formattedName string = fmt.Sprintf("projects/%s/jobs/%s", "[PROJECT]", "[JOBS]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/jobs/%s", "[PROJECT]", "[TENANT]", "[JOBS]")
 	var request = &talentpb.DeleteJobRequest{
 		Name: formattedName,
 	}
@@ -1676,7 +1676,7 @@ func TestJobServiceDeleteJobError(t *testing.T) {
 	errCode := codes.PermissionDenied
 	mockJob.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = fmt.Sprintf("projects/%s/jobs/%s", "[PROJECT]", "[JOBS]")
+	var formattedName string = fmt.Sprintf("projects/%s/tenants/%s/jobs/%s", "[PROJECT]", "[TENANT]", "[JOBS]")
 	var request = &talentpb.DeleteJobRequest{
 		Name: formattedName,
 	}
@@ -2068,7 +2068,6 @@ func TestProfileServiceCreateProfile(t *testing.T) {
 	var source string = "source-896505829"
 	var uri string = "uri116076"
 	var groupId string = "groupId506361563"
-	var resumeHrxml string = "resumeHrxml1834730555"
 	var processed bool = true
 	var keywordSnippet string = "keywordSnippet1325317319"
 	var expectedResponse = &talentpb.Profile{
@@ -2077,7 +2076,6 @@ func TestProfileServiceCreateProfile(t *testing.T) {
 		Source:         source,
 		Uri:            uri,
 		GroupId:        groupId,
-		ResumeHrxml:    resumeHrxml,
 		Processed:      processed,
 		KeywordSnippet: keywordSnippet,
 	}
@@ -2145,7 +2143,6 @@ func TestProfileServiceGetProfile(t *testing.T) {
 	var source string = "source-896505829"
 	var uri string = "uri116076"
 	var groupId string = "groupId506361563"
-	var resumeHrxml string = "resumeHrxml1834730555"
 	var processed bool = true
 	var keywordSnippet string = "keywordSnippet1325317319"
 	var expectedResponse = &talentpb.Profile{
@@ -2154,7 +2151,6 @@ func TestProfileServiceGetProfile(t *testing.T) {
 		Source:         source,
 		Uri:            uri,
 		GroupId:        groupId,
-		ResumeHrxml:    resumeHrxml,
 		Processed:      processed,
 		KeywordSnippet: keywordSnippet,
 	}
@@ -2218,7 +2214,6 @@ func TestProfileServiceUpdateProfile(t *testing.T) {
 	var source string = "source-896505829"
 	var uri string = "uri116076"
 	var groupId string = "groupId506361563"
-	var resumeHrxml string = "resumeHrxml1834730555"
 	var processed bool = true
 	var keywordSnippet string = "keywordSnippet1325317319"
 	var expectedResponse = &talentpb.Profile{
@@ -2227,7 +2222,6 @@ func TestProfileServiceUpdateProfile(t *testing.T) {
 		Source:         source,
 		Uri:            uri,
 		GroupId:        groupId,
-		ResumeHrxml:    resumeHrxml,
 		Processed:      processed,
 		KeywordSnippet: keywordSnippet,
 	}

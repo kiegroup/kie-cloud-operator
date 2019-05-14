@@ -1,10 +1,33 @@
 export class FieldUtils {
-  static generateIds(pageNumber, fieldNumber, label) {
+  static generateIds(pageNumber, fieldNumber, label, parentId) {
     const randomNum = Math.floor(Math.random() * 100000000 + 1);
-    const fieldGroupId =
+    let fieldGroupId =
       pageNumber + "-fieldGroup-" + fieldNumber + "-" + label + "-" + randomNum;
-    const fieldId =
+    let fieldId =
       pageNumber + "-field-" + fieldNumber + "-" + label + "-" + randomNum;
+    if (parentId !== undefined) {
+      fieldGroupId =
+        pageNumber +
+        "_fieldGroup_" +
+        fieldNumber +
+        "_" +
+        parentId +
+        "_" +
+        label +
+        "_" +
+        randomNum;
+
+      fieldId =
+        pageNumber +
+        "_field_" +
+        fieldNumber +
+        "_" +
+        parentId +
+        "_" +
+        label +
+        "_" +
+        randomNum;
+    }
     return {
       fieldGroupId: fieldGroupId,
       fieldGroupKey: "fieldGroupKey-" + fieldGroupId,

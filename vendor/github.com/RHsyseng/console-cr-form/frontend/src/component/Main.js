@@ -7,20 +7,15 @@ export default class Main extends Component {
     super(props);
     this.stepBuilder = new StepBuilder();
     this.state = {
-      steps: [this.stepBuilder.buildPlaceholderStep()],
-      showPopup: false
+      steps: [this.stepBuilder.buildPlaceholderStep()]
     };
   }
 
   componentDidMount() {
-    this.setState({ steps: this.stepBuilder.buildSteps() });
+    this.stepBuilder.buildSteps(steps => this.setState({ steps: steps }));
   }
 
   render() {
-    return (
-      <React.Fragment>
-        <OperatorWizard steps={this.state.steps} />
-      </React.Fragment>
-    );
+    return <OperatorWizard steps={this.state.steps} />;
   }
 }
