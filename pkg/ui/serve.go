@@ -3,6 +3,7 @@ package ui
 //go:generate go run ../controller/kieapp/defaults/.packr/packr.go
 
 import (
+	"encoding/json"
 	"github.com/RHsyseng/console-cr-form/pkg/web"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
@@ -20,7 +21,7 @@ var log = logs.GetLogger("ui")
 
 // Listen ...
 func Listen() {
-	config, err := web.NewConfiguration("", 8080, getSchema(), v1.SchemeGroupVersion.String(), getObjectKind(), getForm(), apply)
+	config, err := web.NewConfiguration("", 8080, getSchema(), getApiVersion(), getObjectKind(), getForm(), apply)
 	if err != nil {
 		log.Fatal("Failed to configure web server", err)
 	}
@@ -73,43 +74,6 @@ func getCurrentNamespace() string {
 	return string(bytes)
 }
 
-func getForm() web.Form {
-	return web.Form{
-		Pages: []web.Page{
-			{
-				Fields: []web.Field{
-					{
-						Label:    "Name",
-						Default:  "rhpam-trial",
-						Required: true,
-						JSONPath: "$.metadata.name",
-					},
-					{
-						Label:    "Environment",
-						Default:  "rhpam-trial",
-						Required: true,
-						JSONPath: "$.spec.environment",
-					},
-				},
-				Buttons: []web.Button{
-					{
-						Label:  "Cancel",
-						Action: web.Cancel,
-					},
-					{
-						Label:  "Deploy",
-						Action: web.Submit,
-					},
-					{
-						Label:  "Customize",
-						Action: web.Next,
-					},
-				},
-			},
-		},
-	}
-}
-
 type CustomResourceDefinition struct {
 	Spec CustomResourceDefinitionSpec `json:"spec,omitempty"`
 }
@@ -132,9 +96,26 @@ func getSchema() spec.Schema {
 	crd := &CustomResourceDefinition{}
 	err = yaml.Unmarshal(yamlByte, crd)
 	if err != nil {
+		log.Fatal(err)
 		panic("Failed to unmarshal static schema, there must be an environment problem!")
 	}
 	return crd.Spec.Validation.OpenAPIV3Schema
+}
+
+func getForm() web.Form {
+	box := packr.New("form", "../../deploy/ui/")
+	jsonBytes, err := box.Find("form.json")
+	if err != nil {
+		log.Fatal(err)
+		panic("Failed to retrieve ui form, there must be an environment problem!")
+	}
+	form := &web.Form{}
+	err = json.Unmarshal(jsonBytes, form)
+	if err != nil {
+		log.Fatal(err)
+		panic("Failed to unmarshal static ui form, there must be an environment problem!")
+	}
+	return *form
 }
 
 func getObjectKind() string {
@@ -150,4 +131,8 @@ func getObjectKind() string {
 		panic("Failed to unmarshal static schema, there must be an environment problem!")
 	}
 	return crd.Spec.Names.Kind
+}
+
+func getApiVersion() string {
+	return v1.SchemeGroupVersion.String()
 }
