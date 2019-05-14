@@ -6,7 +6,18 @@ module.exports = {
   entry: ["./index.js"],
   output: {
     path: path.join(__dirname, "dist"),
-    filename: "bundle.js"
+    filename: "bundle.js",
+    publicPath: '/'
+  },
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    hot: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        secure: false
+      }
+    }
   },
   module: {
     rules: [

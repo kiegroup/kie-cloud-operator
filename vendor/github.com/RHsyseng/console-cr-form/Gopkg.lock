@@ -524,7 +524,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/ghodss/yaml",
     "github.com/go-openapi/spec",
     "github.com/gobuffalo/packr/v2",
     "github.com/gobuffalo/packr/v2/file/resolver",

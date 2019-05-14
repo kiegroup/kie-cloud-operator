@@ -3084,6 +3084,59 @@ type MonitoredResourceDescriptor struct {
 	// identified by values for the labels "database_id" and "zone".
 	Labels []*LabelDescriptor `json:"labels,omitempty"`
 
+	// LaunchStage: Optional. The launch stage of the monitored resource
+	// definition.
+	//
+	// Possible values:
+	//   "LAUNCH_STAGE_UNSPECIFIED" - Do not use this default value.
+	//   "EARLY_ACCESS" - Early Access features are limited to a closed
+	// group of testers. To use
+	// these features, you must sign up in advance and sign a Trusted
+	// Tester
+	// agreement (which includes confidentiality provisions). These features
+	// may
+	// be unstable, changed in backward-incompatible ways, and are
+	// not
+	// guaranteed to be released.
+	//   "ALPHA" - Alpha is a limited availability test for releases before
+	// they are cleared
+	// for widespread use. By Alpha, all significant design issues are
+	// resolved
+	// and we are in the process of verifying functionality. Alpha
+	// customers
+	// need to apply for access, agree to applicable terms, and have
+	// their
+	// projects whitelisted. Alpha releases don’t have to be feature
+	// complete,
+	// no SLAs are provided, and there are no technical support obligations,
+	// but
+	// they will be far enough along that customers can actually use them
+	// in
+	// test environments or for limited-use tests -- just like they would
+	// in
+	// normal production cases.
+	//   "BETA" - Beta is the point at which we are ready to open a release
+	// for any
+	// customer to use. There are no SLA or technical support obligations in
+	// a
+	// Beta release. Products will be complete from a feature perspective,
+	// but
+	// may have some open outstanding issues. Beta releases are suitable
+	// for
+	// limited production use cases.
+	//   "GA" - GA features are open to all developers and are considered
+	// stable and
+	// fully qualified for production use.
+	//   "DEPRECATED" - Deprecated features are scheduled to be shut down
+	// and removed. For more
+	// information, see the “Deprecation Policy” section of our [Terms
+	// of
+	// Service](https://cloud.google.com/terms/)
+	// and the [Google Cloud Platform Subject to the
+	// Deprecation
+	// Policy](https://cloud.google.com/terms/deprecation) documentation.
+	LaunchStage string `json:"launchStage,omitempty"`
+
 	// Name: Optional. The resource name of the monitored resource
 	// descriptor:
 	// "projects/{project_id}/monitoredResourceDescriptors/{type
@@ -3350,7 +3403,8 @@ type Operation struct {
 	// service that
 	// originally returns it. If you use the default HTTP mapping,
 	// the
-	// `name` should have the format of `operations/some/unique/name`.
+	// `name` should be a resource name ending with
+	// `operations/{unique_id}`.
 	Name string `json:"name,omitempty"`
 
 	// Response: The normal response of the operation in case of success.
@@ -6162,7 +6216,7 @@ func (c *ServicesTenancyUnitsAddProjectCall) Do(opts ...googleapi.CallOption) (*
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "Name of the tenancy unit.",
+	//       "description": "Name of the tenancy unit.\nSuch as 'services/service.googleapis.com/projects/12345/tenancyUnits/abcd'.",
 	//       "location": "path",
 	//       "pattern": "^services/[^/]+/[^/]+/[^/]+/tenancyUnits/[^/]+$",
 	//       "required": true,
@@ -6210,6 +6264,10 @@ type ServicesTenancyUnitsApplyProjectConfigCall struct {
 // Omit a billing configuration to keep the existing one.
 // A service account in the project is created if previously non
 // existed.
+// Specified labels will be appended to tenant project, note that the
+// value of
+// existing label key will be updated if the same label key is
+// requested.
 // The specified folder is ignored, as moving a tenant project to a
 // different
 // folder isn't supported.
@@ -6314,7 +6372,7 @@ func (c *ServicesTenancyUnitsApplyProjectConfigCall) Do(opts ...googleapi.CallOp
 	}
 	return ret, nil
 	// {
-	//   "description": "Apply a configuration to an existing tenant project.\nThis project must exist in an active state and have the original owner\naccount. The caller must have permission to add a project to the given\ntenancy unit. The configuration is applied, but any existing settings on\nthe project aren't modified.\nSpecified policy bindings are applied. Existing bindings aren't modified.\nSpecified services are activated. No service is deactivated.\nIf specified, new billing configuration is applied.\nOmit a billing configuration to keep the existing one.\nA service account in the project is created if previously non existed.\nThe specified folder is ignored, as moving a tenant project to a different\nfolder isn't supported.\nThe operation fails if any of the steps fail, but no rollback of already\napplied configuration changes is attempted.\nOperation\u003cresponse: Empty\u003e.",
+	//   "description": "Apply a configuration to an existing tenant project.\nThis project must exist in an active state and have the original owner\naccount. The caller must have permission to add a project to the given\ntenancy unit. The configuration is applied, but any existing settings on\nthe project aren't modified.\nSpecified policy bindings are applied. Existing bindings aren't modified.\nSpecified services are activated. No service is deactivated.\nIf specified, new billing configuration is applied.\nOmit a billing configuration to keep the existing one.\nA service account in the project is created if previously non existed.\nSpecified labels will be appended to tenant project, note that the value of\nexisting label key will be updated if the same label key is requested.\nThe specified folder is ignored, as moving a tenant project to a different\nfolder isn't supported.\nThe operation fails if any of the steps fail, but no rollback of already\napplied configuration changes is attempted.\nOperation\u003cresponse: Empty\u003e.",
 	//   "flatPath": "v1/services/{servicesId}/{servicesId1}/{servicesId2}/tenancyUnits/{tenancyUnitsId}:applyProjectConfig",
 	//   "httpMethod": "POST",
 	//   "id": "serviceconsumermanagement.services.tenancyUnits.applyProjectConfig",
@@ -6323,7 +6381,7 @@ func (c *ServicesTenancyUnitsApplyProjectConfigCall) Do(opts ...googleapi.CallOp
 	//   ],
 	//   "parameters": {
 	//     "name": {
-	//       "description": "Name of the tenancy unit.",
+	//       "description": "Name of the tenancy unit.\nSuch as 'services/service.googleapis.com/projects/12345/tenancyUnits/abcd'.",
 	//       "location": "path",
 	//       "pattern": "^services/[^/]+/[^/]+/[^/]+/tenancyUnits/[^/]+$",
 	//       "required": true,
@@ -6479,7 +6537,7 @@ func (c *ServicesTenancyUnitsAttachProjectCall) Do(opts ...googleapi.CallOption)
 	//   ],
 	//   "parameters": {
 	//     "name": {
-	//       "description": "Name of the tenancy unit that the project will be attached to.",
+	//       "description": "Name of the tenancy unit that the project will be attached to.\nSuch as 'services/service.googleapis.com/projects/12345/tenancyUnits/abcd'.",
 	//       "location": "path",
 	//       "pattern": "^services/[^/]+/[^/]+/[^/]+/tenancyUnits/[^/]+$",
 	//       "required": true,

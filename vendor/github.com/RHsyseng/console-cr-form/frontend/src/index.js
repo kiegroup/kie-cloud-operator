@@ -1,11 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "@patternfly/react-core/dist/styles/base.css";
-import MainPage from "./component/Main";
+import Main from "./component/Main";
 
 document.addEventListener("DOMContentLoaded", function() {
-  ReactDOM.render(
-    React.createElement(MainPage),
-    document.getElementById("mount")
-  );
+  ReactDOM.render(React.createElement(Main), document.getElementById("mount"));
 });
