@@ -40,11 +40,11 @@ servers:
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
                     - name: RHPAM_XA_CONNECTION_PROPERTY_URL
-                      value: "jdbc:h2:/opt/eap/standalone/data/rhpam"
+                      value: "jdbc:h2:/opt/kie/data/h2/rhpam;AUTO_SERVER=TRUE"
                     ## H2 driver settings END
                   volumeMounts:
                     - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
-                      mountPath: "/opt/eap/standalone/data"
+                      mountPath: "/opt/kie/data"
               ## [[ if ne .Database.Size "" ]]
               volumes:
                 ## H2 volume settings BEGIN

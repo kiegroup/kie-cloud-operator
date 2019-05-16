@@ -962,7 +962,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	// H2 Volumes are mounted
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 		Name:      "test-kieserver-h2-pvol",
-		MountPath: "/opt/eap/standalone/data",
+		MountPath: "/opt/kie/data",
 	})
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, corev1.Volume{
 		Name: "test-kieserver-h2-pvol",
