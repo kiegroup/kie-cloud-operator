@@ -10,7 +10,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -264,8 +264,37 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamProdwSmartRouter(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProduction,
+			Objects: v1.KieAppObjects{
+				SmartRouter: &v1.KieAppObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
+	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
+	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
@@ -294,6 +323,7 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Equal(t, "test-jms-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
@@ -316,6 +346,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
@@ -562,6 +593,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring environment")
 	dbPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
 	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
@@ -584,6 +616,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
@@ -1183,7 +1216,7 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 						},
 					},
 				},
-				SmartRouter: v1.KieAppObject{
+				SmartRouter: &v1.KieAppObject{
 					Env:       sampleEnv,
 					Resources: sampleResources,
 				},

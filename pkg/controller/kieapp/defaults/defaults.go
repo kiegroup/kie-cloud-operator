@@ -54,11 +54,29 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	if cr.Spec.Objects.SmartRouter == nil {
+		env.SmartRouter.Omit = true
+	}
 
 	mergedEnv, err := merge(common, env)
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	if mergedEnv.SmartRouter.Omit {
+		// remove router env vars from kieserver DCs
+		for _, server := range mergedEnv.Servers {
+			for _, dc := range server.DeploymentConfigs {
+				newSlice := []corev1.EnvVar{}
+				for _, envvar := range dc.Spec.Template.Spec.Containers[0].Env {
+					if envvar.Name != "KIE_SERVER_ROUTER_SERVICE" && envvar.Name != "KIE_SERVER_ROUTER_PORT" && envvar.Name != "KIE_SERVER_ROUTER_PROTOCOL" {
+						newSlice = append(newSlice, envvar)
+					}
+				}
+				dc.Spec.Template.Spec.Containers[0].Env = newSlice
+			}
+		}
+	}
+
 	mergedEnv, err = mergeDB(service, cr, mergedEnv, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
@@ -210,25 +228,27 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.SmartRouterTemplate{}
-	if !hasEnv {
-		return template
-	}
-	if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
-		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
-	} else {
-		template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
-	}
+	if cr.Spec.Objects.SmartRouter != nil {
+		if !hasEnv {
+			return template
+		}
+		if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
+			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
+		} else {
+			template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
+		}
 
-	// Set replicas
-	envReplicas := v1.Replicas{}
-	if hasEnv {
-		envReplicas = envConstants.Replica.SmartRouter
+		// Set replicas
+		envReplicas := v1.Replicas{}
+		if hasEnv {
+			envReplicas = envConstants.Replica.SmartRouter
+		}
+		replicas, denyScale := setReplicas(*cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
+		if denyScale {
+			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
+		}
+		template.Replicas = replicas
 	}
-	replicas, denyScale := setReplicas(cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
-	if denyScale {
-		cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
-	}
-	template.Replicas = replicas
 
 	return template
 }
@@ -385,7 +405,9 @@ func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet,
 // ConsolidateObjects construct all CustomObjects prior to creation
 func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
-	env.SmartRouter = ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
+	if cr.Spec.Objects.SmartRouter != nil {
+		env.SmartRouter = ConstructObject(env.SmartRouter, *cr.Spec.Objects.SmartRouter)
+	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
 		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
