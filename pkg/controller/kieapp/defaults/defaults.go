@@ -54,12 +54,34 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	if cr.Spec.Objects.SmartRouter == nil {
+		env.SmartRouter.Omit = true
+	}
 
 	mergedEnv, err := merge(common, env)
 	if err != nil {
 		return v1.Environment{}, err
 	}
+	if mergedEnv.SmartRouter.Omit {
+		// remove router env vars from kieserver DCs
+		for _, server := range mergedEnv.Servers {
+			for _, dc := range server.DeploymentConfigs {
+				newSlice := []corev1.EnvVar{}
+				for _, envvar := range dc.Spec.Template.Spec.Containers[0].Env {
+					if envvar.Name != "KIE_SERVER_ROUTER_SERVICE" && envvar.Name != "KIE_SERVER_ROUTER_PORT" && envvar.Name != "KIE_SERVER_ROUTER_PROTOCOL" {
+						newSlice = append(newSlice, envvar)
+					}
+				}
+				dc.Spec.Template.Spec.Containers[0].Env = newSlice
+			}
+		}
+	}
+
 	mergedEnv, err = mergeDB(service, cr, mergedEnv, envTemplate)
+	if err != nil {
+		return v1.Environment{}, err
+	}
+	mergedEnv, err = mergeJms(service, cr, mergedEnv, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -89,6 +111,32 @@ func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envT
 		dbServer, found := findCustomObjectByName(env.Servers[i], dbEnvs[dbType].Servers)
 		if found {
 			env.Servers[i] = mergeCustomObject(env.Servers[i], dbServer)
+		}
+	}
+	return env, nil
+}
+
+func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envTemplate v1.EnvTemplate) (v1.Environment, error) {
+	var jmsEnv v1.Environment
+	for i := range env.Servers {
+		kieServerSet := envTemplate.Servers[i]
+
+		isJmsEnabled := kieServerSet.Jms.EnableKieServerJMSIntegration
+
+		if isJmsEnabled {
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Namespace, envTemplate)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+			err = yaml.Unmarshal(yamlBytes, &jmsEnv)
+			if err != nil {
+				return v1.Environment{}, err
+			}
+		}
+
+		jmsServer, found := findCustomObjectByName(env.Servers[i], jmsEnv.Servers)
+		if found {
+			env.Servers[i] = mergeCustomObject(env.Servers[i], jmsServer)
 		}
 	}
 	return env, nil
@@ -180,25 +228,27 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
 	template := v1.SmartRouterTemplate{}
-	if !hasEnv {
-		return template
-	}
-	if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
-		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
-	} else {
-		template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
-	}
+	if cr.Spec.Objects.SmartRouter != nil {
+		if !hasEnv {
+			return template
+		}
+		if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
+			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Spec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
+		} else {
+			template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
+		}
 
-	// Set replicas
-	envReplicas := v1.Replicas{}
-	if hasEnv {
-		envReplicas = envConstants.Replica.SmartRouter
+		// Set replicas
+		envReplicas := v1.Replicas{}
+		if hasEnv {
+			envReplicas = envConstants.Replica.SmartRouter
+		}
+		replicas, denyScale := setReplicas(*cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
+		if denyScale {
+			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
+		}
+		template.Replicas = replicas
 	}
-	replicas, denyScale := setReplicas(cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
-	if denyScale {
-		cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
-	}
-	template.Replicas = replicas
 
 	return template
 }
@@ -313,6 +363,15 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			if dbConfig != nil {
 				template.Database = *dbConfig
 			}
+
+			jmsConfig, err := getJmsConfig(cr.Spec.Environment, serverSet.Jms)
+			if err != nil {
+				return servers, err
+			}
+			if jmsConfig != nil {
+				template.Jms = *jmsConfig
+			}
+
 			instanceTemplate := template.DeepCopy()
 			if instanceTemplate.KeystoreSecret == "" {
 				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
@@ -346,7 +405,9 @@ func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet,
 // ConsolidateObjects construct all CustomObjects prior to creation
 func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
-	env.SmartRouter = ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter)
+	if cr.Spec.Objects.SmartRouter != nil {
+		env.SmartRouter = ConstructObject(env.SmartRouter, *cr.Spec.Objects.SmartRouter)
+	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
 		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
@@ -443,6 +504,61 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 		return &resultDB, nil
 	}
 	return database, nil
+}
+
+func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.KieAppJmsObject, error) {
+
+	envConstants := constants.EnvironmentConstants[environment]
+	if envConstants == nil || jms == nil || !jms.EnableKieServerJMSIntegration {
+		return nil, nil
+	}
+	// if enabled, prepare the default values
+	defaultJms := &v1.KieAppJmsObject{
+		KieServerJmsExecutor:           true,
+		KieServerJmsExecutorTransacted: false,
+		KieServerJmsQueueExecutor:      "queue/KIE.SERVER.EXECUTOR",
+		KieServerJmsQueueRequest:       "queue/KIE.SERVER.REQUEST",
+		KieServerJmsQueueResponse:      "queue/KIE.SERVER.RESPONSE",
+		KieServerJmsEnableSignal:       false,
+		KieServerJmsQueueSignal:        "queue/KIE.SERVER.SIGNAL",
+		KieServerJmsEnableAudit:        false,
+		KieServerJmsQueueAudit:         "queue/KIE.SERVER.AUDIT",
+		KieServerJmsAuditTransacted:    true,
+		KieServerJmsUsername:           "user" + string(shared.GeneratePassword(4)),
+		KieServerJmsPassword:           string(shared.GeneratePassword(8)),
+	}
+
+	queuesList := []string{
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueExecutor, jms.KieServerJmsQueueExecutor),
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueRequest, jms.KieServerJmsQueueRequest),
+		getDefaultQueue(true, defaultJms.KieServerJmsQueueResponse, jms.KieServerJmsQueueResponse),
+		getDefaultQueue(jms.KieServerJmsEnableSignal, defaultJms.KieServerJmsQueueSignal, jms.KieServerJmsQueueSignal),
+		getDefaultQueue(jms.KieServerJmsEnableAudit, defaultJms.KieServerJmsQueueAudit, jms.KieServerJmsQueueAudit)}
+
+	// clean empty values
+	for i, queue := range queuesList {
+		if queue == "" {
+			queuesList = append(queuesList[:i], queuesList[i+1:]...)
+			break
+		}
+	}
+	defaultJms.KieServerJmsAMQQueues = strings.Join(queuesList[:], ", ")
+
+	// merge the defaultJms into jms, preserving the values set by cr
+	mergo.Merge(jms, defaultJms)
+
+	return jms, nil
+}
+
+func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) string {
+	if append {
+		if jmsQueue == "" {
+			return defaultJmsQueue
+		} else {
+			return jmsQueue
+		}
+	}
+	return ""
 }
 
 func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {

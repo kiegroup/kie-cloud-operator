@@ -1,35 +1,31 @@
-import { USE_MOCK_DATA } from "../common/GuiConstants";
+import { BACKEND_URL } from "../common/GuiConstants";
 
-//TODO: dynamically load
-import { MockupData_JSON, MockupData_JSON_SCHEMA } from "../common/MockupData";
-
-export class FormJsonLoader {
-  passedInJsonForm = {};
-  jsonForm = {};
-  jsonSchema = {};
-
-  constructor({ elementIdJson, elementIdJsonSchema }) {
-    this.elementIdJson = elementIdJson;
-    this.elementIdJsonSchema = elementIdJsonSchema;
-    //TODO: turn it into promises
-    this.loadJson(USE_MOCK_DATA);
+export const loadJsonForm = fetch(BACKEND_URL + "/form", {
+  headers: {
+    "Content-Type": "application/json"
   }
+})
+  .then(res => res.json())
+  .catch(error => {
+    console.error("Unable to load JSON Form: ", error);
+  });
 
-  loadJson(useMockData) {
-    if (useMockData) {
-      this.passedInJsonForm = MockupData_JSON;
-      this.jsonSchema = MockupData_JSON_SCHEMA;
-      console.log("Loaded mock data into memmory");
-    } else {
-      //TODO: refactor to not access DOM directly
-      this.passedInJsonForm = document.getElementById(
-        this.elementIdJson
-      ).innerHTML;
-      this.jsonSchema = document.getElementById(
-        this.elementIdJsonSchema
-      ).innerHTML;
-    }
-
-    this.jsonForm = JSON.parse(JSON.stringify(this.passedInJsonForm));
+export const loadJsonSchema = fetch(BACKEND_URL + "/schema", {
+  headers: {
+    "Content-Type": "application/json"
   }
-}
+})
+  .then(res => res.json())
+  .catch(error => {
+    console.error("Unable to load JSON Schema: ", error);
+  });
+
+export const loadJsonSpec = fetch(BACKEND_URL + "/spec", {
+  headers: {
+    "Content-Type": "application/json"
+  }
+})
+  .then(res => res.json())
+  .catch(error => {
+    console.error("Unable to load JSON Schema: ", error);
+  });

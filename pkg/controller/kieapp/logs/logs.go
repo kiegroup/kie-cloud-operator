@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"io"
 	"os"
 	"strconv"
@@ -19,7 +20,7 @@ type Logger struct {
 
 func GetLogger(name string) *zap.SugaredLogger {
 	// Set log level... override default w/ command-line variable if set.
-	debugBool := GetBoolEnv("DEBUG") // info, debug
+	debugBool := GetBoolEnv(constants.DebugTrue.Name) // info, debug
 
 	// The logger instantiated here can be changed to any logger
 	// implementing the logr.Logger interface. This logger will

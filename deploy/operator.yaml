@@ -36,6 +36,8 @@ spec:
                   fieldPath: metadata.labels['name']
             - name: DEBUG
               value: "false"
+            - name: OPERATOR_UI
+              value: "true"
             #- name: INSECURE
             #  value: ""
             #- name: REGISTRY

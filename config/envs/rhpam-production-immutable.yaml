@@ -1,7 +1,3 @@
-## KIE smartrouter BEGIN
-smartRouter:
-  omit: true
-## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS

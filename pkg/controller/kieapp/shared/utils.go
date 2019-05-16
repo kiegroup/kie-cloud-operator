@@ -130,17 +130,13 @@ func GetEnvVar(envName string, env []corev1.EnvVar) int {
 	return -1
 }
 
-func envVarEqual(env corev1.EnvVar, envList []corev1.EnvVar) bool {
-	match := false
+func EnvVarSet(env corev1.EnvVar, envList []corev1.EnvVar) bool {
 	for _, e := range envList {
-		if env.Name == e.Name {
-			if env.Value == e.Value {
-				match = true
-				break
-			}
+		if env.Name == e.Name && env.Value == e.Value {
+			return true
 		}
 	}
-	return match
+	return false
 }
 
 // EnvOverride replaces or appends the provided EnvVar to the collection
@@ -159,12 +155,12 @@ func EnvOverride(dst, src []corev1.EnvVar) []corev1.EnvVar {
 // EnvVarCheck checks whether the src and dst []EnvVar have the same values
 func EnvVarCheck(dst, src []corev1.EnvVar) bool {
 	for _, denv := range dst {
-		if !envVarEqual(denv, src) {
+		if !EnvVarSet(denv, src) {
 			return false
 		}
 	}
 	for _, senv := range src {
-		if !envVarEqual(senv, dst) {
+		if !EnvVarSet(senv, dst) {
 			return false
 		}
 	}

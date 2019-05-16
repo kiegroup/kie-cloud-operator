@@ -524,12 +524,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/ghodss/yaml",
     "github.com/go-openapi/spec",
     "github.com/gobuffalo/packr/v2",
     "github.com/gobuffalo/packr/v2/file/resolver",
+    "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "golang.org/x/sync/errgroup",
+    "k8s.io/apimachinery/pkg/util/errors",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",

@@ -23,6 +23,10 @@ npm:
 	cd frontend; npm install
 	npm --prefix frontend run build
 
+.PHONY: npm-watch
+npm-watch:
+	cd frontend; npm run watch
+
 .PHONY: dep
 dep:
 	dep ensure -v

@@ -2,6 +2,7 @@ package constants
 
 import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -35,6 +36,9 @@ const (
 	// OpNameEnv is an environment variable of the operator name
 	// set when the code is running via deployment
 	OpNameEnv = "OPERATOR_NAME"
+	// OpUiEnv is an environment variable indicating whether the UI should be deployed
+	// Default behavior is to deploy the UI, unless this variable is provided with a false value
+	OpUiEnv = "OPERATOR_UI"
 	// TrialEnvSuffix is the suffix for trial environments
 	TrialEnvSuffix = "trial"
 	// DefaultKieDeployments default number of Kie Server deployments
@@ -98,4 +102,14 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 var TemplateConstants = v1.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
+}
+
+var DebugTrue = corev1.EnvVar{
+	Name:  "DEBUG",
+	Value: "true",
+}
+
+var DebugFalse = corev1.EnvVar{
+	Name:  "DEBUG",
+	Value: "false",
 }

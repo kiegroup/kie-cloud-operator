@@ -60,11 +60,13 @@ required = [
 
 [[constraint]]
   name = "github.com/RHsyseng/operator-utils"
-  branch = "master"
+  # revision for branch "master"
+  revision = "3725530e9c7aeff1e1c5dee00574200940360370"
 
 [[constraint]]
   name = "github.com/RHsyseng/console-cr-form"
-  branch = "master"
+  # revision for branch "master"
+  revision = "3ef56239f1f6cbfe67303c119ce5af3401a94d5f"
 
 [[constraint]]
   name = "github.com/operator-framework/operator-sdk"

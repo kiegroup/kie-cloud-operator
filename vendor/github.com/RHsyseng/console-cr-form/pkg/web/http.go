@@ -5,15 +5,20 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"text/template"
+
 	"github.com/gobuffalo/packr/v2"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"text/template"
 )
 
 type GoTemplate struct {
-	Schema string
-	Form   string
+	ApiVersion string
+	Kind       string
+	Schema     string
+	Form       string
 }
 
 func RunWebServer(config Configuration) error {
@@ -23,9 +28,9 @@ func RunWebServer(config Configuration) error {
 	http.Handle("/fonts/", http.FileServer(box))
 	http.Handle("/favicon.ico", http.FileServer(box))
 	http.Handle("/health", checkHealth(box))
+	logrus.SetLevel(logrus.DebugLevel)
 
-	//For anything else, including index.html and root requests, send back the processed index.html
-	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+	returnIndex := func(writer http.ResponseWriter, reader *http.Request) {
 		templateString, err := box.FindString("index.html")
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -41,12 +46,78 @@ func RunWebServer(config Configuration) error {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 		}
 		goTemplate := GoTemplate{
-			Form:   string(formBytes),
-			Schema: string(schemaBytes),
+			ApiVersion: config.ApiVersion(),
+			Kind:       config.Kind(),
+			Form:       string(formBytes),
+			Schema:     string(schemaBytes),
 		}
 		if err := templates.ExecuteTemplate(writer, "template", goTemplate); err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 		}
+	}
+
+	processYaml := func(writer http.ResponseWriter, reader *http.Request) {
+		body, err := ioutil.ReadAll(reader.Body)
+		if err != nil {
+			logrus.Errorf("Error reading message %v", err)
+			http.Error(writer, "Error reading request", http.StatusInternalServerError)
+		} else {
+			request := string(body)
+			//TODO temporary fixes to yaml, which should not be a problem to begin with:
+			if strings.Contains(request, "\\n") {
+				logrus.Infof("Request was %s", request)
+				request = strings.Replace(request, "\\n", "\n", -1)
+				logrus.Infof("Request is now %s", request)
+			}
+			if strings.HasPrefix(request, "\"") {
+				logrus.Infof("Request was %s", request)
+				request = strings.TrimLeft(request, "\"")
+				logrus.Infof("Request is now %s", request)
+			}
+			if strings.HasSuffix(request, "\"") {
+				logrus.Infof("Request was %s", request)
+				request = strings.TrimRight(request, "\"")
+				logrus.Infof("Request is now %s", request)
+			}
+			config.CallBack(request)
+			writer.WriteHeader(http.StatusOK)
+			writer.Write([]byte("{\"Result\": \"Success\"}"))
+		}
+	}
+
+	//For anything else:
+	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+		//For index.html and root GET requests, send back the processed index.html
+		returnIndex(writer, reader)
+	})
+
+	http.HandleFunc("/api", func(writer http.ResponseWriter, reader *http.Request) {
+		if reader.Method == "POST" {
+			processYaml(writer, reader)
+		} else {
+			http.Error(writer, "Unable to handle request", http.StatusNotFound)
+		}
+	})
+
+	http.HandleFunc("/api/form", func(writer http.ResponseWriter, reader *http.Request) {
+		js, err := json.Marshal(config.Form())
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+		}
+		writer.Write(js)
+	})
+
+	http.HandleFunc("/api/schema", func(writer http.ResponseWriter, reader *http.Request) {
+		js, err := json.Marshal(config.Schema())
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+		}
+		writer.Write(js)
+	})
+
+	http.HandleFunc("/api/spec", func(writer http.ResponseWriter, reader *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(writer, "{\"kind\": \"%v\", \"apiVersion\": \"%v\"}", config.Kind(), config.ApiVersion())
 	})
 
 	//Start the web server, set the port to listen to 8080. Without a path it assumes localhost

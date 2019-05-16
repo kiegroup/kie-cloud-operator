@@ -610,6 +610,12 @@ servers:
                     #[[end]]
                     ## RoleMapping config END
                     # Auth config END
+                    - name: KIE_SERVER_ROUTER_SERVICE
+                      value: "[[$.ApplicationName]]-smartrouter"
+                    - name: KIE_SERVER_ROUTER_PORT
+                      value: "9000"
+                    - name: KIE_SERVER_ROUTER_PROTOCOL
+                      value: "http"
                   resources:
                     limits:
                       memory: 1Gi

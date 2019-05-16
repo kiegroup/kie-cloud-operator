@@ -52,10 +52,6 @@ console:
       metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
 
-## KIE smartrouter BEGIN
-smartRouter:
-  omit: true
-## KIE smartrouter END
 # ES/AMQ BEGIN
 others:
   - roles:

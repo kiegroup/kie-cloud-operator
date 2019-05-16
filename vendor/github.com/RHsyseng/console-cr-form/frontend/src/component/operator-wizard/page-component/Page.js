@@ -6,6 +6,8 @@ import Dot from "dot-object";
 import { TextArea, Button, Modal } from "@patternfly/react-core";
 import CopyToClipboard from "react-copy-to-clipboard";
 import ReactDOM from "react-dom";
+import * as jsonLoader from "../FormJsonLoader";
+import { BACKEND_URL } from "../../common/GuiConstants";
 
 /**
  * The Page component to handle each element individually.
@@ -28,6 +30,15 @@ export default class Page extends Component {
         isModalOpen: !isModalOpen
       }));
     };
+    this.editYaml = this.editYaml.bind(this);
+    this.formId = "form-page-" + this.props.pageNumber;
+    this.errFlag = false;
+    this.jsonObject = {};
+    this.spec = this.getSpec().then(spec => (this.spec = spec));
+  }
+
+  async getSpec() {
+    return await jsonLoader.loadJsonSpec;
   }
 
   loadPageChildren() {
@@ -49,16 +60,8 @@ export default class Page extends Component {
    * @param {int} startIndex
    * @param {Element} element
    */
-  addElements(
-    startIndex,
-    newElements,
-    objectkey,
-    elementAddCount,
-    parentjsonpath
-  ) {
-    //alert(parentjsonpath + elementAddCount);
+  addElements(startIndex, newElements, objectkey) {
     this.state.elements.forEach((element, i) => {
-      // console.log(element.page.props.key);
       if (element.props != undefined && element.props.ids != undefined) {
         if (element.props.ids.fieldGroupId === objectkey) {
           startIndex = startIndex + i;
@@ -66,29 +69,16 @@ export default class Page extends Component {
       }
     });
 
-    //startIndex=startIndex+newElements
     if (Array.isArray(newElements)) {
       var elements = this.state.elements;
       newElements.forEach((element, count) => {
-        if (elementAddCount !== undefined) {
-          //console.log("22this.props.elementAddCount" + elementAddCount);
-          var jsonpath = element.props.fieldDef.jsonPath;
-          if (jsonpath !== undefined) {
-            var res = "";
-            //console.log(">>>>>>>>>>>>>"+res);
-            if (parentjsonpath.length < jsonpath.length) {
-              res = jsonpath.substring(parentjsonpath.length, jsonpath.length);
-              res = parentjsonpath.concat(res);
-              // console.log(">>>>>>>>>>>>>" + res);
-              jsonpath = res.replace(/\*/g, elementAddCount);
-            } else {
-              jsonpath = jsonpath.replace(/\*/g, elementAddCount);
-            }
-            // this.props.fieldDef.jsonPath = jsonpath;
-            element.props.fieldDef.jsonPath = jsonpath;
-            //console.log("jsonPath *** " + jsonpath);
-          }
-        }
+        // update the json state
+        this.props.pageDef.fields.splice(
+          startIndex + count - 1,
+          0,
+          JSON.parse(JSON.stringify(element.props.fieldDef))
+        );
+        // add the elements dynamically
         elements.splice(startIndex + count, 0, element);
       });
 
@@ -117,6 +107,7 @@ export default class Page extends Component {
       }
     });
     var elements = this.state.elements;
+    this.props.pageDef.fields.splice(startIndex - 1, elementCount);
     elements.splice(startIndex, elementCount);
     this.setState({ elements: elements });
   }
@@ -130,26 +121,52 @@ export default class Page extends Component {
     return this.state.elements;
   }
   editYaml() {
-    this.createSampleYaml();
+    this.errFlag = false;
 
-    this.handleModalToggle();
-    //alert(YAML.safeDump(Dot.object(jsonObject)));
+    this.createSampleYamlfromPages();
+    // console.log("len" + Object.getOwnPropertyNames(this.jsonObject).length);
+    // console.log("errFlag" + this.errFlag);
+    if (this.errFlag === false) {
+      this.createResultYaml();
+      this.handleModalToggle();
+    }
   }
-  createResultYaml = jsonObject => {
-    var resultYaml = YAML.safeDump(Dot.object(jsonObject));
+  createResultYaml() {
+    var resultYaml =
+      "apiVersion: " +
+      this.spec.apiVersion +
+      "\n" +
+      "kind: " +
+      this.spec.kind +
+      "\n";
+    if (Object.getOwnPropertyNames(this.jsonObject).length > 0) {
+      resultYaml = resultYaml + YAML.safeDump(Dot.object(this.jsonObject));
+    }
+
     this.setState({
       resultYaml
     });
 
     return resultYaml;
-  };
+  }
   onChangeYaml = value => {
     this.setResultYaml(value);
   };
 
   deploy = () => {
-    //alert("deploy here");
-    this.createSampleYaml();
+    this.createSampleYamlfromPages();
+    var result = this.createResultYaml();
+    console.log(result);
+    fetch(BACKEND_URL, {
+      method: "POST",
+      body: JSON.stringify(result),
+      headers: {
+        "Content-Type": "application/yaml"
+      }
+    })
+      .then(res => res.json())
+      .then(response => console.log("Success:", JSON.stringify(response)))
+      .catch(error => console.error("Error:", error));
   };
 
   setResultYaml = resultYaml => {
@@ -158,23 +175,140 @@ export default class Page extends Component {
     });
   };
 
-  createSampleYaml() {
-    const jsonObject = {};
-    this.state.elements.forEach(element => {
-      if (element.props != undefined && element.props.ids != undefined) {
+  createSampleYamlfromForm(sampleYaml) {
+    //var str = "";
+
+    var elem = document.getElementById(this.formId).elements;
+    for (var i = 0; i < elem.length; i++) {
+      if (elem[i].type != "button" && elem[i].type != "div") {
+        var jsonpath = document
+          .getElementById(elem[i].id)
+          .getAttribute("jsonpath");
         if (
-          element.props.fieldDef.value !== undefined &&
-          element.props.fieldDef.value !== ""
+          elem[i].value != null &&
+          elem[i].value != "" &&
+          elem[i].name != "alt-form-checkbox-1" &&
+          jsonpath != "$.spec.auth.sso" &&
+          jsonpath != "$.spec.auth.ldap" &&
+          jsonpath != null &&
+          elem[i].style.display !== "none"
         ) {
-          let jsonPath = this.getJsonSchemaPathForYaml(
-            element.props.fieldDef.jsonPath
-          );
-          jsonObject[jsonPath] = element.props.fieldDef.value;
+          // str += "Name: " + elem[i].name + " ";
+          // str += "Type: " + elem[i].type + " ";
+          // str += "Value: " + elem[i].value + " ";
+          // str += "                                                 ";
+
+          var tmpJsonPath = this.getJsonSchemaPathForYaml(jsonpath);
+          const value =
+            elem[i].type === "checkbox" ? elem[i].checked : elem[i].value;
+          // if (tmpJsonPath.search(/\*/g) != -1) {
+          //   tmpJsonPath = utils.replaceStarwithPos(elem[i], jsonpath);
+          // }
+          //
+
+          sampleYaml[tmpJsonPath] = value;
         }
       }
-    });
-    var result = this.createResultYaml(jsonObject);
-    console.log(result);
+    }
+
+    return sampleYaml;
+  }
+  createSampleYamlfromPages() {
+    let jsonObject = {};
+
+    if (Array.isArray(this.props.pages)) {
+      this.props.pages.forEach(page => {
+        //  let pageFields = JSON.parse(JSON.stringify(pages.fields));
+
+        let pageFields = page.fields;
+
+        if (Array.isArray(pageFields)) {
+          pageFields.forEach(field => {
+            if (field.type === "object") {
+              jsonObject = this.addObjectFields(field, jsonObject);
+            } else {
+              const value =
+                field.type === "checkbox" ? field.checked : field.value;
+              if (field.errMsg !== undefined && field.errMsg !== "") {
+                // console.log("err:::" + field.label + "....." + field.errMsg);
+                this.errFlag = true;
+              }
+              if (
+                field.jsonPath !== undefined &&
+                field.jsonPath !== "" &&
+                value !== undefined &&
+                value !== ""
+              ) {
+                let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
+
+                jsonObject[jsonPath] = value;
+              }
+            }
+          });
+        }
+        if (
+          page.subPages !== undefined &&
+          Array.isArray(page.subPages) &&
+          page.subPages.length > 0
+        ) {
+          page.subPages.forEach(subPage => {
+            let subPageFields = subPage.fields;
+
+            subPageFields.forEach(field => {
+              if (field.type === "object") {
+                jsonObject = this.addObjectFields(field, jsonObject);
+              } else {
+                const value =
+                  field.type === "checkbox" ? field.checked : field.value;
+                if (field.errMsg !== undefined && field.errMsg !== "") {
+                  //console.log("err:::" + field.label + "....." + field.errMsg);
+                  this.errFlag = true;
+                }
+                if (
+                  field.jsonPath !== undefined &&
+                  field.jsonPath !== "" &&
+                  value !== undefined &&
+                  value !== ""
+                ) {
+                  let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
+
+                  jsonObject[jsonPath] = value;
+                }
+              }
+            });
+          });
+        }
+      });
+    }
+    this.jsonObject = jsonObject;
+  }
+
+  addObjectFields(field, jsonObject) {
+    //  let childJson ={};
+    if (Array.isArray(field.fields)) {
+      field.fields.forEach(field => {
+        if (field.type === "object") {
+          jsonObject = this.addObjectFields(field, jsonObject);
+        } else {
+          const value = field.type === "checkbox" ? field.checked : field.value;
+          if (field.errMsg !== undefined && field.errMsg !== "") {
+            //console.log("err:::" + field.label + "....." + field.errMsg);
+            this.errFlag = true;
+          }
+          if (
+            field.jsonPath !== undefined &&
+            field.jsonPath !== "" &&
+            value !== undefined &&
+            value !== ""
+          ) {
+            let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
+
+            jsonObject[jsonPath] = value;
+          }
+        }
+      });
+    }
+    return jsonObject;
   }
 
   getJsonSchemaPathForYaml(jsonPath) {
@@ -186,15 +320,6 @@ export default class Page extends Component {
   }
 
   renderPages() {
-    //const pages = this.state.jsonForm.pages;
-    // console.error("renderPages1");
-    /* // const pagesJsx = this.buildPages();
-    const wizardJsx= this.buildPages();
-  // const steps = this.buildPages();;
-    console.error("renderPages2:::" + wizardJsx);
-
-    this.setState({ wizardJsx });
-    //this.setState(steps)*/
     var div = document.createElement("div");
     div.id = "footerDiv";
     var footerElem = document.getElementsByTagName("FOOTER");
@@ -216,10 +341,6 @@ export default class Page extends Component {
       // </ActionGroup>
     );
 
-    //ReactDOM.render(fieldJsx, footerElem[0]);
-    //footerElem.appendChild(fieldJsx);
-    // footerElem.innerHTML +=fieldJsx;
-    // footerElem.innerHTML = (fieldJsx);
     if (footerElem[0] != undefined) {
       footerElem[0].appendChild(div);
     }
@@ -232,6 +353,15 @@ export default class Page extends Component {
     return (
       <Form id={"form-page-" + this.props.pageNumber}>
         <div key={"page" + this.props.pageNumber}>
+          <Button
+            key="try"
+            variant="secondary"
+            onClick={this.editYaml}
+            //className="pf-u-float-right"
+            //onClick={this.togglePopup}
+          >
+            Edit YAML
+          </Button>
           {this.state.elements.map(element => {
             return element.getJsx();
           })}

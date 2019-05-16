@@ -1,13 +1,10 @@
 import React from "react";
-import { FormJsonLoader } from "./FormJsonLoader";
+import * as jsonLoader from "./FormJsonLoader";
 import Page from "./page-component/Page";
 
 export default class StepBuilder {
   constructor() {
-    this.loader = new FormJsonLoader({
-      elementIdJson: "golang_json_form",
-      elementIdJsonSchema: "golang_json_schema"
-    });
+    this.objectMap = new Map();
   }
 
   /**
@@ -22,23 +19,32 @@ export default class StepBuilder {
     };
   }
 
-  buildSteps() {
-    var steps = [];
-    var pages = this.loader.jsonForm.pages;
-    pages.forEach((page, count) => {
-      var step = this.buildStep(page, count + 1);
-
-      if (Array.isArray(page.subPages) && page.subPages.length > 0) {
-        step.steps = [];
-        page.subPages.forEach((subPage, subPageCount) => {
-          step.steps.push(this.buildStep(subPage, subPageCount + 1));
+  buildSteps(callback) {
+    Promise.all([jsonLoader.loadJsonForm, jsonLoader.loadJsonSchema]).then(
+      values => {
+        this.jsonForm = values[0];
+        this.jsonSchema = values[1];
+        var steps = [];
+        this.jsonForm.pages.forEach((page, count) => {
+          var step = this.buildStep(page, count + 1);
+          if (Array.isArray(page.subPages) && page.subPages.length > 0) {
+            step.steps = [];
+            page.subPages.forEach((subPage, subPageCount) => {
+              step.steps.push(this.buildStep(subPage, subPageCount + 1));
+            });
+          }
+          steps.push(step);
         });
+        callback(steps);
       }
+    );
+  }
 
-      steps.push(step);
-    });
-
-    return steps;
+  storeObjectMap(key, value) {
+    this.objectMap.set(key, value);
+  }
+  getObjectMap(key) {
+    return this.objectMap.get(key);
   }
 
   /**
@@ -57,8 +63,12 @@ export default class StepBuilder {
         <Page
           key={"page" + id}
           pageDef={pageDef}
-          jsonSchema={this.loader.jsonSchema}
+          jsonSchema={this.jsonSchema}
           pageNumber={id}
+          pages={this.jsonForm.pages}
+          storeObjectMap={this.storeObjectMap}
+          getObjectMap={this.getObjectMap}
+          objectMap={this.objectMap}
         />
       ),
       enableNext: true //TODO: need to add logic - will enable next only if all fields are valid

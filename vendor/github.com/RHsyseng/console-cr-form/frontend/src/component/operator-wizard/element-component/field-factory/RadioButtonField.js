@@ -1,40 +1,76 @@
 import React from "react";
 
-import { FormGroup, Radio } from "@patternfly/react-core";
+import { FormGroup, Radio, Tooltip } from "@patternfly/react-core";
 
 export class RadioButtonField {
   constructor(props) {
     this.props = props;
+    this.handleChangeRadio = this.handleChangeRadio.bind(this);
   }
 
-  doGenerateJsx() {
-    const fieldIdTrue = this.props.ids.fieldId + "-true";
-    const fieldKeyTrue = this.props.ids.fieldKey + "-true";
-    const fieldIdFalse = this.props.ids.fieldId + "-false";
-    const fieldKeyFalse = this.props.ids.fieldKey + "-false";
+  getJsx() {
     return (
       <FormGroup
-        label={this.props.fieldDef.label}
         fieldId={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
       >
-        <Radio
-          label="Yes"
-          aria-label="radio yes"
-          id={fieldIdTrue}
-          key={fieldKeyTrue}
-          name="horizontal-radios"
-          jsonpath={this.props.fieldDef.jsonPath}
-        />
-        <Radio
-          label="No"
-          aria-label="radio no"
-          id={fieldIdFalse}
-          key={fieldKeyFalse}
-          name="horizontal-radios"
-          jsonpath={this.props.fieldDef.jsonPath}
-        />
+        <Tooltip
+          position="left"
+          content={<div>{this.props.fieldDef.description}</div>}
+          enableFlip={true}
+          style={{
+            display:
+              this.props.fieldDef.description !== undefined &&
+              this.props.fieldDef.description !== ""
+                ? "block"
+                : "none"
+          }}
+        >
+          <Radio
+            key={this.props.ids.fieldKey}
+            defaultValue={this.props.fieldDef.label}
+            onChange={this.handleChangeRadio}
+            name={this.props.parentid}
+            isChecked={this.props.fieldDef.value}
+            label={this.props.fieldDef.label}
+            id={this.props.fieldDef.label}
+          />
+        </Tooltip>
       </FormGroup>
     );
   }
+
+  handleChangeRadio = () => {
+    this.isCheckedRadio = !this.isCheckedRadio;
+
+    let count = 0,
+      pos = 0;
+    this.props.page.props.pageDef.fields.forEach((field, i) => {
+      if (field.label === this.props.parentid) {
+        //locate parent pos
+        pos = i;
+        field.fields.forEach(subfield => {
+          if (subfield.label !== this.props.fieldDef.label) {
+            count = subfield.fields.length; //previously added
+            subfield.value = false;
+          } else {
+            subfield.value = true;
+          }
+        });
+      } // );
+    });
+
+    //remove
+    if (this.props.page.props.pageDef.fields[pos].value !== undefined) {
+      this.props.page.props.pageDef.fields.splice(pos + 1, count);
+    }
+
+    //add
+    this.props.fieldDef.fields.forEach((field, i) => {
+      this.props.page.props.pageDef.fields.splice(pos + 1 + i, 0, field);
+    });
+    this.props.page.props.pageDef.fields[pos].value = this.props.fieldDef.label;
+
+    this.props.page.loadPageChildren();
+  };
 }

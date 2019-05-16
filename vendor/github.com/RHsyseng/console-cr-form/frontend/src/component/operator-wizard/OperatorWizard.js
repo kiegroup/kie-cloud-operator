@@ -7,21 +7,13 @@ export default class OperatorWizard extends Component {
     super(props);
     this.state = {
       isOpen: true,
-      isFormValidA: true,
-      formValueA: "Five",
-      isFormValidB: true,
-      formValueB: "Six",
       allStepsValid: true
     };
-    this.toggleOpen = this.toggleOpen.bind(this);
-    this.onFormChangeA = this.onFormChangeA.bind(this);
-    this.onFormChangeB = this.onFormChangeB.bind(this);
     this.onGoToStep = this.onGoToStep.bind(this);
     this.areAllStepsValid = this.areAllStepsValid.bind(this);
     this.onNext = this.onNext.bind(this);
     this.onBack = this.onBack.bind(this);
     this.onGoToStep = this.onGoToStep.bind(this);
-    this.onSave = this.onSave.bind(this);
   }
 
   /*
@@ -30,35 +22,9 @@ export default class OperatorWizard extends Component {
    * bring back as soon as the user navigates to the Page
    */
 
-  toggleOpen = () => {
-    this.setState(({ isOpen }) => ({
-      isOpen: !isOpen
-    }));
-  };
-
-  onFormChangeA = (isValid, value) => {
-    this.setState(
-      {
-        isFormValidA: isValid,
-        formValueA: value
-      },
-      this.areAllStepsValid
-    );
-  };
-
-  onFormChangeB = (isValid, value) => {
-    this.setState(
-      {
-        isFormValidB: isValid,
-        formValueB: value
-      },
-      this.areAllStepsValid
-    );
-  };
-
   areAllStepsValid = () => {
     this.setState({
-      allStepsValid: this.state.isFormValidA && this.state.isFormValidB
+      allStepsValid: false
     });
   };
 
@@ -83,21 +49,15 @@ export default class OperatorWizard extends Component {
     );
   };
 
-  onSave = () => {
-    console.log("Saved and closed the wizard");
-    this.setState({
-      isOpen: false
-    });
-  };
-
   render() {
     return (
       <Wizard
         isOpen={true}
         title="Operator GUI"
         description="KIE Operator"
-        onClose={this.toggleOpen}
-        onSave={this.onSave}
+        isFullHeight
+        isFullWidth
+        onClose={() => {}}
         steps={this.props.steps}
         onNext={this.onNext}
         onBack={this.onBack}

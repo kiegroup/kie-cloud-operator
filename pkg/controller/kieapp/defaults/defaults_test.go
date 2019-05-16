@@ -10,7 +10,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -264,7 +264,72 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamProdwSmartRouter(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProduction,
+			Objects: v1.KieAppObjects{
+				SmartRouter: &v1.KieAppObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
+	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
+	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-jms",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhdmProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Jms: &v1.KieAppJmsObject{
+							EnableKieServerJMSIntegration: true,
+							KieServerJmsUsername:          "adminUser",
+							KieServerJmsPassword:          "adminPassword",
+							KieServerJmsAuditTransacted:   false,
+							KieServerJmsEnableAudit:       true,
+							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.Equal(t, "test-jms-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
+
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
+
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
@@ -281,8 +346,115 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-jms",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Jms: &v1.KieAppJmsObject{
+							EnableKieServerJMSIntegration: true,
+							KieServerJmsUsername:          "adminUser",
+							KieServerJmsPassword:          "adminPassword",
+							KieServerJmsAuditTransacted:   false,
+							KieServerJmsEnableAudit:       true,
+							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.EnvVar) {
+	for _, env := range kieserverEnvs {
+		switch e := env.Name; e {
+		case "KIE_SERVER_JMS_QUEUE_REQUEST":
+			assert.Equal(t, "queue/KIE.SERVER.REQUEST", env.Value)
+
+		case "KIE_SERVER_JMS_QUEUE_RESPONSE":
+			assert.Equal(t, "queue/KIE.SERVER.RESPONSE", env.Value)
+
+		case "KIE_SERVER_JMS_QUEUE_EXECUTOR":
+			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR", env.Value)
+
+		case "KIE_SERVER_JMS_QUEUE_SIGNAL":
+			assert.Equal(t, "queue/KIE.SERVER.SIGNAL", env.Value)
+
+		case "KIE_SERVER_JMS_QUEUE_AUDIT":
+			assert.Equal(t, "queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+
+		case "KIE_SERVER_JMS_ENABLE_SIGNAL":
+			assert.Equal(t, "false", env.Value)
+
+		case "KIE_SERVER_JMS_ENABLE_AUDIT":
+			assert.Equal(t, "true", env.Value)
+
+		case "KIE_SERVER_JMS_AUDIT_TRANSACTED":
+			assert.Equal(t, "true", env.Value)
+
+		case "MQ_SERVICE_PREFIX_MAPPING":
+			assert.Equal(t, "test-jms-kieserver-amq7=AMQ", env.Value)
+
+		case "AMQ_USERNAME":
+			assert.Equal(t, "adminUser", env.Value)
+
+		case "AMQ_PASSWORD":
+			assert.Equal(t, "adminPassword", env.Value)
+
+		case "AMQ_PROTOCOL":
+			assert.Equal(t, "tcp", env.Value)
+
+		case "AMQ_QUEUES":
+			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+		}
+	}
+
+	for _, env := range amqEnvs {
+		switch e := env.Name; e {
+		case "AMQ_USER":
+			assert.Equal(t, "adminUser", env.Value)
+
+		case "AMQ_PASSWORD":
+			assert.Equal(t, "adminPassword", env.Value)
+
+		case "AMQ_ROLE":
+			assert.Equal(t, "admin", env.Value)
+
+		case "AMQ_NAME":
+			assert.Equal(t, "broker", env.Value)
+
+		case "AMQ_TRANSPORTS":
+			assert.Equal(t, "openwire", env.Value)
+
+		case "AMQ_REQUIRE_LOGIN":
+			assert.Equal(t, "false", env.Value)
+
+		case "AMQ_QUEUES":
+			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+		}
+	}
 }
 
 func TestInvalidBuildConfiguration(t *testing.T) {
@@ -297,7 +469,7 @@ func TestInvalidBuildConfiguration(t *testing.T) {
 					{
 						Deployments: Pint(2),
 						Build: &v1.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: v1.GitSource{
@@ -331,7 +503,7 @@ func TestBuildConfiguration(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Build: &v1.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: v1.GitSource{
@@ -371,7 +543,7 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
 
-	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
 	assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
@@ -421,6 +593,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring environment")
 	dbPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
 	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
@@ -443,6 +616,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
@@ -821,7 +995,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	// H2 Volumes are mounted
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 		Name:      "test-kieserver-h2-pvol",
-		MountPath: "/opt/eap/standalone/data",
+		MountPath: "/opt/kie/data",
 	})
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, corev1.Volume{
 		Name: "test-kieserver-h2-pvol",
@@ -1042,7 +1216,7 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 						},
 					},
 				},
-				SmartRouter: v1.KieAppObject{
+				SmartRouter: &v1.KieAppObject{
 					Env:       sampleEnv,
 					Resources: sampleResources,
 				},
@@ -1277,7 +1451,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Build: &v1.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							GitSource: v1.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
@@ -1298,7 +1472,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 					},
 					{
 						Build: &v1.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.4.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							GitSource: v1.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "anotherbranch",

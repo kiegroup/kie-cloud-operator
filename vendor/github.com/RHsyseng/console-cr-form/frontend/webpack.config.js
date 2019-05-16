@@ -6,10 +6,32 @@ module.exports = {
   entry: ["./index.js"],
   output: {
     path: path.join(__dirname, "dist"),
-    filename: "bundle.js"
+    filename: "bundle.js",
+    publicPath: '/'
+  },
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    hot: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        secure: false
+      }
+    }
   },
   module: {
     rules: [
+      {
+        test: /\.(png|jpg|gif)$/i,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              limit: 8192
+            }
+          }
+        ]
+      },
       {
         test: /\.(js|jsx)$/,
         exclude: /(node_modules|__test__)/,

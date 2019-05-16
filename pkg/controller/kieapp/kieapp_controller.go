@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -50,7 +50,9 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		if err == nil {
 			// Reconcile ConfigMaps
 			reconciler.CreateConfigMaps(myDep)
-			deployConsole(reconciler, myDep)
+			if shouldDeployConsole() {
+				deployConsole(reconciler, myDep)
+			}
 		} else {
 			log.Error("Can't properly create ConfigMaps. ", err)
 		}

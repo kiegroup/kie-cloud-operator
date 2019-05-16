@@ -12,21 +12,31 @@
 ## Build
 
 ### Clean generated Go files
+
 ```bash
 make clean
 ```
 
 ### Build a local binary
+
 ```bash
 make
 ```
 
 ### Only rebuild npm modules / webpack
+
 ```bash
 make npm
 ```
 
 ## Run & Test
+
 ```bash
 ./build/console-cr-form
+```
+
+## Development
+
+```bash
+make npm-watch
 ```
