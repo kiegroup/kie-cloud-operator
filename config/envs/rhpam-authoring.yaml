@@ -34,7 +34,3 @@ console:
         name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
         annotations:
           delete: "true"
-## KIE smartrouter BEGIN
-smartRouter:
-  omit: true
-## KIE smartrouter END

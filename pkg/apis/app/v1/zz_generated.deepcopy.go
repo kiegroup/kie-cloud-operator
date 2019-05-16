@@ -567,7 +567,11 @@ func (in *KieAppObjects) DeepCopyInto(out *KieAppObjects) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.SmartRouter.DeepCopyInto(&out.SmartRouter)
+	if in.SmartRouter != nil {
+		in, out := &in.SmartRouter, &out.SmartRouter
+		*out = new(KieAppObject)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

@@ -4,3 +4,6 @@ metadata:
   name: production
 spec:
   environment: rhpam-production
+  objects:
+    smartRouter:
+      replicas: 1

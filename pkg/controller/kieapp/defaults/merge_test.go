@@ -228,8 +228,9 @@ func TestMergeConfigsWithoutBaseline(t *testing.T) {
 	assert.Equal(t, merged.Servers, common.Servers)
 }
 
-func TestMergeSmartRouterOmitted(t *testing.T) {
+func TestMergeConsoleOmitted(t *testing.T) {
 	var trialEnv v1.Environment
+
 	err := getParsedTemplate("envs/rhpam-trial.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -239,7 +240,6 @@ func TestMergeSmartRouterOmitted(t *testing.T) {
 
 	mergedEnv, err := merge(common, trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	assert.True(t, mergedEnv.SmartRouter.Omit, "SmartRouter deployment must be omitted")
 	assert.False(t, mergedEnv.Console.Omit, "Console deployment must not be omitted")
 }
 

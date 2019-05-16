@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -104,7 +105,7 @@ type KieAppObjects struct {
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
-	SmartRouter KieAppObject `json:"smartRouter,omitempty"`
+	SmartRouter *KieAppObject `json:"smartRouter,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1

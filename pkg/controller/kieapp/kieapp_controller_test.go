@@ -3,9 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
 
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
@@ -16,7 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func TestGenerateSecret(t *testing.T) {
@@ -83,7 +83,7 @@ func TestSpecifySecret(t *testing.T) {
 						},
 					},
 				},
-				SmartRouter: v1.KieAppObject{
+				SmartRouter: &v1.KieAppObject{
 					KeystoreSecret: "smartrouter-ks-secret",
 				},
 			},
