@@ -203,7 +203,7 @@ console:
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
-                    mountPath: "/opt/eap/standalone/data/kie"
+                    mountPath: "/opt/kie/data"
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
