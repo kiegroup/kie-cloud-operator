@@ -28,7 +28,6 @@ func RunWebServer(config Configuration) error {
 	http.Handle("/fonts/", http.FileServer(box))
 	http.Handle("/favicon.ico", http.FileServer(box))
 	http.Handle("/health", checkHealth(box))
-	logrus.SetLevel(logrus.DebugLevel)
 
 	returnIndex := func(writer http.ResponseWriter, reader *http.Request) {
 		templateString, err := box.FindString("index.html")

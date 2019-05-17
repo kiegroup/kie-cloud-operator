@@ -16,15 +16,16 @@ const envJSONForm = "JSON_FORM"
 const envJSONSchema = "JSON_SCHEMA"
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
 	logrus.Info("Starting test server. Using default JSON Form and Schema.")
 	logrus.Info("Provide a different Form and Schema using JSON_FORM and JSON_SCHEMA env vars")
 
 	config, err := web.NewConfiguration("", 8080, getSchema(), "app.kiegroup.org/v1", "KieApp", getForm(), callback)
 	if err != nil {
-		logrus.Errorf("Failed to configure web server: %v", err)
+		logrus.Fatalf("Failed to configure web server: %v", err)
 	}
 	if err := web.RunWebServer(config); err != nil {
-		logrus.Errorf("Failed to run web server: %v", err)
+		logrus.Fatalf("Failed to run web server: %v", err)
 	}
 }
 
@@ -72,16 +73,4 @@ func getSchema() spec.Schema {
 		logrus.Error("Error unmarshalling jsonSchema: ", err)
 	}
 	return schema
-}
-
-type CustomResourceDefinition struct {
-	Spec CustomResourceDefinitionSpec `json:"spec,omitempty"`
-}
-
-type CustomResourceDefinitionSpec struct {
-	Validation CustomResourceDefinitionValidation `json:"validation,omitempty"`
-}
-
-type CustomResourceDefinitionValidation struct {
-	OpenAPIV3Schema spec.Schema `json:"openAPIV3Schema,omitempty"`
 }

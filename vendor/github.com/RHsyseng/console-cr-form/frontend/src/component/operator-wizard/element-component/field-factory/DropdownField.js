@@ -7,8 +7,7 @@ import {
   Tooltip
 } from "@patternfly/react-core";
 
-import * as utils from "../../../common/CommonUtils";
-
+import FieldFactory from "./FieldFactory";
 import JSONPATH from "jsonpath";
 
 export class DropdownField {
@@ -16,12 +15,21 @@ export class DropdownField {
     this.props = props;
     this.errMsg = "";
     this.isValid = true;
+    this.addChildren = this.addChildren.bind(this);
+    this.reBuildChildren = this.reBuildChildren.bind(this);
+  }
+
+  getJsonSchemaPathForJsonPath(jsonPath) {
+    jsonPath = jsonPath.slice(2, jsonPath.length);
+    jsonPath = jsonPath.replace(/\./g, ".properties.");
+    jsonPath = "$.." + jsonPath;
+    return jsonPath;
   }
 
   getJsx() {
     var options = [{ value: "", label: "" }];
 
-    const tmpJsonPath = utils.getJsonSchemaPathForJsonPath(
+    const tmpJsonPath = this.getJsonSchemaPathForJsonPath(
       this.props.fieldDef.originalJsonPath
     );
     const optionValues = this.findValueFromSchema(tmpJsonPath + ".enum");
@@ -50,7 +58,10 @@ export class DropdownField {
       this.isValid = true;
     }
     this.props.fieldDef.errMsg = this.errMsg;
-    return (
+    var jsxArray = [];
+    var fieldJsx;
+
+    fieldJsx = (
       <FormGroup
         label={this.props.fieldDef.label}
         id={this.props.ids.fieldGroupId}
@@ -91,6 +102,55 @@ export class DropdownField {
         </Tooltip>
       </FormGroup>
     );
+    jsxArray.push(fieldJsx);
+    jsxArray.push(this.addChildren());
+    return jsxArray;
+  }
+  addChildren() {
+    var elements = [];
+    if (this.props.fieldDef.fields) {
+      this.props.fieldDef.fields.forEach((subfield, i) => {
+        var parentjsonpath = this.props.fieldDef.jsonPath;
+        parentjsonpath = parentjsonpath.slice(
+          0,
+          parentjsonpath.lastIndexOf(".")
+        );
+        var res = "";
+        if (parentjsonpath.length < subfield.jsonPath.length) {
+          res = subfield.jsonPath.substring(
+            parentjsonpath.length,
+            subfield.jsonPath.length
+          );
+          subfield.jsonPath = parentjsonpath.concat(res);
+        }
+
+        if (subfield.type != "object") {
+          let oneComponent = FieldFactory.newInstance(
+            subfield,
+            i,
+            this.props.pageNumber,
+            this.props.jsonSchema,
+            this.props.page
+          );
+          elements.push(oneComponent.getJsx());
+        } else {
+          if (subfield.label === this.props.fieldDef.value) {
+            //when the drop down value matches field group
+            subfield.visible = true;
+          }
+          let oneComponent = FieldFactory.newInstance(
+            subfield,
+            i,
+            this.props.pageNumber,
+            this.props.jsonSchema,
+            this.props.page,
+            this.props.fieldNumber
+          );
+          elements.push(oneComponent.getJsx());
+        }
+      });
+    }
+    return elements;
   }
 
   onSelect = (_, event) => {
@@ -105,9 +165,24 @@ export class DropdownField {
       this.isValid = true;
     }
     this.props.fieldDef.errMsg = this.errMsg;
+    //rebuild children based on drop down selection
+    this.reBuildChildren(value);
+
     this.props.page.loadPageChildren();
   };
-
+  reBuildChildren(value) {
+    if (this.props.fieldDef.fields) {
+      this.props.fieldDef.fields.forEach(subfield => {
+        if (subfield.type === "fieldGroup") {
+          if (subfield.displayWhen === value) {
+            subfield.visible = true;
+          } else {
+            subfield.visible = false;
+          }
+        }
+      });
+    }
+  }
   findValueFromSchema(jsonPath) {
     try {
       var queryResults = JSONPATH.query(this.props.jsonSchema, jsonPath);

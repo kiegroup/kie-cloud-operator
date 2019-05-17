@@ -187,52 +187,54 @@ export class ObjectField {
     var pos = 0,
       elements = [];
 
-    this.props.fieldDef.fields.forEach((subfield, i) => {
-      if (this.props.fieldDef.min == 0) {
-        //means don't generate the 1st one unless user press button
-        //console.log("field.min == 0, won't render ");
-      } else {
-        var parentjsonpath = this.props.fieldDef.jsonPath;
-        var res = "";
-        //change the JsomPath before insert
-        if (parentjsonpath.length < subfield.jsonPath.length) {
-          res = subfield.jsonPath.substring(
-            parentjsonpath.length,
-            subfield.jsonPath.length
-          );
-          res = parentjsonpath.concat(res);
-
-          subfield.jsonPath = res.replace(/\*/g, pos);
+    if (this.props.fieldDef.fields) {
+      this.props.fieldDef.fields.forEach((subfield, i) => {
+        if (this.props.fieldDef.min == 0) {
+          //means don't generate the 1st one unless user press button
+          //console.log("field.min == 0, won't render ");
         } else {
-          subfield.jsonPath = subfield.jsonPath.replace(/\*/g, pos);
+          var parentjsonpath = this.props.fieldDef.jsonPath;
+          var res = "";
+          //change the JsomPath before insert
+          if (parentjsonpath.length < subfield.jsonPath.length) {
+            res = subfield.jsonPath.substring(
+              parentjsonpath.length,
+              subfield.jsonPath.length
+            );
+            res = parentjsonpath.concat(res);
+
+            subfield.jsonPath = res.replace(/\*/g, pos);
+          } else {
+            subfield.jsonPath = subfield.jsonPath.replace(/\*/g, pos);
+          }
+          if (subfield.type != "object") {
+            let oneComponent = FieldFactory.newInstance(
+              subfield,
+              i,
+              this.props.pageNumber,
+              this.props.jsonSchema,
+
+              this.props.page
+            );
+            elements.push(oneComponent.getJsx());
+          } else {
+            console.log("parentId" + this.props.fieldNumber);
+            let oneComponent = FieldFactory.newInstance(
+              subfield,
+              i,
+
+              this.props.pageNumber,
+
+              this.props.jsonSchema,
+              this.props.page,
+              this.props.fieldNumber
+            );
+            elements.push(oneComponent.getJsx());
+          }
+          //assigning each fiels for object with same pos and increment the pos when all fields are done
         }
-        if (subfield.type != "object") {
-          let oneComponent = FieldFactory.newInstance(
-            subfield,
-            i,
-            this.props.pageNumber,
-            this.props.jsonSchema,
-
-            this.props.page
-          );
-          elements.push(oneComponent.getJsx());
-        } else {
-          console.log("parentId" + this.props.fieldNumber);
-          let oneComponent = FieldFactory.newInstance(
-            subfield,
-            i,
-
-            this.props.pageNumber,
-
-            this.props.jsonSchema,
-            this.props.page,
-            this.props.fieldNumber
-          );
-          elements.push(oneComponent.getJsx());
-        }
-        //assigning each fiels for object with same pos and increment the pos when all fields are done
-      }
-    });
+      });
+    }
     return elements;
   }
   addMinElements() {
