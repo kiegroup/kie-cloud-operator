@@ -11,6 +11,7 @@ import { DefaultTextField } from "./DefaultTextField";
 import { SectionRadioField } from "./SectionRadioField";
 import { ObjectField } from "./ObjectField";
 import { FieldUtils } from "./FieldUtils";
+import { FieldGroupField } from "./FieldGroupField";
 
 export const FIELD_TYPE = {
   dropdown: "dropDown",
@@ -24,7 +25,8 @@ export const FIELD_TYPE = {
   seperateObjDiv: "seperateObjDiv",
   section: "section",
   text: "text",
-  sectionRadio: "section_radio"
+  sectionRadio: "section_radio",
+  fieldGroup: "fieldGroup"
 };
 
 export default class FieldFactory {
@@ -92,6 +94,9 @@ export default class FieldFactory {
         }
 
         fieldReference = new ObjectField(props);
+        break;
+      case FIELD_TYPE.fieldGroup:
+        fieldReference = new FieldGroupField(props);
         break;
       default:
         fieldReference = new DefaultTextField(props);

@@ -20,12 +20,13 @@ export const loadJsonSchema = fetch(BACKEND_URL + "/schema", {
     console.error("Unable to load JSON Schema: ", error);
   });
 
-export const loadJsonSpec = fetch(BACKEND_URL + "/spec", {
-  headers: {
-    "Content-Type": "application/json"
-  }
-})
-  .then(res => res.json())
-  .catch(error => {
-    console.error("Unable to load JSON Schema: ", error);
-  });
+export const loadJsonSpec = () =>
+  fetch(BACKEND_URL + "/spec", {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+    .then(res => res.json())
+    .catch(error => {
+      console.error("Unable to load JSON Schema: ", error);
+    });

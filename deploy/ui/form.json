@@ -19,33 +19,56 @@
           "originalJsonPath": "$.spec.environment",
           "type": "dropDown"
         },
+
         {
-          "label": "Image Registry",
-          "default": "rhpam-trial",
+          "label": "External registry",
+          "type": "fieldGroup",
           "required": false,
-          "jsonPath": "$.spec.imageRegistry.registry",
-          "type": "text"
+          "jsonPath": "$.spec.imageRegistry",
+
+          "default": "",
+          "visible": true,
+          "fields": [
+            {
+              "label": "Image Registry",
+              "default": "rhpam-trial",
+              "required": false,
+              "jsonPath": "$.spec.imageRegistry.registry",
+              "type": "text"
+            },
+            {
+              "label": "Insecure",
+              "default": "false",
+              "required": false,
+              "jsonPath": "$.spec.imageRegistry.insecure",
+              "type": "checkbox"
+            }
+          ]
         },
         {
-          "label": "Insecure",
-          "default": "false",
+          "label": "Admin user",
+          "type": "fieldGroup",
           "required": false,
-          "jsonPath": "$.spec.imageRegistry.insecure",
-          "type": "checkbox"
-        },
-        {
-          "label": "User Name",
-          "default": "rhpam-trial",
-          "required": false,
-          "jsonPath": "$.spec.commonConfig.adminUser",
-          "type": "text"
-        },
-        {
-          "label": "Password",
-          "default": "env2 default",
-          "required": false,
-          "jsonPath": "$.spec.commonConfig.adminPassword",
-          "type": "password"
+          "jsonPath": "$.spec.commonConfig",
+
+          "default": "",
+          "visible": true,
+          "fields": [
+            {
+              "label": "User name",
+              "default": "rhpam-trial",
+              "required": false,
+              "jsonPath": "$.spec.commonConfig.adminUser",
+              "type": "text"
+            },
+            {
+              "label": "Password",
+              "default": "env2 default",
+              "required": false,
+              "jsonPath": "$.spec.commonConfig.adminPassword",
+              "type": "password"
+            }
+          ]
         }
       ]
     },
@@ -569,6 +592,7 @@
                     }
                   ]
                 },
+
                 {
                   "label": "kind",
                   "type": "dropDown",
@@ -668,135 +692,150 @@
                 {
                   "label": "Type",
                   "type": "dropDown",
-                  "required": false,
+                  "required": true,
                   "jsonPath": "$.spec.objects.servers[*].database.type",
                   "originalJsonPath": "$.spec.objects.servers[*].database.type",
-                  "default": ""
-                },
-                {
-                  "label": "Size",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.size",
-                  "default": "100Gi",
-                  "description": "Size of the PersistentVolumeClaim to create. For example, 100Gi"
-                },
-                {
-                  "label": "Driver",
-                  "type": "text",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.driver",
-                  "default": ""
-                },
-                {
-                  "label": "Dialect",
-                  "type": "text",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.dialect",
-                  "default": ""
-                },
-                {
-                  "label": "Name",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.name",
-                  "default": ""
-                },
-                {
-                  "label": "Host",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.host",
-                  "default": ""
-                },
-                {
-                  "label": "Port",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.port",
-                  "default": ""
-                },
-                {
-                  "label": "jdbc URL",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.jdbcURL",
-                  "default": ""
-                },
-                {
-                  "label": "NonXA",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.nonXA",
-                  "default": ""
-                },
-                {
-                  "label": "jndiName",
-                  "type": "text",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.jndiName",
-                  "default": ""
-                },
-                {
-                  "label": "User Name",
-                  "type": "text",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.username",
-                  "default": ""
-                },
-                {
-                  "label": "Password",
-                  "type": "password",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.password",
-                  "default": ""
-                },
-                {
-                  "label": "minPoolSize",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
-                  "default": ""
-                },
-                {
-                  "label": "minPoolSize",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
-                  "default": ""
-                },
-                {
-                  "label": "minPoolSize",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.minPoolSize",
-                  "default": ""
-                },
-                {
-                  "label": "maxPoolSize",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.maxPoolSize",
-                  "default": ""
-                },
-                {
-                  "label": "connectionChecker",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.connectionChecker",
-                  "default": ""
-                },
-                {
-                  "label": "exceptionChecker",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.exceptionChecker",
-                  "default": ""
-                },
-                {
-                  "label": "backgroundValidation",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.backgroundValidation",
-                  "default": ""
-                },
-                {
-                  "label": "backgroundValidationMillis",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].database.type.externalConfig.backgroundValidationMillis",
-                  "default": ""
+                  "default": "",
+                  "fields": [
+                    {
+                      "label": "Size",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.servers[*].database.size",
+                      "default": "100Gi",
+                      "description": "Size of the PersistentVolumeClaim to create. For example, 100Gi"
+                    },
+                    {
+                      "label": "External Database",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.servers[*].database.externalConfig",
+
+                      "default": "",
+                      "displayWhen": "external",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Driver",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.driver",
+                          "default": ""
+                        },
+                        {
+                          "label": "Dialect",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.dialect",
+                          "default": ""
+                        },
+                        {
+                          "label": "Name",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.name",
+                          "default": ""
+                        },
+                        {
+                          "label": "Host",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.host",
+                          "default": ""
+                        },
+                        {
+                          "label": "Port",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.port",
+                          "default": ""
+                        },
+                        {
+                          "label": "jdbc URL",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jdbcURL",
+                          "default": ""
+                        },
+                        {
+                          "label": "NonXA",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.nonXA",
+                          "default": ""
+                        },
+                        {
+                          "label": "jndiName",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jndiName",
+                          "default": ""
+                        },
+                        {
+                          "label": "User Name",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.username",
+                          "default": ""
+                        },
+                        {
+                          "label": "Password",
+                          "type": "password",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.password",
+                          "default": ""
+                        },
+                        {
+                          "label": "minPoolSize",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
+                          "default": ""
+                        },
+                        {
+                          "label": "minPoolSize",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
+                          "default": ""
+                        },
+                        {
+                          "label": "minPoolSize",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
+                          "default": ""
+                        },
+                        {
+                          "label": "maxPoolSize",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.maxPoolSize",
+                          "default": ""
+                        },
+                        {
+                          "label": "connectionChecker",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.connectionChecker",
+                          "default": ""
+                        },
+                        {
+                          "label": "exceptionChecker",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.exceptionChecker",
+                          "default": ""
+                        },
+                        {
+                          "label": "backgroundValidation",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.backgroundValidation",
+                          "default": ""
+                        },
+                        {
+                          "label": "backgroundValidationMillis",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.backgroundValidationMillis",
+                          "default": ""
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
           ]
         },
+
         {
           "label": "Smart Router",
           "fields": [

@@ -66,9 +66,11 @@ export class RadioButtonField {
     }
 
     //add
-    this.props.fieldDef.fields.forEach((field, i) => {
-      this.props.page.props.pageDef.fields.splice(pos + 1 + i, 0, field);
-    });
+    if (this.props.fieldDef.fields) {
+      this.props.fieldDef.fields.forEach((field, i) => {
+        this.props.page.props.pageDef.fields.splice(pos + 1 + i, 0, field);
+      });
+    }
     this.props.page.props.pageDef.fields[pos].value = this.props.fieldDef.label;
 
     this.props.page.loadPageChildren();
