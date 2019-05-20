@@ -24,7 +24,7 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 volumeMounts:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
-                    mountPath: "/opt/eap/standalone/data/kie"
+                    mountPath: "/opt/kie/data"
                 ports:
                   - name: git-ssh
                     containerPort: 8001

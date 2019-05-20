@@ -43,19 +43,19 @@ servers:
                       value: "jdbc:h2:/opt/kie/data/h2/rhpam;AUTO_SERVER=TRUE"
                     ## H2 driver settings END
                   volumeMounts:
-                    - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
+                    - name: "[[.KieName]]-kie-[[$.Constants.DatabaseVolumeSuffix]]"
                       mountPath: "/opt/kie/data"
               ## [[ if ne .Database.Size "" ]]
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
+                - name: "[[.KieName]]-kie-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
-                    claimName: "[[.KieName]]-h2-claim"
+                    claimName: "[[.KieName]]-kie-claim"
     ## KIE server deployment config END
     persistentVolumeClaims:
       ## H2 persistent volume claim BEGIN
       - metadata:
-          name: "[[.KieName]]-h2-claim"
+          name: "[[.KieName]]-kie-claim"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
@@ -70,7 +70,7 @@ servers:
               ## [[ else ]]
               volumes:
                 ## H2 volume settings BEGIN
-                - name: "[[.KieName]]-h2-[[$.Constants.DatabaseVolumeSuffix]]"
+                - name: "[[.KieName]]-kie-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
 ## [[ end ]]
 #[[end]]
