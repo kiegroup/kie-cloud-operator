@@ -361,7 +361,8 @@
                         "properties": {
                           "kind": {
                             "description": "Object kind. e.g. ImageStreamTag",
-                            "type": "string"
+                            "type": "string",
+                            "enum": ["ImageStreamTag", "DockerImage"]
                           },
                           "name": {
                             "description": "Object name",

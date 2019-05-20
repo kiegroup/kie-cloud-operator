@@ -1,38 +1,37 @@
 {
   "pages": [
     {
-      "label": "Information",
+      "label": "Installation",
       "fields": [
         {
           "label": "Application Name",
-          "default": "rhpam-trial",
+          "default": "MyTrialEnvironment",
           "required": true,
           "jsonPath": "$.metadata.name",
           "type": "text"
         },
         {
           "label": "Environment",
-          "default": "env2 default",
+          "default": "rhpam-trial",
           "required": true,
           "description": "The name of the environment used as a baseline",
           "jsonPath": "$.spec.environment",
           "originalJsonPath": "$.spec.environment",
           "type": "dropDown"
         },
-
         {
-          "label": "External registry",
+          "label": "Custom registry",
           "type": "fieldGroup",
           "required": false,
           "jsonPath": "$.spec.imageRegistry",
-
           "default": "",
           "visible": true,
           "fields": [
             {
               "label": "Image Registry",
-              "default": "rhpam-trial",
+              "default": "registry.redhat.io",
               "required": false,
+              "description": "URL of a custom registry where RHPAM images are stored",
               "jsonPath": "$.spec.imageRegistry.registry",
               "type": "text"
             },
@@ -40,6 +39,7 @@
               "label": "Insecure",
               "default": "false",
               "required": false,
+              "description": "Selected if image registry is insecure",
               "jsonPath": "$.spec.imageRegistry.insecure",
               "type": "checkbox"
             }
@@ -50,21 +50,22 @@
           "type": "fieldGroup",
           "required": false,
           "jsonPath": "$.spec.commonConfig",
-
           "default": "",
           "visible": true,
           "fields": [
             {
-              "label": "User name",
-              "default": "rhpam-trial",
+              "label": "Username",
+              "default": "adminUser",
               "required": false,
+              "description": "Administrative username for RHPAM components",
               "jsonPath": "$.spec.commonConfig.adminUser",
               "type": "text"
             },
             {
               "label": "Password",
-              "default": "env2 default",
+              "default": "[Generated value]",
               "required": false,
+              "description": "Administrative password to use instead of generating default value",
               "jsonPath": "$.spec.commonConfig.adminPassword",
               "type": "password"
             }
@@ -84,19 +85,22 @@
               "label": "SSO",
               "type": "radioButton",
               "required": false,
+              "description": "Red Hat Single Sign-On Configuration",
               "jsonPath": "$.spec.objects.console.env.sso",
-              "default": "Some text here",
+              "default": "false",
               "fields": [
                 {
-                  "label": "url",
+                  "label": "URL",
                   "type": "text",
+                  "required": true,
                   "jsonPath": "$.spec.auth.sso.url",
                   "default": "",
                   "description": "RH-SSO URL"
                 },
                 {
-                  "label": "realm",
+                  "label": "Realm",
                   "type": "text",
+                  "required": true,
                   "jsonPath": "$.spec.auth.sso.realm",
                   "default": "",
                   "description": "RH-SSO Realm name"
@@ -120,7 +124,7 @@
                   "type": "checkbox",
                   "jsonPath": "$.spec.auth.sso.disableSSLCertValidation",
                   "default": "false",
-                  "description": "RH-SSO Disable SSL Certificate Validation"
+                  "description": "Disable SSL Certificate Validation"
                 },
                 {
                   "label": "Principal Attribute",
@@ -135,15 +139,17 @@
               "label": "LDAP",
               "type": "radioButton",
               "required": false,
+              "description": "Use ldap as authentication provider",
               "jsonPath": "$.spec.objects.console.env.ldap",
-              "default": "Some text here",
+              "default": "false",
               "fields": [
                 {
-                  "label": "url",
+                  "label": "URL",
                   "type": "text",
+                  "required": true,
                   "jsonPath": "$.spec.auth.ldap.url",
                   "default": "",
-                  "description": " LDAP Endpoint to connect for authentication"
+                  "description": "The ldap URL Endpoint for authentication"
                 },
                 {
                   "label": "bindDN",
@@ -153,14 +159,14 @@
                   "description": "Bind DN used for authentication"
                 },
                 {
-                  "label": "bind Credential",
+                  "label": "bindDN Password",
                   "type": "password",
                   "jsonPath": "$.spec.auth.ldap.bindCredential",
                   "default": "",
-                  "description": "LDAP Credentials used for authentication"
+                  "description": "LDAP Credentials used for authentication of bindDN"
                 },
                 {
-                  "label": "jaasSecurityDomain",
+                  "label": "JAAS Security Domain",
                   "type": "password",
                   "jsonPath": "$.spec.auth.ldap.jaasSecurityDomain",
                   "default": "",
@@ -168,20 +174,20 @@
                 },
                 {
                   "label": "baseCtxDN",
-                  "type": "checkbox",
+                  "type": "text",
                   "jsonPath": "$.spec.auth.ldap.baseCtxDN",
-                  "default": "false",
-                  "description": "LDAP Base DN of the top-level context to begin the user search."
+                  "default": "",
+                  "description": "Base DN of the top-level context to begin the user search."
                 },
                 {
                   "label": "baseFilter",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.baseFilter",
                   "default": "",
-                  "description": "LDAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
+                  "description": "Search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
                 },
                 {
-                  "label": "searchScope",
+                  "label": "Search scope",
                   "type": "dropDown",
                   "jsonPath": "$.spec.auth.ldap.searchScope",
                   "originalJsonPath": "$.spec.auth.ldap.searchScope",
@@ -189,176 +195,176 @@
                   "description": "The search scope to use."
                 },
                 {
-                  "label": "searchTimeLimit",
+                  "label": "Search time limit",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.searchTimeLimit",
                   "default": "",
-                  "description": "The timeout in milliseconds for user or role searches."
+                  "description": "The timeout in milliseconds for ldap searches."
                 },
                 {
-                  "label": "distinguishedNameAttribute",
+                  "label": "DN Attribute",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.distinguishedNameAttribute",
                   "default": "",
                   "description": "The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used."
                 },
                 {
-                  "label": "parseUsername",
+                  "label": "Parse username",
                   "type": "checkbox",
                   "jsonPath": "$.spec.auth.ldap.parseUsername",
                   "default": "false",
-                  "description": "A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString."
+                  "description": "A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with Username prefix and Username suffix."
                 },
                 {
-                  "label": "usernameBeginString",
+                  "label": "Username prefix",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.usernameBeginString",
                   "default": "",
-                  "description": "Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true."
+                  "description": "Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with Username suffix and only taken into account if parseUsername is set to true."
                 },
                 {
-                  "label": "usernameBeginString",
+                  "label": "Username suffix",
                   "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.usernameBeginString",
+                  "jsonPath": "$.spec.auth.ldap.usernameEndString",
                   "default": "",
-                  "description": "Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true."
+                  "description": "Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with Username prefix and only taken into account if parseUsername is set to true."
                 },
                 {
-                  "label": "roleAttributeID",
+                  "label": "Role attribute ID",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.roleAttributeID",
                   "default": "",
                   "description": "Name of the attribute containing the user roles"
                 },
                 {
-                  "label": "rolesCtxDN",
-                  "type": "password",
+                  "label": "Role context DN",
+                  "type": "text",
                   "jsonPath": "$.spec.auth.ldap.rolesCtxDN",
                   "default": "",
                   "description": "The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is."
                 },
                 {
-                  "label": "roleFilter",
-                  "type": "password",
+                  "label": "Role filter",
+                  "type": "text",
                   "jsonPath": "$.spec.auth.ldap.roleFilter",
                   "default": "",
                   "description": "A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1})."
                 },
                 {
-                  "label": "roleRecursion",
+                  "label": "Role recursion",
                   "type": "number",
                   "jsonPath": "$.spec.auth.ldap.baseCtxDN",
                   "default": "false",
                   "description": "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
                 },
                 {
-                  "label": "defaultRole",
+                  "label": "Default role",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.defaultRole",
                   "default": "",
                   "description": "A role included for all authenticated users"
                 },
                 {
-                  "label": "roleNameAttributeID",
+                  "label": "Role name attribute ID",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.roleNameAttributeID",
                   "default": "",
-                  "description": "Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute."
+                  "description": "Name of the attribute within the Role context DN that contains the role name. If the 'Role attribute is DN' property is set to true, this property is used to find the role object’s name attribute."
                 },
                 {
-                  "label": "parseRoleNameFromDN",
+                  "label": "Parse role name from DN",
                   "type": "checkbox",
                   "jsonPath": "$.spec.auth.ldap.parseRoleNameFromDN",
                   "default": "false",
-                  "description": "A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries."
+                  "description": "A flag indicating if the DN returned by a query contains the 'Role name attribute ID'. If set to true, the DN is checked for the 'Role name attribute ID'. If set to false, the DN is not checked for the 'Role name attribute ID'. This flag can improve the performance of LDAP queries."
                 },
                 {
-                  "label": "roleAttributeIsDN",
+                  "label": "Role attribute is DN",
                   "type": "checkbox",
                   "jsonPath": "$.spec.auth.ldap.roleAttributeIsDN",
                   "default": "false",
-                  "description": "Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true."
+                  "description": "Whether or not the 'Role attribute ID' contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the 'Role name attribute ID' attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true."
                 },
                 {
-                  "label": "referralUserAttributeIDToCheck",
+                  "label": "Referral user attribute ID",
                   "type": "text",
                   "jsonPath": "$.spec.auth.ldap.referralUserAttributeIDToCheck",
                   "default": "",
-                  "description": " If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
+                  "description": "If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
                 }
               ]
             }
           ]
         },
         {
-          "label": "Roles Properties",
+          "label": "Role Mapping File",
           "type": "text",
           "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
           "default": "",
-          "description": " When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+          "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
         },
         {
-          "label": "Replace Role",
+          "label": "Replace Roles",
           "type": "checkbox",
           "jsonPath": "$.spec.auth.roleMapper.replaceRole",
           "default": "false",
-          "description": " Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
+          "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
         },
         {
-          "label": "ImageTag",
+          "label": "Image Tag",
           "type": "text",
           "jsonPath": "$.spec.commonConfig.imageTag",
           "default": "",
           "description": "The tag to use for the application images."
         },
         {
-          "label": "keyStorePassword",
+          "label": "keystore Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.keyStorePassword",
           "default": "",
           "description": "The password to use for keystore generation."
         },
         {
-          "label": "DB Password",
+          "label": "Database Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.dbPassword",
           "default": "",
           "description": "The password to use for databases."
         },
         {
-          "label": "amqPassword",
+          "label": "AMQ Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.amqPassword",
           "default": "",
-          "description": "The password to use for amq user"
+          "description": "The password to use for AMQ user"
         },
         {
-          "label": "amqClusterPassword",
+          "label": "AMQ Cluster Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.amqClusterPassword",
           "default": "",
-          "description": "RH-SSO Realm Admin Password used to create the Client"
+          "description": "Password for AMQ Cluster"
         },
         {
-          "label": "controllerPassword",
+          "label": "Controller Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.controllerPassword",
           "default": "",
-          "description": "The password to use for the controllerUser."
+          "description": "The password to use for 'controllerUser'."
         },
         {
-          "label": "serverPassword",
+          "label": "Server Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.serverPassword",
           "default": "",
-          "description": "The password to use for the executionUser."
+          "description": "The password to use for 'executionUser'."
         },
         {
-          "label": "mavenPassword",
+          "label": "Maven Password",
           "type": "password",
           "jsonPath": "$.spec.commonConfig.mavenPassword",
           "default": "",
-          "description": "The password to use for the mavenUser."
+          "description": "The password to use for 'mavenUser'."
         }
       ]
     },
@@ -369,17 +375,19 @@
           "label": "Console",
           "fields": [
             {
-              "label": "KeyStoreSecret",
+              "label": "Keystore Secret",
               "default": "",
               "required": false,
               "jsonPath": "$.spec.objects.console.keystoreSecret",
+              "description": "The secret name within the Java keystore used for https encryption.",
               "type": "text"
             },
             {
               "label": "Replicas",
-              "default": "",
+              "default": "1",
               "required": false,
               "jsonPath": "$.spec.objects.console.replicas",
+              "description": "The number of replicas for the console component.",
               "type": "text"
             },
             {
@@ -395,66 +403,74 @@
                   "type": "text",
                   "required": true,
                   "jsonPath": "$.spec.objects.console.env[*].name",
-                  "default": "Some text here"
+                  "description": "Environment variable name",
+                  "default": ""
                 },
                 {
-                  "label": "value",
+                  "label": "Value",
                   "type": "text",
                   "required": true,
                   "jsonPath": "$.spec.objects.console.env[*].value",
-                  "default": "Some text here"
+                  "description": "Environment variable value",
+                  "default": ""
                 }
               ]
             },
             {
-              "label": "Request(Memory)",
+              "label": "Memory Request",
               "type": "text",
               "jsonPath": "$.spec.objects.console.resources.request.memory",
+              "description": "Minimum amount of memory requested by the container",
               "default": "2Gi"
             },
             {
-              "label": "Request(CPU)",
+              "label": "CPU Request",
               "type": "text",
               "jsonPath": "$.spec.objects.console.resources.request.cpu",
+              "description": "Minimum processing power requested by the container",
               "default": "500m"
             },
             {
-              "label": "Limits(Memory)",
+              "label": "Memory Limit",
               "type": "text",
               "jsonPath": "$.spec.objects.console.resources.limits.memory",
+              "description": "Maximum amount of memory granted to the container",
               "default": "2Gi"
             },
             {
-              "label": "Limits(CPU)",
+              "label": "CPU Limit",
               "type": "text",
               "jsonPath": "$.spec.objects.console.resources.limits.cpu",
+              "description": "Maximum processing power granted to the container",
               "default": "500m"
             },
             {
               "label": "Client Name",
               "type": "text",
               "jsonPath": "$.spec.objects.console.ssoClient.name",
+              "description": "Client name used for console in RH-SSO, when configured",
               "default": ""
             },
             {
               "label": "Client Secret",
               "type": "password",
               "jsonPath": "$.spec.objects.console.ssoClient.secret",
+              "description": "Client secret to use for console in RH-SSO, when configured",
               "default": ""
             },
             {
-              "label": "Hostname Http",
+              "label": "SSO HTTP URL",
               "type": "text",
               "jsonPath": "$.spec.objects.console.ssoClient.hostnameHTTP",
               "default": "",
-              "description": "Hostname to set as redirect URL"
+              "description": "HTTP hostname to set as redirect URL, when RH-SSO is configured"
             },
             {
-              "label": "Hostname Https",
+              "label": "SSO HTTPS URL",
               "type": "text",
               "jsonPath": "$.spec.objects.console.ssoClient.hostnameHTTPS",
               "default": "",
-              "description": "Secure hostname to set as redirect URL"
+              "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
             }
           ]
         },
@@ -475,92 +491,101 @@
                   "default": "",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].name",
-                  "type": "text"
+                  "type": "text",
+                  "description": "The name to use for this KIE Server."
                 },
                 {
                   "label": "Deployments",
                   "default": "",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].deployments",
-                  "type": "text"
+                  "type": "text",
+                  "description": "The number of distinct KIE server sets to auto-generate, when specifying a single server element here."
                 },
                 {
-                  "label": "KeyStoreSecret",
+                  "label": "Keystore Secret",
                   "default": "",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].keystoreSecret",
-                  "type": "text"
+                  "type": "text",
+                  "description": "The secret name within the Java keystore used for https encryption."
                 },
                 {
                   "label": "Replicas",
                   "default": "",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].replicas",
-                  "type": "text"
+                  "type": "text",
+                  "description": "The number of replicas for this KIE server set."
                 },
                 {
-                  "label": "kind",
+                  "label": "Kind",
                   "type": "dropDown",
-                  "required": true,
+                  "required": false,
                   "jsonPath": "$.spec.objects.servers[*].from.kind",
                   "originalJsonPath": "$.spec.objects.servers[*].from.kind",
-                  "default": ""
+                  "default": "",
+                  "description": "Specify whether containers are to be created from an image stream, or a container image."
                 },
                 {
-                  "label": "name",
+                  "label": "Name",
                   "type": "text",
-                  "required": true,
+                  "required": false,
                   "jsonPath": "$.spec.objects.servers[*].from.name",
-                  "default": ""
+                  "default": "",
+                  "description": "The name of the image stream or container image to use."
                 },
                 {
-                  "label": "namespace",
+                  "label": "Namespace",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].from.namespace",
                   "default": "",
-                  "description": "Namespace where the object is located"
+                  "description": "Namespace where the image/stream is located."
                 },
                 {
-                  "label": "kieServerContainerDeployment",
+                  "label": "KIE Server Container Deployment",
                   "type": "text",
-                  "required": true,
+                  "required": false,
                   "jsonPath": "$.spec.objects.servers[*].build.kieServerContainerDeployment",
-                  "default": ""
+                  "default": "",
+                  "description": "KIE packages to deploy to the KIE server."
                 },
                 {
-                  "label": "mavenMirrorURL",
+                  "label": "Maven Mirror URL",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].build.mavenMirrorURL",
-                  "default": ""
+                  "default": "",
+                  "description": "URL of a Maven mirror to use."
                 },
                 {
-                  "label": "artifactDir",
+                  "label": "Artifact Directory",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].build.artifactDir",
-                  "default": ""
+                  "default": "",
+                  "description": "Build artifact directory."
                 },
                 {
-                  "label": "uri",
+                  "label": "S2I Git URI",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].build.gitSource.uri",
                   "default": "",
-                  "required": true,
-                  "description": "Git URI for the s2i source"
+                  "required": false,
+                  "description": "The URI of the Git repository to use in S2I build."
                 },
                 {
                   "label": "Reference",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
                   "default": "",
-                  "required": true,
-                  "description": "Branch to use in the git repository"
+                  "required": false,
+                  "description": "Branch to use in the git repository for S2I build."
                 },
                 {
-                  "label": "contextDir",
+                  "label": "Context Directory",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].build.gitSource.contextDir",
                   "default": "",
-                  "description": "Context/subdirectory where the code is located, relatively to repo root"
+                  "description": "Context/subdirectory where the code is located, relatively to repository root, to use for S2I build."
                 },
                 {
                   "label": "Webhooks",
@@ -576,8 +601,8 @@
                       "jsonPath": "$.spec.objects.servers[*].build.webhooks[*].type",
                       "originalJsonPath": "$.spec.objects.servers[*].build.webhooks[*].type",
                       "default": "",
-                      "required": false,
-                      "description": " WebHook type, either GitHub or Generic"
+                      "required": true,
+                      "description": "Git WebHook type to configure, either GitHub or Generic."
                     },
                     {
                       "label": "Secret",
@@ -585,32 +610,33 @@
                       "jsonPath": "$.spec.objects.servers[*].build.webhooks[*].secret",
                       "default": "",
                       "required": true,
-                      "description": "Secret value for webhook"
+                      "description": "Secret value for WebHook to configure."
                     }
                   ]
                 },
-
                 {
-                  "label": "kind",
+                  "label": "Kind",
                   "type": "dropDown",
-                  "required": true,
-                  "jsonPath": "$.spec.objects.servers[*].from.kind",
-                  "originalJsonPath": "$.spec.objects.servers[*].from.kind",
-                  "default": ""
-                },
-                {
-                  "label": "name",
-                  "type": "text",
-                  "required": true,
-                  "jsonPath": "$.spec.objects.servers[*].from.name",
-                  "default": ""
-                },
-                {
-                  "label": "namespace",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].from.namespace",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].build.from.kind",
+                  "originalJsonPath": "$.spec.objects.servers[*].build.from.kind",
                   "default": "",
-                  "description": "Namespace where the object is located"
+                  "description": "Specify whether build config is created from an image stream, or a container image."
+                },
+                {
+                  "label": "Name",
+                  "type": "text",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].build.from.name",
+                  "default": "",
+                  "description": "The name of the image stream or container image to use for build config."
+                },
+                {
+                  "label": "Namespace",
+                  "type": "text",
+                  "jsonPath": "$.spec.objects.servers[*].build.from.namespace",
+                  "default": "",
+                  "description": "Namespace where the build config image/stream is located."
                 },
                 {
                   "label": "Env",
@@ -625,71 +651,79 @@
                       "type": "text",
                       "required": true,
                       "jsonPath": "$.spec.objects.servers[*].env[*].name",
-                      "default": "Some text here"
+                      "default": "",
+                      "description": "Environment variable name"
                     },
                     {
-                      "label": "value",
+                      "label": "Value",
                       "type": "text",
                       "required": true,
                       "jsonPath": "$.spec.objects.servers[*].env[*].value",
-                      "default": "Some text here"
+                      "default": "",
+                      "description": "Environment variable value"
                     }
                   ]
                 },
                 {
-                  "label": "Request(Memory)",
+                  "label": "Memory Request",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].resources.request.memory",
-                  "default": "2Gi"
+                  "default": "2Gi",
+                  "description": "Minimum amount of memory requested by the container"
                 },
                 {
-                  "label": "Request(CPU)",
+                  "label": "CPU Request",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].resources.request.cpu",
-                  "default": "500m"
+                  "default": "500m",
+                  "description": "Minimum processing power requested by the container"
                 },
                 {
-                  "label": "Limits(Memory)",
+                  "label": "Memory Limit",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].resources.limits.memory",
-                  "default": "2Gi"
+                  "default": "2Gi",
+                  "description": "Maximum amount of memory granted to the container"
                 },
                 {
-                  "label": "Limits(CPU)",
+                  "label": "CPU Limit",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].resources.limits.cpu",
-                  "default": "500m"
+                  "default": "500m",
+                  "description": "Maximum processing power granted to the container"
                 },
                 {
                   "label": "Client Name",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].ssoClient.name",
-                  "default": ""
+                  "default": "",
+                  "description": "Client name used for console in RH-SSO, when configured"
                 },
                 {
                   "label": "Client Secret",
                   "type": "password",
                   "jsonPath": "$.spec.objects.servers[*].ssoClient.secret",
-                  "default": ""
+                  "default": "",
+                  "description": "Client secret to use for console in RH-SSO, when configured"
                 },
                 {
-                  "label": "Hostname Http",
+                  "label": "SSO HTTP URL",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].ssoClient.hostnameHTTP",
                   "default": "",
-                  "description": "Hostname to set as redirect URL"
+                  "description": "HTTP hostname to set as redirect URL, when RH-SSO is configured"
                 },
                 {
-                  "label": "Hostname Https",
+                  "label": "SSO HTTPS URL",
                   "type": "text",
                   "jsonPath": "$.spec.objects.servers[*].ssoClient.hostnameHTTPS",
                   "default": "",
-                  "description": "Secure hostname to set as redirect URL"
+                  "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
                 },
                 {
-                  "label": "Type",
+                  "label": "Database Type",
                   "type": "dropDown",
-                  "required": true,
+                  "required": false,
                   "jsonPath": "$.spec.objects.servers[*].database.type",
                   "originalJsonPath": "$.spec.objects.servers[*].database.type",
                   "default": "",
@@ -699,14 +733,13 @@
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].database.size",
                       "default": "100Gi",
-                      "description": "Size of the PersistentVolumeClaim to create. For example, 100Gi"
+                      "description": "Size of the Persistent Volume Claim to create. For example, 100Gi"
                     },
                     {
                       "label": "External Database",
                       "type": "fieldGroup",
                       "required": true,
                       "jsonPath": "$.spec.objects.servers[*].database.externalConfig",
-
                       "default": "",
                       "displayWhen": "external",
                       "visible": false,
@@ -716,113 +749,117 @@
                           "type": "text",
                           "required": true,
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.driver",
-                          "default": ""
+                          "default": "",
+                          "description": "Database driver."
                         },
                         {
                           "label": "Dialect",
                           "type": "text",
                           "required": true,
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.dialect",
-                          "default": ""
+                          "default": "",
+                          "description": "Database Hibernate Dialect."
                         },
                         {
                           "label": "Name",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.name",
-                          "default": ""
+                          "default": "",
+                          "description": "Database name."
                         },
                         {
                           "label": "Host",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.host",
-                          "default": ""
+                          "default": "",
+                          "description": "Database hostname."
                         },
                         {
                           "label": "Port",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.port",
-                          "default": ""
+                          "default": "",
+                          "description": "Database port."
                         },
                         {
                           "label": "jdbc URL",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jdbcURL",
-                          "default": ""
+                          "default": "",
+                          "description": "Database JDBC URL."
                         },
                         {
                           "label": "NonXA",
-                          "type": "text",
+                          "type": "checkbox",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.nonXA",
-                          "default": ""
+                          "default": "false",
+                          "description": "Select this option to configure database in non XA mode."
                         },
                         {
-                          "label": "jndiName",
+                          "label": "JNDI Name",
                           "type": "text",
                           "required": true,
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jndiName",
-                          "default": ""
+                          "default": "",
+                          "description": "Database JNDI name used by application to resolve the datasource, e.g. java:/jboss/datasources/ExampleDS."
                         },
                         {
                           "label": "User Name",
                           "type": "text",
                           "required": true,
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.username",
-                          "default": ""
+                          "default": "",
+                          "description": "KIE server external database username."
                         },
                         {
                           "label": "Password",
                           "type": "password",
                           "required": true,
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.password",
-                          "default": ""
+                          "default": "",
+                          "description": "KIE server external database password."
                         },
                         {
-                          "label": "minPoolSize",
+                          "label": "Mininimum Connection Pool Size",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
-                          "default": ""
+                          "default": "",
+                          "description": "Sets xa-pool/min-pool-size for the configured datasource."
                         },
                         {
-                          "label": "minPoolSize",
+                          "label": "Maximum Connection Pool Size",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
-                          "default": ""
+                          "default": "",
+                          "description": "Sets xa-pool/max-pool-size for the configured datasource."
                         },
                         {
-                          "label": "minPoolSize",
-                          "type": "text",
-                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
-                          "default": ""
-                        },
-                        {
-                          "label": "maxPoolSize",
-                          "type": "text",
-                          "jsonPath": "$.spec.objects.servers[*].database.externalConfig.maxPoolSize",
-                          "default": ""
-                        },
-                        {
-                          "label": "connectionChecker",
+                          "label": "Valid Connection Checker Class",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.connectionChecker",
-                          "default": ""
+                          "default": "",
+                          "description": "An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid."
                         },
                         {
-                          "label": "exceptionChecker",
+                          "label": "Exception Checker Class",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.exceptionChecker",
-                          "default": ""
+                          "default": "",
+                          "description": "An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred."
                         },
                         {
-                          "label": "backgroundValidation",
-                          "type": "text",
+                          "label": "Background Validation",
+                          "type": "checkbox",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.backgroundValidation",
-                          "default": ""
+                          "default": "false",
+                          "description": "Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used."
                         },
                         {
-                          "label": "backgroundValidationMillis",
+                          "label": "Background Validation Interval (milliseconds)",
                           "type": "text",
                           "jsonPath": "$.spec.objects.servers[*].database.externalConfig.backgroundValidationMillis",
-                          "default": ""
+                          "default": "",
+                          "description": "Defines the interval for the background-validation check for the jdbc connections."
                         }
                       ]
                     }
@@ -832,23 +869,24 @@
             }
           ]
         },
-
         {
           "label": "Smart Router",
           "fields": [
             {
-              "label": "KeyStoreSecret",
+              "label": "Keystore Secret",
               "default": "",
               "required": false,
               "jsonPath": "$.spec.objects.smartRouter.keystoreSecret",
-              "type": "text"
+              "type": "text",
+              "description": "The secret name within the Java keystore used for https encryption."
             },
             {
               "label": "Replicas",
               "default": "",
               "required": false,
               "jsonPath": "$.spec.objects.smartRouter.replicas",
-              "type": "text"
+              "type": "text",
+              "description": "The number of replicas for the console component."
             },
             {
               "label": "Env",
@@ -859,44 +897,50 @@
               "max": 100,
               "fields": [
                 {
-                  "label": "name",
+                  "label": "Name",
                   "type": "text",
                   "required": true,
                   "jsonPath": "$.spec.objects.smartRouter.env[*].name",
-                  "default": "Some text here"
+                  "default": "",
+                  "description": "Environment variable name"
                 },
                 {
-                  "label": "value",
+                  "label": "Value",
                   "type": "text",
                   "required": true,
                   "jsonPath": "$.spec.objects.smartRouter.env[*].value",
-                  "default": "Some text here"
+                  "default": "",
+                  "description": "Environment variable value"
                 }
               ]
             },
             {
-              "label": "Request(Memory)",
+              "label": "Memory Request",
               "type": "text",
               "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
-              "default": "2Gi"
+              "default": "2Gi",
+              "description": "Minimum amount of memory requested by the container"
             },
             {
-              "label": "Request(CPU)",
+              "label": "CPU Request",
               "type": "text",
               "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
-              "default": "500m"
+              "default": "500m",
+              "description": "Minimum processing power requested by the container"
             },
             {
-              "label": "Limits(Memory)",
+              "label": "Memory Limit",
               "type": "text",
               "jsonPath": "$.spec.objects.smartRouter.resources.limits.memory",
-              "default": "2Gi"
+              "default": "2Gi",
+              "description": "Maximum amount of memory granted to the container"
             },
             {
-              "label": "Limits(CPU)",
+              "label": "CPU Limit",
               "type": "text",
               "jsonPath": "$.spec.objects.smartRouter.resources.limits.cpu",
-              "default": "500m"
+              "default": "500m",
+              "description": "Maximum processing power granted to the container"
             }
           ]
         }

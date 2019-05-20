@@ -42,7 +42,7 @@ export default class OperatorWizardFooter extends React.Component {
                   onClick={this.props.onEditYaml}
                   className={this.props.isFormValid ? "" : "pf-m-disabled"}
                 >
-                  Edit YAML
+                  View YAML
                 </Button>
                 <Button
                   variant="primary"
