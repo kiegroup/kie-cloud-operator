@@ -129,8 +129,33 @@ export class ObjectField {
       }
     }
 
-    jsxArray.push(this.minElements);
-
+    if (this.minElementsSize > 0) {
+      var groupCount = this.minElements.length / this.minElementsSize;
+      for (var index = 0; index < this.minElementsSize; index++) {
+        var startIndex = index * groupCount;
+        var endIndex = startIndex + groupCount;
+        var fieldBlock = this.minElements.slice(startIndex, endIndex);
+        var section = this.props.fieldDef.label + "section_" + index;
+        jsxArray.push(
+          <div
+            id={section}
+            key={section}
+            style={{
+              display: "block"
+            }}
+          >
+            <br />
+            <div style={{ fontWeight: "bold" }}>
+              {this.props.fieldDef.label}
+            </div>
+            <div className="pf-c-card">
+              <div className="pf-c-card__body">{fieldBlock}</div>
+            </div>
+          </div>
+        );
+      }
+    }
+    console.log("Here is the whole jsxArray:", jsxArray);
     return jsxArray;
   }
 

@@ -24,7 +24,9 @@ import (
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/internal/jsonrpc2"
 	"golang.org/x/tools/internal/lsp"
+	"golang.org/x/tools/internal/lsp/cache"
 	"golang.org/x/tools/internal/lsp/protocol"
+	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/span"
 	"golang.org/x/tools/internal/tool"
 )
@@ -45,11 +47,25 @@ type Application struct {
 	// An initial, common go/packages configuration
 	Config packages.Config
 
+	// The base cache to use for sessions from this application.
+	Cache source.Cache
+
 	// Support for remote lsp server
 	Remote string `flag:"remote" help:"*EXPERIMENTAL* - forward all commands to a remote lsp"`
 
 	// Enable verbose logging
 	Verbose bool `flag:"v" help:"Verbose output"`
+}
+
+// Returns a new Application ready to run.
+func New(config *packages.Config) *Application {
+	app := &Application{
+		Cache: cache.New(),
+	}
+	if config != nil {
+		app.Config = *config
+	}
+	return app
 }
 
 // Name implements tool.Application returning the binary name.
@@ -135,7 +151,7 @@ func (app *Application) connect(ctx context.Context) (*connection, error) {
 	switch app.Remote {
 	case "":
 		connection := newConnection(app)
-		connection.Server = lsp.NewClientServer(connection.Client)
+		connection.Server = lsp.NewClientServer(app.Cache, connection.Client)
 		return connection, connection.initialize(ctx)
 	case "internal":
 		internalMu.Lock()
@@ -150,7 +166,7 @@ func (app *Application) connect(ctx context.Context) (*connection, error) {
 		var jc *jsonrpc2.Conn
 		jc, connection.Server, _ = protocol.NewClient(jsonrpc2.NewHeaderStream(cr, cw), connection.Client)
 		go jc.Run(ctx)
-		go lsp.NewServer(jsonrpc2.NewHeaderStream(sr, sw)).Run(ctx)
+		go lsp.NewServer(app.Cache, jsonrpc2.NewHeaderStream(sr, sw)).Run(ctx)
 		if err := connection.initialize(ctx); err != nil {
 			return nil, err
 		}
@@ -204,6 +220,7 @@ type cmdFile struct {
 	err            error
 	added          bool
 	hasDiagnostics chan struct{}
+	diagnosticsMu  sync.Mutex
 	diagnostics    []protocol.Diagnostic
 }
 
@@ -273,7 +290,10 @@ func (c *cmdClient) Configuration(ctx context.Context, p *protocol.Configuration
 			}
 			env[l[0]] = l[1]
 		}
-		results[i] = map[string]interface{}{"env": env}
+		results[i] = map[string]interface{}{
+			"env":           env,
+			"noDocsOnHover": true,
+		}
 	}
 	return results, nil
 }
@@ -287,6 +307,8 @@ func (c *cmdClient) PublishDiagnostics(ctx context.Context, p *protocol.PublishD
 	defer c.filesMu.Unlock()
 	uri := span.URI(p.URI)
 	file := c.getFile(ctx, uri)
+	file.diagnosticsMu.Lock()
+	defer file.diagnosticsMu.Unlock()
 	hadDiagnostics := file.diagnostics != nil
 	file.diagnostics = p.Diagnostics
 	if file.diagnostics == nil {
@@ -320,7 +342,7 @@ func (c *cmdClient) getFile(ctx context.Context, uri span.URI) *cmdFile {
 		}
 		f := c.fset.AddFile(fname, -1, len(content))
 		f.SetLinesForContent(content)
-		file.mapper = protocol.NewColumnMapper(uri, c.fset, f, content)
+		file.mapper = protocol.NewColumnMapper(uri, fname, c.fset, f, content)
 	}
 	return file
 }
@@ -339,4 +361,15 @@ func (c *connection) AddFile(ctx context.Context, uri span.URI) *cmdFile {
 		}
 	}
 	return file
+}
+
+func (c *connection) terminate(ctx context.Context) {
+	if c.Client.app.Remote == "internal" {
+		// internal connections need to be left alive for the next test
+		return
+	}
+	//TODO: do we need to handle errors on these calls?
+	c.Shutdown(ctx)
+	//TODO: right now calling exit terminates the process, we should rethink that
+	//server.Exit(ctx)
 }

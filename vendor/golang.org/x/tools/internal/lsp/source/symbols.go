@@ -40,10 +40,16 @@ type Symbol struct {
 	Children      []Symbol
 }
 
-func DocumentSymbols(ctx context.Context, f File) []Symbol {
+func DocumentSymbols(ctx context.Context, f GoFile) []Symbol {
 	fset := f.GetFileSet(ctx)
 	file := f.GetAST(ctx)
+	if file == nil {
+		return nil
+	}
 	pkg := f.GetPackage(ctx)
+	if pkg == nil || pkg.IsIllTyped() {
+		return nil
+	}
 	info := pkg.GetTypesInfo()
 	q := qualifier(file, pkg.GetTypes(), info)
 

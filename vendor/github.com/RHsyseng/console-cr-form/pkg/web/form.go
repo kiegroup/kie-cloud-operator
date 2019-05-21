@@ -18,8 +18,8 @@ type Field struct {
 	Type             string  `json:"type,omitempty"`
 	Required         bool    `json:"required,omitempty"`
 	JSONPath         string  `json:"jsonPath,omitempty"`
-	Min              int     `json:"min,omitempty"`
-	Max              int     `json:"max,omitempty"`
+	Min              int     `json:"min"`
+	Max              int     `json:"max"`
 	OriginalJSONPath string  `json:"originalJsonPath,omitempty"`
 	Visible          bool    `json:"visible,omitempty"`
 	DisplayWhen      string  `json:"displayWhen,omitempty"`

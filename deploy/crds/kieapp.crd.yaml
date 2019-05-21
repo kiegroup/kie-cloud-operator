@@ -256,6 +256,9 @@ spec:
                               kind:
                                 type: string
                                 description: Object kind. e.g. ImageStreamTag
+                                enum:
+                                  - ImageStreamTag
+                                  - DockerImage
                               name:
                                 type: string
                                 description: Object name
