@@ -382,7 +382,7 @@ others:
                           "value": "8888"
                         }
                       ],
-                      "image": "amq-broker-72-openshift:1.1",
+                      "image": "amq-broker-72-openshift:1.3",
                       "name": "[[.ApplicationName]]-amq",
                       "command": ["/bin/sh", "-c", "echo \"Starting the drainer\" ; /opt/amq/bin/drain.sh; echo \"Drain completed! Exit code $?\""],
                       "volumeMounts": [
@@ -455,7 +455,7 @@ others:
                         fieldRef:
                           apiVersion: v1
                           fieldPath: metadata.namespace
-                  image: "amq-broker-72-openshift:1.1"
+                  image: "amq-broker-72-openshift:1.3"
                   imagePullPolicy: IfNotPresent
                   name: broker-amq
                   ports:
