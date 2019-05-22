@@ -17,7 +17,7 @@ export default class OperatorWizardFooter extends React.Component {
         <WizardContextConsumer>
           {({ activeStep, onNext, onBack }) => {
             return (
-              <>
+              <React.Fragment>
                 <Button
                   variant="primary"
                   type="submit"
@@ -37,8 +37,8 @@ export default class OperatorWizardFooter extends React.Component {
                   Back
                 </Button>
                 <Button
-                  variant="secondary"
-                  type="submit"
+                  variant="link"
+                  isInline
                   onClick={this.props.onEditYaml}
                   className={this.props.isFormValid ? "" : "pf-m-disabled"}
                 >
@@ -52,7 +52,7 @@ export default class OperatorWizardFooter extends React.Component {
                 >
                   Deploy
                 </Button>
-              </>
+              </React.Fragment>
             );
           }}
         </WizardContextConsumer>

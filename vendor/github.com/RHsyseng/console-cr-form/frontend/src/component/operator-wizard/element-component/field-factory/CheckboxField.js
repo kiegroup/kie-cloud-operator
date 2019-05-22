@@ -1,6 +1,6 @@
 import React from "react";
 
-import { FormGroup, Checkbox, Tooltip } from "@patternfly/react-core";
+import { FormGroup, Checkbox } from "@patternfly/react-core";
 
 export class CheckboxField {
   constructor(props) {
@@ -15,29 +15,17 @@ export class CheckboxField {
         label={this.props.fieldDef.label}
         fieldId={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
+        helperText={this.props.fieldDef.description}
       >
-        <Tooltip
-          position="left"
-          content={<div>{this.props.fieldDef.description}</div>}
-          enableFlip={true}
-          style={{
-            display:
-              this.props.fieldDef.description !== undefined &&
-              this.props.fieldDef.description !== ""
-                ? "block"
-                : "none"
-          }}
-        >
-          <Checkbox
-            defaultChecked={this.props.fieldDef.checked}
-            onChange={this.onChangeCheckBox}
-            id={this.props.ids.fieldId}
-            key={this.props.ids.fieldKey}
-            aria-label="checkbox yes"
-            name={name}
-            jsonpath={this.props.fieldDef.jsonPath}
-          />
-        </Tooltip>
+        <Checkbox
+          defaultChecked={this.props.fieldDef.checked}
+          onChange={this.onChangeCheckBox}
+          id={this.props.ids.fieldId}
+          key={this.props.ids.fieldKey}
+          aria-label="checkbox yes"
+          name={name}
+          jsonpath={this.props.fieldDef.jsonPath}
+        />
       </FormGroup>
     );
   }

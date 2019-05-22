@@ -3,8 +3,7 @@ import React from "react";
 import {
   FormGroup,
   FormSelectOption,
-  FormSelect,
-  Tooltip
+  FormSelect
 } from "@patternfly/react-core";
 
 import FieldFactory from "./FieldFactory";
@@ -13,6 +12,12 @@ import JSONPATH from "jsonpath";
 export class DropdownField {
   constructor(props) {
     this.props = props;
+    if (
+      props.fieldDef.value === undefined &&
+      props.fieldDef.default !== undefined
+    ) {
+      this.props.fieldDef.value = props.fieldDef.default;
+    }
     this.errMsg = "";
     this.isValid = true;
     this.addChildren = this.addChildren.bind(this);
@@ -20,31 +25,34 @@ export class DropdownField {
   }
 
   getJsonSchemaPathForJsonPath(jsonPath) {
-    jsonPath = jsonPath.slice(2, jsonPath.length);
-    jsonPath = jsonPath.replace(/\./g, ".properties.");
-    jsonPath = "$.." + jsonPath;
+    if (jsonPath !== undefined && jsonPath !== "") {
+      jsonPath = jsonPath.slice(2, jsonPath.length);
+      jsonPath = jsonPath.replace(/\./g, ".properties.");
+      jsonPath = "$.." + jsonPath;
+    }
     return jsonPath;
   }
 
   getJsx() {
-    var options = [{ value: "", label: "" }];
+    let options = [{ value: "", label: "Select here" }];
 
-    const tmpJsonPath = this.getJsonSchemaPathForJsonPath(
-      this.props.fieldDef.originalJsonPath
-    );
-    const optionValues = this.findValueFromSchema(tmpJsonPath + ".enum");
+    if (this.props.fieldDef.options) {
+      options = this.props.fieldDef.options;
+    } else {
+      const tmpJsonPath = this.getJsonSchemaPathForJsonPath(
+        this.props.fieldDef.originalJsonPath
+      );
+      const optionValues = this.findValueFromSchema(tmpJsonPath + ".enum");
 
-    if (optionValues !== undefined) {
-      optionValues.forEach(option => {
-        const oneOption = {
-          label: option,
-          value: option
-        };
-        options.push(oneOption);
-      });
-    }
-    if (this.props.fieldDef.value === undefined) {
-      this.props.fieldDef.value = "";
+      if (optionValues !== undefined) {
+        optionValues.forEach(option => {
+          const oneOption = {
+            label: option,
+            value: option
+          };
+          options.push(oneOption);
+        });
+      }
     }
     if (
       this.props.fieldDef.required === true &&
@@ -58,72 +66,61 @@ export class DropdownField {
       this.isValid = true;
     }
     this.props.fieldDef.errMsg = this.errMsg;
-    var jsxArray = [];
-    var fieldJsx;
 
-    fieldJsx = (
+    var jsxArray = [];
+    jsxArray.push(
       <FormGroup
         label={this.props.fieldDef.label}
         id={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
         helperTextInvalid={this.errMsg}
+        helperText={this.props.fieldDef.description}
         fieldId={this.props.ids.fieldId}
         isValid={this.isValid}
         isRequired={this.props.fieldDef.required}
       >
-        <Tooltip
-          position="left"
-          content={<div>{this.props.fieldDef.description}</div>}
-          enableFlip={true}
-          style={{
-            display:
-              this.props.fieldDef.description !== undefined &&
-              this.props.fieldDef.description !== ""
-                ? "block"
-                : "none"
-          }}
+        <FormSelect
+          id={this.props.ids.fieldId}
+          key={this.props.ids.fieldKey}
+          name={this.props.fieldDef.label}
+          jsonpath={this.props.fieldDef.jsonPath}
+          onChange={this.onSelect}
+          value={this.props.fieldDef.value}
         >
-          <FormSelect
-            id={this.props.ids.fieldId}
-            key={this.props.ids.fieldKey}
-            name={this.props.fieldDef.label}
-            jsonpath={this.props.fieldDef.jsonPath}
-            onChange={this.onSelect}
-            value={this.props.fieldDef.value}
-          >
-            {options.map((option, index) => (
-              <FormSelectOption
-                key={this.props.ids.fieldKey + index}
-                value={option.value}
-                label={option.label}
-              />
-            ))}
-          </FormSelect>
-        </Tooltip>
+          {options.map((option, index) => (
+            <FormSelectOption
+              key={this.props.ids.fieldKey + index}
+              value={option.value}
+              label={option.label}
+            />
+          ))}
+        </FormSelect>
       </FormGroup>
     );
-    jsxArray.push(fieldJsx);
     jsxArray.push(this.addChildren());
     return jsxArray;
   }
+
   addChildren() {
     var elements = [];
+
     if (this.props.fieldDef.fields) {
       this.props.fieldDef.fields.forEach((subfield, i) => {
         var parentjsonpath = this.props.fieldDef.jsonPath;
-        parentjsonpath = parentjsonpath.slice(
-          0,
-          parentjsonpath.lastIndexOf(".")
-        );
-        var res = "";
-        if (parentjsonpath.length < subfield.jsonPath.length) {
-          res = subfield.jsonPath.substring(
-            parentjsonpath.length,
-            subfield.jsonPath.length
+        if (parentjsonpath !== undefined && parentjsonpath !== "") {
+          parentjsonpath = parentjsonpath.slice(
+            0,
+            parentjsonpath.lastIndexOf(".")
           );
-          subfield.jsonPath = parentjsonpath.concat(res);
+          var res = "";
+          if (parentjsonpath.length < subfield.jsonPath.length) {
+            res = subfield.jsonPath.substring(
+              parentjsonpath.length,
+              subfield.jsonPath.length
+            );
+            subfield.jsonPath = parentjsonpath.concat(res);
+          }
         }
-
         if (subfield.type != "object") {
           let oneComponent = FieldFactory.newInstance(
             subfield,
@@ -170,6 +167,7 @@ export class DropdownField {
 
     this.props.page.loadPageChildren();
   };
+
   reBuildChildren(value) {
     if (this.props.fieldDef.fields) {
       this.props.fieldDef.fields.forEach(subfield => {
@@ -183,6 +181,7 @@ export class DropdownField {
       });
     }
   }
+
   findValueFromSchema(jsonPath) {
     try {
       var queryResults = JSONPATH.query(this.props.jsonSchema, jsonPath);

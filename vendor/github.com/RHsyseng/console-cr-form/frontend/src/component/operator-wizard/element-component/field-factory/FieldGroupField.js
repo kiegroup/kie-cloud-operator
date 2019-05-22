@@ -9,6 +9,11 @@ export class FieldGroupField {
     this.props = props;
     this.children = [];
     this.addChildren = this.addChildren.bind(this);
+    this.parentFieldNumber =
+      this.props.parentid === undefined ? -1 : this.props.parentid;
+    this.grandParentFieldNumber = this.props.grandParentId
+      ? this.props.grandParentId
+      : -1;
   }
 
   getJsx() {
@@ -37,11 +42,10 @@ export class FieldGroupField {
               : "none"
         }}
       >
-        <br />
         <div style={{ fontWeight: "bold" }}>{this.props.fieldDef.label}</div>
 
         <div className="pf-c-card">
-          <div className="pf-c-card__body">{this.children}</div>
+          <div className="pf-c-card__body pf-c-form">{this.children}</div>
         </div>
       </div>
     );
@@ -76,7 +80,7 @@ export class FieldGroupField {
           subfield.jsonPath = subfield.jsonPath.replace(/\*/g, pos);
         }
         subfield.visible = this.props.fieldDef.visible;
-        if (subfield.type != "object") {
+        if (subfield.type != "object" && subfield.type != "fieldGroup") {
           let oneComponent = FieldFactory.newInstance(
             subfield,
             i,
@@ -87,14 +91,20 @@ export class FieldGroupField {
           );
           elements.push(oneComponent.getJsx());
         } else {
-          // console.log("parentId" + this.props.fieldNumber);
+          console.log(
+            "parentId" +
+              this.props.fieldNumber +
+              " grandParentId" +
+              this.props.parentid
+          );
           let oneComponent = FieldFactory.newInstance(
             subfield,
             i,
             this.props.pageNumber,
             this.props.jsonSchema,
             this.props.page,
-            this.props.fieldNumber
+            this.props.fieldNumber,
+            this.props.parentid
           );
           elements.push(oneComponent.getJsx());
         }

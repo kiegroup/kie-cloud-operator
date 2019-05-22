@@ -21,7 +21,7 @@ app.use(
 
 app.use(express.static(__dirname));
 
-const server = app.listen(3000, function() {
+const server = app.listen(8080, function() {
   const host = server.address().address;
   const port = server.address().port;
   console.log("Test server app listening at http://%s:%s", host, port);

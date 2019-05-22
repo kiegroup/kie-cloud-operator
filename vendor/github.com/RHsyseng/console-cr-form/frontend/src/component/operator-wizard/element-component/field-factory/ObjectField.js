@@ -51,6 +51,8 @@ export class ObjectField {
       this.minElements = this.addMinChildren();
       this.parentFieldNumber =
         this.props.parentid === undefined ? -1 : this.props.parentid;
+      this.grandParentFieldNumber =
+        this.props.grandParentId === undefined ? -1 : this.props.grandParentId;
     }
   }
 
@@ -69,6 +71,7 @@ export class ObjectField {
           key={this.props.ids.fieldKey}
           fieldnumber={this.props.fieldNumber}
           parentfieldnumber={this.parentFieldNumber}
+          grandparentfieldnumber={this.grandParentFieldNumber}
           onClick={this.addObject}
         >
           Add new {this.props.fieldDef.label}
@@ -80,6 +83,7 @@ export class ObjectField {
           fieldnumber={this.props.fieldNumber}
           onClick={this.deleteObject}
           parentfieldnumber={this.parentFieldNumber}
+          grandparentfieldnumber={this.grandParentFieldNumber}
           disabled={this.elementAddCount == 0}
         >
           Delete last {this.props.fieldDef.label}
@@ -88,8 +92,12 @@ export class ObjectField {
     );
     jsxArray.push(fieldJsx);
 
-    var combinedFieldNumber =
+    let combinedFieldNumber =
       this.parentFieldNumber + "_" + this.props.fieldNumber;
+    if (this.grandParentFieldNumber != -1) {
+      combinedFieldNumber =
+        this.grandParentFieldNumber + "_" + combinedFieldNumber;
+    }
 
     var sampleObj = this.retrieveObjectMap(combinedFieldNumber);
     //getting how many field in obj e.g env has 2 name and value +1 for devider
@@ -99,15 +107,18 @@ export class ObjectField {
 
       if (this.parentFieldNumber != -1) {
         //this is a 2nd tier object, double check if its parent is in the map or not.
-        const parentCombinedFieldNumber = "-1" + "_" + this.parentFieldNumber;
+        const parentCombinedFieldNumber =
+          this.grandParentFieldNumber + "_" + this.parentFieldNumber;
         const parentSampleObj = this.retrieveObjectMap(
           parentCombinedFieldNumber
         );
         if (parentSampleObj == "") {
           //its parent is not store in object map yet, store the sample now.
-          const parentField = this.props.page.props.pageDef.fields[
-            this.parentFieldNumber
-          ];
+          let fields = this.props.page.props.pageDef.fields;
+          if (this.grandParentFieldNumber != -1) {
+            fields = fields[this.grandParentFieldNumber].fields;
+          }
+          const parentField = fields[this.parentFieldNumber];
           this.storeObjectMap(parentField, parentCombinedFieldNumber);
 
           if (parentField.min == 0) {
@@ -149,7 +160,7 @@ export class ObjectField {
               {this.props.fieldDef.label}
             </div>
             <div className="pf-c-card">
-              <div className="pf-c-card__body">{fieldBlock}</div>
+              <div className="pf-c-card__body pf-c-form">{fieldBlock}</div>
             </div>
           </div>
         );
@@ -232,27 +243,30 @@ export class ObjectField {
           } else {
             subfield.jsonPath = subfield.jsonPath.replace(/\*/g, pos);
           }
-          if (subfield.type != "object") {
+          if (subfield.type != "object" && subfield.type != "fieldGroup") {
             let oneComponent = FieldFactory.newInstance(
               subfield,
               i,
               this.props.pageNumber,
               this.props.jsonSchema,
-
               this.props.page
             );
             elements.push(oneComponent.getJsx());
           } else {
-            console.log("parentId" + this.props.fieldNumber);
+            console.log(
+              "parentId" +
+                this.props.fieldNumber +
+                " grandParentId" +
+                this.props.parentid
+            );
             let oneComponent = FieldFactory.newInstance(
               subfield,
               i,
-
               this.props.pageNumber,
-
               this.props.jsonSchema,
               this.props.page,
-              this.props.fieldNumber
+              this.props.fieldNumber,
+              this.props.parentid
             );
             elements.push(oneComponent.getJsx());
           }
@@ -307,26 +321,34 @@ export class ObjectField {
   }
 
   addObject = event => {
-    var fieldNumber = document
+    const fieldNumber = document
       .getElementById(event.target.id)
       .getAttribute("fieldnumber");
-    //console.log("addOneFieldForObj, fieldNumber: " + JSON.parse(fieldNumber));
 
-    var parentFieldNumber = document
+    const parentFieldNumber = document
       .getElementById(event.target.id)
       .getAttribute("parentfieldnumber");
 
-    var field;
-    if (parentFieldNumber == -1) {
-      field = this.props.page.props.pageDef.fields[fieldNumber];
-    } else {
+    const grandParentFieldNumber = document
+      .getElementById(event.target.id)
+      .getAttribute("grandparentfieldnumber");
+
+    let field;
+    if (grandParentFieldNumber != -1 && parentFieldNumber != -1) {
+      field = this.props.page.props.pageDef.fields[grandParentFieldNumber]
+        .fields[parentFieldNumber].fields[fieldNumber];
+    } else if (parentFieldNumber != -1) {
       field = this.props.page.props.pageDef.fields[parentFieldNumber].fields[
         fieldNumber
       ];
+    } else {
+      field = this.props.page.props.pageDef.fields[fieldNumber];
     }
-    //console.log("deleteOneFieldForObj, field.min current value: " + field.min);
 
-    var combinedFieldNumber = parentFieldNumber + "_" + fieldNumber;
+    let combinedFieldNumber = parentFieldNumber + "_" + fieldNumber;
+    if (grandParentFieldNumber != -1) {
+      combinedFieldNumber = grandParentFieldNumber + "_" + combinedFieldNumber;
+    }
     const sampleObj = this.retrieveObjectMap(combinedFieldNumber);
 
     if (field.min < field.max) {
@@ -350,15 +372,15 @@ export class ObjectField {
       }
       field.fields = field.fields.concat(sampleObj);
 
-      if (parentFieldNumber == -1) {
-        this.props.page.props.pageDef.fields[
-          parseInt(fieldNumber)
-        ].fields.concat(sampleObj);
-      } else {
-        this.props.page.props.pageDef.fields[
-          parseInt(parentFieldNumber)
-        ].fields[parseInt(fieldNumber)].fields.concat(sampleObj);
+      let fields = this.props.page.props.pageDef.fields;
+      if (grandParentFieldNumber != -1) {
+        fields = fields[parseInt(grandParentFieldNumber)].fields;
       }
+      if (parentFieldNumber != -1) {
+        fields = fields[parseInt(parentFieldNumber)].fields;
+      }
+      fields[fieldNumber].fields.concat(sampleObj);
+
       field.min = field.min + 1;
       this.props.page.loadPageChildren();
     } else {
@@ -367,29 +389,35 @@ export class ObjectField {
   };
 
   deleteObject = event => {
-    var fieldNumber = document
+    const fieldNumber = document
       .getElementById(event.target.id)
       .getAttribute("fieldnumber");
-    //console.log(      "deleteOneFieldForObj, fieldNumber : " + JSON.parse(fieldNumber)    );
 
-    var parentFieldNumber = document
+    const parentFieldNumber = document
       .getElementById(event.target.id)
       .getAttribute("parentfieldnumber");
-    //console.log(      "deleteOneFieldForObj, parentFieldNumber : " +        JSON.parse(parentFieldNumber)    );
 
-    var field;
-    if (parentFieldNumber == -1) {
-      field = this.props.page.props.pageDef.fields[fieldNumber];
-    } else {
+    const grandParentFieldNumber = document
+      .getElementById(event.target.id)
+      .getAttribute("grandparentfieldnumber");
+
+    let field;
+    if (grandParentFieldNumber != -1 && parentFieldNumber != -1) {
+      field = this.props.page.props.pageDef.fields[grandParentFieldNumber]
+        .fields[parentFieldNumber].fields[fieldNumber];
+    } else if (parentFieldNumber != -1) {
       field = this.props.page.props.pageDef.fields[parentFieldNumber].fields[
         fieldNumber
       ];
+    } else {
+      field = this.props.page.props.pageDef.fields[fieldNumber];
     }
-    //console.log("deleteOneFieldForObj, field.min current value: " + field.min);
 
-    var combinedFieldNumber = parentFieldNumber + "_" + fieldNumber;
+    let combinedFieldNumber = parentFieldNumber + "_" + fieldNumber;
+    if (grandParentFieldNumber != -1) {
+      combinedFieldNumber = grandParentFieldNumber + "_" + combinedFieldNumber;
+    }
     const sampleObj = this.retrieveObjectMap(combinedFieldNumber);
-    //console.log("deleteOneFieldForObj, sampleObj length: " + sampleObj.length);
 
     if (field.min > 0) {
       for (var i = 0; i < sampleObj.length; i++) {
