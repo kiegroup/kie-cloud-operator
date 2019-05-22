@@ -438,6 +438,13 @@ spec:
                           kieServerJmsAMQQueues:
                             type: string
                             description: AMQ broker broker comma separated queues, if empty the values from default queues will be used.
+                      prometheus:
+                        type: object
+                        description: Configuration for Prometheus Server with KIE Server
+                        properties:
+                          disablePrometheusExt:
+                            type: boolean
+                            description: If set to false, the prometheus server extension will be enabled. (Sets the org.kie.prometheus.server.ext.disabled system property)
                 smartRouter:
                   type: object
                   description: Configuration of the RHPAM smart router

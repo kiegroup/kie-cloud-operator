@@ -593,6 +593,13 @@
                   "default": "openshift"
                 },
                 {
+                "label": "Prometheus Server Disabled",
+                  "type": "checkbox",
+                  "jsonPath": "$.spec.objects.servers[*].prometheus.disablePrometheusExt",
+                  "default": "false",
+                  "description": "If unchecked, the prometheus server extension will be enabled. (Sets the org.kie.prometheus.server.ext.disabled system property)"
+                },
+                {
                   "label": "Build configuration (Source to Image)",
                   "type": "fieldGroup",
                   "jsonPath": "$.spec.objects.servers[*].build",

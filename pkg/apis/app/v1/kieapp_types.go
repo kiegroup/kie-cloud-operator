@@ -57,10 +57,11 @@ const (
 
 // EnvironmentConstants stores both the App and Replica Constants for a given environment
 type EnvironmentConstants struct {
-	App      AppConstants     `json:"app,omitempty"`
-	Replica  ReplicaConstants `json:"replica,omitempty"`
-	Database *DatabaseObject  `json:"database,omitempty"`
-	Jms      *KieAppJmsObject `json:"jms,omitempty"`
+	App        AppConstants            `json:"app,omitempty"`
+	Replica    ReplicaConstants        `json:"replica,omitempty"`
+	Database   *DatabaseObject         `json:"database,omitempty"`
+	Jms        *KieAppJmsObject        `json:"jms,omitempty"`
+	Prometheus *KieAppPrometheusObject `json:"prometheus,omitempty"`
 }
 
 // AppConstants data type to store application deployment constants
@@ -116,8 +117,9 @@ type KieServerSet struct {
 	From                *corev1.ObjectReference `json:"from,omitempty"`
 	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
 	SecuredKieAppObject `json:",inline"`
-	Database            *DatabaseObject  `json:"database,omitempty"`
-	Jms                 *KieAppJmsObject `json:"jms,omitempty"`
+	Database            *DatabaseObject         `json:"database,omitempty"`
+	Jms                 *KieAppJmsObject        `json:"jms,omitempty"`
+	Prometheus          *KieAppPrometheusObject `json:"prometheus,omitempty"`
 }
 
 // SecuredKieAppObject Generic object definition
@@ -143,6 +145,11 @@ type KieAppJmsObject struct {
 	KieServerJmsPassword           string `json:"kieServerJmsPassword,omitempty"`
 	// It will receives the default value for the Executor, Request, Response, Signal and Audit queues.
 	KieServerJmsAMQQueues string `json:"kieServerJmsAMQQueues,omitempty"`
+}
+
+// KieAppPrometheusObject especification for Prometheus Server configuration used by KieApp
+type KieAppPrometheusObject struct {
+	DisablePrometheusExt bool `json:"disablePrometheusExt,omitempty"`
 }
 
 // KieAppObject Generic object definition
@@ -360,6 +367,7 @@ type ServerTemplate struct {
 	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
 	Database       DatabaseObject         `json:"database,omitempty"`
 	Jms            KieAppJmsObject        `json:"jms,omitempty"`
+	Prometheus     KieAppPrometheusObject `json:"prometheus,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates

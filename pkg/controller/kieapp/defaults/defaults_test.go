@@ -25,6 +25,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+func TestPrometheusExtDisabled(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-prometheus",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhdmProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Prometheus: &v1.KieAppPrometheusObject{
+							DisablePrometheusExt: true,
+						},
+						ID: "prometheus",
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-prometheus-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "prometheus", env.Servers[0].DeploymentConfigs[0].ObjectMeta.Labels["services.server.kie.org/kie-server-id"])
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "PROMETHEUS_SERVER_EXT_DISABLED"))
+}
+
 func TestLoadUnknownEnvironment(t *testing.T) {
 	defer func() {
 		err := recover()

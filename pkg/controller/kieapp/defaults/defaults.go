@@ -372,6 +372,14 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 				template.Jms = *jmsConfig
 			}
 
+			prometheusConfig, err := getPrometheusConfig(serverSet.Prometheus)
+			if err != nil {
+				return servers, err
+			}
+			if prometheusConfig != nil {
+				template.Prometheus = *prometheusConfig
+			}
+
 			instanceTemplate := template.DeepCopy()
 			if instanceTemplate.KeystoreSecret == "" {
 				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
@@ -548,6 +556,20 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 	mergo.Merge(jms, defaultJms)
 
 	return jms, nil
+}
+
+func getPrometheusConfig(prometheus *v1.KieAppPrometheusObject) (*v1.KieAppPrometheusObject, error) {
+	defaultPrometheus := &v1.KieAppPrometheusObject{
+		DisablePrometheusExt: false,
+	}
+
+	if prometheus == nil {
+		return defaultPrometheus, nil
+	}
+
+	mergo.Merge(prometheus, defaultPrometheus)
+
+	return prometheus, nil
 }
 
 func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) string {

@@ -482,6 +482,8 @@ servers:
                       value: "[[$.ServerPassword]]"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
+                    - name: PROMETHEUS_SERVER_EXT_DISABLED
+                      value: "[[.Prometheus.DisablePrometheusExt]]"
                     - name: KIE_SERVER_CONTROLLER_USER
                       value: controllerUser
                     - name: KIE_SERVER_CONTROLLER_PWD
