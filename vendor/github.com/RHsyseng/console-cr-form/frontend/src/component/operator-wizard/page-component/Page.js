@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import ElementFactory from "../element-component/ElementFactory";
-import { Form } from "@patternfly/react-core";
+import { Form, Title } from "@patternfly/react-core";
 
 /**
  * The Page component to handle each element individually.
@@ -97,11 +97,12 @@ export default class Page extends Component {
   render() {
     return (
       <Form id={"form-page-" + this.props.pageNumber}>
-        <div key={"page" + this.props.pageNumber}>
-          {this.state.elements.map(element => {
-            return element.getJsx();
-          })}
-        </div>
+        <Title headingLevel="h1" size="3xl">
+          {this.props.pageDef.label}
+        </Title>
+        {this.state.elements.map(element => {
+          return element.getJsx();
+        })}
       </Form>
     );
   }

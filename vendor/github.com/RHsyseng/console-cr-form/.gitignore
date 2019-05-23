@@ -4,6 +4,9 @@ frontend/dist/*.jpg
 build
 target/
 
+# Should not be in root directory:
+package-lock.json
+
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Emacs ###
 # -*- mode: gitignore; -*-

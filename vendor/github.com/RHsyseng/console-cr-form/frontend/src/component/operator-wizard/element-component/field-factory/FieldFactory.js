@@ -5,7 +5,6 @@ import { EmailField } from "./EmailField";
 import { UrlField } from "./UrlField";
 import { PasswordField } from "./PasswordField";
 import { CheckboxField } from "./CheckboxField";
-import { SeparateDivField } from "./SeparateDivField";
 import { SectionField } from "./SectionField";
 import { DefaultTextField } from "./DefaultTextField";
 import { SectionRadioField } from "./SectionRadioField";
@@ -39,7 +38,8 @@ export default class FieldFactory {
     pageNumber,
     jsonSchema,
     page,
-    parentid
+    parentid,
+    grandParentId
   ) {
     var fieldReference;
     var props = {
@@ -52,9 +52,11 @@ export default class FieldFactory {
         pageNumber,
         fieldNumber,
         fieldDef.label,
-        parentid
+        parentid,
+        grandParentId
       ),
-      parentid: parentid
+      parentid: parentid,
+      grandParentId: grandParentId
     };
     //TODO: rethink when we have the time
     switch (fieldDef.type) {
@@ -79,9 +81,6 @@ export default class FieldFactory {
       case FIELD_TYPE.checkbox:
         fieldReference = new CheckboxField(props);
         break;
-      case FIELD_TYPE.seperateObjDiv:
-        fieldReference = new SeparateDivField(props);
-        break;
       case FIELD_TYPE.section:
         fieldReference = new SectionField(props);
         break;
@@ -92,7 +91,6 @@ export default class FieldFactory {
         if (props.parentid === undefined) {
           props.parentid = -1;
         }
-
         fieldReference = new ObjectField(props);
         break;
       case FIELD_TYPE.fieldGroup:
