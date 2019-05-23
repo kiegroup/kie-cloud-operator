@@ -1,12 +1,15 @@
 #!/bin/sh
 
-GO_TOOLSET="go-toolset-1.11"
+INSTALL_PKGS="go-toolset"
+OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
+UI_PATH=/usr/local/bin/console-cr-form
 
-scl enable ${GO_TOOLSET} - << \EOF
+yum -y install ${INSTALL_PKGS}
+
 REPO=kie-cloud-operator
 GHORG=github.com/kiegroup
 GHFULL=${GHORG}/${REPO}
-GOPATH=${HOME}/go
+GOPATH=$(go env GOPATH)
 go version
 
 mkdir -p ${GOPATH}/src/${GHFULL}
@@ -16,21 +19,23 @@ cd ${GOPATH}/src/${GHFULL} && pwd
 go generate ./...
 go vet ./...
 go test ./...
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o /usr/local/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
-
-mv deploy/catalog_resources/redhat/${OPERATOR_VERSION} /manifests
-mv deploy/crds/kieapp.crd.yaml /manifests
-EOF
-
-BINARY=/usr/local/bin/kie-cloud-operator
-if [[ ! -f ${BINARY} ]] ; then
-    echo "${BINARY} does not exist, aborting."
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o ${OPERATOR_PATH} github.com/kiegroup/kie-cloud-operator/cmd/manager
+if [[ ! -f ${OPERATOR_PATH} ]] ; then
+    echo "${OPERATOR_PATH} does not exist, aborting."
     exit 1
 fi
-stat ${BINARY}
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o ${UI_PATH} github.com/kiegroup/kie-cloud-operator/cmd/ui
+if [[ ! -f ${UI_PATH} ]] ; then
+    echo "${UI_PATH} does not exist, aborting."
+    exit 1
+fi
 
-yum -y autoremove ${GO_TOOLSET} \
-    && yum -y update-minimal --setopt=tsflags=nodocs --security --sec-severity=Important --sec-severity=Critical \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-rm -rf ${HOME}/go
+mv build/bin/* /usr/local/bin/
+mv deploy/catalog_resources/redhat/${OPERATOR_VERSION} /manifests
+mv deploy/crds/kieapp.crd.yaml /manifests
+/usr/local/bin/user_setup
+
+yum -y autoremove ${INSTALL_PKGS}
+yum -y update-minimal --setopt=tsflags=nodocs --security --sec-severity=Important --sec-severity=Critical
+yum clean all
+rm -rf /var/cache/yum ${GOPATH}
