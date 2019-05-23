@@ -994,11 +994,11 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 
 	// H2 Volumes are mounted
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-		Name:      "test-kieserver-h2-pvol",
+		Name:      "test-kieserver-kie-pvol",
 		MountPath: "/opt/kie/data",
 	})
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "test-kieserver-h2-pvol",
+		Name: "test-kieserver-kie-pvol",
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
@@ -1668,12 +1668,12 @@ func TestDatabaseH2(t *testing.T) {
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-claim", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].PersistentVolumeClaim.ClaimName)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-claim", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].PersistentVolumeClaim.ClaimName)
 		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
 		assert.Equal(t, resource.MustParse("10Mi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
@@ -1715,9 +1715,9 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-h2-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-kie-pvol", idx), env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].Name)
 		assert.NotNil(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[1].EmptyDir)
 		assert.Equal(t, 0, len(env.Servers[i].PersistentVolumeClaims))
 	}

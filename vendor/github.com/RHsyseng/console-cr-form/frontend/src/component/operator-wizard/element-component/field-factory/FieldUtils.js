@@ -1,5 +1,5 @@
 export class FieldUtils {
-  static generateIds(pageNumber, fieldNumber, label, parentId) {
+  static generateIds(pageNumber, fieldNumber, label, parentId, grandParentId) {
     const randomNum = Math.floor(Math.random() * 100000000 + 1);
     let fieldGroupId =
       pageNumber + "-fieldGroup-" + fieldNumber + "-" + label + "-" + randomNum;
@@ -13,6 +13,8 @@ export class FieldUtils {
         "_" +
         parentId +
         "_" +
+        grandParentId +
+        "_" +
         label +
         "_" +
         randomNum;
@@ -23,6 +25,8 @@ export class FieldUtils {
         fieldNumber +
         "_" +
         parentId +
+        "_" +
+        grandParentId +
         "_" +
         label +
         "_" +

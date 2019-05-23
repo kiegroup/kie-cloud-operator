@@ -11,33 +11,42 @@ export default class StepBuilder {
    * Just a placeholder while we build the actual ones. Wizard complains if we don't have at least one step defined.
    */
   buildPlaceholderStep() {
-    return {
-      id: 0,
-      name: "Loading",
-      component: <div>Loading</div>,
-      enableNext: true
-    };
+    return [
+      {
+        id: 0,
+        name: "Loading",
+        component: <div>Loading</div>
+      }
+    ];
   }
 
-  buildSteps(callback) {
-    Promise.all([jsonLoader.loadJsonForm, jsonLoader.loadJsonSchema]).then(
-      values => {
-        this.jsonForm = values[0];
-        this.jsonSchema = values[1];
-        var steps = [];
-        this.jsonForm.pages.forEach((page, count) => {
-          var step = this.buildStep(page, count + 1);
-          if (Array.isArray(page.subPages) && page.subPages.length > 0) {
-            step.steps = [];
-            page.subPages.forEach((subPage, subPageCount) => {
-              step.steps.push(this.buildStep(subPage, subPageCount + 1));
-            });
-          }
-          steps.push(step);
-        });
-        callback(steps);
-      }
-    );
+  buildSteps() {
+    return Promise.all([
+      jsonLoader.loadJsonForm,
+      jsonLoader.loadJsonSchema
+    ]).then(values => {
+      this.jsonForm = values[0];
+      this.jsonSchema = values[1];
+      let steps = [];
+      let pageId = 1;
+      this.jsonForm.pages.forEach(page => {
+        const step = this.buildStep(page, pageId);
+        if (Array.isArray(page.subPages) && page.subPages.length > 0) {
+          step.steps = [];
+          page.subPages.forEach(subPage => {
+            step.steps.push(this.buildStep(subPage, pageId));
+            pageId++;
+          });
+        } else {
+          pageId++;
+        }
+        steps.push(step);
+      });
+      return {
+        steps: steps,
+        pages: this.jsonForm.pages
+      };
+    });
   }
 
   storeObjectMap(key, value) {
@@ -65,13 +74,12 @@ export default class StepBuilder {
           pageDef={pageDef}
           jsonSchema={this.jsonSchema}
           pageNumber={id}
-          pages={this.jsonForm.pages}
+          pages={this.jsonForm.pages} //TODO: try to remove
           storeObjectMap={this.storeObjectMap}
           getObjectMap={this.getObjectMap}
           objectMap={this.objectMap}
         />
-      ),
-      enableNext: true //TODO: need to add logic - will enable next only if all fields are valid
+      )
     };
   }
 }

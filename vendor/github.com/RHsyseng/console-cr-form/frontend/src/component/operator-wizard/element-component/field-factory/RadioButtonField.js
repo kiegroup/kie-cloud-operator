@@ -1,6 +1,6 @@
 import React from "react";
 
-import { FormGroup, Radio, Tooltip } from "@patternfly/react-core";
+import { FormGroup, Radio } from "@patternfly/react-core";
 
 export class RadioButtonField {
   constructor(props) {
@@ -13,29 +13,17 @@ export class RadioButtonField {
       <FormGroup
         fieldId={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
+        helperText={this.props.fieldDef.description}
       >
-        <Tooltip
-          position="left"
-          content={<div>{this.props.fieldDef.description}</div>}
-          enableFlip={true}
-          style={{
-            display:
-              this.props.fieldDef.description !== undefined &&
-              this.props.fieldDef.description !== ""
-                ? "block"
-                : "none"
-          }}
-        >
-          <Radio
-            key={this.props.ids.fieldKey}
-            defaultValue={this.props.fieldDef.label}
-            onChange={this.handleChangeRadio}
-            name={this.props.parentid}
-            isChecked={this.props.fieldDef.value}
-            label={this.props.fieldDef.label}
-            id={this.props.fieldDef.label}
-          />
-        </Tooltip>
+        <Radio
+          key={this.props.ids.fieldKey}
+          defaultValue={this.props.fieldDef.label}
+          onChange={this.handleChangeRadio}
+          name={this.props.parentid}
+          isChecked={this.props.fieldDef.value}
+          label={this.props.fieldDef.label}
+          id={this.props.fieldDef.label}
+        />
       </FormGroup>
     );
   }
@@ -66,9 +54,11 @@ export class RadioButtonField {
     }
 
     //add
-    this.props.fieldDef.fields.forEach((field, i) => {
-      this.props.page.props.pageDef.fields.splice(pos + 1 + i, 0, field);
-    });
+    if (this.props.fieldDef.fields) {
+      this.props.fieldDef.fields.forEach((field, i) => {
+        this.props.page.props.pageDef.fields.splice(pos + 1 + i, 0, field);
+      });
+    }
     this.props.page.props.pageDef.fields[pos].value = this.props.fieldDef.label;
 
     this.props.page.loadPageChildren();
