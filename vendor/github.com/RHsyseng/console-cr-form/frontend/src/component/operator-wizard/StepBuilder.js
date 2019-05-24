@@ -55,6 +55,13 @@ export default class StepBuilder {
   getObjectMap(key) {
     return this.objectMap.get(key);
   }
+  removeObjectMapPrefix(prefix) {
+    for (const key of this.objectMap.keys()) {
+      if (key.startsWith(prefix)) {
+        this.objectMap.delete(key);
+      }
+    }
+  }
 
   /**
    * Builds a collection of steps based on the page definitions
@@ -77,6 +84,7 @@ export default class StepBuilder {
           pages={this.jsonForm.pages} //TODO: try to remove
           storeObjectMap={this.storeObjectMap}
           getObjectMap={this.getObjectMap}
+          removeObjectMapPrefix={this.removeObjectMapPrefix}
           objectMap={this.objectMap}
         />
       )

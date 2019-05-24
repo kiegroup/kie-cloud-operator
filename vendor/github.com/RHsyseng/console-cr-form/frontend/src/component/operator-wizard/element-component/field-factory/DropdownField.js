@@ -153,7 +153,7 @@ export class DropdownField {
   onSelect = (_, event) => {
     let value = event.target.value;
     this.props.fieldDef.value = value;
-
+    this.props.fieldDef.visible = true; //if not changed visible was remains as false or undefined and validations of fields ignored
     if (this.props.fieldDef.required === true && value === "") {
       this.errMsg = this.props.fieldDef.label + " is required.";
       this.isValid = false;
