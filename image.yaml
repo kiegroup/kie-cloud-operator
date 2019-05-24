@@ -17,13 +17,6 @@ labels:
     value: "rhpam,rhdm,operator"
   - name: "com.redhat.delivery.appregistry"
     value: "true"
-envs:
-  - name: "USER_UID"
-    value: "1001"
-  - name: "USER_NAME"
-    value: "kie-cloud-operator"
-  - name: "OPERATOR_VERSION"
-    value: "1.1.0"
 packages:
   content_sets:
     x86_64:
