@@ -11,12 +11,10 @@ CFLAGS="docker"
 go generate ./...
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
-    if [[ ! -f build/_output/bin/console-cr-form ]] ; then
-        echo
-        echo Will build console first:
-        echo
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
-    fi
+    echo
+    echo Will build console first:
+    echo
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
     echo
     echo Now building operator:
     echo
