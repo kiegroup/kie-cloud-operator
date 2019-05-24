@@ -205,6 +205,17 @@ export class ObjectField {
     }
   }
 
+  removeObjectMapPrefix(parent, fieldNumber) {
+    if (
+      this.props.page.props !== undefined &&
+      this.props.page.props.objectMap !== undefined
+    ) {
+      const key =
+        parseInt(this.props.pageNumber) + "_" + parent + "_" + fieldNumber;
+      this.props.page.props.removeObjectMapPrefix(key);
+    }
+  }
+
   createChildrenChunk() {
     var children = [];
     if (Array.isArray(this.childDef) && this.childDef.length > 0) {
@@ -422,6 +433,8 @@ export class ObjectField {
     if (field.min > 0) {
       for (var i = 0; i < sampleObj.length; i++) {
         field.fields.pop();
+        let poppedFieldNumber = sampleObj.length - i - 1;
+        this.removeObjectMapPrefix(fieldNumber, poppedFieldNumber);
       }
 
       field.min = field.min - 1;

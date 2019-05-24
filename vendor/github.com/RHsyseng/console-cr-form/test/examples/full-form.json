@@ -89,7 +89,7 @@
               "label": "SSO",
               "type": "fieldGroup",
               "required": true,
-              "jsonPath": "$.spec.objects.console.env.sso",
+              "jsonPath": "$.spec",
               "displayWhen": "SSO",
               "visible": false,
               "fields": [
@@ -142,9 +142,8 @@
                   "description": "The password used for 'controllerUser' in external provider"
                 },
                 {
-                  "label": "Server password",
+                  "label": "KIE Server password",
                   "type": "password",
-                  "required": true,
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
                 }
@@ -154,7 +153,7 @@
               "label": "LDAP",
               "type": "fieldGroup",
               "required": true,
-              "jsonPath": "$.spec.objects.console.env.ldap",
+              "jsonPath": "$.spec",
               "displayWhen": "LDAP",
               "visible": false,
               "fields": [
@@ -208,7 +207,7 @@
                 },
                 {
                   "label": "Search time limit",
-                  "type": "text",
+                  "type": "integer",
                   "default": "10000",
                   "jsonPath": "$.spec.auth.ldap.searchTimeLimit",
                   "description": "The timeout in milliseconds for ldap searches."
@@ -262,7 +261,7 @@
                 },
                 {
                   "label": "Role recursion",
-                  "type": "number",
+                  "type": "integer",
                   "jsonPath": "$.spec.auth.ldap.baseCtxDN",
                   "default": "1",
                   "description": "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
@@ -309,9 +308,8 @@
                   "description": "The password used for 'controllerUser' in external provider"
                 },
                 {
-                  "label": "Server password",
+                  "label": "KIE Server password",
                   "type": "password",
-                  "required": true,
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
                 }
@@ -321,7 +319,7 @@
               "label": "Internal",
               "type": "fieldGroup",
               "required": true,
-              "jsonPath": "$.spec.commonConfig",
+              "jsonPath": "$.spec",
               "displayWhen": "default",
               "visible": true,
               "fields": [
@@ -332,7 +330,7 @@
                   "description": "The password to use for 'controllerUser'. Generated if empty"
                 },
                 {
-                  "label": "Server password",
+                  "label": "KIE Server password",
                   "type": "password",
                   "required": false,
                   "jsonPath": "$.spec.commonConfig.serverPassword",
@@ -429,7 +427,7 @@
               "required": false,
               "jsonPath": "$.spec.objects.console.replicas",
               "description": "The number of replicas for the console component.",
-              "type": "text"
+              "type": "integer"
             },
             {
               "label": "Env",
@@ -526,10 +524,10 @@
           ]
         },
         {
-          "label": "Process Servers",
+          "label": "KIE Servers",
           "fields": [
             {
-              "label": "Process Server",
+              "label": "KIE Server",
               "required": false,
               "jsonPath": "$.spec.objects.servers",
               "type": "object",
@@ -537,18 +535,25 @@
               "max": 100,
               "fields": [
                 {
+                  "label": "Id",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].id",
+                  "type": "text",
+                  "description": "The id to use for this Process Server."
+                },
+                {
                   "label": "Name",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].name",
                   "type": "text",
-                  "description": "The name to use for this Process Server."
+                  "description": "The name to use for this KIE Server."
                 },
                 {
                   "label": "Deployments",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].deployments",
-                  "type": "text",
-                  "description": "The number of distinct Process Server sets to auto-generate, when specifying a single server element here."
+                  "type": "integer",
+                  "description": "The number of distinct KIE Server sets to auto-generate, when specifying a single server element here."
                 },
                 {
                   "label": "Keystore secret",
@@ -561,8 +566,8 @@
                   "label": "Replicas",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].replicas",
-                  "type": "text",
-                  "description": "The number of replicas for this Process Server set."
+                  "type": "integer",
+                  "description": "The number of replicas for this KIE Server set."
                 },
                 {
                   "label": "Kind",
@@ -594,11 +599,11 @@
                   "visible": true,
                   "fields": [
                     {
-                      "label": "Process Server container deployment",
+                      "label": "KIE Server container deployment",
                       "type": "text",
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].build.kieServerContainerDeployment",
-                      "description": "KIE packages to deploy to the Process Server.",
+                      "description": "KIE packages to deploy to the KIE Server.",
                       "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT"
                     },
                     {
@@ -870,7 +875,7 @@
                               "type": "text",
                               "required": true,
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.username",
-                              "description": "Process Server external database username.",
+                              "description": "KIE Server external database username.",
                               "default": "rhpam"
                             },
                             {
@@ -878,7 +883,7 @@
                               "type": "password",
                               "required": true,
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.password",
-                              "description": "Process Server external database password."
+                              "description": "KIE Server external database password."
                             },
                             {
                               "label": "Mininimum connection pool size",
@@ -933,76 +938,86 @@
           "label": "Smart Router",
           "fields": [
             {
-              "label": "Keystore secret",
+              "label": "Smart Router",
               "required": false,
-              "jsonPath": "$.spec.objects.smartRouter.keystoreSecret",
-              "type": "text",
-              "description": "The secret name within the Java keystore used for https encryption. Generated if empty."
-            },
-            {
-              "label": "Replicas",
-              "required": false,
-              "jsonPath": "$.spec.objects.smartRouter.replicas",
-              "type": "text",
-              "description": "The number of replicas for the console component."
-            },
-            {
-              "label": "Env",
-              "required": false,
-              "jsonPath": "$.spec.objects.smartRouter.env",
+              "jsonPath": "$.spec.objects.smartRouter",
               "type": "object",
               "min": 0,
-              "max": 100,
+              "max": 1,
               "fields": [
                 {
-                  "label": "Name",
+                  "label": "Keystore secret",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.keystoreSecret",
                   "type": "text",
+                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty."
+                },
+                {
+                  "label": "Replicas",
                   "required": true,
-                  "jsonPath": "$.spec.objects.smartRouter.env[*].name",
-                  "description": "Environment variable name"
+                  "jsonPath": "$.spec.objects.smartRouter.replicas",
+                  "type": "integer",
+                  "description": "The number of replicas for the console component."
                 },
                 {
-                  "label": "Value",
-                  "type": "text",
-                  "required": true,
-                  "jsonPath": "$.spec.objects.smartRouter.env[*].value",
-                  "description": "Environment variable value"
-                }
-              ]
-            },
-            {
-              "label": "Resource quotas",
-              "type": "fieldGroup",
-              "jsonPath": "$.spec.objects.smartRouter.resources",
-              "visible": true,
-              "fields": [
-                {
-                  "label": "Memory request",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
-                  "default": "2Gi",
-                  "description": "Minimum amount of memory requested by the container"
+                  "label": "Env",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.env",
+                  "type": "object",
+                  "min": 0,
+                  "max": 100,
+                  "fields": [
+                    {
+                      "label": "Name",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.smartRouter.env[*].name",
+                      "description": "Environment variable name"
+                    },
+                    {
+                      "label": "Value",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.smartRouter.env[*].value",
+                      "description": "Environment variable value"
+                    }
+                  ]
                 },
                 {
-                  "label": "CPU request",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
-                  "default": "500m",
-                  "description": "Minimum processing power requested by the container"
-                },
-                {
-                  "label": "Memory limit",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.smartRouter.resources.limits.memory",
-                  "default": "2Gi",
-                  "description": "Maximum amount of memory granted to the container"
-                },
-                {
-                  "label": "CPU limit",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.smartRouter.resources.limits.cpu",
-                  "default": "500m",
-                  "description": "Maximum processing power granted to the container"
+                  "label": "Resource quotas",
+                  "type": "fieldGroup",
+                  "jsonPath": "$.spec.objects.smartRouter.resources",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Memory request",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
+                      "default": "2Gi",
+                      "description": "Minimum amount of memory requested by the container"
+                    },
+                    {
+                      "label": "CPU request",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
+                      "default": "500m",
+                      "description": "Minimum processing power requested by the container"
+                    },
+                    {
+                      "label": "Memory limit",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.limits.memory",
+                      "default": "2Gi",
+                      "description": "Maximum amount of memory granted to the container"
+                    },
+                    {
+                      "label": "CPU limit",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.limits.cpu",
+                      "default": "500m",
+                      "description": "Maximum processing power granted to the container"
+                    }
+                  ]
                 }
               ]
             }

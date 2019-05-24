@@ -11,6 +11,7 @@ import { SectionRadioField } from "./SectionRadioField";
 import { ObjectField } from "./ObjectField";
 import { FieldUtils } from "./FieldUtils";
 import { FieldGroupField } from "./FieldGroupField";
+import { IntegerField } from "./IntegerField";
 
 export const FIELD_TYPE = {
   dropdown: "dropDown",
@@ -25,7 +26,8 @@ export const FIELD_TYPE = {
   section: "section",
   text: "text",
   sectionRadio: "section_radio",
-  fieldGroup: "fieldGroup"
+  fieldGroup: "fieldGroup",
+  integer: "integer"
 };
 
 export default class FieldFactory {
@@ -95,6 +97,9 @@ export default class FieldFactory {
         break;
       case FIELD_TYPE.fieldGroup:
         fieldReference = new FieldGroupField(props);
+        break;
+      case FIELD_TYPE.integer:
+        fieldReference = new IntegerField(props);
         break;
       default:
         fieldReference = new DefaultTextField(props);
