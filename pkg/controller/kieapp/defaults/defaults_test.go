@@ -955,9 +955,14 @@ func TestKieAppDefaults(t *testing.T) {
 			Objects:     v1.KieAppObjects{},
 		},
 	}
+	_, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
 	assert.NotContains(t, cr.Spec.Objects.Console.Env, corev1.EnvVar{
 		Name: "empty",
 	})
+	assert.True(t, *cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be true by default")
+	assert.False(t, cr.Spec.Upgrades.Minor, "Spec.Upgrades.Minor should be false by default")
 }
 
 func TestMergeTrialAndCommonConfig(t *testing.T) {

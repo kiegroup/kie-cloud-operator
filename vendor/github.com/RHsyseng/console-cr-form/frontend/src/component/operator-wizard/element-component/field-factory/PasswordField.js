@@ -58,5 +58,6 @@ export class PasswordField {
       this.errMsg = "";
       this.isValid = true;
     }
+    this.props.fieldDef.errMsg = this.errMsg;
   }
 }

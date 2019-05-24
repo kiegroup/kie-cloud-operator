@@ -6,7 +6,7 @@ IMAGE=kie-cloud-operator
 TAG=1.1
 TAR=${BRANCH}.tar.gz
 URL=${REPO}/archive/${TAR}
-CFLAGS="--redhat"
+CFLAGS="docker"
 
 go generate ./...
 if [[ -z ${CI} ]]; then
@@ -21,9 +21,9 @@ if [[ -z ${CI} ]]; then
     operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
     if [[ ${1} == "rhel" ]]; then
         if [[ ${LOCAL} != true ]]; then
-            CFLAGS+=" --build-engine=osbs --build-osbs-target=rhba-7.4-openshift-containers-candidate" # rhpam-7-rhel-7-containers-candidate
+            CFLAGS="osbs"
             if [[ ${2} == "release" ]]; then
-                CFLAGS+=" --build-osbs-release"
+                CFLAGS+=" --release"
             fi
         fi
         wget -q ${URL} -O ${TAR}
@@ -31,8 +31,9 @@ if [[ -z ${CI} ]]; then
         rm ${TAR}
 
         echo ${CFLAGS}
-        cekit build ${CFLAGS} \
-            --overrides "{'artifacts': [{'name': 'kie-cloud-operator.tar.gz', 'md5': '${MD5}', 'url': '${URL}'}]}"
+        cekit --redhat build \
+            --overrides "{'artifacts': [{'name': 'kie-cloud-operator.tar.gz', 'md5': '${MD5}', 'url': '${URL}'}]}" \
+            ${CFLAGS}
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui

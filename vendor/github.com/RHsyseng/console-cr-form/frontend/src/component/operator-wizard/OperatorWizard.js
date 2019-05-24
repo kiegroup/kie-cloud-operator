@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Wizard, TextArea, Button, Modal } from "@patternfly/react-core";
+import { Wizard, TextArea, Button, Modal, Alert } from "@patternfly/react-core";
 import YAML from "js-yaml";
 import Dot from "dot-object";
 import CopyToClipboard from "react-copy-to-clipboard";
@@ -22,7 +22,9 @@ export default class OperatorWizard extends Component {
       isFormValid: false,
       currentStep: 1,
       maxSteps: 1,
-      isModalOpen: false
+      isModalOpen: false,
+      isDeployModalOpen: false,
+      isErrorModalOpen: false
     };
     document.title = this.title;
 
@@ -62,9 +64,11 @@ export default class OperatorWizard extends Component {
   onDeploy = () => {
     if (!this.validateForm()) {
       console.log("The form has validation errors");
+      this.handleErrorModalToggle();
       return;
     }
     const result = this.createResultYaml();
+    this.handleDeployModalToggle();
     console.log(result);
     fetch(BACKEND_URL, {
       method: "POST",
@@ -81,6 +85,7 @@ export default class OperatorWizard extends Component {
   onEditYaml = () => {
     if (!this.validateForm()) {
       console.log("The form has validation errors");
+      this.handleErrorModalToggle();
       return;
     }
     this.createResultYaml();
@@ -90,6 +95,18 @@ export default class OperatorWizard extends Component {
   handleModalToggle = () => {
     this.setState(({ isModalOpen }) => ({
       isModalOpen: !isModalOpen
+    }));
+  };
+
+  handleErrorModalToggle = () => {
+    this.setState(({ isErrorModalOpen }) => ({
+      isErrorModalOpen: !isErrorModalOpen
+    }));
+  };
+
+  handleDeployModalToggle = () => {
+    this.setState(({ isDeployModalOpen }) => ({
+      isDeployModalOpen: !isDeployModalOpen
     }));
   };
 
@@ -124,19 +141,18 @@ export default class OperatorWizard extends Component {
     let isValid = true;
     if (fields !== undefined) {
       fields.forEach(field => {
-        if (field.type === "object" && !this.validateFields(field.fields)) {
+        if (
+          (field.type === "object" ||
+            ((field.type === "dropDown" || field.type === "fieldGroup") &&
+              field.fields !== undefined &&
+              (field.visible !== undefined && field.visible !== false))) &&
+          !this.validateFields(field.fields)
+        ) {
           isValid = false;
           return;
         }
-        if (
-          field.required !== undefined &&
-          field.required &&
-          field.errMsg !== undefined &&
-          field.errMsg !== ""
-        ) {
-          console.log(
-            `Field ${field.label} is required and is not valid: ${field.errMsg}`
-          );
+        if (field.errMsg !== undefined && field.errMsg !== "") {
+          console.log(`Field ${field.label} is not valid: ${field.errMsg}`);
           isValid = false;
         }
       });
@@ -323,6 +339,24 @@ export default class OperatorWizard extends Component {
             cols={35}
             value={this.state.resultYaml}
           />
+        </Modal>
+
+        <Modal
+          isSmall
+          title=""
+          isOpen={this.state.isDeployModalOpen}
+          onClose={this.handleDeployModalToggle}
+        >
+          <Alert variant="info" title="Deployment request was created." />
+        </Modal>
+
+        <Modal
+          isSmall
+          title=""
+          isOpen={this.state.isErrorModalOpen}
+          onClose={this.handleErrorModalToggle}
+        >
+          <Alert variant="danger" title="Validation errors!" />
         </Modal>
       </React.Fragment>
     );
