@@ -29,6 +29,7 @@ type KieAppSpec struct {
 	Objects       KieAppObjects    `json:"objects,omitempty"`
 	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
 	Auth          KieAppAuthObject `json:"auth,omitempty"`
+	Upgrades      KieAppUpgrades   `json:"upgrades,omitempty"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -106,6 +107,12 @@ type KieAppObjects struct {
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
 	SmartRouter *KieAppObject `json:"smartRouter,omitempty"`
+}
+
+// KieAppUpgrades KIE App product upgrade flags
+type KieAppUpgrades struct {
+	Patch *bool `json:"patch,omitempty"`
+	Minor bool  `json:"minor,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
