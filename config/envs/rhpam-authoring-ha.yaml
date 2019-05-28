@@ -30,10 +30,14 @@ console:
                     containerPort: 8001
                     protocol: TCP
                 env:
-                  - name: APPFORMER_ELASTIC_HOST
-                    value: "[[.ApplicationName]]-[[.Constants.Product]]index"
+                  - name: APPFORMER_INFINISPAN_SERVICE_NAME
+                    value: "[[.ApplicationName]]-datagrid"
+                  - name: APPFORMER_INFINISPAN_PORT
+                    value: "11222"
                   - name: APPFORMER_JMS_BROKER_ADDRESS
                     value: "[[.ApplicationName]]-amq-tcp"
+                  - name: APPFORMER_JMS_BROKER_PORT
+                    value: "61616"
                   - name: APPFORMER_JMS_BROKER_USER
                     value: "jmsBrokerUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
@@ -166,82 +170,7 @@ others:
             application: "[[.ApplicationName]]"
           name: "[[.ApplicationName]]-amq-scaledown-controller-sa"
 
-    persistentVolumeClaims:
-      - metadata:
-          name: "[[.ApplicationName]]-[[.Constants.Product]]index-claim"
-          labels:
-            app: "[[.ApplicationName]]"
-            application: "[[.ApplicationName]]"
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: "1Gi"
-
     deploymentConfigs:
-      - metadata:
-          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
-          labels:
-            app: "[[.ApplicationName]]"
-            service: "[[.ApplicationName]]-[[.Constants.Product]]index"
-        spec:
-          strategy:
-            type: Recreate
-          triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "[[.ApplicationName]]-[[.Constants.Product]]index"
-                from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift:[[.ImageTag]]"
-            - type: ConfigChange
-          replicas: 1
-          selector:
-            deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
-          template:
-            metadata:
-              name: "[[.ApplicationName]]-[[.Constants.Product]]index"
-              labels:
-                deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
-                app: "[[.ApplicationName]]"
-                application: "[[.ApplicationName]]"
-            spec:
-              terminationGracePeriodSeconds: 60
-              containers:
-                - name: "[[.ApplicationName]]-[[.Constants.Product]]index"
-                  image: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-indexing-openshift"
-                  imagePullPolicy: Always
-                  volumeMounts:
-                    - name: "[[.ApplicationName]]-[[.Constants.Product]]index-pvol"
-                      mountPath: "/opt/elasticsearch/data"
-                  livenessProbe:
-                    tcpSocket:
-                      port: 9300
-                    initialDelaySeconds: 15
-                    timeoutSeconds: 1
-                  readinessProbe:
-                    httpGet:
-                      scheme: HTTP
-                      path: /_cluster/health
-                      port: 9200
-                    initialDelaySeconds: 15
-                    timeoutSeconds: 2
-                  ports:
-                    - name: es
-                      containerPort: 9300
-                      protocol: TCP
-                    - name: http
-                      containerPort: 9200
-                      protocol: TCP
-              volumes:
-                - name: "[[.ApplicationName]]-[[.Constants.Product]]index-pvol"
-                  persistentVolumeClaim:
-                    claimName: "[[.ApplicationName]]-[[.Constants.Product]]index-claim"
-
       - metadata:
           labels:
             app: "[[.ApplicationName]]"
@@ -290,6 +219,110 @@ others:
             - type: ConfigChange
 
     statefulsets:
+      - metadata:
+          name: "[[.ApplicationName]]-datagrid"
+          labels:
+            app: "[[.ApplicationName]]"
+            application: "[[.ApplicationName]]"
+            service: "[[.ApplicationName]]-datagrid"
+        spec:
+          podManagementPolicy: OrderedReady
+          replicas: 1
+          selector:
+            matchLabels:
+              deploymentConfig: "[[.ApplicationName]]-datagrid"
+          serviceName: "[[.ApplicationName]]-datagrid"
+          strategy:
+            rollingParams:
+              intervalSeconds: 20
+              maxSurge: 1
+              maxUnavailable: 1
+              timeoutSeconds: 1200
+              updatePeriodSeconds: 20
+            type: Rolling
+          template:
+            metadata:
+              labels:
+                app: "[[.ApplicationName]]"
+                application: "[[.ApplicationName]]"
+                deploymentConfig: "[[.ApplicationName]]-datagrid"
+              name: "[[.ApplicationName]]-datagrid"
+            spec:
+              containers:
+                - env:
+                    - name: SERVICE_NAME
+                      value: "[[.ApplicationName]]-datagrid"
+                    - name: SERVICE_PROFILE
+                      value: "[[.ApplicationName]]-datagrid"
+                    - name: JGROUPS_PING_PROTOCOL
+                      value: openshift.DNS_PING
+                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+                      value: "[[.ApplicationName]]-datagrid-ping"
+                    - name: INFINISPAN_CONNECTORS
+                      value: "hotrod"
+                  image: "registry.redhat.io/jboss-datagrid-7/[[$.Constants.DatagridImage]]:[[$.Constants.DatagridImageTag]]"
+                  imagePullPolicy: IfNotPresent
+                  name: "[[.ApplicationName]]-datagrid"
+                  ports:
+                    - containerPort: 8888
+                      name: ping
+                      protocol: TCP
+                    - containerPort: 11222
+                      name: hotrod
+                      protocol: TCP
+                  livenessProbe:
+                    exec:
+                      command:
+                        - /opt/datagrid/bin/livenessProbe.sh
+                    failureThreshold: 5
+                    initialDelaySeconds: 15
+                    periodSeconds: 20
+                    successThreshold: 1
+                    timeoutSeconds: 10
+                  readinessProbe:
+                    exec:
+                      command:
+                        - /opt/datagrid/bin/readinessProbe.sh
+                    failureThreshold: 5
+                    initialDelaySeconds: 17
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 10
+                  resources:
+                    limits:
+                      memory: "512Mi"
+                    requests:
+                      cpu: "0.5"
+                      memory: "512Mi"
+                  volumeMounts:
+                    - mountPath: /opt/datagrid/standalone/data
+                      name: srv-data
+                    - mountPath: /var/run/secrets/java.io/keystores
+                      name: datagrid-keystore-volume
+                    - mountPath: /var/run/secrets/openshift.io/serviceaccount
+                      name: datagrid-service-certs
+              dnsPolicy: ClusterFirst
+              restartPolicy: Always
+              schedulerName: default-scheduler
+              securityContext: {}
+              terminationGracePeriodSeconds: 60
+              volumes:
+                - empty-dir: {}
+                  name: datagrid-keystore-volume
+                - name: datagrid-service-certs
+                  secret:
+                    secretName: datagrid-service-certs
+          triggers:
+            - type: ConfigChange
+          volumeClaimTemplates:
+            - metadata:
+                name: srv-data
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
       - metadata:
           annotations:
             alpha.image.policy.openshift.io/resolve-names: "*"
@@ -382,7 +415,7 @@ others:
                           "value": "8888"
                         }
                       ],
-                      "image": "amq-broker-72-openshift:1.3",
+                      "image": "registry.redhat.io/amq-broker-7/[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]",
                       "name": "[[.ApplicationName]]-amq",
                       "command": ["/bin/sh", "-c", "echo \"Starting the drainer\" ; /opt/amq/bin/drain.sh; echo \"Drain completed! Exit code $?\""],
                       "volumeMounts": [
@@ -455,7 +488,7 @@ others:
                         fieldRef:
                           apiVersion: v1
                           fieldPath: metadata.namespace
-                  image: "amq-broker-72-openshift:1.3"
+                  image: "registry.redhat.io/amq-broker-7/[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
                   imagePullPolicy: IfNotPresent
                   name: broker-amq
                   ports:
@@ -543,38 +576,36 @@ others:
             application: "[[.ApplicationName]]"
 
       - spec:
+          clusterIP: None
           ports:
-            - name: rest
-              port: 9200
-              targetPort: 9200
-            - name: transport
-              port: 9300
-              targetPort: 9300
+            - name: ping
+              port: 8888
+              protocol: TCP
+              targetPort: 8888
           selector:
-            deploymentConfig: "[[.ApplicationName]]-[[.Constants.Product]]index"
+            deploymentConfig: "[[.ApplicationName]]-datagrid"
         metadata:
-          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
+          name: "[[.ApplicationName]]-datagrid-ping"
           labels:
-            app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
-            service: "[[.ApplicationName]]-[[.Constants.Product]]index"
           annotations:
-            description: All the Business Central Indexing Elasticsearch ports.
+            description: "The JGroups ping port for clustering."
+            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 
-    routes:
-      - id: "[[.ApplicationName]]-[[.Constants.Product]]index-http"
+      - spec:
+          ports:
+            - name: hotrod
+              port: 11222
+              protocol: TCP
+              targetPort: 11222
+          selector:
+            deploymentConfig: "[[.ApplicationName]]-datagrid"
         metadata:
-          name: "[[.ApplicationName]]-[[.Constants.Product]]index"
+          name: "[[.ApplicationName]]-datagrid"
           labels:
-            app: "[[.ApplicationName]]"
             application: "[[.ApplicationName]]"
           annotations:
-            description: Route for Business Central Indexing's Elasticsearch http service.
-        spec:
-          host: ""
-          to:
-            name: "[[.ApplicationName]]-[[.Constants.Product]]index"
-          port:
-            targetPort: rest
+            description: Provides a service for accessing the application over Hot Rod protocol.
+            service.alpha.openshift.io/serving-cert-secret-name: datagrid-service-certs
 ## ES/AMQ END
 

@@ -288,8 +288,9 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	regContext := fmt.Sprintf("%s-%s", product, string(version[0]))
 
 	registryAddress := cr.Spec.ImageRegistry.Registry
-	if strings.Contains(result[0], "indexing-openshift") {
-		regContext = fmt.Sprintf("%s-7-tech-preview", product)
+	if strings.Contains(result[0], "datagrid") {
+		registryAddress = constants.ImageRegistry
+		regContext = "jboss-datagrid-7"
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"

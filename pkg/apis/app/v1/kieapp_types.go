@@ -345,6 +345,10 @@ type TemplateConstants struct {
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
+	BrokerImage          string `json:"brokerImage"`
+	BrokerImageTag       string `json:"brokerImageTag"`
+	DatagridImage        string `json:"datagridImage"`
+	DatagridImageTag     string `json:"datagridImageTag"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates

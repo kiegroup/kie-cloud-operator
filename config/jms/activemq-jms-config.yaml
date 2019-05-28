@@ -65,7 +65,7 @@ servers:
                 - "[[.KieName]]-amq"
               from:
                 kind: ImageStreamTag
-                name: "amq-broker-72-openshift:1.3"
+                name: "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
                 namespace: "openshift"
           - type: ConfigChange
         replicas: 1
@@ -83,7 +83,7 @@ servers:
             terminationGracePeriodSeconds: 60
             containers:
             - name: "[[.KieName]]-amq"
-              image: amq-broker-72-openshift
+              image: "[[$.Constants.BrokerImage]]"
               imagePullPolicy: Always
               readinessProbe:
                 exec:
