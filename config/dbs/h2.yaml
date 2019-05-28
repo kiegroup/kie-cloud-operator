@@ -7,8 +7,6 @@ servers:
       - metadata:
           name: "[[.KieName]]"
         spec:
-          strategy:
-            type: Recreate
           template:
             metadata:
               name: "[[.KieName]]"
