@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INSTALL_PKGS="go-toolset"
+INSTALL_PKGS="go-toolset-1.11.5"
 OPERATOR_VERSION="1.1.0"
 OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
 UI_PATH=/usr/local/bin/console-cr-form
