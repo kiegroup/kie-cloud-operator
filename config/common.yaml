@@ -464,12 +464,25 @@ servers:
                 services.server.kie.org/kie-server-id: "[[.KieServerID]]"
             spec:
               serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
-              terminationGracePeriodSeconds: 60
+              terminationGracePeriodSeconds: 90
               containers:
                 - name: "[[.KieName]]"
                   image: "[[$.Constants.Product]][[$.Version]]-kieserver-openshift"
                   imagePullPolicy: Always
+                  lifecycle:
+                    postStart:
+                      exec:
+                        command:
+                        - /bin/sh
+                        - /opt/eap/bin/launch/jboss-kie-kieserver-hooks.sh
+                    preStop:
+                      exec:
+                        command:
+                        - /bin/sh
+                        - /opt/eap/bin/launch/jboss-kie-kieserver-hooks.sh
                   env:
+                    - name: WORKBENCH_SERVICE_NAME
+                      value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: KIE_ADMIN_USER
                       value: "[[$.AdminUser]]"
                     - name: KIE_ADMIN_PWD
