@@ -7,8 +7,6 @@ servers:
       - metadata:
           name: "[[.KieName]]"
         spec:
-          strategy:
-            type: Recreate
           template:
             metadata:
               name: "[[.KieName]]"
@@ -39,6 +37,8 @@ servers:
                       value: "12345"
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_NONXA
+                      value: "false"
                     - name: RHPAM_XA_CONNECTION_PROPERTY_URL
                       value: "jdbc:h2:/opt/kie/data/h2/rhpam;AUTO_SERVER=TRUE"
                     ## H2 driver settings END

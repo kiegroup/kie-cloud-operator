@@ -1,13 +1,13 @@
 package logs
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"io"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -67,11 +67,13 @@ func zapSugaredLoggerTo(destWriter io.Writer, development bool) *zap.SugaredLogg
 	var opts []zap.Option
 	if development {
 		encCfg := zap.NewDevelopmentEncoderConfig()
+		encCfg.EncodeTime = timeEncoder
 		enc = zapcore.NewConsoleEncoder(encCfg)
 		lvl = zap.NewAtomicLevelAt(zap.DebugLevel)
 		opts = append(opts, zap.Development(), zap.AddStacktrace(zap.ErrorLevel))
 	} else {
 		encCfg := zap.NewProductionEncoderConfig()
+		encCfg.EncodeTime = timeEncoder
 		enc = zapcore.NewJSONEncoder(encCfg)
 		lvl = zap.NewAtomicLevelAt(zap.InfoLevel)
 		opts = append(opts, zap.WrapCore(func(core zapcore.Core) zapcore.Core {
@@ -83,6 +85,11 @@ func zapSugaredLoggerTo(destWriter io.Writer, development bool) *zap.SugaredLogg
 	log = log.WithOptions(opts...)
 
 	return log.Sugar()
+}
+
+func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	t = t.UTC()
+	enc.AppendString(t.Format(time.RFC3339Nano))
 }
 
 func GetBoolEnv(key string) bool {

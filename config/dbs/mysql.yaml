@@ -35,7 +35,7 @@ servers:
                     - name: KIE_SERVER_PERSISTENCE_DS
                       value: "java:/jboss/datasources/rhpam"
                     - name: RHPAM_DRIVER
-                      value: "mysql"
+                      value: "mariadb"
                     - name: KIE_SERVER_PERSISTENCE_DIALECT
                       value: "org.hibernate.dialect.MySQL57Dialect"
                     - name: RHPAM_USERNAME
