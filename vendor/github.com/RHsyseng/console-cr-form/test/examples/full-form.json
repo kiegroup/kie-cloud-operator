@@ -539,7 +539,7 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].id",
                   "type": "text",
-                  "description": "The id to use for this Process Server."
+                  "description": "The id to use for this KIE Server."
                 },
                 {
                   "label": "Name",

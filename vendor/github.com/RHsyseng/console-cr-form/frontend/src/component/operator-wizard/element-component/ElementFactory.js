@@ -12,7 +12,9 @@ export default class ElementFactory {
    */
   static newInstances(fieldDefs, buttonDefs, jsonSchema, pageNumber, page) {
     const children = [];
-    children.push(new ButtonGroup(buttonDefs, pageNumber, page));
+    let buttonRef = new ButtonGroup(buttonDefs, pageNumber, page);
+    let buttonJsx = buttonRef.getJsx();
+    children.push(buttonJsx);
     children.push(
       ...FieldFactory.newInstances(fieldDefs, jsonSchema, pageNumber, page)
     );

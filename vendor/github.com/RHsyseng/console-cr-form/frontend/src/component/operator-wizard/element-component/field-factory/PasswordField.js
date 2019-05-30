@@ -1,26 +1,45 @@
-import React from "react";
+import React, { Component } from "react";
 
 import { FormGroup, TextInput } from "@patternfly/react-core";
 
-export class PasswordField {
+export class PasswordField extends Component {
   constructor(props) {
+    super(props);
+
+    this.state = {
+      value: this.props.fieldDef.value,
+      isValid: true,
+      errMsg: this.props.fieldDef.errMsg
+    };
     this.props = props;
-    this.onBlurText = this.onBlurPwd.bind(this);
-    this.errMsg = "";
-    this.isValid = true;
+
+    this.handleTextInputChange = value => {
+      this.isValidField(value);
+      this.props.fieldDef.value = value;
+      this.props.fieldDef.errMsg = this.state.errMsg;
+    };
   }
 
   getJsx() {
-    this.isValidField();
+    let { value, isValid, errMsg } = this.state;
 
+    if (this.props.fieldDef.required === true && value === "") {
+      errMsg = this.props.fieldDef.label + " is required.";
+
+      isValid = false;
+    } else {
+      this.errMsg = "";
+      this.isValid = true;
+    }
+    this.props.fieldDef.errMsg = errMsg;
     return (
       <FormGroup
         label={this.props.fieldDef.label}
         fieldId={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
-        helperTextInvalid={this.errMsg}
+        helperTextInvalid={errMsg}
         helperText={this.props.fieldDef.description}
-        isValid={this.isValid}
+        isValid={isValid}
         isRequired={this.props.fieldDef.required}
       >
         <TextInput
@@ -29,35 +48,31 @@ export class PasswordField {
           key={this.props.ids.fieldKey}
           aria-describedby="horizontal-form-name-helper"
           name={this.props.fieldDef.label}
-          // onChange={this.onChangeText}
-          onBlur={this.onBlurPwd}
+          onChange={this.handleTextInputChange}
           jsonpath={this.props.fieldDef.jsonPath}
-          defaultValue={this.props.fieldDef.value}
+          defaultValue={value}
           {...this.props.attrs}
         />
       </FormGroup>
     );
   }
-  onBlurPwd = event => {
-    let value = event.target.value;
-    if (value !== undefined && value !== null) {
-      this.props.fieldDef.value = value;
-      this.isValidField();
-    }
-  };
 
-  isValidField() {
-    const value = this.props.fieldDef.value;
-    if (
-      this.props.fieldDef.required === true &&
-      (value === undefined || value === "")
-    ) {
-      this.errMsg = this.props.fieldDef.label + " is required.";
-      this.isValid = false;
+  isValidField(value) {
+    let isValid = true;
+    let errMsg = "";
+
+    if (this.props.fieldDef.required === true && value === "") {
+      errMsg = this.props.fieldDef.label + " is required.";
+
+      isValid = false;
     } else {
-      this.errMsg = "";
-      this.isValid = true;
+      errMsg = "";
+      isValid = true;
     }
-    this.props.fieldDef.errMsg = this.errMsg;
+    this.props.fieldDef.errMsg = errMsg;
+    this.setState({ value, isValid, errMsg });
+  }
+  render() {
+    return this.getJsx();
   }
 }

@@ -89,7 +89,7 @@ export class FieldGroupField {
 
             this.props.page
           );
-          elements.push(oneComponent.getJsx());
+          elements.push(oneComponent);
         } else {
           console.log(
             "parentId" +
@@ -106,7 +106,7 @@ export class FieldGroupField {
             this.props.fieldNumber,
             this.props.parentid
           );
-          elements.push(oneComponent.getJsx());
+          elements.push(oneComponent);
         }
       });
     }
