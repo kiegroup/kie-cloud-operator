@@ -20,6 +20,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // KieAppSpec defines the desired state of KieApp
+// +k8s:openapi-gen=true
 type KieAppSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -33,6 +34,7 @@ type KieAppSpec struct {
 }
 
 // EnvironmentType describes a possible application environment
+// +k8s:openapi-gen=true
 type EnvironmentType string
 
 const (
@@ -73,6 +75,7 @@ type AppConstants struct {
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
+// +k8s:openapi-gen=true
 type KieAppRegistry struct {
 	Registry string `json:"registry,omitempty"` // Registry to use, can also be set w/ "REGISTRY" env variable
 	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
@@ -100,6 +103,7 @@ type KieAppList struct {
 }
 
 // KieAppObjects KIE App deployment objects
+// +k8s:openapi-gen=true
 type KieAppObjects struct {
 	// Business Central container configs
 	Console SecuredKieAppObject `json:"console,omitempty"`
@@ -110,12 +114,14 @@ type KieAppObjects struct {
 }
 
 // KieAppUpgrades KIE App product upgrade flags
+// +k8s:openapi-gen=true
 type KieAppUpgrades struct {
 	Patch *bool `json:"patch,omitempty"`
 	Minor bool  `json:"minor,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
+// +k8s:openapi-gen=true
 type KieServerSet struct {
 	Deployments         *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
 	Name                string                  `json:"name,omitempty"`
@@ -128,6 +134,7 @@ type KieServerSet struct {
 }
 
 // SecuredKieAppObject Generic object definition
+// +k8s:openapi-gen=true
 type SecuredKieAppObject struct {
 	SSOClient    *SSOAuthClient `json:"ssoClient,omitempty"`
 	KieAppObject `json:",inline"`
@@ -153,6 +160,7 @@ type KieAppJmsObject struct {
 }
 
 // KieAppObject Generic object definition
+// +k8s:openapi-gen=true
 type KieAppObject struct {
 	Env            []corev1.EnvVar             `json:"env,omitempty"`
 	Replicas       *int32                      `json:"replicas,omitempty"`
@@ -183,6 +191,7 @@ type CustomObject struct {
 }
 
 // KieAppBuildObject Data to define how to build an application from source
+// +k8s:openapi-gen=true
 type KieAppBuildObject struct {
 	KieServerContainerDeployment string                  `json:"kieServerContainerDeployment,omitempty"`
 	GitSource                    GitSource               `json:"gitSource,omitempty"`
@@ -193,6 +202,7 @@ type KieAppBuildObject struct {
 }
 
 // GitSource Git coordinates to locate the source code to build
+// +k8s:openapi-gen=true
 type GitSource struct {
 	URI        string `json:"uri,omitempty"`
 	Reference  string `json:"reference,omitempty"`
@@ -210,12 +220,14 @@ const (
 )
 
 // WebhookSecret Secret to use for a given webhook
+// +k8s:openapi-gen=true
 type WebhookSecret struct {
 	Type   WebhookType `json:"type,omitempty"`
 	Secret string      `json:"secret,omitempty"`
 }
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
+// +k8s:openapi-gen=true
 type KieAppAuthObject struct {
 	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
 	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
@@ -223,6 +235,7 @@ type KieAppAuthObject struct {
 }
 
 // SSOAuthConfig Authentication configuration for SSO
+// +k8s:openapi-gen=true
 type SSOAuthConfig struct {
 	URL                      string `json:"url,omitempty"`
 	Realm                    string `json:"realm,omitempty"`
@@ -233,6 +246,7 @@ type SSOAuthConfig struct {
 }
 
 // SSOAuthClient Auth client to use for the SSO integration
+// +k8s:openapi-gen=true
 type SSOAuthClient struct {
 	Name          string `json:"name,omitempty"`
 	Secret        string `json:"secret,omitempty"`
@@ -241,6 +255,7 @@ type SSOAuthClient struct {
 }
 
 // LDAPAuthConfig Authentication configuration for LDAP
+// +k8s:openapi-gen=true
 type LDAPAuthConfig struct {
 	URL                            string          `json:"url,omitempty"`
 	BindDN                         string          `json:"bindDN,omitempty"`
@@ -278,12 +293,14 @@ const (
 )
 
 // RoleMapperAuthConfig Configuration for RoleMapper Authentication
+// +k8s:openapi-gen=true
 type RoleMapperAuthConfig struct {
 	RolesProperties string `json:"rolesProperties,omitempty"`
 	ReplaceRole     bool   `json:"replaceRole,omitempty"`
 }
 
 // DatabaseType to define what kind of database will be used for the Kie Servers
+// +k8s:openapi-gen=true
 type DatabaseType string
 
 const (
@@ -299,6 +316,7 @@ const (
 
 // DatabaseObject Defines how a KieServer will manage and create a new Database
 // or connect to an existing one
+// +k8s:openapi-gen=true
 type DatabaseObject struct {
 	Type           DatabaseType            `json:"type,omitempty"`
 	Size           string                  `json:"size,omitempty"`
@@ -306,6 +324,7 @@ type DatabaseObject struct {
 }
 
 // ExternalDatabaseObject configuration definition of an external database
+// +k8s:openapi-gen=true
 type ExternalDatabaseObject struct {
 	Driver                     string `json:"driver,omitempty"`
 	Dialect                    string `json:"dialect,omitempty"`
@@ -400,6 +419,7 @@ type BuildTemplate struct {
 }
 
 // CommonConfig variables used in the templates
+// +k8s:openapi-gen=true
 type CommonConfig struct {
 	ApplicationName    string `json:"applicationName,omitempty"`
 	Version            string `json:"version,omitempty"`
@@ -447,6 +467,7 @@ const (
 )
 
 // Condition - The condition for the kie-cloud-operator
+// +k8s:openapi-gen=true
 type Condition struct {
 	Type               ConditionType          `json:"type"`
 	Status             corev1.ConditionStatus `json:"status"`
@@ -456,12 +477,15 @@ type Condition struct {
 }
 
 // KieAppStatus - The status for custom resources managed by the operator-sdk.
+// +k8s:openapi-gen=true
 type KieAppStatus struct {
 	Conditions  []Condition `json:"conditions"`
 	ConsoleHost string      `json:"consoleHost,omitempty"`
 	Deployments Deployments `json:"deployments"`
 }
 
+// Deployments ...
+// +k8s:openapi-gen=true
 type Deployments struct {
 	// Deployments are ready to serve requests
 	Ready []string `json:"ready,omitempty"`

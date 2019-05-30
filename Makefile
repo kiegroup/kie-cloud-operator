@@ -32,6 +32,7 @@ go-generate: dep
 
 .PHONY: sdk-generate
 sdk-generate: dep
+	operator-sdk generate openapi
 	operator-sdk generate k8s
 
 .PHONY: vet
