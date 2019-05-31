@@ -14,10 +14,10 @@ type Configuration interface {
 	ApiVersion() string
 	Kind() string
 	Form() Form
-	CallBack(yamlString string)
+	CallBack(yaml string) error
 }
 
-func NewConfiguration(host string, port int, schema spec.Schema, apiVersion string, kind string, form Form, callback func(yamlString string)) (Configuration, error) {
+func NewConfiguration(host string, port int, schema spec.Schema, apiVersion string, kind string, form Form, callback func(yaml string) error) (Configuration, error) {
 	var errs []error
 	if port == 0 {
 		port = 8080
@@ -36,10 +36,9 @@ func NewConfiguration(host string, port int, schema spec.Schema, apiVersion stri
 	}
 	if len(errs) == 0 {
 		return &configuration{host, port, schema, apiVersion, kind, form, callback}, nil
-	} else {
-		logrus.Debug("Configuration is invalid", errs)
-		return nil, aggregate.NewAggregate(errs)
 	}
+	logrus.Debug("Configuration is invalid", errs)
+	return nil, aggregate.NewAggregate(errs)
 }
 
 type configuration struct {
@@ -49,7 +48,7 @@ type configuration struct {
 	apiVersion string
 	kind       string
 	form       Form
-	callback   func(yaml string)
+	callback   func(yamlString string) error
 }
 
 func (config *configuration) Host() string {
@@ -76,6 +75,6 @@ func (config *configuration) Form() Form {
 	return config.form
 }
 
-func (config *configuration) CallBack(yamlString string) {
-	config.callback(yamlString)
+func (config *configuration) CallBack(yaml string) error {
+	return config.callback(yaml)
 }

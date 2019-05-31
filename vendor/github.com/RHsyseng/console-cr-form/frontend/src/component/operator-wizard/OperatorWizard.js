@@ -66,19 +66,21 @@ export default class OperatorWizard extends Component {
       }
     })
       .then(response => {
-        if (!response.ok) {
-          throw Error(response.statusText);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json();
         }
-        return response.json();
+        throw Error(response.statusText);
       })
       .then(response => {
-        console.log("Success:", JSON.stringify(response));
-        this.setState({
-          deployment: {
-            deployed: true,
-            result: response
-          }
-        });
+        const deployment = {
+          deployed: true
+        };
+        if (response.result !== "success") {
+          deployment.error = response.message;
+        }
+        console.log("Applilcation deployed:", JSON.stringify(deployment));
+        this.setState({ deployment });
       })
       .catch(error => {
         console.error("Error:", error.message);
