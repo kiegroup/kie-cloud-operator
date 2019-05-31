@@ -44,7 +44,8 @@ export default class StepBuilder {
       });
       return {
         steps: steps,
-        pages: this.jsonForm.pages
+        pages: this.jsonForm.pages,
+        maxSteps: pageId
       };
     });
   }

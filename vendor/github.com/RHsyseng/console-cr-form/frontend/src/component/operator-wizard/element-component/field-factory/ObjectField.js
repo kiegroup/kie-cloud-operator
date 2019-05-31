@@ -262,7 +262,7 @@ export class ObjectField {
               this.props.jsonSchema,
               this.props.page
             );
-            elements.push(oneComponent.getJsx());
+            elements.push(oneComponent);
           } else {
             console.log(
               "parentId" +
@@ -279,7 +279,7 @@ export class ObjectField {
               this.props.fieldNumber,
               this.props.parentid
             );
-            elements.push(oneComponent.getJsx());
+            elements.push(oneComponent);
           }
           //assigning each fiels for object with same pos and increment the pos when all fields are done
         }

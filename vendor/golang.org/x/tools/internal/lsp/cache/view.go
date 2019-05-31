@@ -159,6 +159,13 @@ func (v *view) shutdown(context.Context) {
 	}
 }
 
+// Ignore checks if the given URI is a URI we ignore.
+// As of right now, we only ignore files in the "builtin" package.
+func (v *view) Ignore(uri span.URI) bool {
+	_, ok := v.ignoredURIs[uri]
+	return ok
+}
+
 func (v *view) BackgroundContext() context.Context {
 	v.mu.Lock()
 	defer v.mu.Unlock()
@@ -207,7 +214,7 @@ func (v *view) SetContent(ctx context.Context, uri span.URI, content []byte) err
 	v.backgroundCtx, v.cancel = context.WithCancel(v.baseCtx)
 
 	v.contentChanges[uri] = func() {
-		v.applyContentChange(uri, content)
+		v.session.SetOverlay(uri, content)
 	}
 
 	return nil
@@ -232,19 +239,7 @@ func (v *view) applyContentChanges(ctx context.Context) error {
 	return nil
 }
 
-// setContent applies a content update for a given file. It assumes that the
-// caller is holding the view's mutex.
-func (v *view) applyContentChange(uri span.URI, content []byte) {
-	f, err := v.getFile(uri)
-	if err != nil {
-		return
-	}
-	f.setContent(content)
-}
-
-func (f *goFile) setContent(content []byte) {
-	f.content = content
-
+func (f *goFile) invalidate() {
 	// TODO(rstambler): Should we recompute these here?
 	f.ast = nil
 	f.token = nil
@@ -253,18 +248,7 @@ func (f *goFile) setContent(content []byte) {
 	if f.pkg != nil {
 		f.view.remove(f.pkg.pkgPath, map[string]struct{}{})
 	}
-
-	switch {
-	case f.active && content == nil:
-		// The file was active, so we need to forget its content.
-		f.active = false
-		f.view.session.setOverlay(f.URI(), nil)
-		f.content = nil
-	case content != nil:
-		// This is an active overlay, so we update the map.
-		f.active = true
-		f.view.session.setOverlay(f.URI(), f.content)
-	}
+	f.fc = nil
 }
 
 // remove invalidates a package and its reverse dependencies in the view's
@@ -329,7 +313,7 @@ func (v *view) getFile(uri span.URI) (viewFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	var f *goFile
+	var f viewFile
 	switch ext := filepath.Ext(filename); ext {
 	case ".go":
 		f = &goFile{
@@ -338,21 +322,28 @@ func (v *view) getFile(uri span.URI) (viewFile, error) {
 				fname: filename,
 			},
 		}
+		v.session.filesWatchMap.Watch(uri, func() {
+			f.(*goFile).invalidate()
+		})
 	case ".mod":
-		return nil, fmt.Errorf("mod files are not yet supported")
+		f = &modFile{
+			fileBase: fileBase{
+				view:  v,
+				fname: filename,
+			},
+		}
+	case ".sum":
+		f = &sumFile{
+			fileBase: fileBase{
+				view:  v,
+				fname: filename,
+			},
+		}
 	default:
 		return nil, fmt.Errorf("unsupported file extension: %s", ext)
 	}
-
 	v.mapFile(uri, f)
 	return f, nil
-}
-
-// Ignore checks if the given URI is a URI we ignore.
-// As of right now, we only ignore files in the "builtin" package.
-func (v *view) Ignore(uri span.URI) bool {
-	_, ok := v.ignoredURIs[uri]
-	return ok
 }
 
 // findFile checks the cache for any file matching the given uri.

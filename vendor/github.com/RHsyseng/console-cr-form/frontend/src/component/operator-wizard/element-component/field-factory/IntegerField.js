@@ -1,23 +1,37 @@
-import React from "react";
+import React, { Component } from "react";
 import { FormGroup, TextInput } from "@patternfly/react-core";
 
-export class IntegerField {
+export class IntegerField extends Component {
   constructor(props) {
+    super(props);
+
+    this.state = {
+      value: this.props.fieldDef.value,
+      isValid: true,
+      errMsg: this.props.fieldDef.errMsg
+    };
     this.props = props;
-    this.errMsg = "";
-    this.isValid = true;
+
+    this.handleTextInputChange = value => {
+      this.isValidField(value);
+      this.props.fieldDef.value = value;
+      this.props.fieldDef.errMsg = this.state.errMsg;
+    };
   }
 
   getJsx() {
-    this.isValidField();
+    let { value } = this.state;
+
+    let { isValid, errMsg } = this.validate(value);
+
     return (
       <FormGroup
         label={this.props.fieldDef.label}
         fieldId={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
-        helperTextInvalid={this.errMsg}
+        helperTextInvalid={errMsg}
         helperText={this.props.fieldDef.description}
-        isValid={this.isValid}
+        isValid={isValid}
         isRequired={this.props.fieldDef.required}
       >
         <TextInput
@@ -26,46 +40,43 @@ export class IntegerField {
           key={this.props.ids.fieldKey}
           aria-describedby="horizontal-form-name-helper"
           name={this.props.fieldDef.label}
-          onChange={this.onChangeText}
+          onChange={this.handleTextInputChange}
           jsonpath={this.props.fieldDef.jsonPath}
-          defaultValue={this.props.fieldDef.value}
+          defaultValue={value}
           {...this.props.attrs}
         />
       </FormGroup>
     );
   }
-  onChangeText = value => {
-    if (value !== undefined && value !== null) {
-      this.props.fieldDef.value = value;
-      this.isValidField();
-    }
-  };
-
-  isValidField() {
-    const value = this.props.fieldDef.value;
-
-    if (
-      this.props.fieldDef.required === true &&
-      (value === undefined || value === "")
-    ) {
-      this.errMsg = this.props.fieldDef.label + " is required.";
-
-      this.isValid = false;
+  isValidField(value) {
+    let { isValid, errMsg } = this.validate(value);
+    this.setState({ value, isValid, errMsg });
+  }
+  validate(value) {
+    let isValid = true;
+    let errMsg = "";
+    if (this.props.fieldDef.required === true && value === "") {
+      errMsg = this.props.fieldDef.label + " is required.";
+      isValid = false;
     } else if (value !== undefined && value !== "") {
       let isInteger = /^\d+$/.test(value);
       if (!isInteger) {
-        this.errMsg = this.props.fieldDef.label + " is an integer.";
-
-        this.isValid = false;
+        errMsg = this.props.fieldDef.label + " is an integer.";
+        isValid = false;
       } else {
         this.props.fieldDef.value = parseInt(value);
-        this.errMsg = "";
-        this.isValid = true;
+        errMsg = "";
+        isValid = true;
       }
     } else {
-      this.errMsg = "";
-      this.isValid = true;
+      errMsg = "";
+      isValid = true;
     }
-    this.props.fieldDef.errMsg = this.errMsg;
+    this.props.fieldDef.errMsg = errMsg;
+    return { isValid, errMsg };
+  }
+
+  render() {
+    return this.getJsx();
   }
 }
