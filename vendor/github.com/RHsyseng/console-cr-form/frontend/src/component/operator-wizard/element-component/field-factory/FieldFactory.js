@@ -1,3 +1,4 @@
+import React from "react";
 import { DropdownField } from "./DropdownField";
 import { TextAreaField } from "./TextAreaField";
 import { RadioButtonField } from "./RadioButtonField";
@@ -43,8 +44,9 @@ export default class FieldFactory {
     parentid,
     grandParentId
   ) {
-    var fieldReference;
-    var props = {
+    let fieldReference;
+    let elementJsx;
+    let props = {
       page: page,
       fieldDef: fieldDef,
       fieldNumber: fieldNumber,
@@ -60,52 +62,146 @@ export default class FieldFactory {
       parentid: parentid,
       grandParentId: grandParentId
     };
-    //TODO: rethink when we have the time
+
     switch (fieldDef.type) {
       case FIELD_TYPE.dropdown:
-        fieldReference = new DropdownField(props);
+        elementJsx = (
+          <DropdownField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.textArea:
-        fieldReference = new TextAreaField(props);
+        elementJsx = (
+          <TextAreaField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.radioButton:
         fieldReference = new RadioButtonField(props);
+        elementJsx = fieldReference.getJsx();
         break;
       case FIELD_TYPE.email:
-        fieldReference = new EmailField(props);
+        elementJsx = (
+          <EmailField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.url:
-        fieldReference = new UrlField(props);
+        elementJsx = (
+          <UrlField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.password:
-        fieldReference = new PasswordField(props);
+        elementJsx = (
+          <PasswordField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.checkbox:
-        fieldReference = new CheckboxField(props);
+        elementJsx = (
+          <CheckboxField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       case FIELD_TYPE.section:
         fieldReference = new SectionField(props);
+        elementJsx = fieldReference.getJsx();
         break;
       case FIELD_TYPE.sectionRadio:
         fieldReference = new SectionRadioField(props);
+        elementJsx = fieldReference.getJsx();
         break;
       case FIELD_TYPE.object:
         if (props.parentid === undefined) {
           props.parentid = -1;
         }
         fieldReference = new ObjectField(props);
+        elementJsx = fieldReference.getJsx();
         break;
       case FIELD_TYPE.fieldGroup:
         fieldReference = new FieldGroupField(props);
+        elementJsx = fieldReference.getJsx();
         break;
       case FIELD_TYPE.integer:
-        fieldReference = new IntegerField(props);
+        elementJsx = (
+          <IntegerField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
         break;
       default:
-        fieldReference = new DefaultTextField(props);
+        elementJsx = (
+          <DefaultTextField
+            props={props}
+            key={fieldNumber}
+            fieldNumber={fieldNumber}
+            fieldDef={fieldDef}
+            pageNumber={pageNumber}
+            jsonSchema={jsonSchema}
+            ids={props.ids}
+            parentid={parentid}
+          />
+        );
+        break;
     }
 
-    return fieldReference;
+    return elementJsx;
   }
 
   /**

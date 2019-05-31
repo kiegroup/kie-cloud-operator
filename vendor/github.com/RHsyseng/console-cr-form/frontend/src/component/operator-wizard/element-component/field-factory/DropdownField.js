@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component } from "react";
 
 import {
   FormGroup,
@@ -9,19 +9,21 @@ import {
 import FieldFactory from "./FieldFactory";
 import JSONPATH from "jsonpath";
 
-export class DropdownField {
+export class DropdownField extends Component {
   constructor(props) {
-    this.props = props;
+    super(props);
     if (
       props.fieldDef.value === undefined &&
       props.fieldDef.default !== undefined
     ) {
       this.props.fieldDef.value = props.fieldDef.default;
     }
-    this.errMsg = "";
-    this.isValid = true;
-    this.addChildren = this.addChildren.bind(this);
-    this.reBuildChildren = this.reBuildChildren.bind(this);
+    this.state = {
+      value: this.props.fieldDef.value,
+      isValid: true,
+      errMsg: this.props.fieldDef.errMsg
+    };
+    this.props = props;
   }
 
   getJsonSchemaPathForJsonPath(jsonPath) {
@@ -34,6 +36,7 @@ export class DropdownField {
   }
 
   getJsx() {
+    let { value, isValid, errMsg } = this.state;
     let options = [{ value: "", label: "Select here" }];
 
     if (this.props.fieldDef.options) {
@@ -59,13 +62,13 @@ export class DropdownField {
       (this.props.fieldDef.value === undefined ||
         this.props.fieldDef.value === "")
     ) {
-      this.errMsg = this.props.fieldDef.label + " is required.";
-      this.isValid = false;
+      errMsg = this.props.fieldDef.label + " is required.";
+      isValid = false;
     } else {
-      this.errMsg = "";
-      this.isValid = true;
+      errMsg = "";
+      isValid = true;
     }
-    this.props.fieldDef.errMsg = this.errMsg;
+    this.props.fieldDef.errMsg = errMsg;
 
     var jsxArray = [];
     jsxArray.push(
@@ -73,10 +76,10 @@ export class DropdownField {
         label={this.props.fieldDef.label}
         id={this.props.ids.fieldGroupId}
         key={this.props.ids.fieldGroupKey}
-        helperTextInvalid={this.errMsg}
+        helperTextInvalid={errMsg}
         helperText={this.props.fieldDef.description}
         fieldId={this.props.ids.fieldId}
-        isValid={this.isValid}
+        isValid={isValid}
         isRequired={this.props.fieldDef.required}
       >
         <FormSelect
@@ -85,7 +88,7 @@ export class DropdownField {
           name={this.props.fieldDef.label}
           jsonpath={this.props.fieldDef.jsonPath}
           onChange={this.onSelect}
-          value={this.props.fieldDef.value}
+          value={value}
         >
           {options.map((option, index) => (
             <FormSelectOption
@@ -129,7 +132,7 @@ export class DropdownField {
             this.props.jsonSchema,
             this.props.page
           );
-          elements.push(oneComponent.getJsx());
+          elements.push(oneComponent);
         } else {
           if (subfield.label === this.props.fieldDef.value) {
             //when the drop down value matches field group
@@ -143,7 +146,7 @@ export class DropdownField {
             this.props.page,
             this.props.fieldNumber
           );
-          elements.push(oneComponent.getJsx());
+          elements.push(oneComponent);
         }
       });
     }
@@ -152,20 +155,11 @@ export class DropdownField {
 
   onSelect = (_, event) => {
     let value = event.target.value;
-    this.props.fieldDef.value = value;
-    this.props.fieldDef.visible = true; //if not changed visible was remains as false or undefined and validations of fields ignored
-    if (this.props.fieldDef.required === true && value === "") {
-      this.errMsg = this.props.fieldDef.label + " is required.";
-      this.isValid = false;
-    } else {
-      this.errMsg = "";
-      this.isValid = true;
-    }
-    this.props.fieldDef.errMsg = this.errMsg;
-    //rebuild children based on drop down selection
+
+    this.isValidField(value);
     this.reBuildChildren(value);
 
-    this.props.page.loadPageChildren();
+    this.props.props.page.loadPageChildren();
   };
 
   reBuildChildren(value) {
@@ -193,5 +187,24 @@ export class DropdownField {
       console.debug("Failed to find a value from schema", error);
     }
     return [];
+  }
+
+  isValidField(value) {
+    let isValid = true;
+    let errMsg = "";
+    this.props.fieldDef.value = value;
+    this.props.fieldDef.visible = true; //if not changed visible was remains as false or undefined and validations of fields ignored
+    if (this.props.fieldDef.required === true && value === "") {
+      errMsg = this.props.fieldDef.label + " is required.";
+      isValid = false;
+    } else {
+      errMsg = "";
+      isValid = true;
+    }
+    this.props.fieldDef.errMsg = this.errMsg;
+    this.setState({ value, isValid, errMsg });
+  }
+  render() {
+    return this.getJsx();
   }
 }

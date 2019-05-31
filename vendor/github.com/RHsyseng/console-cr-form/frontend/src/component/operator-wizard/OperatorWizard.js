@@ -9,6 +9,7 @@ import OperatorWizardFooter from "./OperatorWizardFooter";
 import { BACKEND_URL } from "../common/GuiConstants";
 import { loadJsonSpec } from "./FormJsonLoader";
 import StepBuilder from "./StepBuilder";
+import ReviewPage from "./page-component/ReviewPage";
 
 export default class OperatorWizard extends Component {
   constructor(props) {
@@ -17,14 +18,16 @@ export default class OperatorWizard extends Component {
     this.subtitle = "RHPAM installer";
     this.stepBuilder = new StepBuilder();
     this.state = {
-      isOpen: true,
       steps: this.stepBuilder.buildPlaceholderStep(),
       isFormValid: false,
+      validationError: "",
       currentStep: 1,
       maxSteps: 1,
-      isModalOpen: false,
-      isDeployModalOpen: false,
-      isErrorModalOpen: false
+      isEditYamlModalOpen: false,
+      isErrorModalOpen: false,
+      deployment: {
+        deployed: false
+      }
     };
     document.title = this.title;
 
@@ -38,22 +41,10 @@ export default class OperatorWizard extends Component {
       this.setState({
         steps: result.steps,
         pages: result.pages,
-        maxSteps: this.calculateSteps(result.steps)
+        maxSteps: result.maxSteps
       });
     });
   }
-
-  calculateSteps = pages => {
-    let steps = 0;
-    pages.forEach(p => {
-      if (p.steps !== undefined) {
-        steps += this.calculateSteps(p.steps);
-      } else {
-        steps++;
-      }
-    });
-    return steps;
-  };
 
   onPageChange = ({ id }) => {
     this.setState({
@@ -63,12 +54,9 @@ export default class OperatorWizard extends Component {
 
   onDeploy = () => {
     if (!this.validateForm()) {
-      console.log("The form has validation errors");
-      this.handleErrorModalToggle();
       return;
     }
     const result = this.createResultYaml();
-    this.handleDeployModalToggle();
     console.log(result);
     fetch(BACKEND_URL, {
       method: "POST",
@@ -77,36 +65,45 @@ export default class OperatorWizard extends Component {
         "Content-Type": "application/yaml"
       }
     })
-      .then(res => res.json())
-      .then(response => console.log("Success:", JSON.stringify(response)))
-      .catch(error => console.error("Error:", error));
+      .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json();
+        }
+        throw Error(response.statusText);
+      })
+      .then(response => {
+        const deployment = {
+          deployed: true
+        };
+        if (response.result !== "success") {
+          deployment.error = response.message;
+        }
+        console.log("Applilcation deployed:", JSON.stringify(deployment));
+        this.setState({ deployment });
+      })
+      .catch(error => {
+        console.error("Error:", error.message);
+        this.setState({
+          deployment: {
+            deployed: true,
+            error: error.message
+          }
+        });
+      });
   };
 
   onEditYaml = () => {
     if (!this.validateForm()) {
-      console.log("The form has validation errors");
-      this.handleErrorModalToggle();
       return;
     }
     this.createResultYaml();
-    this.handleModalToggle();
+    this.handleEditYamlModalToggle();
   };
 
-  handleModalToggle = () => {
-    this.setState(({ isModalOpen }) => ({
-      isModalOpen: !isModalOpen
-    }));
-  };
-
-  handleErrorModalToggle = () => {
-    this.setState(({ isErrorModalOpen }) => ({
-      isErrorModalOpen: !isErrorModalOpen
-    }));
-  };
-
-  handleDeployModalToggle = () => {
-    this.setState(({ isDeployModalOpen }) => ({
-      isDeployModalOpen: !isDeployModalOpen
+  handleEditYamlModalToggle = () => {
+    this.setState(({ isEditYamlModalOpen }) => ({
+      isEditYamlModalOpen: !isEditYamlModalOpen
     }));
   };
 
@@ -116,48 +113,86 @@ export default class OperatorWizard extends Component {
     });
   };
 
-  //TODO: Validation should only be done onFieldUpdated and only for this field
-  validateForm() {
-    let isValid = true;
+  validateForm = () => {
+    let result = { isValid: true, errMsg: "" };
+    if (this.state.pages === undefined) {
+      return false;
+    }
     this.state.pages.forEach(page => {
+      if (!result.isValid) {
+        return;
+      }
       if (page.subPages !== undefined) {
         page.subPages.forEach(subPage => {
-          if (!this.validateFields(subPage.fields)) {
-            isValid = false;
+          if (!result.isValid) {
+            return;
           }
+          result = this.validateFields(subPage.fields);
         });
+        if (!result.isValid) {
+          return;
+        }
       }
-      if (isValid) {
-        isValid = this.validateFields(page.fields);
+
+      result = this.validateFields(page.fields);
+      if (!result.isValid) {
+        return;
       }
     });
     this.setState({
-      isFormValid: isValid
+      isFormValid: result.isValid,
+      validationError: result.errMsg,
+      isErrorModalOpen: !result.isValid
     });
-    return isValid;
-  }
+    return result.isValid;
+  };
 
   validateFields(fields) {
-    let isValid = true;
+    let result = { isValid: true, errMsg: "" };
+
     if (fields !== undefined) {
       fields.forEach(field => {
-        if (
-          (field.type === "object" ||
-            ((field.type === "dropDown" || field.type === "fieldGroup") &&
-              field.fields !== undefined &&
-              (field.visible !== undefined && field.visible !== false))) &&
-          !this.validateFields(field.fields)
-        ) {
-          isValid = false;
+        if (!result.isValid) {
           return;
         }
-        if (field.errMsg !== undefined && field.errMsg !== "") {
-          console.log(`Field ${field.label} is not valid: ${field.errMsg}`);
-          isValid = false;
+        if (field.type === "object" && field.min > 0) {
+          result = this.validateFields(field.fields);
+          if (!result.isValid) {
+            return;
+          }
+        } else if (
+          (field.type === "dropDown" || field.type === "fieldGroup") &&
+          field.fields !== undefined
+        ) {
+          if (field.visible !== undefined && field.visible !== false) {
+            result = this.validateFields(field.fields);
+            if (!result.isValid) {
+              return;
+            }
+          }
+        } else {
+          if (field.errMsg !== undefined && field.errMsg !== "") {
+            console.log(`Field ${field.label} is not valid: ${field.errMsg}`);
+            result = { isValid: false, errMsg: field.errMsg };
+          } else {
+            if (
+              field.required !== undefined &&
+              field.required &&
+              (field.value === undefined || field.value === "")
+            ) {
+              console.log(
+                `Field ${field.label} is required and is not valid: ${
+                  field.errMsg
+                }`
+              );
+              let errMsg = field.label + " is required.";
+              result = { isValid: false, errMsg: errMsg };
+            }
+          }
         }
       });
     }
-    return isValid;
+    return result;
   }
 
   createYamlFromPages() {
@@ -285,19 +320,41 @@ export default class OperatorWizard extends Component {
   }
 
   render() {
+    if (this.state.pages) {
+      const reviewPageTitle = "Confirmation";
+      const reviewStep = {
+        id: this.state.maxSteps,
+        name: reviewPageTitle,
+        // canJumpTo: this.state.isFormValid,
+        component: (
+          <ReviewPage
+            title={reviewPageTitle}
+            deployment={this.state.deployment}
+          />
+        )
+      };
+      const steps = this.state.steps;
+      if (steps[steps.length - 1].id === reviewStep.id) {
+        steps[steps.length - 1] = reviewStep;
+      } else if (steps.length === this.state.pages.length) {
+        steps.push(reviewStep);
+      }
+    }
+
     const operatorFooter = (
       <OperatorWizardFooter
-        // isFormValid={this.state.isFormValid}
-        isFormValid={true} //TODO: Replace by line above when validation works properly
+        validate={this.validateForm}
+        isFormValid={this.state.isFormValid}
         maxSteps={this.state.maxSteps}
         onDeploy={this.onDeploy}
         onEditYaml={this.onEditYaml}
         onNext={this.onPageChange}
         onBack={this.onPageChange}
         onGoToStep={this.onPageChange}
+        isFinished={this.state.deployment.deployed}
       />
     );
-    return (
+    this.wizard = (
       <React.Fragment>
         <Wizard
           isOpen={true}
@@ -311,8 +368,8 @@ export default class OperatorWizard extends Component {
         />
         <Modal
           title=" "
-          isOpen={this.state.isModalOpen}
-          onClose={this.handleModalToggle}
+          isOpen={this.state.isEditYamlModalOpen}
+          onClose={this.handleEditYamlModalToggle}
           actions={[
             <CopyToClipboard
               key="yaml_copy"
@@ -325,7 +382,7 @@ export default class OperatorWizard extends Component {
             <Button
               key="cancel"
               variant="secondary"
-              onClick={this.handleModalToggle}
+              onClick={this.handleEditYamlModalToggle}
             >
               Cancel
             </Button>
@@ -343,22 +400,14 @@ export default class OperatorWizard extends Component {
 
         <Modal
           isSmall
-          title=""
-          isOpen={this.state.isDeployModalOpen}
-          onClose={this.handleDeployModalToggle}
-        >
-          <Alert variant="info" title="Deployment request was created." />
-        </Modal>
-
-        <Modal
-          isSmall
-          title=""
+          title="Review the form"
           isOpen={this.state.isErrorModalOpen}
-          onClose={this.handleErrorModalToggle}
+          onClose={() => this.setState({ isErrorModalOpen: false })}
         >
-          <Alert variant="danger" title="Validation errors!" />
+          <Alert variant="danger" title={this.state.validationError} />
         </Modal>
       </React.Fragment>
     );
+    return this.wizard;
   }
 }

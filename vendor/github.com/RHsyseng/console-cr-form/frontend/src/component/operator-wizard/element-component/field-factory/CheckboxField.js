@@ -1,9 +1,10 @@
-import React from "react";
+import React, { Component } from "react";
 
 import { FormGroup, Checkbox } from "@patternfly/react-core";
 
-export class CheckboxField {
+export class CheckboxField extends Component {
   constructor(props) {
+    super(props);
     this.props = props;
   }
 
@@ -36,4 +37,7 @@ export class CheckboxField {
     this.props.fieldDef.checked = value;
     //  this.setParentState({ [event.target.name]: value });
   };
+  render() {
+    return this.getJsx();
+  }
 }

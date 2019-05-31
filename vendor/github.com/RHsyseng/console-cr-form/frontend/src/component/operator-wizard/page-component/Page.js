@@ -96,12 +96,12 @@ export default class Page extends Component {
 
   render() {
     return (
-      <Form id={"form-page-" + this.props.pageNumber}>
-        <Title headingLevel="h1" size="3xl">
+      <Form key={"page" + this.props.pageNumber}>
+        <Title headingLevel="h1" size="2xl">
           {this.props.pageDef.label}
         </Title>
         {this.state.elements.map(element => {
-          return element.getJsx();
+          return element;
         })}
       </Form>
     );

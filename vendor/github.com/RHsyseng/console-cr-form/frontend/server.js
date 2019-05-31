@@ -19,6 +19,7 @@ app.use(
   })
 );
 
+// eslint-disable-next-line no-undef
 app.use(express.static(__dirname));
 
 const server = app.listen(8080, function() {
@@ -27,32 +28,31 @@ const server = app.listen(8080, function() {
   console.log("Test server app listening at http://%s:%s", host, port);
 });
 
-app.get('/api/form', (req, res) => {
+app.get("/api/form", (req, res) => {
   return res.send(readFile("full-form.json"));
 });
 
-app.get('/api/schema', (req, res) => {
+app.get("/api/schema", (req, res) => {
   return res.send(readFile("full-schema.json"));
 });
 
-app.get('/api/spec', (req, res) => {
+app.get("/api/spec", (req, res) => {
   return res.send({
     kind: "KieApp",
     apiVersion: "web-served.app.kiegroup.org/v1"
   });
 });
 
-app.post('/api', (req, res) => {
+app.post("/api", (req, res) => {
   let body = "";
   req.on("data", chunk => {
     body += chunk.toString();
   });
   req.on("end", () => {
     console.log("Hey I deployed this stuff: ", body);
-    res.end("{\"Result\": \"Success\"}");
+    res.end('{"result": "success"}');
   });
 });
-
 
 function readFile(fileName) {
   return JSON.parse(fs.readFileSync("../test/examples/" + fileName));
