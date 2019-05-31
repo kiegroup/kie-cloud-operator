@@ -49,14 +49,14 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:0e66e9a9b255b70bfeb13ae21d949b1ff720f33734281cde886e0233e0fc3fab"
+  digest = "1:0ae6d5e0eae5c081c4a656a4da2007947f335d1efd785bbd91c30b40cb8bf43e"
   name = "github.com/RHsyseng/console-cr-form"
   packages = [
     "pkg/web",
     "pkg/web/packrd",
   ]
   pruneopts = ""
-  revision = "02592634daa9f4143562f9703efe538f8f766cca"
+  revision = "123881c116b0f9cdabce6dd092587205bb6b8193"
 
 [[projects]]
   digest = "1:f2aaf5dbb9e7af6b32ca675324597d2193ce6f7840d044bb97a726401fc7ec68"

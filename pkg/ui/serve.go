@@ -4,13 +4,14 @@ package ui
 
 import (
 	"encoding/json"
+	"io/ioutil"
+
 	"github.com/RHsyseng/console-cr-form/pkg/web"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
 	"github.com/gobuffalo/packr/v2"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
-	"io/ioutil"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -30,23 +31,23 @@ func Listen() {
 	}
 }
 
-func apply(cr string) {
+func apply(cr string) error {
 	log.Debugf("Will deploy KieApp based on yaml %v", cr)
 	kieApp := &v1.KieApp{}
 	err := yaml.Unmarshal([]byte(cr), kieApp)
 	if err != nil {
 		log.Errorf("Failed to parse CR based on %s, error is %v", cr, err)
-		return
+		return err
 	}
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Error("Failed to get in-cluster config", err)
-		return
+		return err
 	}
 	err = v1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Error("Failed to add scheme", err)
-		return
+		return err
 	}
 	config.ContentConfig.GroupVersion = &v1.SchemeGroupVersion
 	config.APIPath = "/apis"
@@ -55,15 +56,16 @@ func apply(cr string) {
 	restClient, err := rest.UnversionedRESTClientFor(config)
 	if err != nil {
 		log.Error("Failed to get REST client", err)
-		return
+		return err
 	}
 	kieApp.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("KieApp"))
 	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do().Into(kieApp)
 	if err != nil {
 		log.Error("Failed to create KIE app", err)
-		return
+		return err
 	}
 	log.Infof("Created KIE application named %s", kieApp.Name)
+	return nil
 }
 
 func getCurrentNamespace() string {

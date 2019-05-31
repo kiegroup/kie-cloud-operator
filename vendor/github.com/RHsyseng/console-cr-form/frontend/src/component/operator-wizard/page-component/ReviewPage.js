@@ -9,21 +9,27 @@ import {
   EmptyState,
   EmptyStateVariant,
   EmptyStateIcon,
-  EmptyStateBody
+  EmptyStateBody,
+  Expandable
 } from "@patternfly/react-core";
 import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 
 export default class ReviewPage extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      showErrorMsg: false
+    };
+    this.onShowErrorMsg = () => {
+      this.setState({
+        showErrorMsg: !this.state.showErrorMsg
+      });
+    };
   }
 
   render() {
     if (this.props.deployment.deployed === true) {
-      if (
-        this.props.deployment.result !== undefined &&
-        this.props.deployment.result.Result === "Success"
-      ) {
+      if (this.props.deployment.error === undefined) {
         return (
           <EmptyState variant={EmptyStateVariant.full}>
             <EmptyStateIcon icon={CheckCircleIcon} />
@@ -36,13 +42,24 @@ export default class ReviewPage extends React.Component {
           </EmptyState>
         );
       } else {
+        const { showErrorMsg } = this.state;
         return (
           <EmptyState variant={EmptyStateVariant.full}>
             <EmptyStateIcon icon={ErrorCircleOIcon} />
             <Title headingLevel="h5" size="lg">
               Unable to deploy the application
             </Title>
-            <EmptyStateBody>{this.props.deployment.error}</EmptyStateBody>
+            <Expandable
+              toggleText={showErrorMsg ? "Hide details" : "Show details"}
+              onToggle={this.onShowErrorMsg}
+              isExpanded={showErrorMsg}
+            >
+              <TextContent>
+                <Text component={TextVariants.small}>
+                  {this.props.deployment.error}
+                </Text>
+              </TextContent>
+            </Expandable>
           </EmptyState>
         );
       }
