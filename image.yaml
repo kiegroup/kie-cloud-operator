@@ -30,6 +30,9 @@ modules:
 osbs:
   configuration:
     container:
+      compose:
+          include_unpublished_pulp_repos: true
+          pulp_repos: true
       platforms:
         only:
           - x86_64

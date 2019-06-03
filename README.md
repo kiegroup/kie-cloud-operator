@@ -150,7 +150,7 @@ spec:
 
 ## Build rhel-based image for release
 
-Requires `cekit` v3 and `rhpkg` -
+Requires `cekit` v3.1+ and `rhpkg` -
 
 ```bash
 # local build
