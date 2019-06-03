@@ -198,7 +198,7 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
 }
 
-func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
+func TestCreateTagVersionImageStreams(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -216,13 +216,13 @@ func TestCreateRhdmTechPreviewImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.DatagridImage, constants.DatagridImageTag), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.DatagridImage, constants.DatagridImageTag), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7-tech-preview/rhdm%s-decisioncentral-indexing-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.DatagridImage, constants.DatagridImageTag), isTag.Tag.From.Name)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
@@ -243,13 +243,14 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-indexing-openshift", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.DatagridImage), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.DatagridImage), metav1.GetOptions{})
 	assert.Nil(t, err)
+	fmt.Print(isTag)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7-tech-preview/rhdm%s-decisioncentral-indexing-openshift:latest", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.DatagridImage), isTag.Tag.From.Name)
 }
 
 func TestStatusDeploymentsProgression(t *testing.T) {

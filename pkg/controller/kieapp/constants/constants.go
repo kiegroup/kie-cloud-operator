@@ -20,6 +20,14 @@ const (
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
 	ImageStreamTag = "1.0"
+	// AMQ Broker Image Name
+	BrokerImage = "amq-broker-73-openshift"
+	// AMQ Broker Image Tag
+	BrokerImageTag = "7.3"
+	// JBoss Datagrid Image Name
+	DatagridImage = "datagrid73-openshift"
+	// JBoss Datagrid  Image Tag
+	DatagridImageTag = "1.1"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
 	// KieServerCMLabel the label to modify when replicas is set to 0
@@ -102,6 +110,10 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 var TemplateConstants = v1.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
+	BrokerImage:          BrokerImage,
+	BrokerImageTag:       BrokerImageTag,
+	DatagridImage:        DatagridImage,
+	DatagridImageTag:     DatagridImageTag,
 }
 
 var DebugTrue = corev1.EnvVar{
