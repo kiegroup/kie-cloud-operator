@@ -29,7 +29,7 @@ To install this operator on OpenShift 4 for end-to-end testing, make sure you ha
 Push the operator bundle to your quay application repository as follows:
 
 ```bash
-operator-courier push deploy/catalog_resources/courier/bundle_dir/1.1.0 kiegroup kiecloud-operator 1.1.0 "basic XXXXXXXXX"
+operator-courier push deploy/catalog_resources/courier/bundle_dir/1.1.1 kiegroup kiecloud-operator 1.1.1 "basic XXXXXXXXX"
 # operator-courier push deploy/catalog_resources/courier/bundle_dir/1.0.1 kiegroup kiecloud-operator 1.0.1 "basic XXXXXXXXX"
 ```
 
