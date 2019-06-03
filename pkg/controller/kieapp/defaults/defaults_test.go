@@ -992,7 +992,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
 	assert.Equal(t, "test-rhpamcentr-http", env.Console.Routes[1].Name)
 
-	assert.Equal(t, "test-kieserver", env.Servers[0].Routes[0].Name)
+	assert.Equal(t, "secure-test-kieserver", env.Servers[0].Routes[0].Name)
 	assert.Equal(t, "test-kieserver-http", env.Servers[0].Routes[1].Name)
 
 	// Env vars overrides
@@ -1528,12 +1528,12 @@ func TestExampleServerCommonConfig(t *testing.T) {
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Services[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-ping", env.Servers[len(env.Servers)-2].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "secure-server-config-kieserver2", env.Servers[len(env.Servers)-2].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-http", env.Servers[len(env.Servers)-2].Routes[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Services[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2-ping", env.Servers[len(env.Servers)-1].Services[1].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Routes[0].Name, "Unexpected name for object")
+	assert.Equal(t, "secure-server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2-http", env.Servers[len(env.Servers)-1].Routes[1].Name, "Unexpected name for object")
 }
 

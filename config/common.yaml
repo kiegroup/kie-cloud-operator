@@ -515,6 +515,10 @@ servers:
                       valueFrom:
                         fieldRef:
                           fieldPath: metadata.labels['services.server.kie.org/kie-server-id']
+                    - name: KIE_SERVER_ROUTE_NAME
+                      value: "[[.KieName]]"
+                    - name: KIE_SERVER_USE_SECURE_ROUTE_NAME
+                      value: "true"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: mavenUser
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
@@ -718,7 +722,7 @@ servers:
     routes:
       - id: "[[.KieName]]-https"
         metadata:
-          name: "[[.KieName]]"
+          name: "secure-[[.KieName]]"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
