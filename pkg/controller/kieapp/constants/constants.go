@@ -19,7 +19,7 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.0"
+	ImageStreamTag = "1.1"
 	// AMQ Broker Image Name
 	BrokerImage = "amq-broker-73-openshift"
 	// AMQ Broker Image Tag
