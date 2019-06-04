@@ -46,7 +46,7 @@ func callback(yamlString string) error {
 			spec.objects.servers.build.gitSource.uri in body is required
 			spec.objects.servers.build.gitSource.reference in body is required
 			spec.objects.servers.build.kieServerContainerDeployment in body is required`
-		logrus.Errorf("Return a canned error: %v", errorMsg)
+		logrus.Debug("Return a canned error: ", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 	return nil
