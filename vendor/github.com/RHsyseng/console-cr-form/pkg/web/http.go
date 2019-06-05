@@ -87,7 +87,7 @@ func RunWebServer(config Configuration) error {
 			err := config.CallBack(request)
 			writer.Header().Set("Content-Type", "application/json")
 			if err != nil {
-				logrus.Errorf("Error processing the request %v", err)
+				logrus.Info("Unable to process the request: ", err)
 				writer.WriteHeader(http.StatusBadRequest)
 				writer.Write([]byte(fmt.Sprintf("{\"result\": \"error\", \"message\": \"%v\"}", sanitizeError(err))))
 			} else {
