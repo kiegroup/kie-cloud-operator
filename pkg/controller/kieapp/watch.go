@@ -1,7 +1,7 @@
 package kieapp
 
 import (
-	"github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -40,6 +40,12 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 
 	watchOwnedObjects := []runtime.Object{
 		&corev1.ConfigMap{},
+		&corev1.Pod{},
+		&rbacv1.RoleBinding{},
+		&rbacv1.Role{},
+		&corev1.Service{},
+		&routev1.Route{},
+		&corev1.ServiceAccount{},
 	}
 	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
