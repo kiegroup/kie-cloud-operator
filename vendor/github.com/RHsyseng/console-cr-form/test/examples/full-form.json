@@ -430,12 +430,10 @@
               "type": "integer"
             },
             {
-              "label": "Env",
+              "label": "Environment variable",
               "required": false,
               "jsonPath": "$.spec.objects.console.env",
               "type": "object",
-              "min": 0,
-              "max": 100,
               "fields": [
                 {
                   "label": "Name",
@@ -531,8 +529,6 @@
               "required": false,
               "jsonPath": "$.spec.objects.servers",
               "type": "object",
-              "min": 0,
-              "max": 100,
               "fields": [
                 {
                   "label": "Id",
@@ -570,38 +566,53 @@
                   "description": "The number of replicas for this KIE Server set."
                 },
                 {
-                  "label": "Kind",
-                  "type": "dropDown",
+                  "label": "KIE Server image",
                   "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].from.kind",
-                  "originalJsonPath": "$.spec.objects.servers[*].from.kind",
-                  "description": "Specify whether containers are to be created from an image stream, or a container image."
-                },
-                {
-                  "label": "Name",
-                  "type": "text",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].from.name",
-                  "description": "The name of the image stream or container image to use.",
-                  "default": "rhpam74-kieserver-openshift"
-                },
-                {
-                  "label": "Namespace",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.servers[*].from.namespace",
-                  "description": "Namespace where the image/stream is located.",
-                  "default": "openshift"
+                  "jsonPath": "$.spec.objects.servers[*].from",
+                  "type": "object",
+                  "max": 1,
+                  "fields": [
+                    {
+                      "label": "Kind",
+                      "type": "dropDown",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.servers[*].from.kind",
+                      "originalJsonPath": "$.spec.objects.servers[*].from.kind",
+                      "description": "Specify whether containers are to be created from an image stream, or a container image.",
+                      "default": "ImageStreamTag",
+                      "options": [
+                        { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                        { "value": "DockerImage", "label": "DockerImage" }
+                      ]
+                    },
+                    {
+                      "label": "Name",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.servers[*].from.name",
+                      "description": "The name of the image stream or container image to use.",
+                      "default": "rhpam74-kieserver-openshift"
+                    },
+                    {
+                      "label": "Namespace",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.servers[*].from.namespace",
+                      "description": "Namespace where the image/stream is located.",
+                      "default": "openshift"
+                    }
+                  ]
                 },
                 {
                   "label": "Build configuration (Source to Image)",
-                  "type": "fieldGroup",
+                  "type": "object",
+                  "max": 1,
                   "jsonPath": "$.spec.objects.servers[*].build",
                   "visible": true,
                   "fields": [
                     {
                       "label": "KIE Server container deployment",
                       "type": "text",
-                      "required": false,
+                      "required": true,
                       "jsonPath": "$.spec.objects.servers[*].build.kieServerContainerDeployment",
                       "description": "KIE packages to deploy to the KIE Server.",
                       "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT"
@@ -619,35 +630,41 @@
                       "description": "Build artifact directory."
                     },
                     {
-                      "label": "S2I Git URI",
-                      "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].build.gitSource.uri",
-                      "required": false,
-                      "description": "The URI of the Git repository to use in S2I build.",
-                      "default": "https://github.com/jboss-container-images/rhpam-7-openshift-image.git"
+                      "label": "Git Source",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*].build.gitSource",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "S2I Git URI",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].build.gitSource.uri",
+                          "required": true,
+                          "description": "The URI of the Git repository to use in S2I build.",
+                          "default": "https://github.com/jboss-container-images/rhpam-7-openshift-image.git"
+                        },
+                        {
+                          "label": "Reference",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
+                          "required": true,
+                          "description": "Branch to use in the git repository for S2I build.",
+                          "default": "master"
+                        },
+                        {
+                          "label": "Context directory",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].build.gitSource.contextDir",
+                          "description": "Context/subdirectory where the code is located, relatively to repository root, to use for S2I build.",
+                          "default": "quickstarts/library-process/library"
+                        }
+                      ]
                     },
                     {
-                      "label": "Reference",
-                      "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
-                      "required": false,
-                      "description": "Branch to use in the git repository for S2I build.",
-                      "default": "master"
-                    },
-                    {
-                      "label": "Context directory",
-                      "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].build.gitSource.contextDir",
-                      "description": "Context/subdirectory where the code is located, relatively to repository root, to use for S2I build.",
-                      "default": "quickstarts/library-process/library"
-                    },
-                    {
-                      "label": "Webhooks",
+                      "label": "Webhook",
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].build.webhooks",
                       "type": "object",
-                      "min": 0,
-                      "max": 100,
                       "fields": [
                         {
                           "label": "Type",
@@ -667,37 +684,49 @@
                       ]
                     },
                     {
-                      "label": "Kind",
-                      "type": "dropDown",
+                      "label": "Base build image",
                       "required": false,
-                      "jsonPath": "$.spec.objects.servers[*].build.from.kind",
-                      "originalJsonPath": "$.spec.objects.servers[*].build.from.kind",
-                      "description": "Specify whether build config is created from an image stream, or a container image."
-                    },
-                    {
-                      "label": "Name",
-                      "type": "text",
-                      "required": false,
-                      "jsonPath": "$.spec.objects.servers[*].build.from.name",
-                      "description": "The name of the image stream or container image to use for build config.",
-                      "default": "rhpam74-kieserver-openshift"
-                    },
-                    {
-                      "label": "Namespace",
-                      "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].build.from.namespace",
-                      "description": "Namespace where the build config image/stream is located.",
-                      "default": "openshift"
+                      "jsonPath": "$.spec.objects.servers[*].build.from",
+                      "type": "object",
+                      "max": 1,
+                      "fields": [
+                        {
+                          "label": "Kind",
+                          "type": "dropDown",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.from.kind",
+                          "originalJsonPath": "$.spec.objects.servers[*].build.from.kind",
+                          "description": "Specify whether build config is created from an image stream, or a container image.",
+                          "default": "ImageStreamTag",
+                          "options": [
+                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                            { "value": "DockerImage", "label": "DockerImage" }
+                          ]
+                        },
+                        {
+                          "label": "Name",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.from.name",
+                          "description": "The name of the image stream or container image to use for build config.",
+                          "default": "rhpam74-kieserver-openshift"
+                        },
+                        {
+                          "label": "Namespace",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].build.from.namespace",
+                          "description": "Namespace where the build config image/stream is located.",
+                          "default": "openshift"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "label": "Env",
+                  "label": "Environment variable",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].env",
                   "type": "object",
-                  "min": 0,
-                  "max": 100,
                   "fields": [
                     {
                       "label": "Name",
@@ -942,7 +971,6 @@
               "required": false,
               "jsonPath": "$.spec.objects.smartRouter",
               "type": "object",
-              "min": 0,
               "max": 1,
               "fields": [
                 {
@@ -960,12 +988,10 @@
                   "description": "The number of replicas for the console component."
                 },
                 {
-                  "label": "Env",
+                  "label": "Environment variable",
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.env",
                   "type": "object",
-                  "min": 0,
-                  "max": 100,
                   "fields": [
                     {
                       "label": "Name",

@@ -7,10 +7,7 @@ import FieldFactory from "./FieldFactory";
  */
 export class ObjectField {
   childDef = [];
-  /**
-   * How many times we've added an element chunk
-   */
-  elementAddCount = 0;
+
   /**
    * (Const) How many elements we're adding each time
    */
@@ -19,35 +16,23 @@ export class ObjectField {
    * Min fixed elements added to the component
    */
   minElements = [];
-  /**
-   * Max chunk of elements that could be added to this object.
-   */
-  maxElementsSize = 0;
-  /**
-   * Min chunk of elements that could be added to this object.
-   */
 
-  minElementsSize = 0;
   constructor(props) {
     this.props = props;
     this.addElements = this.addElements.bind(this);
     this.deleteElements = this.deleteElements.bind(this);
     if (Array.isArray(this.props.fieldDef.fields)) {
-      this.minElementsSize =
-        this.props.fieldDef.min === undefined
+      this.props.fieldDef.elementCount =
+        this.props.fieldDef.elementCount === undefined
           ? 0
-          : parseInt(this.props.fieldDef.min);
-      this.maxElementsSize =
-        this.props.fieldDef.max === undefined
-          ? 0
-          : parseInt(this.props.fieldDef.max);
+          : this.props.fieldDef.elementCount;
+      this.props.fieldDef.min =
+        this.props.fieldDef.min === undefined ? 0 : this.props.fieldDef.min;
+      this.props.fieldDef.max =
+        this.props.fieldDef.max === undefined ? -1 : this.props.fieldDef.max;
       // let's copy the reference to keep a clear reference in memory.
       this.childDef = JSON.parse(JSON.stringify(this.props.fieldDef.fields));
       this.elementChunkCount = this.props.fieldDef.fields.length;
-      this.elementAddCount =
-        this.props.fieldDef.elementAddCount === undefined
-          ? 0
-          : parseInt(this.props.fieldDef.elementAddCount);
       this.minElements = this.addMinChildren();
       this.parentFieldNumber =
         this.props.parentid === undefined ? -1 : this.props.parentid;
@@ -60,6 +45,12 @@ export class ObjectField {
     var jsxArray = [];
     var fieldJsx;
 
+    let addBtn = "Add new";
+    let deleteBtn = "Delete last";
+    if (this.props.fieldDef.max === 1) {
+      addBtn = "Set";
+      deleteBtn = "Remove";
+    }
     fieldJsx = (
       <ActionGroup
         fieldid={this.props.ids.fieldGroupId}
@@ -73,8 +64,12 @@ export class ObjectField {
           parentfieldnumber={this.parentFieldNumber}
           grandparentfieldnumber={this.grandParentFieldNumber}
           onClick={this.addObject}
+          isDisabled={
+            this.props.fieldDef.max > -1 &&
+            this.props.fieldDef.elementCount >= this.props.fieldDef.max
+          }
         >
-          Add new {this.props.fieldDef.label}
+          {addBtn} {this.props.fieldDef.label}
         </Button>
         <Button
           variant="secondary"
@@ -84,9 +79,11 @@ export class ObjectField {
           onClick={this.deleteObject}
           parentfieldnumber={this.parentFieldNumber}
           grandparentfieldnumber={this.grandParentFieldNumber}
-          disabled={this.elementAddCount == 0}
+          isDisabled={
+            this.props.fieldDef.elementCount == this.props.fieldDef.min
+          }
         >
-          Delete last {this.props.fieldDef.label}
+          {deleteBtn} {this.props.fieldDef.label}
         </Button>
       </ActionGroup>
     );
@@ -121,28 +118,29 @@ export class ObjectField {
           const parentField = fields[this.parentFieldNumber];
           this.storeObjectMap(parentField, parentCombinedFieldNumber);
 
-          if (parentField.min == 0) {
+          if (parentField.elementCount == 0) {
             parentField.fields = [];
           }
         }
       }
 
-      if (this.props.fieldDef.min == 0) {
-        //if it's the 1st time here, and field.min ==0
+      if (this.props.fieldDef.elementCount == 0) {
+        //if it's the 1st time here, and field.elementCount ==0
         //so after store it to the map, remove from render json form, then it won't be displayed
         this.props.fieldDef.fields = [];
-      } else if (this.props.fieldDef.min > 1) {
-        //for field.min == 1 do nothing, just leave the sample there as the 1st object in array which will be displayed
-        //for field.min > 1, need to insert more objects as the min value requires
+      } else if (this.props.fieldDef.elementCount > 1) {
+        //for field.elementCount == 1 do nothing, just leave the sample there as the 1st object in array which will be displayed
+        //for field.elementCount > 1, need to insert more objects as the min value requires
         //TODO:
 
         console.log("!!!!!!!! TODO: add more objects");
       }
     }
 
-    if (this.minElementsSize > 0) {
-      var groupCount = this.minElements.length / this.minElementsSize;
-      for (var index = 0; index < this.minElementsSize; index++) {
+    if (this.props.fieldDef.elementCount > 0) {
+      var groupCount =
+        this.minElements.length / this.props.fieldDef.elementCount;
+      for (var index = 0; index < this.props.fieldDef.elementCount; index++) {
         var startIndex = index * groupCount;
         var endIndex = startIndex + groupCount;
         var fieldBlock = this.minElements.slice(startIndex, endIndex);
@@ -236,9 +234,9 @@ export class ObjectField {
 
     if (this.props.fieldDef.fields) {
       this.props.fieldDef.fields.forEach((subfield, i) => {
-        if (this.props.fieldDef.min == 0) {
+        if (this.props.fieldDef.elementCount == 0) {
           //means don't generate the 1st one unless user press button
-          //console.log("field.min == 0, won't render ");
+          //console.log("field.elementCount == 0, won't render ");
         } else {
           var parentjsonpath = this.props.fieldDef.jsonPath;
           var res = "";
@@ -289,7 +287,7 @@ export class ObjectField {
   }
   addMinElements() {
     var elements = [];
-    for (let index = 0; index < this.minElementsSize; index++) {
+    for (let index = 0; index < this.props.fieldDef.elementCount; index++) {
       var children = this.createChildrenChunk();
       children.forEach(child => {
         elements.push(child.getJsx());
@@ -299,36 +297,29 @@ export class ObjectField {
   }
 
   addElements() {
-    //  this.renderComponents();
-    if (this.maxElementsSize > this.elementAddCount + this.minElementsSize) {
+    if (
+      this.props.fieldDef.max === -1 ||
+      this.props.fieldDef.max >= this.props.fieldDef.elementCount
+    ) {
       var children = this.createChildrenChunk();
       this.props.page.addElements(
-        1 + this.elementAddCount * this.elementChunkCount,
+        1 + this.props.fieldDef.elementCount * this.elementChunkCount,
         children,
         this.props.ids.fieldGroupId
       );
-      this.elementAddCount++;
-      this.setElementAddCountState(this.elementAddCount);
+      this.props.fieldDef.elementCount++;
     }
   }
 
   deleteElements() {
-    if (this.elementAddCount > 0) {
+    if (this.props.fieldDef.elementCount > 0) {
       this.props.page.deleteElements(
-        1 + this.elementChunkCount * (this.elementAddCount - 1),
+        1 + this.elementChunkCount * (this.props.fieldDef.elementCount - 1),
         this.elementChunkCount,
         this.props.ids.fieldGroupId
       );
-      this.elementAddCount--;
-      this.setElementAddCountState(this.elementAddCount);
+      this.props.fieldDef.elementCount--;
     }
-  }
-
-  /**
-   * Preserve the element add count so we can restore its state between the wizard navigation
-   */
-  setElementAddCountState(count) {
-    this.props.fieldDef.elementAddCount = count;
   }
 
   addObject = event => {
@@ -362,7 +353,7 @@ export class ObjectField {
     }
     const sampleObj = this.retrieveObjectMap(combinedFieldNumber);
 
-    if (field.min < field.max) {
+    if (field.max === -1 || field.elementCount < field.max) {
       for (var i = 0; i < sampleObj.length; i++) {
         console.log(sampleObj[i].jsonPath);
         var res = "";
@@ -372,12 +363,11 @@ export class ObjectField {
             sampleObj[i].jsonPath.length
           );
           res = field.jsonPath.concat(res);
-          //  console.log(">>>>>>>>>>>>>" + element.props.fieldDef.id);
-          sampleObj[i].jsonPath = res.replace(/\*/g, field.min);
+          sampleObj[i].jsonPath = res.replace(/\*/g, field.elementCount);
         } else {
           sampleObj[i].jsonPath = sampleObj[i].jsonPath.replace(
             /\*/g,
-            field.min
+            field.elementCount
           );
         }
       }
@@ -392,7 +382,7 @@ export class ObjectField {
       }
       fields[fieldNumber].fields.concat(sampleObj);
 
-      field.min = field.min + 1;
+      field.elementCount++;
       this.props.page.loadPageChildren();
     } else {
       console.log("addOneFieldForObj, min = max, can't add more!");
@@ -430,14 +420,14 @@ export class ObjectField {
     }
     const sampleObj = this.retrieveObjectMap(combinedFieldNumber);
 
-    if (field.min > 0) {
+    if (field.elementCount > 0) {
       for (var i = 0; i < sampleObj.length; i++) {
         field.fields.pop();
         let poppedFieldNumber = sampleObj.length - i - 1;
         this.removeObjectMapPrefix(fieldNumber, poppedFieldNumber);
       }
 
-      field.min = field.min - 1;
+      field.elementCount--;
       this.props.page.loadPageChildren();
     } else {
       console.log("deleteOneFieldForObj, min = 0, can't delete more!");
