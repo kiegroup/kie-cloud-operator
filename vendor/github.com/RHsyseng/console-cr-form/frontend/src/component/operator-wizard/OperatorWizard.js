@@ -63,7 +63,8 @@ export default class OperatorWizard extends Component {
       body: JSON.stringify(result),
       headers: {
         "Content-Type": "application/yaml"
-      }
+      },
+      credentials: "same-origin"
     })
       .then(response => {
         const contentType = response.headers.get("content-type");
@@ -155,7 +156,7 @@ export default class OperatorWizard extends Component {
         if (!result.isValid) {
           return;
         }
-        if (field.type === "object" && field.min > 0) {
+        if (field.type === "object" && field.elementCount > 0) {
           result = this.validateFields(field.fields);
           if (!result.isValid) {
             return;

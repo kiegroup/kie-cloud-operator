@@ -3,7 +3,8 @@ import { BACKEND_URL } from "../common/GuiConstants";
 export const loadJsonForm = fetch(BACKEND_URL + "/form", {
   headers: {
     "Content-Type": "application/json"
-  }
+  },
+  credentials: "same-origin"
 })
   .then(res => res.json())
   .catch(error => {
@@ -13,7 +14,8 @@ export const loadJsonForm = fetch(BACKEND_URL + "/form", {
 export const loadJsonSchema = fetch(BACKEND_URL + "/schema", {
   headers: {
     "Content-Type": "application/json"
-  }
+  },
+  credentials: "same-origin"
 })
   .then(res => res.json())
   .catch(error => {
@@ -24,7 +26,8 @@ export const loadJsonSpec = () =>
   fetch(BACKEND_URL + "/spec", {
     headers: {
       "Content-Type": "application/json"
-    }
+    },
+    credentials: "same-origin"
   })
     .then(res => res.json())
     .catch(error => {
