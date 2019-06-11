@@ -159,24 +159,15 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 				log.Error("Failed to get CSV. ", err)
 				return
 			}
-			update := true
-			exists := false
 			url := fmt.Sprintf("https://%s", found.Spec.Host)
-			for i, link := range csv.Spec.Links {
-				if link.Name == constants.ConsoleLinkName {
-					exists = true
-					if link.URL == url {
-						update = false
-					} else {
-						csv.Spec.Links[i].URL = url
-					}
+			link := getConsoleLink(csv)
+			if link == nil || link.URL != url {
+				if link == nil {
+					csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
+				} else {
+					link.URL = url
 				}
-			}
-			if !exists {
-				csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
-			}
-			if update {
-				log.Info("Updating ", csv.Name, " ", csv.Kind, ".")
+				log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
 				err = reconciler.Service.Update(context.TODO(), csv)
 				if err != nil {
 					log.Error("Failed to update CSV. ", err)
@@ -184,6 +175,15 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 			}
 		}
 	}
+}
+
+func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1alpha1.AppLink {
+	for i, link := range csv.Spec.Links {
+		if link.Name == constants.ConsoleLinkName {
+			return &csv.Spec.Links[i]
+		}
+	}
+	return nil
 }
 
 func getPod(namespace string, image string, sa string, operator *appsv1.Deployment) *corev1.Pod {
