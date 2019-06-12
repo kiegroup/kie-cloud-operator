@@ -82,6 +82,10 @@ required = [
   name = "github.com/pavel-v-chernykh/keystore-go"
   version = "=v2.1.0"
 
+[[constraint]]
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  revision = "b8a4faf68e36feb6d99a6aec623b405e587b17b1"
+
 [prune]
 #  go-tests = true
 #  non-go = true

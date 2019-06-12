@@ -59,6 +59,8 @@ const (
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
+	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
+	ConsoleLinkName = "Installer"
 )
 
 var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}

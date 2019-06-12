@@ -4,18 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"os"
 	"strings"
+	"time"
 
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	routev1 "github.com/openshift/api/route/v1"
+	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -28,10 +31,9 @@ func shouldDeployConsole() bool {
 	if strings.ToLower(shouldDeploy) == "false" {
 		log.Debugf("Environment variable %s set to %s, so will not deploy operator UI", constants.OpUiEnv, shouldDeploy)
 		return false
-	} else {
-		//Default to deploying, if env var not set to false
-		return true
 	}
+	//Default to deploying, if env var not set to false
+	return true
 }
 
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
@@ -129,6 +131,59 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 			return
 		}
 	}
+	updateCSVlinks(reconciler, route, operator)
+}
+
+func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
+	csv := &operatorsv1alpha1.ClusterServiceVersion{}
+	found := &routev1.Route{}
+	for i := 1; i < 60; i++ {
+		time.Sleep(time.Duration(100) * time.Millisecond)
+		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, found)
+		if err == nil && found.Spec.Host != route.Name && found.Spec.Host != "" {
+			break
+		}
+	}
+	if found.Name == "" || found.Spec.Host == found.Name {
+		log.Warn("Unable to get Route url. ", route.Name)
+		return
+	}
+	for _, ref := range operator.GetOwnerReferences() {
+		if ref.Kind == "ClusterServiceVersion" {
+			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: operator.Namespace, Name: ref.Name}, csv)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.Debug("CSV not found. ", err)
+					return
+				}
+				log.Error("Failed to get CSV. ", err)
+				return
+			}
+			url := fmt.Sprintf("https://%s", found.Spec.Host)
+			link := getConsoleLink(csv)
+			if link == nil || link.URL != url {
+				if link == nil {
+					csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
+				} else {
+					link.URL = url
+				}
+				log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
+				err = reconciler.Service.Update(context.TODO(), csv)
+				if err != nil {
+					log.Error("Failed to update CSV. ", err)
+				}
+			}
+		}
+	}
+}
+
+func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1alpha1.AppLink {
+	for i, link := range csv.Spec.Links {
+		if link.Name == constants.ConsoleLinkName {
+			return &csv.Spec.Links[i]
+		}
+	}
+	return nil
 }
 
 func getPod(namespace string, image string, sa string, operator *appsv1.Deployment) *corev1.Pod {
