@@ -150,6 +150,7 @@ spec:
             - apiGroups:
                 - apps
               resourceNames:
+                - kie-cloud-operator
                 - business-automation-operator
               resources:
                 - deployments/finalizers
