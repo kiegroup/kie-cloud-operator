@@ -19,7 +19,7 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.0"
+	ImageStreamTag = "1.1"
 	// AMQ Broker Image Name
 	BrokerImage = "amq-broker-73-openshift"
 	// AMQ Broker Image Tag
@@ -59,6 +59,8 @@ const (
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
+	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
+	ConsoleLinkName = "Installer"
 )
 
 var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}

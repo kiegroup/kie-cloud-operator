@@ -34,7 +34,13 @@ type MockPlatformService struct {
 }
 
 func MockService() *MockPlatformService {
-	v1.SchemeBuilder.Register(&v1.KieApp{}, &v1.KieAppList{}, &corev1.PersistentVolumeClaim{}, &corev1.ServiceAccount{}, &corev1.Secret{}, &rbacv1.Role{}, &rbacv1.RoleBinding{}, &oappsv1.DeploymentConfig{}, &corev1.Service{}, &appsv1.StatefulSet{}, &routev1.Route{}, &oimagev1.ImageStream{}, &buildv1.BuildConfig{}, &oappsv1.DeploymentConfigList{}, &buildv1.BuildConfigList{})
+	return MockServiceWithExtraScheme()
+}
+
+func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
+	registerObjs := []runtime.Object{&v1.KieApp{}, &v1.KieAppList{}, &corev1.PersistentVolumeClaim{}, &corev1.ServiceAccount{}, &corev1.Secret{}, &rbacv1.Role{}, &rbacv1.RoleBinding{}, &oappsv1.DeploymentConfig{}, &corev1.Service{}, &appsv1.StatefulSet{}, &routev1.Route{}, &oimagev1.ImageStream{}, &buildv1.BuildConfig{}, &oappsv1.DeploymentConfigList{}, &buildv1.BuildConfigList{}}
+	registerObjs = append(registerObjs, objs...)
+	v1.SchemeBuilder.Register(registerObjs...)
 	scheme, _ := v1.SchemeBuilder.Build()
 	client := fake.NewFakeClientWithScheme(scheme)
 	log.Debugf("Fake client created as %v", client)

@@ -24,9 +24,16 @@ rules:
       - get
       - create
   - apiGroups:
+      - operators.coreos.com
+    resources:
+      - clusterserviceversions
+    verbs:
+      - "*"
+  - apiGroups:
       - apps
     resourceNames:
       - kie-cloud-operator
+      - business-automation-operator
     resources:
       - deployments/finalizers
     verbs:
