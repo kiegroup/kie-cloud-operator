@@ -36,17 +36,17 @@ func apply(cr string) error {
 	kieApp := &v1.KieApp{}
 	err := yaml.Unmarshal([]byte(cr), kieApp)
 	if err != nil {
-		log.Errorf("Failed to parse CR based on %s, error is %v", cr, err)
+		log.Debugf("Failed to parse CR based on %s. Cause: ", cr, err)
 		return err
 	}
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		log.Error("Failed to get in-cluster config", err)
+		log.Debug("Failed to get in-cluster config", err)
 		return err
 	}
 	err = v1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	if err != nil {
-		log.Error("Failed to add scheme", err)
+		log.Debug("Failed to add scheme", err)
 		return err
 	}
 	config.ContentConfig.GroupVersion = &v1.SchemeGroupVersion
@@ -55,13 +55,13 @@ func apply(cr string) error {
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
 	restClient, err := rest.UnversionedRESTClientFor(config)
 	if err != nil {
-		log.Error("Failed to get REST client", err)
+		log.Debug("Failed to get REST client", err)
 		return err
 	}
 	kieApp.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("KieApp"))
 	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do().Into(kieApp)
 	if err != nil {
-		log.Error("Failed to create KIE app", err)
+		log.Debug("Failed to create KIE app", err)
 		return err
 	}
 	log.Infof("Created KIE application named %s", kieApp.Name)

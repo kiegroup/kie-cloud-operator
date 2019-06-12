@@ -18,7 +18,10 @@ metadata:
     operator-kiecloud: "true"
 spec:
   displayName: Kie Cloud
-  description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
+  description: |
+    Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
+
+    **To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**
   keywords:
     - kieapp
     - pam
@@ -139,9 +142,16 @@ spec:
                 - get
                 - create
             - apiGroups:
+                - operators.coreos.com
+              resources:
+                - clusterserviceversions
+              verbs:
+                - "*"
+            - apiGroups:
                 - apps
               resourceNames:
                 - kie-cloud-operator
+                - business-automation-operator
               resources:
                 - deployments/finalizers
               verbs:

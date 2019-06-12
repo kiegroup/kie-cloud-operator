@@ -109,6 +109,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:00b2c2ee0f120e9d267674ca28446e6aa43258d2c5491861664325e24ef32e62"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = ""
+  revision = "ba2c2ddd89069b46a7011d4106f6868f17ee1705"
+  version = "v3.6.1"
+
+[[projects]]
   digest = "1:10139b9c841acd336ceff02e8a85e0c558dee738b2277bb24d61d9d3c90ef1f2"
   name = "github.com/census-instrumentation/opencensus-proto"
   packages = [
@@ -645,6 +653,17 @@
   pruneopts = ""
   revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
   version = "v3.9.0"
+
+[[projects]]
+  digest = "1:598128184f9c09b3f4881db9d4e9ecac046d968f7748591068725425399be049"
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  packages = [
+    "pkg/api/apis/operators",
+    "pkg/api/apis/operators/v1alpha1",
+    "pkg/lib/version",
+  ]
+  pruneopts = ""
+  revision = "b8a4faf68e36feb6d99a6aec623b405e587b17b1"
 
 [[projects]]
   digest = "1:09a2b92dea291cda0f8f710ef31eb7299defe74bb784ab2df0426a69f347a843"
@@ -1412,6 +1431,7 @@
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/log/zap",
