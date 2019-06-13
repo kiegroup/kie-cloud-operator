@@ -499,9 +499,15 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 		return defaultDB, nil
 	}
 
-	if database.Type == v1.DatabaseExternal && database.ExternalConfig == nil {
-		return nil, fmt.Errorf("external database configuration is mandatory for external database type")
+	if database.Type == v1.DatabaseExternal {
+		if database.ExternalConfig == nil {
+			return nil, fmt.Errorf("external database configuration is mandatory for external database type")
+		}
+		if database.ExternalConfig.JndiName == "" {
+			database.ExternalConfig.JndiName = constants.DefaultJNDIName
+		}
 	}
+
 	if database.Size == "" && defaultDB != nil {
 		resultDB := *database.DeepCopy()
 		resultDB.Size = defaultDB.Size

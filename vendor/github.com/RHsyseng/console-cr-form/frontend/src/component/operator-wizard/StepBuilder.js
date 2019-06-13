@@ -1,5 +1,5 @@
 import React from "react";
-import * as jsonLoader from "./FormJsonLoader";
+import FormJsonLoader from "./FormJsonLoader";
 import Page from "./page-component/Page";
 
 export default class StepBuilder {
@@ -22,8 +22,8 @@ export default class StepBuilder {
 
   buildSteps() {
     return Promise.all([
-      jsonLoader.loadJsonForm,
-      jsonLoader.loadJsonSchema
+      FormJsonLoader.loadJsonForm(),
+      FormJsonLoader.loadJsonSchema()
     ]).then(values => {
       this.jsonForm = values[0];
       this.jsonSchema = values[1];

@@ -19,14 +19,19 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
+<<<<<<< HEAD
 	ImageStreamTag = "1.0"
 	// AMQ Broker Image Name
+=======
+	ImageStreamTag = "1.1"
+	// BrokerImage AMQ Broker Image Name
+>>>>>>> 8a6aa8ce... [KIECLOUD-254] Allow default value for JNDI Name with external databases
 	BrokerImage = "amq-broker-73-openshift"
-	// AMQ Broker Image Tag
+	// BrokerImageTag AMQ Broker Image Tag
 	BrokerImageTag = "7.3"
-	// JBoss Datagrid Image Name
+	// DatagridImage JBoss Datagrid Image Name
 	DatagridImage = "datagrid73-openshift"
-	// JBoss Datagrid  Image Tag
+	// DatagridImageTag JBoss Datagrid  Image Tag
 	DatagridImageTag = "1.1"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
@@ -38,15 +43,17 @@ const (
 	DefaultPassword = "RedHat"
 	// SSODefaultPrincipalAttribute default PrincipalAttribute to use for SSO integration
 	SSODefaultPrincipalAttribute = "preferred_username"
+	// DefaultJNDIName to use for external databases
+	DefaultJNDIName = "java:jboss/datasources/jbpmDS"
 	// NameSpaceEnv is an environment variable of the current namespace
 	// set via downward api when the code is running via deployment
 	NameSpaceEnv = "WATCH_NAMESPACE"
 	// OpNameEnv is an environment variable of the operator name
 	// set when the code is running via deployment
 	OpNameEnv = "OPERATOR_NAME"
-	// OpUiEnv is an environment variable indicating whether the UI should be deployed
+	// OpUIEnv is an environment variable indicating whether the UI should be deployed
 	// Default behavior is to deploy the UI, unless this variable is provided with a false value
-	OpUiEnv = "OPERATOR_UI"
+	OpUIEnv = "OPERATOR_UI"
 	// TrialEnvSuffix is the suffix for trial environments
 	TrialEnvSuffix = "trial"
 	// DefaultKieDeployments default number of Kie Server deployments
