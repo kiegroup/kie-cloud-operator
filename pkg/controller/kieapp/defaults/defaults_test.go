@@ -1569,6 +1569,39 @@ func TestDatabaseExternalInvalid(t *testing.T) {
 	assert.EqualError(t, err, "external database configuration is mandatory for external database type", "Expected database configuration error")
 }
 
+func TestDatabaseExternalDefaults(t *testing.T) {
+	deployments := 2
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						Database: &v1.DatabaseObject{
+							Type:           v1.DatabaseExternal,
+							ExternalConfig: &v1.ExternalDatabaseObject{},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	for i := 0; i < deployments; i++ {
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, "java:jboss/datasources/jbpmDS", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JNDI"))
+	}
+}
+
 func TestDatabaseExternal(t *testing.T) {
 	deployments := 2
 	cr := &v1.KieApp{

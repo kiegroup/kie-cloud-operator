@@ -7,7 +7,7 @@ import CopyToClipboard from "react-copy-to-clipboard";
 
 import OperatorWizardFooter from "./OperatorWizardFooter";
 import { BACKEND_URL } from "../common/GuiConstants";
-import { loadJsonSpec } from "./FormJsonLoader";
+import FormJsonLoader from "./FormJsonLoader";
 import StepBuilder from "./StepBuilder";
 import ReviewPage from "./page-component/ReviewPage";
 
@@ -30,8 +30,7 @@ export default class OperatorWizard extends Component {
       }
     };
     document.title = this.title;
-
-    loadJsonSpec().then(spec =>
+    FormJsonLoader.loadJsonSpec().then(spec =>
       this.setState({
         spec: spec
       })
@@ -181,12 +180,7 @@ export default class OperatorWizard extends Component {
               field.required &&
               (field.value === undefined || field.value === "")
             ) {
-              console.log(
-                `Field ${field.label} is required and is not valid: ${
-                  field.errMsg
-                }`
-              );
-              let errMsg = field.label + " is required.";
+              const errMsg = field.label + " is required.";
               result = { isValid: false, errMsg: errMsg };
             }
           }

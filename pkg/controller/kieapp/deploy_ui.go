@@ -27,9 +27,9 @@ var name = "console-cr-form"
 var operatorName string
 
 func shouldDeployConsole() bool {
-	shouldDeploy := os.Getenv(constants.OpUiEnv)
+	shouldDeploy := os.Getenv(constants.OpUIEnv)
 	if strings.ToLower(shouldDeploy) == "false" {
-		log.Debugf("Environment variable %s set to %s, so will not deploy operator UI", constants.OpUiEnv, shouldDeploy)
+		log.Debugf("Environment variable %s set to %s, so will not deploy operator UI", constants.OpUIEnv, shouldDeploy)
 		return false
 	}
 	//Default to deploying, if env var not set to false
