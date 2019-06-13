@@ -316,12 +316,12 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Jms: &v1.KieAppJmsObject{
-							EnableKieServerJMSIntegration: true,
-							KieServerJmsUsername:          "adminUser",
-							KieServerJmsPassword:          "adminPassword",
-							KieServerJmsAuditTransacted:   false,
-							KieServerJmsEnableAudit:       true,
-							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableIntegration: true,
+							Username:          "adminUser",
+							Password:          "adminPassword",
+							AuditTransacted:   false,
+							EnableAudit:       true,
+							QueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
 						},
 					},
 				},
@@ -370,12 +370,12 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Jms: &v1.KieAppJmsObject{
-							EnableKieServerJMSIntegration: true,
-							KieServerJmsUsername:          "adminUser",
-							KieServerJmsPassword:          "adminPassword",
-							KieServerJmsAuditTransacted:   false,
-							KieServerJmsEnableAudit:       true,
-							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableIntegration: true,
+							Username:          "adminUser",
+							Password:          "adminPassword",
+							AuditTransacted:   false,
+							EnableAudit:       true,
+							QueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
 						},
 					},
 				},
