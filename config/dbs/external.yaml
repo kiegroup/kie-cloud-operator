@@ -24,7 +24,7 @@ servers:
                     - name: RHPAM_SERVICE_PORT
                       value: "[[.Database.ExternalConfig.Port]]"
                     - name: RHPAM_JNDI
-                      value: "[[.Database.ExternalConfig.JndiName]]"
+                      value: "java:/jboss/datasources/rhpam"
                     - name: RHPAM_DRIVER
                       value: "[[.Database.ExternalConfig.Driver]]"
                     - name: RHPAM_USERNAME
