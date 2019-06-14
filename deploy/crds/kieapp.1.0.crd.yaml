@@ -323,6 +323,7 @@ spec:
                             required:
                               - driver
                               - dialect
+                              - jndiName
                               - username
                               - password
                             oneOf:
@@ -353,6 +354,9 @@ spec:
                               nonXA:
                                 type: string
                                 description: Sets the datasources type. It can be XA or NONXA. For non XA set it to true. Default value is false.
+                              jndiName:
+                                type: string
+                                description: Database JNDI name used by application to resolve the datasource, e.g. java:/jboss/datasources/ExampleDS
                               username:
                                 type: string
                                 description: External database username
