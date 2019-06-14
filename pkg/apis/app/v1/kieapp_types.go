@@ -314,7 +314,6 @@ type ExternalDatabaseObject struct {
 	Port                       string `json:"port,omitempty"`
 	JdbcURL                    string `json:"jdbcURL,omitempty"`
 	NonXA                      string `json:"nonXA,omitempty"`
-	JndiName                   string `json:"jndiName,omitempty"`
 	Username                   string `json:"username,omitempty"`
 	Password                   string `json:"password,omitempty"`
 	MinPoolSize                string `json:"minPoolSize,omitempty"`

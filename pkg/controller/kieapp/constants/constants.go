@@ -38,8 +38,6 @@ const (
 	DefaultPassword = "RedHat"
 	// SSODefaultPrincipalAttribute default PrincipalAttribute to use for SSO integration
 	SSODefaultPrincipalAttribute = "preferred_username"
-	// DefaultJNDIName to use for external databases
-	DefaultJNDIName = "java:jboss/datasources/jbpmDS"
 	// NameSpaceEnv is an environment variable of the current namespace
 	// set via downward api when the code is running via deployment
 	NameSpaceEnv = "WATCH_NAMESPACE"
