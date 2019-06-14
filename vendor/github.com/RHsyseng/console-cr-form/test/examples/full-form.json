@@ -604,7 +604,7 @@
                 },
 
                 {
-                  "label": "Build configuration (Source to Image)",
+                  "label": "Immutable server configuration",
                   "type": "object",
                   "max": 1,
                   "jsonPath": "$.spec.objects.servers[*].build",
