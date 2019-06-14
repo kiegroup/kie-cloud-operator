@@ -1594,12 +1594,23 @@ func TestDatabaseExternal(t *testing.T) {
 								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
 							},
 						},
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							KieAppObject: v1.KieAppObject{
+								Env: []corev1.EnvVar{
+									{
+										Name:  "RHPAM_JNDI",
+										Value: "java:jboss/OracleDS",
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
 
 	assert.Nil(t, err, "Error getting prod environment")
 
@@ -1630,6 +1641,7 @@ func TestDatabaseExternal(t *testing.T) {
 		assert.Equal(t, "", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_VALIDATION_MILLIS"))
 		assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_CONNECTION_CHECKER"))
 		assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_EXCEPTION_SORTER"))
+		assert.Equal(t, "java:jboss/OracleDS", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JNDI"))
 		assert.Equal(t, "org.hibernate.dialect.Oracle10gDialect", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_PERSISTENCE_DIALECT"))
 		assert.Equal(t, "", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE"))
 		assert.Equal(t, "", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_HOST"))
