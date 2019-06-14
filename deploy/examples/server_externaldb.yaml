@@ -15,7 +15,6 @@ spec:
             username: orauser
             password: orapwd
             jdbcURL: jdbc:oracle:thin:@oracleHostName:1521:orcl
-            jndiName: java:jboss/OracleXADS
       - name: test-mysql
         database:
           type: external
@@ -27,4 +26,3 @@ spec:
             name: rhpam1
             username: otheruser
             password: otherpwd
-            jndiName: java:jboss/MySqlXADS

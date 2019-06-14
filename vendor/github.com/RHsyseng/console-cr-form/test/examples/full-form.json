@@ -894,13 +894,6 @@
                               "description": "Select this option to configure database in non XA mode."
                             },
                             {
-                              "label": "JNDI name",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jndiName",
-                              "description": "Database JNDI name used by application to resolve the datasource, e.g. java:/jboss/datasources/ExampleDS.",
-                              "default": "java:jboss/datasources/jbpmDS"
-                            },
-                            {
                               "label": "User name",
                               "type": "text",
                               "required": true,
