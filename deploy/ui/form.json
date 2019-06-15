@@ -603,7 +603,7 @@
                   ]
                 },
                 {
-                  "label": "Build configuration (Source to Image)",
+                  "label": "Immutable server configuration",
                   "type": "object",
                   "max": 1,
                   "jsonPath": "$.spec.objects.servers[*].build",
@@ -630,8 +630,46 @@
                       "description": "Build artifact directory."
                     },
                     {
+                      "label": "Base build image",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].build.from",
+                      "type": "object",
+                      "max": 1,
+                      "fields": [
+                        {
+                          "label": "Kind",
+                          "type": "dropDown",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.from.kind",
+                          "originalJsonPath": "$.spec.objects.servers[*].build.from.kind",
+                          "description": "Specify whether build config is created from an image stream, or a container image.",
+                          "default": "ImageStreamTag",
+                          "options": [
+                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                            { "value": "DockerImage", "label": "DockerImage" }
+                          ]
+                        },
+                        {
+                          "label": "Name",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.from.name",
+                          "description": "The name of the image stream or container image to use for build config.",
+                          "default": "rhpam74-kieserver-openshift"
+                        },
+                        {
+                          "label": "Namespace",
+                          "type": "text",
+                          "jsonPath": "$.spec.objects.servers[*].build.from.namespace",
+                          "description": "Namespace where the build config image/stream is located.",
+                          "default": "openshift"
+                        }
+                      ]
+                    },
+                    {
                       "label": "Git Source",
-                      "type": "fieldGroup",
+                      "type": "object",
+                      "max": 1,
                       "jsonPath": "$.spec.objects.servers[*].build.gitSource",
                       "visible": true,
                       "fields": [
@@ -680,43 +718,6 @@
                           "jsonPath": "$.spec.objects.servers[*].build.webhooks[*].secret",
                           "required": true,
                           "description": "Secret value for WebHook to configure. Generated if empty"
-                        }
-                      ]
-                    },
-                    {
-                      "label": "Base build image",
-                      "required": false,
-                      "jsonPath": "$.spec.objects.servers[*].build.from",
-                      "type": "object",
-                      "max": 1,
-                      "fields": [
-                        {
-                          "label": "Kind",
-                          "type": "dropDown",
-                          "required": true,
-                          "jsonPath": "$.spec.objects.servers[*].build.from.kind",
-                          "originalJsonPath": "$.spec.objects.servers[*].build.from.kind",
-                          "description": "Specify whether build config is created from an image stream, or a container image.",
-                          "default": "ImageStreamTag",
-                          "options": [
-                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
-                            { "value": "DockerImage", "label": "DockerImage" }
-                          ]
-                        },
-                        {
-                          "label": "Name",
-                          "type": "text",
-                          "required": true,
-                          "jsonPath": "$.spec.objects.servers[*].build.from.name",
-                          "description": "The name of the image stream or container image to use for build config.",
-                          "default": "rhpam74-kieserver-openshift"
-                        },
-                        {
-                          "label": "Namespace",
-                          "type": "text",
-                          "jsonPath": "$.spec.objects.servers[*].build.from.namespace",
-                          "description": "Namespace where the build config image/stream is located.",
-                          "default": "openshift"
                         }
                       ]
                     }
@@ -790,13 +791,13 @@
                       "label": "Client name",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].ssoClient.name",
-                      "description": "Client name used for console in RH-SSO, when configured"
+                      "description": "Client name used for this KIE Server in RH-SSO, when configured"
                     },
                     {
                       "label": "Client secret",
                       "type": "password",
                       "jsonPath": "$.spec.objects.servers[*].ssoClient.secret",
-                      "description": "Client secret to use for console in RH-SSO, when configured"
+                      "description": "Client secret to use for this KIE Server in RH-SSO, when configured"
                     },
                     {
                       "label": "SSO HTTP URL",
@@ -890,14 +891,6 @@
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.nonXA",
                               "default": "false",
                               "description": "Select this option to configure database in non XA mode."
-                            },
-                            {
-                              "label": "JNDI name",
-                              "type": "text",
-                              "required": true,
-                              "jsonPath": "$.spec.objects.servers[*].database.externalConfig.jndiName",
-                              "description": "Database JNDI name used by application to resolve the datasource, e.g. java:/jboss/datasources/ExampleDS.",
-                              "default": "java:jboss/datasources/jbpmDS"
                             },
                             {
                               "label": "User name",

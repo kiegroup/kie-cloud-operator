@@ -1585,7 +1585,6 @@ func TestDatabaseExternal(t *testing.T) {
 							Type: v1.DatabaseExternal,
 							ExternalConfig: &v1.ExternalDatabaseObject{
 								Dialect:              "org.hibernate.dialect.Oracle10gDialect",
-								JndiName:             "java:jboss/OracleDS",
 								Driver:               "oracle",
 								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
 								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
@@ -1595,12 +1594,23 @@ func TestDatabaseExternal(t *testing.T) {
 								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
 							},
 						},
+						SecuredKieAppObject: v1.SecuredKieAppObject{
+							KieAppObject: v1.KieAppObject{
+								Env: []corev1.EnvVar{
+									{
+										Name:  "RHPAM_JNDI",
+										Value: "java:jboss/OracleDS",
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
 
 	assert.Nil(t, err, "Error getting prod environment")
 
