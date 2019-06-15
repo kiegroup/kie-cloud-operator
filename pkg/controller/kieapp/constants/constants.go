@@ -19,13 +19,8 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
-<<<<<<< HEAD
 	ImageStreamTag = "1.0"
 	// AMQ Broker Image Name
-=======
-	ImageStreamTag = "1.1"
-	// BrokerImage AMQ Broker Image Name
->>>>>>> 8a6aa8ce... [KIECLOUD-254] Allow default value for JNDI Name with external databases
 	BrokerImage = "amq-broker-73-openshift"
 	// BrokerImageTag AMQ Broker Image Tag
 	BrokerImageTag = "7.3"
