@@ -86,6 +86,55 @@ func TestSchemaStructSlice(t *testing.T) {
 	}
 }
 
+func TestSchemaFloat64(t *testing.T) {
+	schemaYaml := `
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: sample.app.example.com
+spec:
+  group: app.example.com
+  names:
+    kind: SampleApp
+    listKind: SampleAppList
+    plural: sampleapps
+    singular: sampleapp
+  scope: Namespaced
+  version: v1
+  validation:
+    openAPIV3Schema:
+      required:
+        - spec
+      properties:
+        spec:
+          type: object
+          required:
+          - number
+          properties:
+            number:
+              type: number
+              format: double
+`
+	schema, err := New([]byte(schemaYaml))
+	assert.NoError(t, err)
+
+	type myAppSpec struct {
+		Number float64 `json:"number,omitempty"`
+	}
+
+	type myApp struct {
+		Spec   myAppSpec       `json:"spec,omitempty"`
+	}
+
+	cr := myApp{
+		Spec: myAppSpec{
+			Number: float64(23),
+		},
+	}
+	missingEntries := schema.GetMissingEntries(&cr)
+	assert.Len(t, missingEntries, 0, "Expect no missing entries in CRD for this struct: %v", missingEntries)
+}
+
 func getCompleteSchema(t *testing.T) Schema {
 	schemaYaml := `
 apiVersion: apiextensions.k8s.io/v1beta1

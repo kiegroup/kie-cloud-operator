@@ -5575,7 +5575,9 @@ func (s *TableCell) MarshalJSON() ([]byte, error) {
 // border, make
 // its width 0.
 type TableCellBorder struct {
-	// Color: The color of the border. This color cannot be transparent.
+	// Color: The color of the border.
+	//
+	// This color cannot be transparent.
 	Color *OptionalColor `json:"color,omitempty"`
 
 	// DashStyle: The dash style of the border.

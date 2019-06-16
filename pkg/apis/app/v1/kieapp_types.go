@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -460,20 +461,9 @@ type Condition struct {
 
 // KieAppStatus - The status for custom resources managed by the operator-sdk.
 type KieAppStatus struct {
-	Conditions  []Condition `json:"conditions"`
-	ConsoleHost string      `json:"consoleHost,omitempty"`
-	Deployments Deployments `json:"deployments"`
-}
-
-type Deployments struct {
-	// Deployments are ready to serve requests
-	Ready []string `json:"ready,omitempty"`
-	// Deployments are starting, may or may not succeed
-	Starting []string `json:"starting,omitempty"`
-	// Deployments are not starting, unclear what next step will be
-	Stopped []string `json:"stopped,omitempty"`
-	// Deployments failed
-	Failed []string `json:"failed,omitempty"`
+	Conditions  []Condition          `json:"conditions"`
+	ConsoleHost string               `json:"consoleHost,omitempty"`
+	Deployments olm.DeploymentStatus `json:"deployments"`
 }
 
 type PlatformService interface {

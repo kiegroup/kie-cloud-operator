@@ -3753,7 +3753,8 @@ type Operation struct {
 	// service that
 	// originally returns it. If you use the default HTTP mapping,
 	// the
-	// `name` should have the format of `operations/some/unique/name`.
+	// `name` should be a resource name ending with
+	// `operations/{unique_id}`.
 	Name string `json:"name,omitempty"`
 
 	// Response: The normal response of the operation in case of success.
@@ -4166,6 +4167,18 @@ type PropertyDefinition struct {
 	// Timestamp
 	// properties.
 	IsSortable bool `json:"isSortable,omitempty"`
+
+	// IsWildcardSearchable: Indicates that users can perform wildcard
+	// search for this
+	// property. Only supported for Text properties. IsReturnable must be
+	// true to
+	// set this option. In a given datasource maximum of 5 properties can
+	// be
+	// marked as is_wildcard_searchable.
+	//
+	// Note: This is an alpha feature and is enabled for whitelisted users
+	// only.
+	IsWildcardSearchable bool `json:"isWildcardSearchable,omitempty"`
 
 	// Name: The name of the property. Item indexing requests sent to the
 	// Indexing API
