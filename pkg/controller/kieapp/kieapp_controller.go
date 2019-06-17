@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"reflect"
 	"regexp"
 	"strings"
@@ -150,10 +151,19 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return false, err
 	}
-	instance.Status.Deployments = getDeploymentsStatuses(dcList.Items, instance)
+	var dcs []oappsv1.DeploymentConfig
+	for _, dc := range dcList.Items {
+		for _, ownerRef := range dc.GetOwnerReferences() {
+			if ownerRef.UID == instance.UID {
+				dcs = append(dcs, dc)
+				break
+			}
+		}
+	}
+	instance.Status.Deployments = olm.GetDeploymentConfigStatus(dcs)
 
 	var dcUpdates []oappsv1.DeploymentConfig
-	for _, dc := range dcList.Items {
+	for _, dc := range dcs {
 		for _, cDc := range env.Console.DeploymentConfigs {
 			if dc.Name == cDc.Name {
 				dcUpdates = reconciler.dcUpdateCheck(dc, cDc, dcUpdates, instance)
@@ -682,31 +692,6 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 		return true
 	}
 	return false
-}
-
-func getDeploymentsStatuses(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) v1.Deployments {
-	var ready, starting, stopped []string
-	for _, dc := range dcs {
-		for _, ownerRef := range dc.GetOwnerReferences() {
-			if ownerRef.UID == cr.UID {
-				if dc.Spec.Replicas == 0 {
-					stopped = append(stopped, dc.Name)
-				} else if dc.Status.Replicas == 0 {
-					stopped = append(stopped, dc.Name)
-				} else if dc.Status.ReadyReplicas < dc.Status.Replicas {
-					starting = append(starting, dc.Name)
-				} else {
-					ready = append(ready, dc.Name)
-				}
-			}
-		}
-	}
-	log.Debugf("Found DCs with status stopped [%s], starting [%s], and ready [%s]", stopped, starting, ready)
-	return v1.Deployments{
-		Stopped:  stopped,
-		Starting: starting,
-		Ready:    ready,
-	}
 }
 
 // GetRouteHost returns the Hostname of the route provided

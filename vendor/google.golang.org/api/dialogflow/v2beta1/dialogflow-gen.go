@@ -701,8 +701,9 @@ type GoogleCloudDialogflowV2Intent struct {
 	Action string `json:"action,omitempty"`
 
 	// DefaultResponsePlatforms: Optional. The list of platforms for which
-	// the first response will be
-	// taken from among the messages assigned to the DEFAULT_PLATFORM.
+	// the first responses will be
+	// copied from the messages in PLATFORM_UNSPECIFIED (i.e. default
+	// platform).
 	//
 	// Possible values:
 	//   "PLATFORM_UNSPECIFIED" - Not specified.
@@ -781,6 +782,7 @@ type GoogleCloudDialogflowV2Intent struct {
 	//     "intent": "actions.intent.OPTION"
 	//   }
 	// }</pre>
+	//   "GOOGLE_HANGOUTS" - Google Hangouts.
 	DefaultResponsePlatforms []string `json:"defaultResponsePlatforms,omitempty"`
 
 	// DisplayName: Required. The name of this intent.
@@ -1066,6 +1068,7 @@ type GoogleCloudDialogflowV2IntentMessage struct {
 	//     "intent": "actions.intent.OPTION"
 	//   }
 	// }</pre>
+	//   "GOOGLE_HANGOUTS" - Google Hangouts.
 	Platform string `json:"platform,omitempty"`
 
 	// QuickReplies: The quick replies response.
@@ -1989,6 +1992,7 @@ type GoogleCloudDialogflowV2QueryResult struct {
 	Action string `json:"action,omitempty"`
 
 	// AllRequiredParamsPresent: This field is set to:
+	//
 	// - `false` if the matched intent has required parameters and not all
 	// of
 	//    the required parameter values have been collected.
@@ -2050,6 +2054,7 @@ type GoogleCloudDialogflowV2QueryResult struct {
 	Parameters googleapi.RawMessage `json:"parameters,omitempty"`
 
 	// QueryText: The original conversational query text:
+	//
 	// - If natural language text was provided as input, `query_text`
 	// contains
 	//   a copy of the input.
@@ -2058,7 +2063,9 @@ type GoogleCloudDialogflowV2QueryResult struct {
 	//   contains the speech recognition result. If speech recognizer
 	// produced
 	//   multiple alternatives, a particular one is picked.
-	// - If an event was provided as input, `query_text` is not set.
+	// - If automatic spell correction is enabled, `query_text` will contain
+	// the
+	//   corrected user input.
 	QueryText string `json:"queryText,omitempty"`
 
 	// SentimentAnalysisResult: The sentiment analysis result, which depends
@@ -3042,9 +3049,9 @@ func (s *GoogleCloudDialogflowV2beta1DetectIntentResponse) MarshalJSON() ([]byte
 
 // GoogleCloudDialogflowV2beta1Document: A document resource.
 //
-// Note: resource `projects.agent.knowledgeBases.documents` is
-// deprecated,
-// please use `projects.knowledgeBases.documents` instead.
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 type GoogleCloudDialogflowV2beta1Document struct {
 	// Content: The raw content of the document. This field is only
 	// permitted for
@@ -3666,8 +3673,9 @@ type GoogleCloudDialogflowV2beta1Intent struct {
 	Action string `json:"action,omitempty"`
 
 	// DefaultResponsePlatforms: Optional. The list of platforms for which
-	// the first response will be
-	// taken from among the messages assigned to the DEFAULT_PLATFORM.
+	// the first responses will be
+	// copied from the messages in PLATFORM_UNSPECIFIED (i.e. default
+	// platform).
 	//
 	// Possible values:
 	//   "PLATFORM_UNSPECIFIED" - Not specified.
@@ -3747,6 +3755,7 @@ type GoogleCloudDialogflowV2beta1Intent struct {
 	//   }
 	// }</pre>
 	//   "TELEPHONY" - Telephony Gateway.
+	//   "GOOGLE_HANGOUTS" - Google Hangouts.
 	DefaultResponsePlatforms []string `json:"defaultResponsePlatforms,omitempty"`
 
 	// DisplayName: Required. The name of this intent.
@@ -4090,6 +4099,7 @@ type GoogleCloudDialogflowV2beta1IntentMessage struct {
 	//   }
 	// }</pre>
 	//   "TELEPHONY" - Telephony Gateway.
+	//   "GOOGLE_HANGOUTS" - Google Hangouts.
 	Platform string `json:"platform,omitempty"`
 
 	// QuickReplies: Displays quick replies.
@@ -5207,9 +5217,9 @@ func (s *GoogleCloudDialogflowV2beta1KnowledgeAnswersAnswer) UnmarshalJSON(data 
 // GoogleCloudDialogflowV2beta1KnowledgeBase: Represents knowledge base
 // resource.
 //
-// Note: resource `projects.agent.knowledgeBases` is deprecated, please
-// use
-// `projects.knowledgeBases` instead.
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 type GoogleCloudDialogflowV2beta1KnowledgeBase struct {
 	// DisplayName: Required. The display name of the knowledge base. The
 	// name must be 1024
@@ -5763,6 +5773,7 @@ type GoogleCloudDialogflowV2beta1QueryResult struct {
 	Action string `json:"action,omitempty"`
 
 	// AllRequiredParamsPresent: This field is set to:
+	//
 	// - `false` if the matched intent has required parameters and not all
 	// of
 	//    the required parameter values have been collected.
@@ -5829,6 +5840,7 @@ type GoogleCloudDialogflowV2beta1QueryResult struct {
 	Parameters googleapi.RawMessage `json:"parameters,omitempty"`
 
 	// QueryText: The original conversational query text:
+	//
 	// - If natural language text was provided as input, `query_text`
 	// contains
 	//   a copy of the input.
@@ -5837,7 +5849,9 @@ type GoogleCloudDialogflowV2beta1QueryResult struct {
 	//   contains the speech recognition result. If speech recognizer
 	// produced
 	//   multiple alternatives, a particular one is picked.
-	// - If an event was provided as input, `query_text` is not set.
+	// - If automatic spell correction is enabled, `query_text` will contain
+	// the
+	//   corrected user input.
 	QueryText string `json:"queryText,omitempty"`
 
 	// SentimentAnalysisResult: The sentiment analysis result, which depends
@@ -6573,7 +6587,8 @@ type GoogleLongrunningOperation struct {
 	// service that
 	// originally returns it. If you use the default HTTP mapping,
 	// the
-	// `name` should have the format of `operations/some/unique/name`.
+	// `name` should be a resource name ending with
+	// `operations/{unique_id}`.
 	Name string `json:"name,omitempty"`
 
 	// Response: The normal response of the operation in case of success.
@@ -12343,6 +12358,10 @@ type ProjectsAgentKnowledgeBasesCreateCall struct {
 }
 
 // Create: Creates a knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsAgentKnowledgeBasesService) Create(parent string, googleclouddialogflowv2beta1knowledgebase *GoogleCloudDialogflowV2beta1KnowledgeBase) *ProjectsAgentKnowledgeBasesCreateCall {
 	c := &ProjectsAgentKnowledgeBasesCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -12442,7 +12461,7 @@ func (c *ProjectsAgentKnowledgeBasesCreateCall) Do(opts ...googleapi.CallOption)
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a knowledge base.",
+	//   "description": "Creates a knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.create",
@@ -12484,6 +12503,10 @@ type ProjectsAgentKnowledgeBasesDeleteCall struct {
 }
 
 // Delete: Deletes the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsAgentKnowledgeBasesService) Delete(name string) *ProjectsAgentKnowledgeBasesDeleteCall {
 	c := &ProjectsAgentKnowledgeBasesDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -12583,7 +12606,7 @@ func (c *ProjectsAgentKnowledgeBasesDeleteCall) Do(opts ...googleapi.CallOption)
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes the specified knowledge base.",
+	//   "description": "Deletes the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.delete",
@@ -12628,6 +12651,10 @@ type ProjectsAgentKnowledgeBasesGetCall struct {
 }
 
 // Get: Retrieves the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsAgentKnowledgeBasesService) Get(name string) *ProjectsAgentKnowledgeBasesGetCall {
 	c := &ProjectsAgentKnowledgeBasesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -12734,7 +12761,7 @@ func (c *ProjectsAgentKnowledgeBasesGetCall) Do(opts ...googleapi.CallOption) (*
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves the specified knowledge base.",
+	//   "description": "Retrieves the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.get",
@@ -12773,7 +12800,12 @@ type ProjectsAgentKnowledgeBasesListCall struct {
 	header_      http.Header
 }
 
-// List: Returns the list of all knowledge bases of the specified agent.
+// List: Returns the list of all knowledge bases of the specified
+// agent.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsAgentKnowledgeBasesService) List(parent string) *ProjectsAgentKnowledgeBasesListCall {
 	c := &ProjectsAgentKnowledgeBasesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -12896,7 +12928,7 @@ func (c *ProjectsAgentKnowledgeBasesListCall) Do(opts ...googleapi.CallOption) (
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns the list of all knowledge bases of the specified agent.",
+	//   "description": "Returns the list of all knowledge bases of the specified agent.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.list",
@@ -12968,6 +13000,10 @@ type ProjectsAgentKnowledgeBasesPatchCall struct {
 }
 
 // Patch: Updates the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsAgentKnowledgeBasesService) Patch(name string, googleclouddialogflowv2beta1knowledgebase *GoogleCloudDialogflowV2beta1KnowledgeBase) *ProjectsAgentKnowledgeBasesPatchCall {
 	c := &ProjectsAgentKnowledgeBasesPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -13077,7 +13113,7 @@ func (c *ProjectsAgentKnowledgeBasesPatchCall) Do(opts ...googleapi.CallOption) 
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified knowledge base.",
+	//   "description": "Updates the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.patch",
@@ -13126,6 +13162,10 @@ type ProjectsAgentKnowledgeBasesDocumentsCreateCall struct {
 }
 
 // Create: Creates a new document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 //
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
@@ -13226,7 +13266,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsCreateCall) Do(opts ...googleapi.Ca
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a new document.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Creates a new document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.create",
@@ -13268,6 +13308,10 @@ type ProjectsAgentKnowledgeBasesDocumentsDeleteCall struct {
 }
 
 // Delete: Deletes the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 //
 // Operation <response: google.protobuf.Empty,
 //            metadata: KnowledgeOperationMetadata>
@@ -13362,7 +13406,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsDeleteCall) Do(opts ...googleapi.Ca
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes the specified document.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Deletes the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.delete",
@@ -13402,6 +13446,10 @@ type ProjectsAgentKnowledgeBasesDocumentsGetCall struct {
 }
 
 // Get: Retrieves the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 func (r *ProjectsAgentKnowledgeBasesDocumentsService) Get(name string) *ProjectsAgentKnowledgeBasesDocumentsGetCall {
 	c := &ProjectsAgentKnowledgeBasesDocumentsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -13507,7 +13555,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsGetCall) Do(opts ...googleapi.CallO
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves the specified document.",
+	//   "description": "Retrieves the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.get",
@@ -13547,6 +13595,10 @@ type ProjectsAgentKnowledgeBasesDocumentsListCall struct {
 }
 
 // List: Returns the list of all documents of the knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 func (r *ProjectsAgentKnowledgeBasesDocumentsService) List(parent string) *ProjectsAgentKnowledgeBasesDocumentsListCall {
 	c := &ProjectsAgentKnowledgeBasesDocumentsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -13668,7 +13720,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsListCall) Do(opts ...googleapi.Call
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns the list of all documents of the knowledge base.",
+	//   "description": "Returns the list of all documents of the knowledge base.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.list",
@@ -13740,6 +13792,11 @@ type ProjectsAgentKnowledgeBasesDocumentsPatchCall struct {
 }
 
 // Patch: Updates the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
+//
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
 func (r *ProjectsAgentKnowledgeBasesDocumentsService) Patch(name string, googleclouddialogflowv2beta1document *GoogleCloudDialogflowV2beta1Document) *ProjectsAgentKnowledgeBasesDocumentsPatchCall {
@@ -13849,7 +13906,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsPatchCall) Do(opts ...googleapi.Cal
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified document.\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Updates the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.patch",
@@ -13905,6 +13962,11 @@ type ProjectsAgentKnowledgeBasesDocumentsReloadCall struct {
 // still
 // may be side effects because of internal implementation
 // changes.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
+//
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
 func (r *ProjectsAgentKnowledgeBasesDocumentsService) Reload(name string, googleclouddialogflowv2beta1reloaddocumentrequest *GoogleCloudDialogflowV2beta1ReloadDocumentRequest) *ProjectsAgentKnowledgeBasesDocumentsReloadCall {
@@ -14004,7 +14066,7 @@ func (c *ProjectsAgentKnowledgeBasesDocumentsReloadCall) Do(opts ...googleapi.Ca
 	}
 	return ret, nil
 	// {
-	//   "description": "Reloads the specified document from its specified source, content_uri or\ncontent. The previously loaded content of the document will be deleted.\nNote: Even when the content of the document has not changed, there still\nmay be side effects because of internal implementation changes.\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Reloads the specified document from its specified source, content_uri or\ncontent. The previously loaded content of the document will be deleted.\nNote: Even when the content of the document has not changed, there still\nmay be side effects because of internal implementation changes.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/agent/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}:reload",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.agent.knowledgeBases.documents.reload",
@@ -15862,6 +15924,10 @@ type ProjectsKnowledgeBasesCreateCall struct {
 }
 
 // Create: Creates a knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsKnowledgeBasesService) Create(parent string, googleclouddialogflowv2beta1knowledgebase *GoogleCloudDialogflowV2beta1KnowledgeBase) *ProjectsKnowledgeBasesCreateCall {
 	c := &ProjectsKnowledgeBasesCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -15961,7 +16027,7 @@ func (c *ProjectsKnowledgeBasesCreateCall) Do(opts ...googleapi.CallOption) (*Go
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a knowledge base.",
+	//   "description": "Creates a knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.knowledgeBases.create",
@@ -16003,6 +16069,10 @@ type ProjectsKnowledgeBasesDeleteCall struct {
 }
 
 // Delete: Deletes the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsKnowledgeBasesService) Delete(name string) *ProjectsKnowledgeBasesDeleteCall {
 	c := &ProjectsKnowledgeBasesDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -16102,7 +16172,7 @@ func (c *ProjectsKnowledgeBasesDeleteCall) Do(opts ...googleapi.CallOption) (*Go
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes the specified knowledge base.",
+	//   "description": "Deletes the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "dialogflow.projects.knowledgeBases.delete",
@@ -16147,6 +16217,10 @@ type ProjectsKnowledgeBasesGetCall struct {
 }
 
 // Get: Retrieves the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsKnowledgeBasesService) Get(name string) *ProjectsKnowledgeBasesGetCall {
 	c := &ProjectsKnowledgeBasesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -16253,7 +16327,7 @@ func (c *ProjectsKnowledgeBasesGetCall) Do(opts ...googleapi.CallOption) (*Googl
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves the specified knowledge base.",
+	//   "description": "Retrieves the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.knowledgeBases.get",
@@ -16292,7 +16366,12 @@ type ProjectsKnowledgeBasesListCall struct {
 	header_      http.Header
 }
 
-// List: Returns the list of all knowledge bases of the specified agent.
+// List: Returns the list of all knowledge bases of the specified
+// agent.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsKnowledgeBasesService) List(parent string) *ProjectsKnowledgeBasesListCall {
 	c := &ProjectsKnowledgeBasesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -16415,7 +16494,7 @@ func (c *ProjectsKnowledgeBasesListCall) Do(opts ...googleapi.CallOption) (*Goog
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns the list of all knowledge bases of the specified agent.",
+	//   "description": "Returns the list of all knowledge bases of the specified agent.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.knowledgeBases.list",
@@ -16487,6 +16566,10 @@ type ProjectsKnowledgeBasesPatchCall struct {
 }
 
 // Patch: Updates the specified knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases` resource is
+// deprecated;
+// only use `projects.knowledgeBases`.
 func (r *ProjectsKnowledgeBasesService) Patch(name string, googleclouddialogflowv2beta1knowledgebase *GoogleCloudDialogflowV2beta1KnowledgeBase) *ProjectsKnowledgeBasesPatchCall {
 	c := &ProjectsKnowledgeBasesPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -16596,7 +16679,7 @@ func (c *ProjectsKnowledgeBasesPatchCall) Do(opts ...googleapi.CallOption) (*Goo
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified knowledge base.",
+	//   "description": "Updates the specified knowledge base.\n\nNote: The `projects.agent.knowledgeBases` resource is deprecated;\nonly use `projects.knowledgeBases`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "dialogflow.projects.knowledgeBases.patch",
@@ -16645,6 +16728,10 @@ type ProjectsKnowledgeBasesDocumentsCreateCall struct {
 }
 
 // Create: Creates a new document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 //
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
@@ -16745,7 +16832,7 @@ func (c *ProjectsKnowledgeBasesDocumentsCreateCall) Do(opts ...googleapi.CallOpt
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a new document.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Creates a new document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.create",
@@ -16787,6 +16874,10 @@ type ProjectsKnowledgeBasesDocumentsDeleteCall struct {
 }
 
 // Delete: Deletes the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 //
 // Operation <response: google.protobuf.Empty,
 //            metadata: KnowledgeOperationMetadata>
@@ -16881,7 +16972,7 @@ func (c *ProjectsKnowledgeBasesDocumentsDeleteCall) Do(opts ...googleapi.CallOpt
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes the specified document.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Deletes the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.delete",
@@ -16921,6 +17012,10 @@ type ProjectsKnowledgeBasesDocumentsGetCall struct {
 }
 
 // Get: Retrieves the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 func (r *ProjectsKnowledgeBasesDocumentsService) Get(name string) *ProjectsKnowledgeBasesDocumentsGetCall {
 	c := &ProjectsKnowledgeBasesDocumentsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -17026,7 +17121,7 @@ func (c *ProjectsKnowledgeBasesDocumentsGetCall) Do(opts ...googleapi.CallOption
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves the specified document.",
+	//   "description": "Retrieves the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.get",
@@ -17066,6 +17161,10 @@ type ProjectsKnowledgeBasesDocumentsListCall struct {
 }
 
 // List: Returns the list of all documents of the knowledge base.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
 func (r *ProjectsKnowledgeBasesDocumentsService) List(parent string) *ProjectsKnowledgeBasesDocumentsListCall {
 	c := &ProjectsKnowledgeBasesDocumentsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -17187,7 +17286,7 @@ func (c *ProjectsKnowledgeBasesDocumentsListCall) Do(opts ...googleapi.CallOptio
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns the list of all documents of the knowledge base.",
+	//   "description": "Returns the list of all documents of the knowledge base.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents",
 	//   "httpMethod": "GET",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.list",
@@ -17259,6 +17358,11 @@ type ProjectsKnowledgeBasesDocumentsPatchCall struct {
 }
 
 // Patch: Updates the specified document.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
+//
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
 func (r *ProjectsKnowledgeBasesDocumentsService) Patch(name string, googleclouddialogflowv2beta1document *GoogleCloudDialogflowV2beta1Document) *ProjectsKnowledgeBasesDocumentsPatchCall {
@@ -17368,7 +17472,7 @@ func (c *ProjectsKnowledgeBasesDocumentsPatchCall) Do(opts ...googleapi.CallOpti
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified document.\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Updates the specified document.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.patch",
@@ -17424,6 +17528,11 @@ type ProjectsKnowledgeBasesDocumentsReloadCall struct {
 // still
 // may be side effects because of internal implementation
 // changes.
+//
+// Note: The `projects.agent.knowledgeBases.documents` resource is
+// deprecated;
+// only use `projects.knowledgeBases.documents`.
+//
 // Operation <response: Document,
 //            metadata: KnowledgeOperationMetadata>
 func (r *ProjectsKnowledgeBasesDocumentsService) Reload(name string, googleclouddialogflowv2beta1reloaddocumentrequest *GoogleCloudDialogflowV2beta1ReloadDocumentRequest) *ProjectsKnowledgeBasesDocumentsReloadCall {
@@ -17523,7 +17632,7 @@ func (c *ProjectsKnowledgeBasesDocumentsReloadCall) Do(opts ...googleapi.CallOpt
 	}
 	return ret, nil
 	// {
-	//   "description": "Reloads the specified document from its specified source, content_uri or\ncontent. The previously loaded content of the document will be deleted.\nNote: Even when the content of the document has not changed, there still\nmay be side effects because of internal implementation changes.\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
+	//   "description": "Reloads the specified document from its specified source, content_uri or\ncontent. The previously loaded content of the document will be deleted.\nNote: Even when the content of the document has not changed, there still\nmay be side effects because of internal implementation changes.\n\nNote: The `projects.agent.knowledgeBases.documents` resource is deprecated;\nonly use `projects.knowledgeBases.documents`.\n\nOperation \u003cresponse: Document,\n           metadata: KnowledgeOperationMetadata\u003e",
 	//   "flatPath": "v2beta1/projects/{projectsId}/knowledgeBases/{knowledgeBasesId}/documents/{documentsId}:reload",
 	//   "httpMethod": "POST",
 	//   "id": "dialogflow.projects.knowledgeBases.documents.reload",
