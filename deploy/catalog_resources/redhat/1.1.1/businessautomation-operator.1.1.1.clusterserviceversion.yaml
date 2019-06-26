@@ -18,10 +18,7 @@ metadata:
     operator-businessautomation: "true"
 spec:
   displayName: Business Automation
-  description: |
-    Business Automation Operator for deployment and management of RHPAM/RHDM environments.
-
-    **To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**
+  description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
   keywords:
     - kieapp
     - pam
