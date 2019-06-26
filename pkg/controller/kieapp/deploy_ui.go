@@ -135,6 +135,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 }
 
 func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
+	var update bool
 	csv := &operatorsv1alpha1.ClusterServiceVersion{}
 	found := &routev1.Route{}
 	for i := 1; i < 60; i++ {
@@ -162,13 +163,20 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 			url := fmt.Sprintf("https://%s", found.Spec.Host)
 			link := getConsoleLink(csv)
 			if link == nil || link.URL != url {
+				update = true
 				if link == nil {
 					csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
 				} else {
 					link.URL = url
 				}
+			}
+			if !strings.Contains(csv.Spec.Description, constants.ConsoleDescription) {
+				update = true
+				csv.Spec.Description = strings.Join([]string{csv.Spec.Description, constants.ConsoleDescription}, "\n\n")
+			}
+			if update {
 				log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
-				err = reconciler.Service.Update(context.TODO(), csv)
+				err := reconciler.Service.Update(context.TODO(), csv)
 				if err != nil {
 					log.Error("Failed to update CSV. ", err)
 				}
