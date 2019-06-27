@@ -17,10 +17,10 @@ func init() {
 		api.SchemeBuilder.AddToScheme,
 		v1.SchemeBuilder.AddToScheme,
 		rbacv1.SchemeBuilder.AddToScheme,
-		oappsv1.SchemeBuilder.AddToScheme,
-		routev1.SchemeBuilder.AddToScheme,
-		oimagev1.SchemeBuilder.AddToScheme,
-		buildv1.SchemeBuilder.AddToScheme,
+		oappsv1.Install,
+		routev1.Install,
+		oimagev1.Install,
+		buildv1.Install,
 		operatorsv1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
