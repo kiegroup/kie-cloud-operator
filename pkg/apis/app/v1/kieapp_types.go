@@ -83,6 +83,7 @@ type KieAppRegistry struct {
 
 // KieApp is the Schema for the kieapps API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type KieApp struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

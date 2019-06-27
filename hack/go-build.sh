@@ -14,7 +14,7 @@ if [[ -z ${CI} ]]; then
     echo
     echo Will build console first:
     echo
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
     echo
     echo Now building operator:
     echo
@@ -36,6 +36,6 @@ if [[ -z ${CI} ]]; then
             ${CFLAGS}
     fi
 else
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -v -a -o build/_output/bin/console-cr-form github.com/kiegroup/kie-cloud-operator/cmd/ui
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -v -a -o build/_output/bin/kie-cloud-operator github.com/kiegroup/kie-cloud-operator/cmd/manager
 fi
