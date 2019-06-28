@@ -46,6 +46,10 @@ servers:
                       value: "[[.KieName]]-mysql"
                     - name: RHPAM_SERVICE_PORT
                       value: "3306"
+                    - name: RHPAM_CONNECTION_CHECKER
+                      value: "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"
+                    - name: RHPAM_EXCEPTION_SORTER
+                      value: "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"
                     - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
                       value: "60000"
                     ## MySQL driver settings END
