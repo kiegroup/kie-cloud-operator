@@ -28,15 +28,10 @@ go get -u github.com/evanphx/json-patch
 
 # Configuration
 
-* There is a global configuration variable `jsonpatch.SupportNegativeIndices`.
-  This defaults to `true` and enables the non-standard practice of allowing
-  negative indices to mean indices starting at the end of an array. This
-  functionality can be disabled by setting `jsonpatch.SupportNegativeIndices =
-  false`.
-
-* There is a global configuration variable `jsonpatch.AccumulatedCopySizeLimit`,
-  which limits the total size increase in bytes caused by "copy" operations in a
-  patch. It defaults to 0, which means there is no limit.
+There is a single global configuration variable `jsonpatch.SupportNegativeIndices'. This
+defaults to `true` and enables the non-standard practice of allowing negative indices
+to mean indices starting at the end of an array. This functionality can be disabled
+by setting `jsonpatch.SupportNegativeIndices = false`.
 
 ## Create and apply a merge patch
 Given both an original JSON document and a modified JSON document, you can create

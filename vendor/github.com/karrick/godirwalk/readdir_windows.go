@@ -1,15 +1,16 @@
 package godirwalk
 
+import (
+	"os"
+)
+
 // The functions in this file are mere wrappers of what is already provided by
 // standard library, in order to provide the same API as this library provides.
 //
-// The scratch buffer parameter in these functions is the underscore because
-// presently that parameter is ignored by the functions for this architecture.
+// The scratch buffer argument is ignored by this architecture.
 //
 // Please send PR or link to article if you know of a more performant way of
 // enumerating directory contents and mode types on Windows.
-
-import "os"
 
 func readdirents(osDirname string, _ []byte) (Dirents, error) {
 	dh, err := os.Open(osDirname)
