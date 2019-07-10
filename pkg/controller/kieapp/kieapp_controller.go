@@ -3,12 +3,12 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -297,7 +297,17 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	imageName := tagName
 	regContext := fmt.Sprintf("%s-%s", product, string(version[0]))
 
-	registryAddress := cr.Spec.ImageRegistry.Registry
+	// default registry settings
+	registry := &v1.KieAppRegistry{
+		Insecure: logs.GetBoolEnv("INSECURE"),
+	}
+	if cr.Spec.ImageRegistry != nil {
+		registry = cr.Spec.ImageRegistry
+	}
+	if registry.Registry == "" {
+		registry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry)
+	}
+	registryAddress := registry.Registry
 	if strings.Contains(result[0], "datagrid") {
 		registryAddress = constants.ImageRegistry
 		regContext = "jboss-datagrid-7"
@@ -329,7 +339,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
-	if cr.Spec.ImageRegistry.Insecure {
+	if registry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
 		}
@@ -618,6 +628,19 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 }
 
 func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+	if cr.Spec.ImageRegistry != nil {
+		if reconciler.checkImageStreamTag(name, cr.Namespace) {
+			return cr.Namespace, nil
+		}
+		log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
+		err := reconciler.createLocalImageTag(name, cr)
+		if err != nil {
+			log.Error(err)
+			return namespace, err
+		}
+		return cr.Namespace, nil
+	}
+
 	if reconciler.checkImageStreamTag(name, namespace) {
 		return namespace, nil
 	} else if reconciler.checkImageStreamTag(name, cr.Namespace) {
@@ -629,8 +652,8 @@ func (reconciler *Reconciler) ensureImageStream(name string, namespace string, c
 			log.Error(err)
 			return namespace, err
 		}
-		return cr.Namespace, nil
 	}
+	return cr.Namespace, nil
 }
 
 // createCustomObject checks for an object's existence before creating it
