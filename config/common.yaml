@@ -324,6 +324,7 @@ smartRouter:
               deploymentConfig: "[[.ApplicationName]]-smartrouter"
               service: "[[.ApplicationName]]-smartrouter"
           spec:
+            serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-smartrouter"
@@ -349,6 +350,12 @@ smartRouter:
                     value: "kie-server-router"
                   - name: KIE_SERVER_ROUTER_NAME
                     value: "KIE Server Router"
+                  - name: KIE_SERVER_ROUTER_PROTOCOL
+                    value: "https"
+                  - name: KIE_SERVER_ROUTER_ROUTE_NAME
+                    value: "[[.ApplicationName]]-smartrouter"
+                  - name: KIE_SERVER_ROUTER_SERVICE
+                    value: "[[.ApplicationName]]-smartrouter"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
                     value: "jboss"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
