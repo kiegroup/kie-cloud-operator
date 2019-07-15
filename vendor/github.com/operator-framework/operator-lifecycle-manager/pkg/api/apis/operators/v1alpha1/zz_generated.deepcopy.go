@@ -23,7 +23,6 @@ package v1alpha1
 import (
 	json "encoding/json"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -397,7 +396,7 @@ func (in *ClusterServiceVersionList) DeepCopyObject() runtime.Object {
 func (in *ClusterServiceVersionSpec) DeepCopyInto(out *ClusterServiceVersionSpec) {
 	*out = *in
 	in.InstallStrategy.DeepCopyInto(&out.InstallStrategy)
-	in.Version.DeepCopyInto(&out.Version)
+	out.Version = in.Version
 	in.CustomResourceDefinitions.DeepCopyInto(&out.CustomResourceDefinitions)
 	in.APIServiceDefinitions.DeepCopyInto(&out.APIServiceDefinitions)
 	if in.NativeAPIs != nil {
@@ -1023,11 +1022,6 @@ func (in *SubscriptionStatus) DeepCopyInto(out *SubscriptionStatus) {
 	if in.Install != nil {
 		in, out := &in.Install, &out.Install
 		*out = new(InstallPlanReference)
-		**out = **in
-	}
-	if in.InstallPlanRef != nil {
-		in, out := &in.InstallPlanRef, &out.InstallPlanRef
-		*out = new(corev1.ObjectReference)
 		**out = **in
 	}
 	in.LastUpdated.DeepCopyInto(&out.LastUpdated)
