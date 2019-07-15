@@ -40,7 +40,7 @@ func GenerateKeystore(commonName, alias string, password []byte) []byte {
 	var b bytes.Buffer
 	err = keystore.Encode(&b, keyStore, password)
 	if err != nil {
-		log.Error("Error encryting and signing keystore. ", err)
+		log.Error("Error encrypting and signing keystore. ", err)
 	}
 
 	return b.Bytes()

@@ -55,7 +55,7 @@ servers:
         labels:
           app: "[[$.ApplicationName]]"
           application: "[[$.ApplicationName]]"
-          service: "[[.KieName]]"
+          service: "[[.KieName]]-amq"
         annotations:
           template.alpha.openshift.io/wait-for-ready: "true"
       spec:
@@ -100,16 +100,28 @@ servers:
                   name: console-jolokia
                   protocol: TCP
                 - containerPort: 5672
-                  name: amq-amqp
+                  name: amqp
+                  protocol: TCP
+                - containerPort: 5671
+                  name: amqp-ssl
                   protocol: TCP
                 - containerPort: 1883
-                  name: amq-mqtt
+                  name: mqtt
+                  protocol: TCP
+                - containerPort: 8883
+                  name: mqtt-ssl
                   protocol: TCP
                 - containerPort: 61613
-                  name: amq-stomp
+                  name: stomp
+                  protocol: TCP
+                - containerPort: 61612
+                  name: stomp-ssl
                   protocol: TCP
                 - containerPort: 61616
-                  name: amq-tcp
+                  name: artemis
+                  protocol: TCP
+                - containerPort: 61617
+                  name: amq-tcp-ssl
                   protocol: TCP
               env:
                 - name: AMQ_USER
@@ -126,9 +138,30 @@ servers:
                 - name: AMQ_QUEUES
                   value: "[[.Jms.AMQQueues]]"
                 - name: AMQ_REQUIRE_LOGIN
-                  value: "false"
+                  value: "true"
                 - name: AMQ_ANYCAST_PREFIX
                 - name: AMQ_MULTICAST_PREFIX
+            # [[ if .Jms.AMQEnableSSL]]
+                - name: AMQ_KEYSTORE_TRUSTSTORE_DIR
+                  value: "/etc/amq-secret-volume"
+                - name: AMQ_TRUSTSTORE
+                  value: '[[.Jms.AMQTruststoreName ]]'
+                - name: AMQ_TRUSTSTORE_PASSWORD
+                  value: '[[.Jms.AMQTruststorePassword ]]'
+                - name: AMQ_KEYSTORE
+                  value: '[[.Jms.AMQKeystoreName ]]'
+                - name: AMQ_KEYSTORE_PASSWORD
+                  value: '[[.Jms.AMQKeystorePassword ]]'
+              volumeMounts:
+                - name: broker-secret-volume
+                  mountPath: "/etc/amq-secret-volume"
+                  readOnly: true
+            volumes:
+              - name: broker-secret-volume
+                secret:
+                  secretName: '[[.Jms.AMQSecretName ]]'
+           # [[end]]
+
     ## AMQ deployment END
     services:
       - spec:
@@ -148,7 +181,7 @@ servers:
             description: "The broker's console and Jolokia port."
       - spec:
           ports:
-            - name: "amp-amqp"
+            - name: "amq-amqp"
               port: 5672
               targetPort: 5672
           selector:
@@ -161,6 +194,21 @@ servers:
             service: "[[.KieName]]-amq"
           annotations:
             description: "The broker's AMQP port."
+      - spec:
+          ports:
+            - name: "amq-amqp-ssl"
+              port: 5671
+              targetPort: 5671
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-amqp-ssl"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's AMQP SSL port."
       - spec:
           ports:
             - name: "amq-mqtt"
@@ -178,7 +226,22 @@ servers:
             description: "The broker's MQTT port."
       - spec:
           ports:
-            - name: "amp-stomp"
+            - name: "amq-mqtt-ssl"
+              port: 8883
+              targetPort: 8883
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-mqtt-ssl"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's MQTT SSL port."
+      - spec:
+          ports:
+            - name: "amq-stomp"
               port: 61613
               targetPort: 61613
           selector:
@@ -191,6 +254,21 @@ servers:
             service: "[[.KieName]]-amq"
           annotations:
             description: "The broker's STOMP port."
+      - spec:
+          ports:
+            - name: "amq-stomp-ssl"
+              port: 61612
+              targetPort: 61612
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-stomp-ssl"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's STOMP SSL port."
       - spec:
           ports:
             - name: "amq-tcp"
@@ -209,11 +287,33 @@ servers:
             service.alpha.openshift.io/dependencies: '[{"name": "[[.KieName]]-amq-amqp",
                 "kind": "Service"},{"name": "[[.KieName]]-amq-mqtt", "kind": "Service"},{"name":
                 "[[.KieName]]-amq-stomp", "kind": "Service"}]'
-
+      - spec:
+          ports:
+            - name: "amq-tcp-ssl"
+              port: 61617
+              targetPort: 61617
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-tcp-ssl"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: The broker's OpenWire SSL port.
+            service.alpha.openshift.io/dependencies: '[{"name": "[[.KieName]]-amq-tcp", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-amqp", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-mqtt", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-stomp", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-amqp-ssl", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-mqtt-ssl", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-stomp-ssl", "kind": "Service"}]'
     routes:
+      # [[ if .Jms.AMQEnableSSL]]
       - id: "[[.KieName]]-amq-jolokia-console"
         metadata:
-          name: amq-jolokia-console
+          name: "amq-jolokia-console"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
@@ -224,6 +324,40 @@ servers:
           to:
             kind: "Service"
             name: "[[.KieName]]-amq-jolokia"
+          tls:
+            termination: passthrough
+
+      - id: "[[.KieName]]-amq-tcp-ssl"
+        metadata:
+          name: "amq-tcp-ssl"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "Route for AMQ Jolokia Service"
+        spec:
+          to:
+            kind: "Service"
+            name: "[[.KieName]]-amq-tcp-ssl"
+          tls:
+            termination: passthrough
+      # [[else]]
+      - id: "[[.KieName]]-amq-jolokia-console"
+        metadata:
+          name: "amq-jolokia-console"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "Route for AMQ Jolokia Service"
+        spec:
+          to:
+            kind: "Service"
+            name: "[[.KieName]]-amq-jolokia"
+      # [[end]]
+
 #[[end]]
 ## RANGE ends
 ## KIE Servers END
