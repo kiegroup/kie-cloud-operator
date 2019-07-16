@@ -106,7 +106,7 @@ type KieAppObjects struct {
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
-	SmartRouter *KieAppObject `json:"smartRouter,omitempty"`
+	SmartRouter *SmartRouterSet `json:"smartRouter,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
@@ -125,6 +125,12 @@ type KieServerSet struct {
 	SecuredKieAppObject `json:",inline"`
 	Database            *DatabaseObject  `json:"database,omitempty"`
 	Jms                 *KieAppJmsObject `json:"jms,omitempty"`
+}
+
+type SmartRouterSet struct {
+	KieAppObject     `json:"smartRouter,omitempty"`
+	Protocol         string `json:"protocol,omitempty"`
+	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 }
 
 // SecuredKieAppObject Generic object definition
@@ -370,12 +376,15 @@ type ServerTemplate struct {
 	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
 	Database       DatabaseObject         `json:"database,omitempty"`
 	Jms            KieAppJmsObject        `json:"jms,omitempty"`
+	SmartRouter    SmartRouterSet         `json:"smartRouter,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
 	Replicas       int32  `json:"replicas,omitempty"`
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
+	Protocol         string `json:"protocol,omitempty"`
+	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type

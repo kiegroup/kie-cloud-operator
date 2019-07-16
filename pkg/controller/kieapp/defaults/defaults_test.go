@@ -288,18 +288,43 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamProduction,
 			Objects: v1.KieAppObjects{
-				SmartRouter: &v1.KieAppObject{},
+				SmartRouter: &v1.SmartRouterSet{},
 			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
-
 	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
 	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestRhpamProdwSmartRouterWithSSL(t *testing.T) {
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProduction,
+			Objects: v1.KieAppObjects{
+				SmartRouter: &v1.SmartRouterSet{
+					Protocol: "https",
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
+	assert.Equal(t, "9443", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
+	assert.Equal(t, "https", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -654,6 +679,7 @@ func TestConstructSmartRouterObject(t *testing.T) {
 	assert.Nil(t, err)
 
 	env = ConsolidateObjects(env, cr)
+
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
 	re := regexp.MustCompile("[0-9]+")
@@ -1229,9 +1255,11 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 						},
 					},
 				},
-				SmartRouter: &v1.KieAppObject{
-					Env:       sampleEnv,
-					Resources: sampleResources,
+				SmartRouter: &v1.SmartRouterSet{
+					KieAppObject: v1.KieAppObject{
+						Env:       sampleEnv,
+						Resources: sampleResources,
+					},
 				},
 			},
 		},
