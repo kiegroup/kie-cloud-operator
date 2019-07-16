@@ -7,3 +7,4 @@ spec:
   objects:
     smartRouter:
       replicas: 1
+
