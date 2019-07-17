@@ -106,7 +106,7 @@ type KieAppObjects struct {
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
-	SmartRouter *SmartRouterSet `json:"smartRouter,omitempty"`
+	SmartRouter *SmartRouterObject `json:"smartRouter,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
@@ -127,8 +127,8 @@ type KieServerSet struct {
 	Jms                 *KieAppJmsObject `json:"jms,omitempty"`
 }
 
-type SmartRouterSet struct {
-	KieAppObject     `json:"smartRouter,omitempty"`
+type SmartRouterObject struct {
+	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 }
@@ -376,7 +376,7 @@ type ServerTemplate struct {
 	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
 	Database       DatabaseObject         `json:"database,omitempty"`
 	Jms            KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter    SmartRouterSet         `json:"smartRouter,omitempty"`
+	SmartRouter    SmartRouterObject      `json:"smartRouter,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates

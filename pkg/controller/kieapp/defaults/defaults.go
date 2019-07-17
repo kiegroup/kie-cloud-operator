@@ -248,7 +248,6 @@ func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 			template.Protocol = cr.Spec.Objects.SmartRouter.Protocol
 		}
 
-		// if enpty defaults to false
 		template.UseExternalRoute = cr.Spec.Objects.SmartRouter.UseExternalRoute
 
 		// Set replicas

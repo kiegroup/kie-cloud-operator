@@ -288,7 +288,7 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamProduction,
 			Objects: v1.KieAppObjects{
-				SmartRouter: &v1.SmartRouterSet{},
+				SmartRouter: &v1.SmartRouterObject{},
 			},
 		},
 	}
@@ -305,7 +305,7 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
-func TestRhpamProdwSmartRouterWithSSL(t *testing.T) {
+func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -313,7 +313,7 @@ func TestRhpamProdwSmartRouterWithSSL(t *testing.T) {
 		Spec: v1.KieAppSpec{
 			Environment: v1.RhpamProduction,
 			Objects: v1.KieAppObjects{
-				SmartRouter: &v1.SmartRouterSet{
+				SmartRouter: &v1.SmartRouterObject{
 					Protocol:         "https",
 					UseExternalRoute: true,
 				},
@@ -1258,7 +1258,7 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 						},
 					},
 				},
-				SmartRouter: &v1.SmartRouterSet{
+				SmartRouter: &v1.SmartRouterObject{
 					KieAppObject: v1.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
