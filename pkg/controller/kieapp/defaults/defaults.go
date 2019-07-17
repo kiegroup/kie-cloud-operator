@@ -238,12 +238,20 @@ func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 			template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
 		}
 
+		if cr.Spec.Objects.SmartRouter.Protocol == "" {
+			template.Protocol = constants.SmartRouterProtocol
+		} else {
+			template.Protocol = cr.Spec.Objects.SmartRouter.Protocol
+		}
+
+		template.UseExternalRoute = cr.Spec.Objects.SmartRouter.UseExternalRoute
+
 		// Set replicas
 		envReplicas := v1.Replicas{}
 		if hasEnv {
 			envReplicas = envConstants.Replica.SmartRouter
 		}
-		replicas, denyScale := setReplicas(*cr.Spec.Objects.SmartRouter, envReplicas, hasEnv)
+		replicas, denyScale := setReplicas(cr.Spec.Objects.SmartRouter.KieAppObject, envReplicas, hasEnv)
 		if denyScale {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
@@ -356,6 +364,16 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			}
 			template.Replicas = replicas
 
+			// if, SmartRouter object is nil, ignore it
+			// get smart router protocol configuration
+			if cr.Spec.Objects.SmartRouter != nil {
+				if cr.Spec.Objects.SmartRouter.Protocol == "" {
+					template.SmartRouter.Protocol = constants.SmartRouterProtocol
+				} else {
+					template.SmartRouter.Protocol = cr.Spec.Objects.SmartRouter.Protocol
+				}
+			}
+
 			dbConfig, err := getDatabaseConfig(cr.Spec.Environment, serverSet.Database)
 			if err != nil {
 				return servers, err
@@ -406,7 +424,7 @@ func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet,
 func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 	env.Console = ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
 	if cr.Spec.Objects.SmartRouter != nil {
-		env.SmartRouter = ConstructObject(env.SmartRouter, *cr.Spec.Objects.SmartRouter)
+		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter.KieAppObject)
 	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)

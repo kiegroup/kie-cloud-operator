@@ -351,9 +351,11 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_NAME
                     value: "KIE Server Router"
                   - name: KIE_SERVER_ROUTER_PROTOCOL
-                    value: "https"
+                    value: "[[.SmartRouter.Protocol]]"
+                  #[[if .SmartRouter.UseExternalRoute]]
                   - name: KIE_SERVER_ROUTER_ROUTE_NAME
-                    value: "[[.ApplicationName]]-smartrouter"
+                    value: "[[$.ApplicationName]]-smartrouter"
+                  #[[end]]
                   - name: KIE_SERVER_ROUTER_SERVICE
                     value: "[[.ApplicationName]]-smartrouter"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
@@ -634,10 +636,15 @@ servers:
                     # Auth config END
                     - name: KIE_SERVER_ROUTER_SERVICE
                       value: "[[$.ApplicationName]]-smartrouter"
+                      #[[ if eq .SmartRouter.Protocol "https" ]]
+                    - name: KIE_SERVER_ROUTER_PORT
+                      value: "9443"
+                      #[[ else ]]
                     - name: KIE_SERVER_ROUTER_PORT
                       value: "9000"
+                      #[[ end ]]
                     - name: KIE_SERVER_ROUTER_PROTOCOL
-                      value: "http"
+                      value: "[[.SmartRouter.Protocol]]"
                   resources:
                     limits:
                       memory: 1Gi

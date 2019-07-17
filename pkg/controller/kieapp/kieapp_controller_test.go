@@ -83,8 +83,10 @@ func TestSpecifySecret(t *testing.T) {
 						},
 					},
 				},
-				SmartRouter: &v1.KieAppObject{
-					KeystoreSecret: "smartrouter-ks-secret",
+				SmartRouter: &v1.SmartRouterObject{
+					KieAppObject: v1.KieAppObject{
+						KeystoreSecret: "smartrouter-ks-secret",
+					},
 				},
 			},
 		},
