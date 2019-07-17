@@ -7,5 +7,4 @@ spec:
   objects:
     smartRouter:
       replicas: 1
-      useExternalRoute: false
 

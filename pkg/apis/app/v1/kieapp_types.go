@@ -381,8 +381,8 @@ type ServerTemplate struct {
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
-	Replicas       int32  `json:"replicas,omitempty"`
-	KeystoreSecret string `json:"keystoreSecret,omitempty"`
+	Replicas         int32  `json:"replicas,omitempty"`
+	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 }

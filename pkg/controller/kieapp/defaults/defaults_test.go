@@ -299,6 +299,7 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
 	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -313,7 +314,8 @@ func TestRhpamProdwSmartRouterWithSSL(t *testing.T) {
 			Environment: v1.RhpamProduction,
 			Objects: v1.KieAppObjects{
 				SmartRouter: &v1.SmartRouterSet{
-					Protocol: "https",
+					Protocol:         "https",
+					UseExternalRoute: true,
 				},
 			},
 		},
@@ -327,6 +329,7 @@ func TestRhpamProdwSmartRouterWithSSL(t *testing.T) {
 	assert.Equal(t, "https", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-smartrouter", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
