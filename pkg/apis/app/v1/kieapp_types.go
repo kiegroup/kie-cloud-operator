@@ -136,21 +136,20 @@ type SecuredKieAppObject struct {
 
 // KieAppJmsObject messaging specification to be used by the KieApp
 type KieAppJmsObject struct {
-	EnableKieServerJMSIntegration  bool   `json:"enableKieServerJMSIntegration,omitempty"`
-	KieServerJmsExecutor           bool   `json:"kieServerJmsExecutor,omitempty"`
-	KieServerJmsExecutorTransacted bool   `json:"kieServerJmsExecutorTransacted,omitempty"`
-	KieServerJmsQueueRequest       string `json:"kieServerJmsQueueRequest,omitempty"`
-	KieServerJmsQueueResponse      string `json:"kieServerJmsQueueResponse,omitempty"`
-	KieServerJmsQueueExecutor      string `json:"kieServerJmsQueueExecutor,omitempty"`
-	KieServerJmsEnableSignal       bool   `json:"kieServerJmsEnableSignal,omitempty"`
-	KieServerJmsQueueSignal        string `json:"kieServerJmsQueueSignal,omitempty"`
-	KieServerJmsEnableAudit        bool   `json:"kieServerJmsEnableAudit,omitempty"`
-	KieServerJmsQueueAudit         string `json:"kieServerJmsQueueAudit,omitempty"`
-	KieServerJmsAuditTransacted    bool   `json:"kieServerJmsAuditTransacted,omitempty"`
-	KieServerJmsUsername           string `json:"kieServerJmsUsername,omitempty"`
-	KieServerJmsPassword           string `json:"kieServerJmsPassword,omitempty"`
-	// It will receives the default value for the Executor, Request, Response, Signal and Audit queues.
-	KieServerJmsAMQQueues string `json:"kieServerJmsAMQQueues,omitempty"`
+	EnableIntegration  bool   `json:"enableIntegration,omitempty"`
+	Executor           bool   `json:"executor,omitempty"`
+	ExecutorTransacted bool   `json:"executorTransacted,omitempty"`
+	QueueRequest       string `json:"queueRequest,omitempty"`
+	QueueResponse      string `json:"queueResponse,omitempty"`
+	QueueExecutor      string `json:"queueExecutor,omitempty"`
+	EnableSignal       bool   `json:"enableSignal,omitempty"`
+	QueueSignal        string `json:"queueSignal,omitempty"`
+	EnableAudit        bool   `json:"enableAudit,omitempty"`
+	QueueAudit         string `json:"queueAudit,omitempty"`
+	AuditTransacted    bool   `json:"auditTransacted,omitempty"`
+	Username           string `json:"username,omitempty"`
+	Password           string `json:"password,omitempty"`
+	AMQQueues          string `json:"amqQueues,omitempty"` // It will receive the default value for the Executor, Request, Response, Signal and Audit queues.
 }
 
 // KieAppObject Generic object definition

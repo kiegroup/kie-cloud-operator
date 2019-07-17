@@ -390,48 +390,48 @@ spec:
                         type: object
                         description: Configuration for JMS integration with KIE Server.
                         required:
-                        - enableKieServerJMSIntegration
+                        - enableIntegration
                         properties:
-                          enableKieServerJMSIntegration:
+                          enableIntegration:
                             type: boolean
                             description: When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.
-                          kieServerJmsExecutor:
+                          executor:
                             type: boolean
                             description: Set false to disable the JMS executor, it is enabled by default.
-                          kieServerJmsQueueExecutor:
+                          queueExecutor:
                             type: string
                             description: JNDI name of executor queue for JMS, example queue/CUSTOM.KIE.SERVER.EXECUTOR, default is queue/KIE.SERVER.EXECUTOR.
-                          kieServerJmsExecutorTransacted:
+                          executorTransacted:
                             type: boolean
                             description: Enable transactions for JMS executor, disabled by default.
-                          kieServerJmsQueueRequest:
+                          queueRequest:
                             type: string
                             description: JNDI name of request queue for JMS, example queue/CUSTOM.KIE.SERVER.REQUEST, default is queue/KIE.SERVER.REQUEST.
-                          kieServerJmsQueueResponse:
+                          queueResponse:
                             type: string
                             description: JNDI name of response queue for JMS, example queue/CUSTOM.KIE.SERVER.RESPONSE, default is queue/KIE.SERVER.RESPONSE.
-                          kieServerJmsEnableSignal:
+                          enableSignal:
                             type: boolean
                             description: Enable the Signal configuration through JMS. Default is false.
-                          kieServerJmsQueueSignal:
+                          queueSignal:
                             type: string
                             description: JNDI name of signal queue for JMS, example queue/CUSTOM.KIE.SERVER.SIGNAL, default is queue/KIE.SERVER.SIGNAL.
-                          kieServerJmsEnableAudit:
+                          enableAudit:
                             type: boolean
                             description: Enable the Audit logging through JMS. Default is false.
-                          kieServerJmsQueueAudit:
+                          queueAudit:
                             type: string
                             description: JNDI name of audit logging queue for JMS, example queue/CUSTOM.KIE.SERVER.AUDIT, default is queue/KIE.SERVER.AUDIT.
-                          kieServerJmsAuditTransacted:
+                          auditTransacted:
                             type: boolean
                             description: Determines if JMS session is transacted or not - default true.
-                          kieServerJmsUsername:
+                          username:
                             type: string
                             description: AMQ broker username to connect do the AMQ, generated if empty.
-                          kieServerJmsPassword:
+                          password:
                             type: string
                             description: AMQ broker password to connect do the AMQ, generated if empty.
-                          kieServerJmsAMQQueues:
+                          amqQueues:
                             type: string
                             description: AMQ broker broker comma separated queues, if empty the values from default queues will be used.
                 smartRouter:

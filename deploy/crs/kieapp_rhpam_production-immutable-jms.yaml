@@ -13,6 +13,6 @@ spec:
             reference: master
             contextDir: quickstarts/library-process/library
         jms:
-          enableKieServerJMSIntegration: true
-          kieServerJmsEnableSignal: true
-          kieServerJmsEnableAudit: true
+          enableIntegration: true
+          enableSignal: true
+          enableAudit: true

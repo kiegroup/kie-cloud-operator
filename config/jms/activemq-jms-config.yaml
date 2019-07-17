@@ -14,35 +14,35 @@ servers:
                 env:
                   # JMS config BEGIN
                   - name: KIE_SERVER_JMS_QUEUE_REQUEST
-                    value: "[[.Jms.KieServerJmsQueueRequest]]"
+                    value: "[[.Jms.QueueRequest]]"
                   - name: KIE_SERVER_JMS_QUEUE_RESPONSE
-                    value: "[[.Jms.KieServerJmsQueueResponse]]"
+                    value: "[[.Jms.QueueResponse]]"
                   - name: KIE_SERVER_JMS_QUEUE_EXECUTOR
-                    value: "[[.Jms.KieServerJmsQueueExecutor]]"
+                    value: "[[.Jms.QueueExecutor]]"
                   - name: KIE_SERVER_JMS_ENABLE_SIGNAL
-                    value: "[[.Jms.KieServerJmsEnableSignal]]"
-                    # [[ if .Jms.KieServerJmsEnableSignal]]
+                    value: "[[.Jms.EnableSignal]]"
+                    # [[ if .Jms.EnableSignal]]
                   - name: KIE_SERVER_JMS_QUEUE_SIGNAL
-                    value: "[[.Jms.KieServerJmsQueueSignal]]"
+                    value: "[[.Jms.QueueSignal]]"
                     # [[end]]
                   - name: KIE_SERVER_JMS_ENABLE_AUDIT
-                    value: "[[.Jms.KieServerJmsEnableAudit]]"
-                    # [[ if .Jms.KieServerJmsEnableAudit]]
+                    value: "[[.Jms.EnableAudit]]"
+                    # [[ if .Jms.EnableAudit]]
                   - name: KIE_SERVER_JMS_QUEUE_AUDIT
-                    value: "[[.Jms.KieServerJmsQueueAudit]]"
+                    value: "[[.Jms.QueueAudit]]"
                     # [[end]]
                   - name: KIE_SERVER_JMS_AUDIT_TRANSACTED
-                    value: "[[.Jms.KieServerJmsAuditTransacted]]"
+                    value: "[[.Jms.AuditTransacted]]"
                   - name: MQ_SERVICE_PREFIX_MAPPING
                     value: "[[.KieName]]-amq7=AMQ"
                   - name: AMQ_USERNAME
-                    value: "[[.Jms.KieServerJmsUsername]]"
+                    value: "[[.Jms.Username]]"
                   - name: AMQ_PASSWORD
-                    value: "[[.Jms.KieServerJmsPassword]]"
+                    value: "[[.Jms.Password]]"
                   - name: AMQ_PROTOCOL
                     value: "tcp"
                   - name: AMQ_QUEUES
-                    value: "[[.Jms.KieServerJmsAMQQueues]]"
+                    value: "[[.Jms.AMQQueues]]"
                   # JMS config END
     ## KIE server deployment config END
     ## AMQ deployment BEGIN
@@ -109,9 +109,9 @@ servers:
                   protocol: TCP
               env:
                 - name: AMQ_USER
-                  value: "[[.Jms.KieServerJmsUsername]]"
+                  value: "[[.Jms.Username]]"
                 - name: AMQ_PASSWORD
-                  value: "[[.Jms.KieServerJmsPassword]]"
+                  value: "[[.Jms.Password]]"
                   # maybe turn it in a parameter and defaults to admin if empty?
                 - name: AMQ_ROLE
                   value: "admin"
@@ -120,7 +120,7 @@ servers:
                 - name: AMQ_TRANSPORTS
                   value: "openwire"
                 - name: AMQ_QUEUES
-                  value: "[[.Jms.KieServerJmsAMQQueues]]"
+                  value: "[[.Jms.AMQQueues]]"
                 - name: AMQ_REQUIRE_LOGIN
                   value: "false"
                 - name: AMQ_ANYCAST_PREFIX
