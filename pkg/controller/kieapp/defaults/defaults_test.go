@@ -1181,8 +1181,7 @@ func TestImageRegistry(t *testing.T) {
 	if !assert.Nil(t, err, "error should be nil") {
 		log.Error("Error getting environment. ", err)
 	}
-	assert.Equal(t, registry1, cr.Spec.ImageRegistry.Registry)
-	assert.Equal(t, true, cr.Spec.ImageRegistry.Insecure)
+	assert.Nil(t, cr.Spec.ImageRegistry)
 
 	registry2 := "registry2.test.com:5000"
 	cr2 := &v1.KieApp{
@@ -1191,7 +1190,7 @@ func TestImageRegistry(t *testing.T) {
 		},
 		Spec: v1.KieAppSpec{
 			Environment: "rhpam-trial",
-			ImageRegistry: v1.KieAppRegistry{
+			ImageRegistry: &v1.KieAppRegistry{
 				Registry: registry2,
 			},
 		},

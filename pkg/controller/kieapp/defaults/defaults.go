@@ -155,10 +155,6 @@ func findCustomObjectByName(template v1.CustomObject, objects []v1.CustomObject)
 }
 
 func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
-	if cr.Spec.ImageRegistry == (v1.KieAppRegistry{}) {
-		cr.Spec.ImageRegistry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry) // default to red hat registry
-		cr.Spec.ImageRegistry.Insecure = logs.GetBoolEnv("INSECURE")
-	}
 	setAppConstants(&cr.Spec.CommonConfig)
 
 	// set default values for go template where not provided

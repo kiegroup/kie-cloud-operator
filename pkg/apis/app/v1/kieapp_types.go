@@ -26,7 +26,7 @@ type KieAppSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
 	Environment   EnvironmentType  `json:"environment,omitempty"`
-	ImageRegistry KieAppRegistry   `json:"imageRegistry,omitempty"`
+	ImageRegistry *KieAppRegistry  `json:"imageRegistry,omitempty"`
 	Objects       KieAppObjects    `json:"objects,omitempty"`
 	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
 	Auth          KieAppAuthObject `json:"auth,omitempty"`
