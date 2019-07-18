@@ -36,7 +36,3 @@ spec:
         resources:
           limits:
             memory: 2Gi
-    smartRouter:
-      env:
-        - name: MY_VALUE
-          value: "example"
