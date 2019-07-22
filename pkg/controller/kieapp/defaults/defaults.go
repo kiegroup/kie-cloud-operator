@@ -530,28 +530,33 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 	if envConstants == nil || jms == nil || !jms.EnableIntegration {
 		return nil, nil
 	}
+
+	t := true
+	if jms.Executor == nil {
+		jms.Executor = &t
+	}
+	if jms.AuditTransacted == nil {
+		jms.AuditTransacted = &t
+	}
+
 	// if enabled, prepare the default values
 	defaultJms := &v1.KieAppJmsObject{
-		Executor:           true,
-		ExecutorTransacted: false,
-		QueueExecutor:      "queue/KIE.SERVER.EXECUTOR",
-		QueueRequest:       "queue/KIE.SERVER.REQUEST",
-		QueueResponse:      "queue/KIE.SERVER.RESPONSE",
-		EnableSignal:       false,
-		QueueSignal:        "queue/KIE.SERVER.SIGNAL",
-		EnableAudit:        false,
-		QueueAudit:         "queue/KIE.SERVER.AUDIT",
-		AuditTransacted:    true,
-		Username:           "user" + string(shared.GeneratePassword(4)),
-		Password:           string(shared.GeneratePassword(8)),
+		QueueExecutor: "queue/KIE.SERVER.EXECUTOR",
+		QueueRequest:  "queue/KIE.SERVER.REQUEST",
+		QueueResponse: "queue/KIE.SERVER.RESPONSE",
+		QueueSignal:   "queue/KIE.SERVER.SIGNAL",
+		QueueAudit:    "queue/KIE.SERVER.AUDIT",
+		Username:      "user" + string(shared.GeneratePassword(4)),
+		Password:      string(shared.GeneratePassword(8)),
 	}
 
 	queuesList := []string{
-		getDefaultQueue(true, defaultJms.QueueExecutor, jms.QueueExecutor),
+		getDefaultQueue(*jms.Executor, defaultJms.QueueExecutor, jms.QueueExecutor),
 		getDefaultQueue(true, defaultJms.QueueRequest, jms.QueueRequest),
 		getDefaultQueue(true, defaultJms.QueueResponse, jms.QueueResponse),
 		getDefaultQueue(jms.EnableSignal, defaultJms.QueueSignal, jms.QueueSignal),
-		getDefaultQueue(jms.EnableAudit, defaultJms.QueueAudit, jms.QueueAudit)}
+		getDefaultQueue(jms.EnableAudit, defaultJms.QueueAudit, jms.QueueAudit),
+	}
 
 	// clean empty values
 	for i, queue := range queuesList {
@@ -572,9 +577,8 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	if append {
 		if jmsQueue == "" {
 			return defaultJmsQueue
-		} else {
-			return jmsQueue
 		}
+		return jmsQueue
 	}
 	return ""
 }
