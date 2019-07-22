@@ -142,7 +142,7 @@ type SecuredKieAppObject struct {
 // KieAppJmsObject messaging specification to be used by the KieApp
 type KieAppJmsObject struct {
 	EnableKieServerJMSIntegration  bool   `json:"enableKieServerJMSIntegration,omitempty"`
-	KieServerJmsExecutor           bool   `json:"kieServerJmsExecutor,omitempty"`
+	KieServerJmsExecutor           *bool  `json:"kieServerJmsExecutor,omitempty"`
 	KieServerJmsExecutorTransacted bool   `json:"kieServerJmsExecutorTransacted,omitempty"`
 	KieServerJmsQueueRequest       string `json:"kieServerJmsQueueRequest,omitempty"`
 	KieServerJmsQueueResponse      string `json:"kieServerJmsQueueResponse,omitempty"`
@@ -151,7 +151,7 @@ type KieAppJmsObject struct {
 	KieServerJmsQueueSignal        string `json:"kieServerJmsQueueSignal,omitempty"`
 	KieServerJmsEnableAudit        bool   `json:"kieServerJmsEnableAudit,omitempty"`
 	KieServerJmsQueueAudit         string `json:"kieServerJmsQueueAudit,omitempty"`
-	KieServerJmsAuditTransacted    bool   `json:"kieServerJmsAuditTransacted,omitempty"`
+	KieServerJmsAuditTransacted    *bool  `json:"kieServerJmsAuditTransacted,omitempty"`
 	KieServerJmsUsername           string `json:"kieServerJmsUsername,omitempty"`
 	KieServerJmsPassword           string `json:"kieServerJmsPassword,omitempty"`
 	// It will receives the default value for the Executor, Request, Response, Signal and Audit queues.

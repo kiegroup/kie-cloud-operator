@@ -534,24 +534,28 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 	if envConstants == nil || jms == nil || !jms.EnableKieServerJMSIntegration {
 		return nil, nil
 	}
+
+	t := true
+	if jms.KieServerJmsExecutor == nil {
+		jms.KieServerJmsExecutor = &t
+	}
+	if jms.KieServerJmsAuditTransacted == nil {
+		jms.KieServerJmsAuditTransacted = &t
+	}
+
 	// if enabled, prepare the default values
 	defaultJms := &v1.KieAppJmsObject{
-		KieServerJmsExecutor:           true,
-		KieServerJmsExecutorTransacted: false,
-		KieServerJmsQueueExecutor:      "queue/KIE.SERVER.EXECUTOR",
-		KieServerJmsQueueRequest:       "queue/KIE.SERVER.REQUEST",
-		KieServerJmsQueueResponse:      "queue/KIE.SERVER.RESPONSE",
-		KieServerJmsEnableSignal:       false,
-		KieServerJmsQueueSignal:        "queue/KIE.SERVER.SIGNAL",
-		KieServerJmsEnableAudit:        false,
-		KieServerJmsQueueAudit:         "queue/KIE.SERVER.AUDIT",
-		KieServerJmsAuditTransacted:    true,
-		KieServerJmsUsername:           "user" + string(shared.GeneratePassword(4)),
-		KieServerJmsPassword:           string(shared.GeneratePassword(8)),
+		KieServerJmsQueueExecutor: "queue/KIE.SERVER.EXECUTOR",
+		KieServerJmsQueueRequest:  "queue/KIE.SERVER.REQUEST",
+		KieServerJmsQueueResponse: "queue/KIE.SERVER.RESPONSE",
+		KieServerJmsQueueSignal:   "queue/KIE.SERVER.SIGNAL",
+		KieServerJmsQueueAudit:    "queue/KIE.SERVER.AUDIT",
+		KieServerJmsUsername:      "user" + string(shared.GeneratePassword(4)),
+		KieServerJmsPassword:      string(shared.GeneratePassword(8)),
 	}
 
 	queuesList := []string{
-		getDefaultQueue(true, defaultJms.KieServerJmsQueueExecutor, jms.KieServerJmsQueueExecutor),
+		getDefaultQueue(*jms.KieServerJmsExecutor, defaultJms.KieServerJmsQueueExecutor, jms.KieServerJmsQueueExecutor),
 		getDefaultQueue(true, defaultJms.KieServerJmsQueueRequest, jms.KieServerJmsQueueRequest),
 		getDefaultQueue(true, defaultJms.KieServerJmsQueueResponse, jms.KieServerJmsQueueResponse),
 		getDefaultQueue(jms.KieServerJmsEnableSignal, defaultJms.KieServerJmsQueueSignal, jms.KieServerJmsQueueSignal),
@@ -576,9 +580,8 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	if append {
 		if jmsQueue == "" {
 			return defaultJmsQueue
-		} else {
-			return jmsQueue
 		}
+		return jmsQueue
 	}
 	return ""
 }
