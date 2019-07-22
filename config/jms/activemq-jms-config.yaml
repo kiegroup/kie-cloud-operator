@@ -13,6 +13,10 @@ servers:
               - name: "[[.KieName]]"
                 env:
                   # JMS config BEGIN
+                  - name: KIE_SERVER_EXECUTOR_JMS
+                    value: "[[.Jms.KieServerJmsExecutor]]"
+                  - name: KIE_SERVER_EXECUTOR_JMS_TRANSACTED
+                    value: "[[.Jms.KieServerJmsExecutorTransacted]]"
                   - name: KIE_SERVER_JMS_QUEUE_REQUEST
                     value: "[[.Jms.KieServerJmsQueueRequest]]"
                   - name: KIE_SERVER_JMS_QUEUE_RESPONSE

@@ -334,6 +334,7 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
+	f := false
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -344,12 +345,14 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Jms: &v1.KieAppJmsObject{
-							EnableKieServerJMSIntegration: true,
-							KieServerJmsUsername:          "adminUser",
-							KieServerJmsPassword:          "adminPassword",
-							KieServerJmsAuditTransacted:   false,
-							KieServerJmsEnableAudit:       true,
-							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableKieServerJMSIntegration:  true,
+							KieServerJmsExecutorTransacted: true,
+							KieServerJmsUsername:           "adminUser",
+							KieServerJmsPassword:           "adminPassword",
+							KieServerJmsAuditTransacted:    &f,
+							KieServerJmsEnableAudit:        true,
+							KieServerJmsQueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
+							KieServerJmsEnableSignal:       true,
 						},
 					},
 				},
@@ -388,6 +391,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 }
 
 func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
+	f := false
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -398,18 +402,21 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 				Servers: []v1.KieServerSet{
 					{
 						Jms: &v1.KieAppJmsObject{
-							EnableKieServerJMSIntegration: true,
-							KieServerJmsUsername:          "adminUser",
-							KieServerJmsPassword:          "adminPassword",
-							KieServerJmsAuditTransacted:   false,
-							KieServerJmsEnableAudit:       true,
-							KieServerJmsQueueAudit:        "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableKieServerJMSIntegration:  true,
+							KieServerJmsExecutorTransacted: true,
+							KieServerJmsUsername:           "adminUser",
+							KieServerJmsPassword:           "adminPassword",
+							KieServerJmsAuditTransacted:    &f,
+							KieServerJmsEnableAudit:        true,
+							KieServerJmsQueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
+							KieServerJmsEnableSignal:       true,
 						},
 					},
 				},
 			},
 		},
 	}
+
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 
@@ -421,6 +428,52 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
 
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+}
+
+func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
+	f := false
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-jms",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Jms: &v1.KieAppJmsObject{
+							EnableKieServerJMSIntegration:  true,
+							KieServerJmsExecutor:           &f,
+							KieServerJmsExecutorTransacted: true,
+							KieServerJmsEnableAudit:        true,
+							KieServerJmsQueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
+							KieServerJmsEnableSignal:       true,
+							KieServerJmsQueueSignal:        "queue/CUSTOM.KIE.SERVER.SIGNAL",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_EXECUTOR_JMS"), "Variable should exist")
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_EXECUTOR_JMS_TRANSACTED"), "Variable should exist")
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_ENABLE_AUDIT"), "Variable should exist")
+	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_AUDIT"), "Variable should exist")
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_ENABLE_SIGNAL"), "Variable should exist")
+	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.SIGNAL", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_SIGNAL"), "Variable should exist")
+	assert.Equal(t, "queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AMQ_QUEUES"), "Variable should exist")
+
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", cr.Spec.CommonConfig.Version), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 }
 
 func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.EnvVar) {
@@ -442,12 +495,18 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 			assert.Equal(t, "queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
 
 		case "KIE_SERVER_JMS_ENABLE_SIGNAL":
-			assert.Equal(t, "false", env.Value)
+			assert.Equal(t, "true", env.Value)
 
 		case "KIE_SERVER_JMS_ENABLE_AUDIT":
 			assert.Equal(t, "true", env.Value)
 
 		case "KIE_SERVER_JMS_AUDIT_TRANSACTED":
+			assert.Equal(t, "false", env.Value)
+
+		case "KIE_SERVER_EXECUTOR_JMS_TRANSACTED":
+			assert.Equal(t, "true", env.Value)
+
+		case "KIE_SERVER_EXECUTOR_JMS":
 			assert.Equal(t, "true", env.Value)
 
 		case "MQ_SERVICE_PREFIX_MAPPING":
@@ -463,7 +522,7 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 			assert.Equal(t, "tcp", env.Value)
 
 		case "AMQ_QUEUES":
-			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
 		}
 	}
 
@@ -488,7 +547,7 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 			assert.Equal(t, "false", env.Value)
 
 		case "AMQ_QUEUES":
-			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
 		}
 	}
 }
