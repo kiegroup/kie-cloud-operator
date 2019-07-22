@@ -5,6 +5,7 @@ metadata:
   namespace: placeholder
   annotations:
     categories: "Integration & Delivery"
+    capabilities: "Basic Install"
     certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator    
