@@ -209,7 +209,7 @@
       }
     }
   },
-  "revision": "20190501",
+  "revision": "20190530",
   "rootUrl": "https://docs.googleapis.com/",
   "schemas": {
     "AutoText": {
@@ -3118,7 +3118,7 @@
       "properties": {
         "color": {
           "$ref": "OptionalColor",
-          "description": "The color of the border. This color cannot be transparent."
+          "description": "The color of the border.\n\nThis color cannot be transparent."
         },
         "dashStyle": {
           "description": "The dash style of the border.",
