@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -150,10 +151,19 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
 		return false, err
 	}
-	instance.Status.Deployments = getDeploymentsStatuses(dcList.Items, instance)
+	var dcs []oappsv1.DeploymentConfig
+	for _, dc := range dcList.Items {
+		for _, ownerRef := range dc.GetOwnerReferences() {
+			if ownerRef.UID == instance.UID {
+				dcs = append(dcs, dc)
+				break
+			}
+		}
+	}
+	instance.Status.Deployments = olm.GetDeploymentConfigStatus(dcs)
 
 	var dcUpdates []oappsv1.DeploymentConfig
-	for _, dc := range dcList.Items {
+	for _, dc := range dcs {
 		for _, cDc := range env.Console.DeploymentConfigs {
 			if dc.Name == cDc.Name {
 				dcUpdates = reconciler.dcUpdateCheck(dc, cDc, dcUpdates, instance)
@@ -287,7 +297,17 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	imageName := tagName
 	regContext := fmt.Sprintf("%s-%s", product, string(version[0]))
 
-	registryAddress := cr.Spec.ImageRegistry.Registry
+	// default registry settings
+	registry := &v1.KieAppRegistry{
+		Insecure: logs.GetBoolEnv("INSECURE"),
+	}
+	if cr.Spec.ImageRegistry != nil {
+		registry = cr.Spec.ImageRegistry
+	}
+	if registry.Registry == "" {
+		registry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry)
+	}
+	registryAddress := registry.Registry
 	if strings.Contains(result[0], "datagrid") {
 		registryAddress = constants.ImageRegistry
 		regContext = "jboss-datagrid-7"
@@ -319,7 +339,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 		},
 	}
 	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
-	if cr.Spec.ImageRegistry.Insecure {
+	if registry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
 		}
@@ -608,6 +628,19 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 }
 
 func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+	if cr.Spec.ImageRegistry != nil {
+		if reconciler.checkImageStreamTag(name, cr.Namespace) {
+			return cr.Namespace, nil
+		}
+		log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
+		err := reconciler.createLocalImageTag(name, cr)
+		if err != nil {
+			log.Error(err)
+			return namespace, err
+		}
+		return cr.Namespace, nil
+	}
+
 	if reconciler.checkImageStreamTag(name, namespace) {
 		return namespace, nil
 	} else if reconciler.checkImageStreamTag(name, cr.Namespace) {
@@ -619,8 +652,8 @@ func (reconciler *Reconciler) ensureImageStream(name string, namespace string, c
 			log.Error(err)
 			return namespace, err
 		}
-		return cr.Namespace, nil
 	}
+	return cr.Namespace, nil
 }
 
 // createCustomObject checks for an object's existence before creating it
@@ -682,31 +715,6 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 		return true
 	}
 	return false
-}
-
-func getDeploymentsStatuses(dcs []oappsv1.DeploymentConfig, cr *v1.KieApp) v1.Deployments {
-	var ready, starting, stopped []string
-	for _, dc := range dcs {
-		for _, ownerRef := range dc.GetOwnerReferences() {
-			if ownerRef.UID == cr.UID {
-				if dc.Spec.Replicas == 0 {
-					stopped = append(stopped, dc.Name)
-				} else if dc.Status.Replicas == 0 {
-					stopped = append(stopped, dc.Name)
-				} else if dc.Status.ReadyReplicas < dc.Status.Replicas {
-					starting = append(starting, dc.Name)
-				} else {
-					ready = append(ready, dc.Name)
-				}
-			}
-		}
-	}
-	log.Debugf("Found DCs with status stopped [%s], starting [%s], and ready [%s]", stopped, starting, ready)
-	return v1.Deployments{
-		Stopped:  stopped,
-		Starting: starting,
-		Ready:    ready,
-	}
 }
 
 // GetRouteHost returns the Hostname of the route provided

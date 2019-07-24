@@ -1298,8 +1298,9 @@ func (s *ErrorDetail) MarshalJSON() ([]byte, error) {
 type ExportDicomDataRequest struct {
 	// BigqueryDestination: The BigQuery output destination.
 	//
-	// For now, only exporting to a dataset in the current project is
-	// supported
+	// You can only export to a BigQuery dataset that's in the same project
+	// as
+	// the DICOM store you're exporting from.
 	//
 	// The BigQuery location requires two IAM
 	// roles:
@@ -3023,8 +3024,8 @@ func (s *Location) MarshalJSON() ([]byte, error) {
 // details
 // on the standard.
 type Message struct {
-	// CreateTime: The datetime when the message was created. Set by the
-	// server.
+	// CreateTime: Output only. The datetime when the message was created.
+	// Set by the server.
 	CreateTime string `json:"createTime,omitempty"`
 
 	// Data: Raw message bytes.
@@ -3059,7 +3060,7 @@ type Message struct {
 	// Assigned by the server.
 	Name string `json:"name,omitempty"`
 
-	// ParsedData: The parsed version of the raw message data.
+	// ParsedData: Output only. The parsed version of the raw message data.
 	ParsedData *ParsedData `json:"parsedData,omitempty"`
 
 	// PatientIds: All patient IDs listed in the PID-2, PID-3, and PID-4
@@ -3303,7 +3304,9 @@ type ParserConfig struct {
 
 	// SegmentTerminator: Byte(s) to be used as the segment terminator. If
 	// this is unset, '\r' will
-	// be used as segment terminator.
+	// be used as the segment terminator, matching the HL7 version
+	// 2
+	// specification.
 	SegmentTerminator string `json:"segmentTerminator,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "AllowNullHeader") to
@@ -3546,9 +3549,9 @@ func (s *ResourceAnnotation) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// SchemaConfig: Configuration for the FHIR BigQuery schema. Determines
-// how the server
-// generates the schema.
+// SchemaConfig: Configuration for the FHIR BigQuery and Cloud Storage
+// schema. Determines
+// how the server generates the schema.
 type SchemaConfig struct {
 	// RecursiveStructureDepth: The depth for all recursive structures in
 	// the output analytics
@@ -9319,7 +9322,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebSearchForInstancesCall struct {
 // instances.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebService) SearchForInstances(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForInstancesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebSearchForInstancesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -9393,7 +9396,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForInstancesCall) Do(
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/instances",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.searchForInstances",
@@ -9443,7 +9446,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebSearchForSeriesCall struct {
 // SearchForSeries: SearchForSeries returns a list of matching series.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebService) SearchForSeries(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForSeriesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebSearchForSeriesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -9517,7 +9520,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForSeriesCall) Do(opt
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForSeries returns a list of matching series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForSeries returns a list of matching series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/series",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.searchForSeries",
@@ -9568,7 +9571,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebSearchForStudiesCall struct {
 // studies.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebService) SearchForStudies(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForStudiesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebSearchForStudiesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -9642,7 +9645,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebSearchForStudiesCall) Do(op
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForStudies returns a list of matching studies. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForStudies returns a list of matching studies. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.searchForStudies",
@@ -9694,7 +9697,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStoreInstancesCall struct {
 // identifiers (SUID).
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.6.1.
+// l#sect_10.5.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebService) StoreInstances(parent string, dicomWebPath string, body_ io.Reader) *ProjectsLocationsDatasetsDicomStoresDicomWebStoreInstancesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStoreInstancesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -9755,7 +9758,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStoreInstancesCall) Do(opts
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "StoreInstances stores DICOM instances associated with study instance unique\nidentifiers (SUID). See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.6.1.",
+	//   "description": "StoreInstances stores DICOM instances associated with study instance unique\nidentifiers (SUID). See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.5.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies",
 	//   "httpMethod": "POST",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.storeInstances",
@@ -9952,7 +9955,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesMetadataCall struct {
 // presented as metadata with the bulk data removed.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.6.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesService) Metadata(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesMetadataCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesMetadataCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10026,7 +10029,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesMetadataCall) Do(opt
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveStudyMetadata returns instance associated with the given study\npresented as metadata with the bulk data removed. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.6.",
+	//   "description": "RetrieveStudyMetadata returns instance associated with the given study\npresented as metadata with the bulk data removed. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/metadata",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.metadata",
@@ -10077,7 +10080,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesRetrieveStudyCall struct
 // study.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.1.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesService) RetrieveStudy(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesRetrieveStudyCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesRetrieveStudyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10151,7 +10154,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesRetrieveStudyCall) D
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveStudy returns all instances within the given study. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.1.",
+	//   "description": "RetrieveStudy returns all instances within the given study. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.retrieveStudy",
@@ -10202,7 +10205,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForInstancesCall s
 // instances.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesService) SearchForInstances(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForInstancesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForInstancesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10276,7 +10279,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForInstancesCa
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/instances",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.searchForInstances",
@@ -10326,7 +10329,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForSeriesCall stru
 // SearchForSeries: SearchForSeries returns a list of matching series.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesService) SearchForSeries(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForSeriesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForSeriesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10400,7 +10403,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSearchForSeriesCall)
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForSeries returns a list of matching series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForSeries returns a list of matching series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.searchForSeries",
@@ -10452,7 +10455,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesStoreInstancesCall struc
 // identifiers (SUID).
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.6.1.
+// l#sect_10.5.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesService) StoreInstances(parent string, dicomWebPath string, body_ io.Reader) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesStoreInstancesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesStoreInstancesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10513,7 +10516,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesStoreInstancesCall) 
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "StoreInstances stores DICOM instances associated with study instance unique\nidentifiers (SUID). See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.6.1.",
+	//   "description": "StoreInstances stores DICOM instances associated with study instance unique\nidentifiers (SUID). See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.5.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}",
 	//   "httpMethod": "POST",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.storeInstances",
@@ -10712,7 +10715,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesMetadataCall struc
 // series, presented as metadata with the bulk data removed.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.6.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesService) Metadata(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesMetadataCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesMetadataCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10786,7 +10789,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesMetadataCall) 
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveSeriesMetadata returns instance associated with the given study and\nseries, presented as metadata with the bulk data removed. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.6.",
+	//   "description": "RetrieveSeriesMetadata returns instance associated with the given study and\nseries, presented as metadata with the bulk data removed. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/metadata",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.metadata",
@@ -10837,7 +10840,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesRetrieveSeriesCall
 // study and series.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.2.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesService) RetrieveSeries(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesRetrieveSeriesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesRetrieveSeriesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -10911,7 +10914,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesRetrieveSeries
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveSeries returns all instances within the given study and series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.2.",
+	//   "description": "RetrieveSeries returns all instances within the given study and series. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.retrieveSeries",
@@ -10962,7 +10965,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesSearchForInstances
 // instances.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.7
+// l#sect_10.6.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesService) SearchForInstances(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesSearchForInstancesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesSearchForInstancesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11036,7 +11039,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesSearchForInsta
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.7",
+	//   "description": "SearchForInstances returns a list of matching instances. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.6.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.searchForInstances",
@@ -11234,7 +11237,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesMetadataC
 // removed.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.6.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesService) Metadata(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesMetadataCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesMetadataCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11308,7 +11311,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesMetad
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveInstanceMetadata returns instance associated with the given study,\nseries, and SOP Instance UID presented as metadata with the bulk data\nremoved. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.6.",
+	//   "description": "RetrieveInstanceMetadata returns instance associated with the given study,\nseries, and SOP Instance UID presented as metadata with the bulk data\nremoved. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances/{instancesId}/metadata",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.instances.metadata",
@@ -11360,7 +11363,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRenderedC
 // series, and SOP Instance UID in an acceptable Rendered Media Type.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.8.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesService) Rendered(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRenderedCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRenderedCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11434,7 +11437,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRende
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveRenderedInstance returns instance associated with the given study,\nseries, and SOP Instance UID in an acceptable Rendered Media Type. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.8.",
+	//   "description": "RetrieveRenderedInstance returns instance associated with the given study,\nseries, and SOP Instance UID in an acceptable Rendered Media Type. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances/{instancesId}/rendered",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.instances.rendered",
@@ -11444,7 +11447,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRende
 	//   ],
 	//   "parameters": {
 	//     "dicomWebPath": {
-	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instance/{instance_id}/rendered`).",
+	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instances/{instance_id}/rendered`).",
 	//       "location": "path",
 	//       "pattern": "^studies/[^/]+/series/[^/]+/instances/[^/]+/rendered$",
 	//       "required": true,
@@ -11486,7 +11489,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRetrieveI
 // and SOP Instance UID.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.3.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesService) RetrieveInstance(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRetrieveInstanceCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRetrieveInstanceCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11560,7 +11563,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRetri
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveInstance returns instance associated with the given study, series,\nand SOP Instance UID. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.3.",
+	//   "description": "RetrieveInstance returns instance associated with the given study, series,\nand SOP Instance UID. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances/{instancesId}",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.instances.retrieveInstance",
@@ -11570,7 +11573,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesRetri
 	//   ],
 	//   "parameters": {
 	//     "dicomWebPath": {
-	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instance/{instance_id}`).",
+	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instances/{instance_id}`).",
 	//       "location": "path",
 	//       "pattern": "^studies/[^/]+/series/[^/]+/instances/[^/]+$",
 	//       "required": true,
@@ -11614,7 +11617,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRen
 // Type.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.8.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesService) Rendered(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRenderedCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRenderedCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11688,7 +11691,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFrame
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveRenderedFrames returns instances associated with the given study,\nseries, SOP Instance UID and frame numbers in an acceptable Rendered Media\nType. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.8.",
+	//   "description": "RetrieveRenderedFrames returns instances associated with the given study,\nseries, SOP Instance UID and frame numbers in an acceptable Rendered Media\nType. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances/{instancesId}/frames/{framesId}/rendered",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.instances.frames.rendered",
@@ -11698,7 +11701,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFrame
 	//   ],
 	//   "parameters": {
 	//     "dicomWebPath": {
-	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instance/{instance_id}/frames/{frame_list}/rendered`).",
+	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instances/{instance_id}/frames/{frame_list}/rendered`).",
 	//       "location": "path",
 	//       "pattern": "^studies/[^/]+/series/[^/]+/instances/[^/]+/frames/[^/]+/rendered$",
 	//       "required": true,
@@ -11740,7 +11743,7 @@ type ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRet
 // SOP Instance UID and frame numbers.
 // See
 // http://dicom.nema.org/medical/dicom/current/output/html/part18.htm
-// l#sect_6.5.4.
+// l#sect_10.4.
 func (r *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesService) RetrieveFrames(parent string, dicomWebPath string) *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRetrieveFramesCall {
 	c := &ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFramesRetrieveFramesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -11814,7 +11817,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFrame
 	gensupport.SetOptions(c.urlParams_, opts...)
 	return c.doRequest("")
 	// {
-	//   "description": "RetrieveFrames returns instances associated with the given study, series,\nSOP Instance UID and frame numbers. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_6.5.4.",
+	//   "description": "RetrieveFrames returns instances associated with the given study, series,\nSOP Instance UID and frame numbers. See\nhttp://dicom.nema.org/medical/dicom/current/output/html/part18.html#sect_10.4.",
 	//   "flatPath": "v1alpha2/projects/{projectsId}/locations/{locationsId}/datasets/{datasetsId}/dicomStores/{dicomStoresId}/dicomWeb/studies/{studiesId}/series/{seriesId}/instances/{instancesId}/frames/{framesId}",
 	//   "httpMethod": "GET",
 	//   "id": "healthcare.projects.locations.datasets.dicomStores.dicomWeb.studies.series.instances.frames.retrieveFrames",
@@ -11824,7 +11827,7 @@ func (c *ProjectsLocationsDatasetsDicomStoresDicomWebStudiesSeriesInstancesFrame
 	//   ],
 	//   "parameters": {
 	//     "dicomWebPath": {
-	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instance/{instance_id}/frames/{frame_list}`).",
+	//       "description": "The path of the DICOMweb request, as specified in the STOW-RS, WADO-RS, or\nQIDO-RS standard (e.g.,\n`studies/{study_id}/series/{series_id}/instances/{instance_id}/frames/{frame_list}`).",
 	//       "location": "path",
 	//       "pattern": "^studies/[^/]+/series/[^/]+/instances/[^/]+/frames/[^/]+$",
 	//       "required": true,

@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gobuffalo/syncx"
 	"github.com/pkg/errors"
 )
 
@@ -22,7 +21,7 @@ var _ Box = NewMemoryBox()
 
 // MemoryBox is a thread-safe, in-memory, implementation of the Box interface.
 type MemoryBox struct {
-	files *syncx.ByteMap
+	files *ByteMap
 }
 
 func (m *MemoryBox) Has(path string) bool {
@@ -152,6 +151,6 @@ func (m *MemoryBox) Remove(path string) {
 // NewMemoryBox returns a configured *MemoryBox
 func NewMemoryBox() *MemoryBox {
 	return &MemoryBox{
-		files: &syncx.ByteMap{},
+		files: &ByteMap{},
 	}
 }
