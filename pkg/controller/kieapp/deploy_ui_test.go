@@ -3,6 +3,9 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -15,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"testing"
 )
 
 func TestUpdateLink(t *testing.T) {
@@ -27,6 +29,7 @@ func TestUpdateLink(t *testing.T) {
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
 	assert.Nil(t, err, "Error parsing CSV file")
+	assert.False(t, strings.Contains(csv.Spec.Description, constants.ConsoleDescription), "Should be no information about link in description")
 
 	err = service.Create(context.TODO(), csv)
 	assert.Nil(t, err, "Error creating the CSV")
@@ -60,6 +63,7 @@ func TestUpdateLink(t *testing.T) {
 
 	link := getConsoleLink(updatedCSV)
 	assert.NotNil(t, link, "Found no console link in CSV")
+	assert.True(t, strings.Contains(updatedCSV.Spec.Description, constants.ConsoleDescription), "Found no information about link in description")
 	assert.Equal(t, fmt.Sprintf("https://%s", url), link.URL, "The console link did not have the expected value")
 }
 
@@ -72,6 +76,8 @@ func TestUpdateExistingLink(t *testing.T) {
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
 	assert.Nil(t, err, "Error parsing CSV file")
+	assert.False(t, strings.Contains(csv.Spec.Description, constants.ConsoleDescription), "Should be no information about link in description")
+
 	csv.Spec.Links = append([]operators.AppLink{{Name: constants.ConsoleLinkName, URL: "some-bad-link"}}, csv.Spec.Links...)
 
 	err = service.Create(context.TODO(), csv)
@@ -106,5 +112,6 @@ func TestUpdateExistingLink(t *testing.T) {
 
 	link := getConsoleLink(updatedCSV)
 	assert.NotNil(t, link, "Found no console link in CSV")
+	assert.True(t, strings.Contains(updatedCSV.Spec.Description, constants.ConsoleDescription), "Found no information about link in description")
 	assert.Equal(t, fmt.Sprintf("https://%s", url), link.URL, "The console link did not have the expected value")
 }

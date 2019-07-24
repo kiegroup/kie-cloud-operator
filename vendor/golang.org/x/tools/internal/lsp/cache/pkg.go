@@ -18,14 +18,17 @@ import (
 
 // pkg contains the type information needed by the source package.
 type pkg struct {
-	id, pkgPath string
-	files       []string
-	syntax      []*ast.File
-	errors      []packages.Error
-	imports     map[string]*pkg
-	types       *types.Package
-	typesInfo   *types.Info
-	typesSizes  types.Sizes
+	// ID and package path have their own types to avoid being used interchangeably.
+	id      packageID
+	pkgPath packagePath
+
+	files      []string
+	syntax     map[string]*astFile
+	errors     []packages.Error
+	imports    map[packagePath]*pkg
+	types      *types.Package
+	typesInfo  *types.Info
+	typesSizes types.Sizes
 
 	// The analysis cache holds analysis information for all the packages in a view.
 	// Each graph node (action) is one unit of analysis.
@@ -34,6 +37,12 @@ type pkg struct {
 	mu       sync.Mutex
 	analyses map[*analysis.Analyzer]*analysisEntry
 }
+
+// packageID is a type that abstracts a package ID.
+type packageID string
+
+// packagePath is a type that abstracts a package path.
+type packagePath string
 
 type analysisEntry struct {
 	done      chan struct{}
@@ -108,11 +117,11 @@ func (pkg *pkg) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*sour
 		if len(a.FactTypes) > 0 {
 			importPaths := make([]string, 0, len(pkg.imports))
 			for importPath := range pkg.imports {
-				importPaths = append(importPaths, importPath)
+				importPaths = append(importPaths, string(importPath))
 			}
 			sort.Strings(importPaths) // for determinism
 			for _, importPath := range importPaths {
-				dep, ok := pkg.imports[importPath]
+				dep, ok := pkg.imports[packagePath(importPath)]
 				if !ok {
 					continue
 				}
@@ -128,8 +137,12 @@ func (pkg *pkg) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*sour
 	return e.Action, nil
 }
 
+func (pkg *pkg) ID() string {
+	return string(pkg.id)
+}
+
 func (pkg *pkg) PkgPath() string {
-	return pkg.pkgPath
+	return string(pkg.pkgPath)
 }
 
 func (pkg *pkg) GetFilenames() []string {
@@ -137,7 +150,11 @@ func (pkg *pkg) GetFilenames() []string {
 }
 
 func (pkg *pkg) GetSyntax() []*ast.File {
-	return pkg.syntax
+	syntax := make([]*ast.File, 0, len(pkg.syntax))
+	for _, astFile := range pkg.syntax {
+		syntax = append(syntax, astFile.file)
+	}
+	return syntax
 }
 
 func (pkg *pkg) GetErrors() []packages.Error {
@@ -161,5 +178,9 @@ func (pkg *pkg) IsIllTyped() bool {
 }
 
 func (pkg *pkg) GetImport(pkgPath string) source.Package {
-	return pkg.imports[pkgPath]
+	if imp := pkg.imports[packagePath(pkgPath)]; imp != nil {
+		return imp
+	}
+	// Don't return a nil pointer because that still satisfies the interface.
+	return nil
 }

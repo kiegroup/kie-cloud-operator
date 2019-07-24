@@ -121,7 +121,7 @@ func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, env
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
 
-		isJmsEnabled := kieServerSet.Jms.EnableKieServerJMSIntegration
+		isJmsEnabled := kieServerSet.Jms.EnableIntegration
 
 		if isJmsEnabled {
 			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Namespace, envTemplate)
@@ -155,10 +155,6 @@ func findCustomObjectByName(template v1.CustomObject, objects []v1.CustomObject)
 }
 
 func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
-	if cr.Spec.ImageRegistry == (v1.KieAppRegistry{}) {
-		cr.Spec.ImageRegistry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry) // default to red hat registry
-		cr.Spec.ImageRegistry.Insecure = logs.GetBoolEnv("INSECURE")
-	}
 	setAppConstants(&cr.Spec.CommonConfig)
 
 	// set default values for go template where not provided
@@ -531,31 +527,36 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.KieAppJmsObject, error) {
 
 	envConstants := constants.EnvironmentConstants[environment]
-	if envConstants == nil || jms == nil || !jms.EnableKieServerJMSIntegration {
+	if envConstants == nil || jms == nil || !jms.EnableIntegration {
 		return nil, nil
 	}
+
+	t := true
+	if jms.Executor == nil {
+		jms.Executor = &t
+	}
+	if jms.AuditTransacted == nil {
+		jms.AuditTransacted = &t
+	}
+
 	// if enabled, prepare the default values
 	defaultJms := &v1.KieAppJmsObject{
-		KieServerJmsExecutor:           true,
-		KieServerJmsExecutorTransacted: false,
-		KieServerJmsQueueExecutor:      "queue/KIE.SERVER.EXECUTOR",
-		KieServerJmsQueueRequest:       "queue/KIE.SERVER.REQUEST",
-		KieServerJmsQueueResponse:      "queue/KIE.SERVER.RESPONSE",
-		KieServerJmsEnableSignal:       false,
-		KieServerJmsQueueSignal:        "queue/KIE.SERVER.SIGNAL",
-		KieServerJmsEnableAudit:        false,
-		KieServerJmsQueueAudit:         "queue/KIE.SERVER.AUDIT",
-		KieServerJmsAuditTransacted:    true,
-		KieServerJmsUsername:           "user" + string(shared.GeneratePassword(4)),
-		KieServerJmsPassword:           string(shared.GeneratePassword(8)),
+		QueueExecutor: "queue/KIE.SERVER.EXECUTOR",
+		QueueRequest:  "queue/KIE.SERVER.REQUEST",
+		QueueResponse: "queue/KIE.SERVER.RESPONSE",
+		QueueSignal:   "queue/KIE.SERVER.SIGNAL",
+		QueueAudit:    "queue/KIE.SERVER.AUDIT",
+		Username:      "user" + string(shared.GeneratePassword(4)),
+		Password:      string(shared.GeneratePassword(8)),
 	}
 
 	queuesList := []string{
-		getDefaultQueue(true, defaultJms.KieServerJmsQueueExecutor, jms.KieServerJmsQueueExecutor),
-		getDefaultQueue(true, defaultJms.KieServerJmsQueueRequest, jms.KieServerJmsQueueRequest),
-		getDefaultQueue(true, defaultJms.KieServerJmsQueueResponse, jms.KieServerJmsQueueResponse),
-		getDefaultQueue(jms.KieServerJmsEnableSignal, defaultJms.KieServerJmsQueueSignal, jms.KieServerJmsQueueSignal),
-		getDefaultQueue(jms.KieServerJmsEnableAudit, defaultJms.KieServerJmsQueueAudit, jms.KieServerJmsQueueAudit)}
+		getDefaultQueue(*jms.Executor, defaultJms.QueueExecutor, jms.QueueExecutor),
+		getDefaultQueue(true, defaultJms.QueueRequest, jms.QueueRequest),
+		getDefaultQueue(true, defaultJms.QueueResponse, jms.QueueResponse),
+		getDefaultQueue(jms.EnableSignal, defaultJms.QueueSignal, jms.QueueSignal),
+		getDefaultQueue(jms.EnableAudit, defaultJms.QueueAudit, jms.QueueAudit),
+	}
 
 	// clean empty values
 	for i, queue := range queuesList {
@@ -564,7 +565,7 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 			break
 		}
 	}
-	defaultJms.KieServerJmsAMQQueues = strings.Join(queuesList[:], ", ")
+	defaultJms.AMQQueues = strings.Join(queuesList[:], ", ")
 
 	// merge the defaultJms into jms, preserving the values set by cr
 	mergo.Merge(jms, defaultJms)
@@ -576,9 +577,8 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	if append {
 		if jmsQueue == "" {
 			return defaultJmsQueue
-		} else {
-			return jmsQueue
 		}
+		return jmsQueue
 	}
 	return ""
 }

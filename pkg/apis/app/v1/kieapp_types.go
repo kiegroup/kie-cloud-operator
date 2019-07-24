@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -25,7 +26,7 @@ type KieAppSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// KIE environment type to deploy (prod, authoring, trial, etc)
 	Environment   EnvironmentType  `json:"environment,omitempty"`
-	ImageRegistry KieAppRegistry   `json:"imageRegistry,omitempty"`
+	ImageRegistry *KieAppRegistry  `json:"imageRegistry,omitempty"`
 	Objects       KieAppObjects    `json:"objects,omitempty"`
 	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
 	Auth          KieAppAuthObject `json:"auth,omitempty"`
@@ -141,21 +142,21 @@ type SecuredKieAppObject struct {
 
 // KieAppJmsObject messaging specification to be used by the KieApp
 type KieAppJmsObject struct {
-	EnableKieServerJMSIntegration  bool   `json:"enableKieServerJMSIntegration,omitempty"`
-	KieServerJmsExecutor           bool   `json:"kieServerJmsExecutor,omitempty"`
-	KieServerJmsExecutorTransacted bool   `json:"kieServerJmsExecutorTransacted,omitempty"`
-	KieServerJmsQueueRequest       string `json:"kieServerJmsQueueRequest,omitempty"`
-	KieServerJmsQueueResponse      string `json:"kieServerJmsQueueResponse,omitempty"`
-	KieServerJmsQueueExecutor      string `json:"kieServerJmsQueueExecutor,omitempty"`
-	KieServerJmsEnableSignal       bool   `json:"kieServerJmsEnableSignal,omitempty"`
-	KieServerJmsQueueSignal        string `json:"kieServerJmsQueueSignal,omitempty"`
-	KieServerJmsEnableAudit        bool   `json:"kieServerJmsEnableAudit,omitempty"`
-	KieServerJmsQueueAudit         string `json:"kieServerJmsQueueAudit,omitempty"`
-	KieServerJmsAuditTransacted    bool   `json:"kieServerJmsAuditTransacted,omitempty"`
-	KieServerJmsUsername           string `json:"kieServerJmsUsername,omitempty"`
-	KieServerJmsPassword           string `json:"kieServerJmsPassword,omitempty"`
-	// It will receives the default value for the Executor, Request, Response, Signal and Audit queues.
-	KieServerJmsAMQQueues string `json:"kieServerJmsAMQQueues,omitempty"`
+	EnableIntegration  bool   `json:"enableIntegration,omitempty"`
+	Executor           *bool  `json:"executor,omitempty"`
+	ExecutorTransacted bool   `json:"executorTransacted,omitempty"`
+	QueueRequest       string `json:"queueRequest,omitempty"`
+	QueueResponse      string `json:"queueResponse,omitempty"`
+	QueueExecutor      string `json:"queueExecutor,omitempty"`
+	EnableSignal       bool   `json:"enableSignal,omitempty"`
+	QueueSignal        string `json:"queueSignal,omitempty"`
+	EnableAudit        bool   `json:"enableAudit,omitempty"`
+	QueueAudit         string `json:"queueAudit,omitempty"`
+	AuditTransacted    *bool  `json:"auditTransacted,omitempty"`
+	Username           string `json:"username,omitempty"`
+	Password           string `json:"password,omitempty"`
+	AMQQueues          string `json:"amqQueues,omitempty"` // It will receive the default value for the Executor, Request, Response, Signal and Audit queues.
+
 }
 
 // KieAppObject Generic object definition
@@ -469,20 +470,9 @@ type Condition struct {
 
 // KieAppStatus - The status for custom resources managed by the operator-sdk.
 type KieAppStatus struct {
-	Conditions  []Condition `json:"conditions"`
-	ConsoleHost string      `json:"consoleHost,omitempty"`
-	Deployments Deployments `json:"deployments"`
-}
-
-type Deployments struct {
-	// Deployments are ready to serve requests
-	Ready []string `json:"ready,omitempty"`
-	// Deployments are starting, may or may not succeed
-	Starting []string `json:"starting,omitempty"`
-	// Deployments are not starting, unclear what next step will be
-	Stopped []string `json:"stopped,omitempty"`
-	// Deployments failed
-	Failed []string `json:"failed,omitempty"`
+	Conditions  []Condition          `json:"conditions"`
+	ConsoleHost string               `json:"consoleHost,omitempty"`
+	Deployments olm.DeploymentStatus `json:"deployments"`
 }
 
 type PlatformService interface {

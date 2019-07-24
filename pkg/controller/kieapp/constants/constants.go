@@ -19,8 +19,8 @@ const (
 	// ProductVersion default version
 	ProductVersion = "7.4"
 	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.0"
-	// AMQ Broker Image Name
+	ImageStreamTag = "1.1"
+	// BrokerImage AMQ Broker Image Name
 	BrokerImage = "amq-broker-73-openshift"
 	// BrokerImageTag AMQ Broker Image Tag
 	BrokerImageTag = "7.3"
@@ -61,6 +61,8 @@ const (
 	DefaultDatabaseSize = "1Gi"
 	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
 	ConsoleLinkName = "Installer"
+	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
+	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
 	// Default SmartRouter protocol
 	SmartRouterProtocol = "http"
 )
