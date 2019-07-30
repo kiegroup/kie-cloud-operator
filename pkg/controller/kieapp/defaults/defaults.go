@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -37,7 +36,7 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 		return v1.Environment{}, err
 	}
 	var common v1.Environment
-	yamlBytes, err := loadYaml(service, "common.yaml", cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(service, "common.yaml", cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -46,7 +45,7 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 		return v1.Environment{}, err
 	}
 	var env v1.Environment
-	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Namespace, envTemplate)
+	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return v1.Environment{}, err
 	}
@@ -97,7 +96,7 @@ func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envT
 		}
 		dbType := kieServerSet.Database.Type
 		if _, loadedDB := dbEnvs[dbType]; !loadedDB {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Namespace, envTemplate)
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
 			if err != nil {
 				return v1.Environment{}, err
 			}
@@ -124,7 +123,7 @@ func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, env
 		isJmsEnabled := kieServerSet.Jms.EnableIntegration
 
 		if isJmsEnabled {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Namespace, envTemplate)
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
 			if err != nil {
 				return v1.Environment{}, err
 			}
@@ -156,13 +155,14 @@ func findCustomObjectByName(template v1.CustomObject, objects []v1.CustomObject)
 
 func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	setAppConstants(&cr.Spec.CommonConfig)
-
-	// set default values for go template where not provided
-	if cr.Spec.Upgrades.Patch == nil {
-		defaultPatchFlag := true
-		cr.Spec.Upgrades.Patch = &defaultPatchFlag
+	if !checkVersion(cr.Spec.CommonConfig.Version) {
+		return v1.EnvTemplate{}, fmt.Errorf("Product version %s is not supported by this Operator, %s", cr.Spec.CommonConfig.Version, version.Version)
 	}
+	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
+	if len(config.ImageTag) == 0 {
+		config.ImageTag = constants.VersionConstants[config.Version].ImageStreamTag
+	}
 	if config.ApplicationName == "" {
 		config.ApplicationName = cr.Name
 	}
@@ -178,7 +178,7 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
-		Constants:    *getTemplateConstants(cr.Spec.Environment),
+		Constants:    *getTemplateConstants(cr.Spec.Environment, cr.Spec.CommonConfig.Version),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -188,11 +188,18 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	return envTemplate, nil
 }
 
-func getTemplateConstants(env v1.EnvironmentType) *v1.TemplateConstants {
+func getTemplateConstants(env v1.EnvironmentType, productVersion string) *v1.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
+	c.Major, c.Minor, c.Patch = MajorMinorPatch(productVersion)
 	if envConstants, found := constants.EnvironmentConstants[env]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
+	}
+	if versionConstants, found := constants.VersionConstants[productVersion]; found {
+		c.BrokerImage = versionConstants.BrokerImage
+		c.BrokerImageTag = versionConstants.BrokerImageTag
+		c.DatagridImage = versionConstants.DatagridImage
+		c.DatagridImageTag = versionConstants.DatagridImageTag
 	}
 	return c
 }
@@ -495,7 +502,7 @@ func getDefaultKieServerImage(product string, config *v1.CommonConfig, from *cor
 	if from != nil {
 		return *from
 	}
-	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, config.Version, config.ImageTag)
+	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, getMinorImageVersion(config.Version), config.ImageTag)
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
 		Name:      imageName,
@@ -616,9 +623,13 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 }
 
 // important to parse template first with this function, before unmarshalling into object
-func loadYaml(service v1.PlatformService, filename, namespace string, env v1.EnvTemplate) ([]byte, error) {
+func loadYaml(service v1.PlatformService, filename, productVersion, namespace string, env v1.EnvTemplate) ([]byte, error) {
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
 		box := packr.New("config", "../../../../config")
+		if !box.HasDir(productVersion) {
+			return nil, fmt.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
+		}
+		filename = strings.Join([]string{productVersion, filename}, "/")
 		if box.Has(filename) {
 			yamlString, err := box.FindString(filename)
 			if err != nil {
@@ -669,10 +680,14 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 
 // ConfigMapsFromFile reads the files under the config folder and creates
 // configmaps in the given namespace. It sets OwnerRef to operator deployment.
-func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) []corev1.ConfigMap {
+func ConfigMapsFromFile(myDep *appsv1.Deployment, ns, productVersion string, scheme *runtime.Scheme) []corev1.ConfigMap {
 	box := packr.New("config", "../../../../config")
+	if !box.HasDir(productVersion) {
+		log.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
+	}
 	cmList := map[string][]map[string]string{}
 	for _, filename := range box.List() {
+		filename := strings.Join([]string{productVersion, filename}, "/")
 		s, err := box.FindString(filename)
 		if err != nil {
 			log.Error("Error finding file with packr. ", err)
@@ -727,15 +742,40 @@ func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace s
 // setAppConstants sets the application-related constants to use in the template processing
 func setAppConstants(common *v1.CommonConfig) {
 	if len(common.Version) == 0 {
-		pattern := regexp.MustCompile("[0-9]+")
-		common.Version = strings.Join(pattern.FindAllString(constants.ProductVersion, -1), "")
-	}
-	if len(common.ImageTag) == 0 {
-		common.ImageTag = constants.ImageStreamTag
+		common.Version = constants.CurrentVersion
+	} else if common.Version == "74" {
+		common.Version = "7.4.1"
 	}
 	if len(common.AdminUser) == 0 {
 		common.AdminUser = constants.DefaultAdminUser
 	}
+}
+
+// getMinorImageVersion ...
+func getMinorImageVersion(productVersion string) string {
+	major, minor, _ := MajorMinorPatch(productVersion)
+	return fmt.Sprintf("%s%s", major, minor)
+}
+
+// MajorMinorPatch ...
+func MajorMinorPatch(productVersion string) (major, minor, patch string) {
+	version := strings.Split(productVersion, ".")
+	for len(version) < 3 {
+		version = append(version, "0")
+	}
+	return version[0], version[1], version[2]
+}
+
+// checkVersion ...
+func checkVersion(productVersion string) bool {
+	versionCheck := make(map[string]bool)
+	for _, v := range constants.SupportedVersions {
+		versionCheck[v] = true
+	}
+	if versionCheck[productVersion] {
+		return true
+	}
+	return false
 }
 
 // Pint returns a pointer to an integer
