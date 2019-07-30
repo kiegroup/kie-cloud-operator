@@ -871,7 +871,7 @@ func TestTrialServerEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{
@@ -928,7 +928,7 @@ func TestTrialServersEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{
@@ -995,7 +995,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhdm-trial",
+			Environment: v1.RhdmTrial,
 			CommonConfig: v1.CommonConfig{
 				ApplicationName: "trial",
 			},
@@ -1033,12 +1033,10 @@ func TestTrialConsoleEnv(t *testing.T) {
 func TestKieAppDefaults(t *testing.T) {
 	cr := &v1.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test-ns",
+			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
-			Objects:     v1.KieAppObjects{},
+			Environment: v1.RhpamTrial,
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -1047,8 +1045,24 @@ func TestKieAppDefaults(t *testing.T) {
 	assert.NotContains(t, cr.Spec.Objects.Console.Env, corev1.EnvVar{
 		Name: "empty",
 	})
-	assert.True(t, *cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be true by default")
+	assert.Nil(t, cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be empty by default")
 	assert.False(t, cr.Spec.Upgrades.Minor, "Spec.Upgrades.Minor should be false by default")
+}
+
+func TestUpgradesTrue(t *testing.T) {
+	patch := true
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamTrial,
+			Upgrades:    v1.KieAppUpgrades{Patch: &patch},
+		},
+	}
+	_, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.True(t, *cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be true")
 }
 
 func TestMergeTrialAndCommonConfig(t *testing.T) {
@@ -1057,7 +1071,7 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -1105,7 +1119,7 @@ func TestServerConflict(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{Name: duplicate, Deployments: Pint(deployments)},
@@ -1128,7 +1142,7 @@ func TestServerConflictGenerated(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{Name: duplicate},
@@ -1151,7 +1165,7 @@ func TestServersDefaultNameDeployments(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{Deployments: Pint(deployments)},
@@ -1179,7 +1193,7 @@ func TestServersDefaultNameArray(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{}, {}, {},
@@ -1212,7 +1226,7 @@ func TestServersDefaultNameMixed(t *testing.T) {
 			Name: name,
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{Deployments: Pint(deployments0)},
@@ -1252,7 +1266,7 @@ func TestImageRegistry(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -1267,7 +1281,7 @@ func TestImageRegistry(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			ImageRegistry: &v1.KieAppRegistry{
 				Registry: registry2,
 			},

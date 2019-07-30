@@ -159,10 +159,6 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 		return v1.EnvTemplate{}, fmt.Errorf("Product version %s is not supported by this Operator, %s", cr.Spec.CommonConfig.Version, version.Version)
 	}
 	// set default values for go template where not provided
-	if cr.Spec.Upgrades.Patch == nil {
-		defaultPatchFlag := true
-		cr.Spec.Upgrades.Patch = &defaultPatchFlag
-	}
 	config := &cr.Spec.CommonConfig
 	if len(config.ImageTag) == 0 {
 		config.ImageTag = constants.VersionConstants[config.Version].ImageStreamTag
