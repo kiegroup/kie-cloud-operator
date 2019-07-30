@@ -348,6 +348,9 @@ type EnvTemplate struct {
 // TemplateConstants constant values that are used within the different configuration templates
 type TemplateConstants struct {
 	Product              string `json:"product,omitempty"`
+	Major                string `json:"major,omitempty"`
+	Minor                string `json:"minor,omitempty"`
+	Patch                string `json:"patch,omitempty"`
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
@@ -426,6 +429,15 @@ type CommonConfig struct {
 	ControllerPassword string `json:"controllerPassword,omitempty"`
 	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
+}
+
+// VersionConfigs ...
+type VersionConfigs struct {
+	ImageStreamTag   string `json:"imageStreamTag,omitempty"`
+	BrokerImage      string `json:"brokerImage,omitempty"`
+	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
+	DatagridImage    string `json:"datagridImage,omitempty"`
+	DatagridImageTag string `json:"datagridImageTag,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

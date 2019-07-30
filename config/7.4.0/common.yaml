@@ -18,7 +18,7 @@ console:
               from:
                 kind: ImageStreamTag
                 namespace: openshift
-                name: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-openshift:[[.ImageTag]]"
+                name: "[[.Constants.Product]][[.Constants.Major]][[.Constants.Minor]]-[[.Console.ImageName]]-openshift:[[.ImageTag]]"
           - type: ConfigChange
         replicas: [[.Console.Replicas]]
         selector:
@@ -36,7 +36,7 @@ console:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
-                image: "[[.Constants.Product]][[.Version]]-[[.Console.ImageName]]-openshift"
+                image: "[[.Constants.Product]][[.Constants.Major]][[.Constants.Minor]]-[[.Console.ImageName]]-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -310,7 +310,7 @@ smartRouter:
               from:
                 kind: ImageStreamTag
                 namespace: "openshift"
-                name: "[[.Constants.Product]][[.Version]]-smartrouter-openshift:[[.ImageTag]]"
+                name: "[[.Constants.Product]][[.Constants.Major]][[.Constants.Minor]]-smartrouter-openshift:[[.ImageTag]]"
           - type: ConfigChange
         replicas: [[.SmartRouter.Replicas]]
         selector:
@@ -328,7 +328,7 @@ smartRouter:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-smartrouter"
-                image: "[[.Constants.Product]][[.Version]]-smartrouter-openshift"
+                image: "[[.Constants.Product]][[.Constants.Major]][[.Constants.Minor]]-smartrouter-openshift"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -476,7 +476,7 @@ servers:
               terminationGracePeriodSeconds: 90
               containers:
                 - name: "[[.KieName]]"
-                  image: "[[$.Constants.Product]][[$.Version]]-kieserver-openshift"
+                  image: "[[$.Constants.Product]][[$.Constants.Major]][[$.Constants.Minor]]-kieserver-openshift"
                   imagePullPolicy: Always
                   lifecycle:
                     postStart:

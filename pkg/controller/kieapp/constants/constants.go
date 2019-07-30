@@ -6,6 +6,18 @@ import (
 )
 
 const (
+	// CurrentVersion version supported
+	CurrentVersion = "7.4.1"
+	// PastMinorVersion version supported
+	PastMinorVersion = "7.4.0"
+	// PastPatchVersion version supported
+	PastPatchVersion = "7.4.1"
+)
+
+// SupportedVersions - product versions this operator supports
+var SupportedVersions = []string{CurrentVersion, PastMinorVersion, PastPatchVersion}
+
+const (
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
@@ -16,18 +28,6 @@ const (
 	ImageRegistry = "registry.redhat.io"
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
-	// ProductVersion default version
-	ProductVersion = "7.4"
-	// ImageStreamTag default tag name for the ImageStreams
-	ImageStreamTag = "1.1"
-	// BrokerImage AMQ Broker Image Name
-	BrokerImage = "amq-broker-73-openshift"
-	// BrokerImageTag AMQ Broker Image Tag
-	BrokerImageTag = "7.3"
-	// DatagridImage JBoss Datagrid Image Name
-	DatagridImage = "datagrid73-openshift"
-	// DatagridImageTag JBoss Datagrid  Image Tag
-	DatagridImageTag = "1.1"
 	// ConfigMapPrefix prefix to use for the configmaps
 	ConfigMapPrefix = "kieconfigs"
 	// KieServerCMLabel the label to modify when replicas is set to 0
@@ -63,9 +63,36 @@ const (
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
 	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
-	// Default SmartRouter protocol
+	// SmartRouterProtocol - default SmartRouter protocol
 	SmartRouterProtocol = "http"
 )
+
+// VersionConstants ...
+var VersionConstants = map[string]*v1.VersionConfigs{
+	CurrentVersion: {
+		ImageStreamTag:   "1.1",
+		BrokerImage:      "amq-broker-73-openshift",
+		BrokerImageTag:   "7.3",
+		DatagridImage:    "datagrid73-openshift",
+		DatagridImageTag: "1.1",
+	},
+	PastMinorVersion: {
+		ImageStreamTag:   "1.0",
+		BrokerImage:      "amq-broker-73-openshift",
+		BrokerImageTag:   "7.3",
+		DatagridImage:    "datagrid73-openshift",
+		DatagridImageTag: "1.1",
+	},
+	/*
+		PastPatchVersion: {
+			ImageStreamTag:   "1.1",
+			BrokerImage:      "amq-broker-73-openshift",
+			BrokerImageTag:   "7.3",
+			DatagridImage:    "datagrid73-openshift",
+			DatagridImageTag: "1.1",
+		},
+	*/
+}
 
 var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
 var rhpamMonitorAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
@@ -116,17 +143,15 @@ var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
 var TemplateConstants = v1.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
-	BrokerImage:          BrokerImage,
-	BrokerImageTag:       BrokerImageTag,
-	DatagridImage:        DatagridImage,
-	DatagridImageTag:     DatagridImageTag,
 }
 
+// DebugTrue - used to enable debug logs in objects
 var DebugTrue = corev1.EnvVar{
 	Name:  "DEBUG",
 	Value: "true",
 }
 
+// DebugFalse - used to disable debug logs in objects
 var DebugFalse = corev1.EnvVar{
 	Name:  "DEBUG",
 	Value: "false",

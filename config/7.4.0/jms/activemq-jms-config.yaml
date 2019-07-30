@@ -1,0 +1,226 @@
+## KIE Servers BEGIN
+servers:
+## RANGE BEGINS
+#[[ range $index, $Map := .Servers ]]
+## KIE server deployment config BEGIN
+  - deploymentConfigs:
+    - metadata:
+        name: "[[.KieName]]"
+      spec:
+        template:
+          spec:
+            containers:
+              - name: "[[.KieName]]"
+                env:
+                  # JMS config BEGIN
+                  - name: KIE_SERVER_JMS_QUEUE_REQUEST
+                    value: "[[.Jms.KieServerJmsQueueRequest]]"
+                  - name: KIE_SERVER_JMS_QUEUE_RESPONSE
+                    value: "[[.Jms.KieServerJmsQueueResponse]]"
+                  - name: KIE_SERVER_JMS_QUEUE_EXECUTOR
+                    value: "[[.Jms.KieServerJmsQueueExecutor]]"
+                  - name: KIE_SERVER_JMS_ENABLE_SIGNAL
+                    value: "[[.Jms.KieServerJmsEnableSignal]]"
+                    # [[ if .Jms.KieServerJmsEnableSignal]]
+                  - name: KIE_SERVER_JMS_QUEUE_SIGNAL
+                    value: "[[.Jms.KieServerJmsQueueSignal]]"
+                    # [[end]]
+                  - name: KIE_SERVER_JMS_ENABLE_AUDIT
+                    value: "[[.Jms.KieServerJmsEnableAudit]]"
+                    # [[ if .Jms.KieServerJmsEnableAudit]]
+                  - name: KIE_SERVER_JMS_QUEUE_AUDIT
+                    value: "[[.Jms.KieServerJmsQueueAudit]]"
+                    # [[end]]
+                  - name: KIE_SERVER_JMS_AUDIT_TRANSACTED
+                    value: "[[.Jms.KieServerJmsAuditTransacted]]"
+                  - name: MQ_SERVICE_PREFIX_MAPPING
+                    value: "[[.KieName]]-amq7=AMQ"
+                  - name: AMQ_USERNAME
+                    value: "[[.Jms.KieServerJmsUsername]]"
+                  - name: AMQ_PASSWORD
+                    value: "[[.Jms.KieServerJmsPassword]]"
+                  - name: AMQ_PROTOCOL
+                    value: "tcp"
+                  - name: AMQ_QUEUES
+                    value: "[[.Jms.KieServerJmsAMQQueues]]"
+                  # JMS config END
+    ## KIE server deployment config END
+    ## AMQ deployment BEGIN
+    - metadata:
+        name: "[[.KieName]]-amq"
+        labels:
+          app: "[[$.ApplicationName]]"
+          application: "[[$.ApplicationName]]"
+          service: "[[.KieName]]"
+        annotations:
+          template.alpha.openshift.io/wait-for-ready: "true"
+      spec:
+        strategy:
+          type: Recreate
+        triggers:
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - "[[.KieName]]-amq"
+              from:
+                kind: ImageStreamTag
+                name: "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
+                namespace: "openshift"
+          - type: ConfigChange
+        replicas: 1
+        selector:
+          deploymentConfig: "[[.KieName]]-amq"
+        template:
+          metadata:
+            name: "[[.KieName]]-amq"
+            labels:
+              app: "[[$.ApplicationName]]"
+              application: "[[$.ApplicationName]]"
+              deploymentConfig: "[[.KieName]]-amq"
+              service: "[[.KieName]]-amq"
+          spec:
+            terminationGracePeriodSeconds: 60
+            containers:
+            - name: "[[.KieName]]-amq"
+              image: "[[$.Constants.BrokerImage]]"
+              imagePullPolicy: Always
+              readinessProbe:
+                exec:
+                  command:
+                  - "/bin/bash"
+                  - "-c"
+                  - "/opt/amq/bin/readinessProbe.sh"
+              ports:
+                - containerPort: 8161
+                  name: console-jolokia
+                  protocol: TCP
+                - containerPort: 5672
+                  name: amq-amqp
+                  protocol: TCP
+                - containerPort: 1883
+                  name: amq-mqtt
+                  protocol: TCP
+                - containerPort: 61613
+                  name: amq-stomp
+                  protocol: TCP
+                - containerPort: 61616
+                  name: amq-tcp
+                  protocol: TCP
+              env:
+                - name: AMQ_USER
+                  value: "[[.Jms.KieServerJmsUsername]]"
+                - name: AMQ_PASSWORD
+                  value: "[[.Jms.KieServerJmsPassword]]"
+                  # maybe turn it in a parameter and defaults to admin if empty?
+                - name: AMQ_ROLE
+                  value: "admin"
+                - name: AMQ_NAME
+                  value: "broker"
+                - name: AMQ_TRANSPORTS
+                  value: "openwire"
+                - name: AMQ_QUEUES
+                  value: "[[.Jms.KieServerJmsAMQQueues]]"
+                - name: AMQ_REQUIRE_LOGIN
+                  value: "false"
+                - name: AMQ_ANYCAST_PREFIX
+                - name: AMQ_MULTICAST_PREFIX
+    ## AMQ deployment END
+    services:
+      - spec:
+          ports:
+            - name: "amq-jolokia"
+              port: 8161
+              targetPort: 8161
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-jolokia"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's console and Jolokia port."
+      - spec:
+          ports:
+            - name: "amp-amqp"
+              port: 5672
+              targetPort: 5672
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-amqp"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's AMQP port."
+      - spec:
+          ports:
+            - name: "amq-mqtt"
+              port: 1883
+              targetPort: 1883
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-mqtt"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's MQTT port."
+      - spec:
+          ports:
+            - name: "amp-stomp"
+              port: 61613
+              targetPort: 61613
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-stomp"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "The broker's STOMP port."
+      - spec:
+          ports:
+            - name: "amq-tcp"
+              port: 61616
+              targetPort: 61616
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+        metadata:
+          name: "[[.KieName]]-amq-tcp"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: The broker's OpenWire port.
+            service.alpha.openshift.io/dependencies: '[{"name": "[[.KieName]]-amq-amqp",
+                "kind": "Service"},{"name": "[[.KieName]]-amq-mqtt", "kind": "Service"},{"name":
+                "[[.KieName]]-amq-stomp", "kind": "Service"}]'
+
+    routes:
+      - id: "[[.KieName]]-amq-jolokia-console"
+        metadata:
+          name: amq-jolokia-console
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            description: "Route for AMQ Jolokia Service"
+        spec:
+          to:
+            kind: "Service"
+            name: "[[.KieName]]-amq-jolokia"
+#[[end]]
+## RANGE ends
+## KIE Servers END
+
