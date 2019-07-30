@@ -17,7 +17,7 @@ spec:
       serviceAccountName: kie-cloud-operator
       containers:
         - name: kie-cloud-operator
-          image: quay.io/kiegroup/kie-cloud-operator:1.1
+          image: quay.io/kiegroup/kie-cloud-operator:1.2
           command:
             - kie-cloud-operator
           imagePullPolicy: Always

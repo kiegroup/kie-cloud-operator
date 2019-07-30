@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	// CurrentVersion version supported
-	CurrentVersion = "7.4.1"
-	// PastMinorVersion version supported
-	PastMinorVersion = "7.4.0"
-	// PastPatchVersion version supported
+	// CurrentVersion product version supported
+	CurrentVersion = "7.5.0"
+	// PastPatchVersion product version supported
 	PastPatchVersion = "7.4.1"
+	// PastMinorVersion product version supported
+	PastMinorVersion = "7.4.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PastMinorVersion, PastPatchVersion}
+var SupportedVersions = []string{CurrentVersion, PastPatchVersion, PastMinorVersion}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -70,6 +70,13 @@ const (
 // VersionConstants ...
 var VersionConstants = map[string]*v1.VersionConfigs{
 	CurrentVersion: {
+		ImageStreamTag:   "1.0",
+		BrokerImage:      "amq-broker-73-openshift",
+		BrokerImageTag:   "7.3",
+		DatagridImage:    "datagrid73-openshift",
+		DatagridImageTag: "1.1",
+	},
+	PastPatchVersion: {
 		ImageStreamTag:   "1.1",
 		BrokerImage:      "amq-broker-73-openshift",
 		BrokerImageTag:   "7.3",
@@ -83,15 +90,6 @@ var VersionConstants = map[string]*v1.VersionConfigs{
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.1",
 	},
-	/*
-		PastPatchVersion: {
-			ImageStreamTag:   "1.1",
-			BrokerImage:      "amq-broker-73-openshift",
-			BrokerImageTag:   "7.3",
-			DatagridImage:    "datagrid73-openshift",
-			DatagridImageTag: "1.1",
-		},
-	*/
 }
 
 var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
