@@ -25,7 +25,7 @@ func TestGenerateSecret(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Servers: []v1.KieServerSet{
 					{Deployments: defaults.Pint(3)},
@@ -67,7 +67,7 @@ func TestSpecifySecret(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 			Objects: v1.KieAppObjects{
 				Console: v1.SecuredKieAppObject{
 					KieAppObject: v1.KieAppObject{
@@ -130,7 +130,7 @@ func TestConsoleHost(t *testing.T) {
 			Name: "test",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhdm-trial",
+			Environment: v1.RhdmTrial,
 		},
 	}
 
@@ -153,7 +153,7 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: v1.RhpamTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -180,7 +180,7 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhdm-trial",
+			Environment: v1.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -207,7 +207,7 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhdm-trial",
+			Environment: v1.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -234,7 +234,7 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 			Namespace: "test-ns",
 		},
 		Spec: v1.KieAppSpec{
-			Environment: "rhdm-trial",
+			Environment: v1.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -259,7 +259,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	crNamespacedName := getNamespacedName("namespace", "cr")
 	cr := getInstance(crNamespacedName)
 	cr.Spec = v1.KieAppSpec{
-		Environment: "rhpam-trial",
+		Environment: v1.RhpamTrial,
 	}
 	service := test.MockService()
 	err := service.Create(context.TODO(), cr)
