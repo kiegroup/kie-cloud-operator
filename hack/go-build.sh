@@ -1,9 +1,9 @@
 #!/bin/sh
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=1.1.1
+BRANCH=1.2.0
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
-TAG=1.1
+TAG=1.2
 TAR=${BRANCH}.tar.gz
 URL=${REPO}/archive/${TAR}
 CFLAGS="docker"

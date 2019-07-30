@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEP_VERSION=v0.5.0
+DEP_VERSION=v0.5.1
 
 if [[ -z ${CI} ]]; then
     dep ensure -v
