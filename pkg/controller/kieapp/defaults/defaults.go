@@ -624,12 +624,12 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 
 // important to parse template first with this function, before unmarshalling into object
 func loadYaml(service v1.PlatformService, filename, productVersion, namespace string, env v1.EnvTemplate) ([]byte, error) {
+	filename = strings.Join([]string{productVersion, filename}, "/")
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
 		box := packr.New("config", "../../../../config")
 		if !box.HasDir(productVersion) {
 			return nil, fmt.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
 		}
-		filename = strings.Join([]string{productVersion, filename}, "/")
 		if box.Has(filename) {
 			yamlString, err := box.FindString(filename)
 			if err != nil {
@@ -680,14 +680,10 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 
 // ConfigMapsFromFile reads the files under the config folder and creates
 // configmaps in the given namespace. It sets OwnerRef to operator deployment.
-func ConfigMapsFromFile(myDep *appsv1.Deployment, ns, productVersion string, scheme *runtime.Scheme) []corev1.ConfigMap {
+func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) []corev1.ConfigMap {
 	box := packr.New("config", "../../../../config")
-	if !box.HasDir(productVersion) {
-		log.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
-	}
 	cmList := map[string][]map[string]string{}
 	for _, filename := range box.List() {
-		filename := strings.Join([]string{productVersion, filename}, "/")
 		s, err := box.FindString(filename)
 		if err != nil {
 			log.Error("Error finding file with packr. ", err)

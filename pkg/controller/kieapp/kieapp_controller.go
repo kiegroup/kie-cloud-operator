@@ -54,7 +54,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			// started creating as versioned configs
 			// if versioned one already exists, reconcile??
 			// if not, but prior version exists, check deltas and apply as new versioned config
-			reconciler.CreateConfigMaps(myDep, constants.CurrentVersion)
+			reconciler.CreateConfigMaps(myDep)
 			if shouldDeployConsole() {
 				deployConsole(reconciler, myDep)
 			}
@@ -758,8 +758,8 @@ func (reconciler *Reconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) s
 }
 
 // CreateConfigMaps generates & creates necessary versioned ConfigMaps from embedded product files
-func (reconciler *Reconciler) CreateConfigMaps(myDep *appsv1.Deployment, productVersion string) {
-	configMaps := defaults.ConfigMapsFromFile(myDep, myDep.Namespace, productVersion, reconciler.Service.GetScheme())
+func (reconciler *Reconciler) CreateConfigMaps(myDep *appsv1.Deployment) {
+	configMaps := defaults.ConfigMapsFromFile(myDep, myDep.Namespace, reconciler.Service.GetScheme())
 	for _, configMap := range configMaps {
 		var testDir bool
 		result := strings.Split(configMap.Name, "-")
