@@ -9,7 +9,7 @@ metadata:
     certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator    
-    containerImage: registry.redhat.io/rhpam-7/rhpam75-operator:1.2
+    containerImage: registry.redhat.io/rhpam-7/rhpam75-operator:1.0
     createdAt: 2019-06-03
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -171,7 +171,7 @@ spec:
                 serviceAccountName: business-automation-operator
                 containers:
                   - name: business-automation-operator
-                    image: registry.redhat.io/rhpam-7/rhpam75-operator:1.2
+                    image: registry.redhat.io/rhpam-7/rhpam75-operator:1.0
                     command:
                       - kie-cloud-operator
                     imagePullPolicy: Always
