@@ -13,7 +13,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -30,28 +30,28 @@ var log = logs.GetLogger("kieapp.defaults")
 
 // GetEnvironment returns an Environment from merging the common config and the config
 // related to the environment set in the KieApp definition
-func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, error) {
+func GetEnvironment(cr *api.KieApp, service api.PlatformService) (api.Environment, error) {
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
-	var common v1.Environment
-	yamlBytes, err := loadYaml(service, "common.yaml", cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
+	var common api.Environment
+	yamlBytes, err := loadYaml(service, "common.yaml", cr.Spec.Version, cr.Namespace, envTemplate)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	err = yaml.Unmarshal(yamlBytes, &common)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
-	var env v1.Environment
-	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
+	var env api.Environment
+	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), cr.Spec.Version, cr.Namespace, envTemplate)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	err = yaml.Unmarshal(yamlBytes, &env)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	if cr.Spec.Objects.SmartRouter == nil {
 		env.SmartRouter.Omit = true
@@ -59,7 +59,7 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 
 	mergedEnv, err := merge(common, env)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	if mergedEnv.SmartRouter.Omit {
 		// remove router env vars from kieserver DCs
@@ -78,17 +78,17 @@ func GetEnvironment(cr *v1.KieApp, service v1.PlatformService) (v1.Environment, 
 
 	mergedEnv, err = mergeDB(service, cr, mergedEnv, envTemplate)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	mergedEnv, err = mergeJms(service, cr, mergedEnv, envTemplate)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	return mergedEnv, nil
 }
 
-func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envTemplate v1.EnvTemplate) (v1.Environment, error) {
-	dbEnvs := make(map[v1.DatabaseType]v1.Environment)
+func mergeDB(service api.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	dbEnvs := make(map[api.DatabaseType]api.Environment)
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
 		if kieServerSet.Database.Type == "" {
@@ -96,14 +96,14 @@ func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envT
 		}
 		dbType := kieServerSet.Database.Type
 		if _, loadedDB := dbEnvs[dbType]; !loadedDB {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Spec.Version, cr.Namespace, envTemplate)
 			if err != nil {
-				return v1.Environment{}, err
+				return api.Environment{}, err
 			}
-			var dbEnv v1.Environment
+			var dbEnv api.Environment
 			err = yaml.Unmarshal(yamlBytes, &dbEnv)
 			if err != nil {
-				return v1.Environment{}, err
+				return api.Environment{}, err
 			}
 			dbEnvs[dbType] = dbEnv
 		}
@@ -115,21 +115,21 @@ func mergeDB(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envT
 	return env, nil
 }
 
-func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, envTemplate v1.EnvTemplate) (v1.Environment, error) {
-	var jmsEnv v1.Environment
+func mergeJms(service api.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	var jmsEnv api.Environment
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
 
 		isJmsEnabled := kieServerSet.Jms.EnableIntegration
 
 		if isJmsEnabled {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Spec.Version, cr.Namespace, envTemplate)
 			if err != nil {
-				return v1.Environment{}, err
+				return api.Environment{}, err
 			}
 			err = yaml.Unmarshal(yamlBytes, &jmsEnv)
 			if err != nil {
-				return v1.Environment{}, err
+				return api.Environment{}, err
 			}
 		}
 
@@ -141,28 +141,46 @@ func mergeJms(service v1.PlatformService, cr *v1.KieApp, env v1.Environment, env
 	return env, nil
 }
 
-func findCustomObjectByName(template v1.CustomObject, objects []v1.CustomObject) (v1.CustomObject, bool) {
+func findCustomObjectByName(template api.CustomObject, objects []api.CustomObject) (api.CustomObject, bool) {
 	for i := range objects {
 		if len(objects[i].DeploymentConfigs) == 0 || len(template.DeploymentConfigs) == 0 {
-			return v1.CustomObject{}, false
+			return api.CustomObject{}, false
 		}
 		if objects[i].DeploymentConfigs[0].ObjectMeta.Name == template.DeploymentConfigs[0].ObjectMeta.Name {
 			return objects[i], true
 		}
 	}
-	return v1.CustomObject{}, false
+	return api.CustomObject{}, false
 }
 
-func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
-	setAppConstants(&cr.Spec.CommonConfig)
-	if !checkVersion(cr.Spec.CommonConfig.Version) {
-		return v1.EnvTemplate{}, fmt.Errorf("Product version %s is not supported by this Operator, %s", cr.Spec.CommonConfig.Version, version.Version)
+func getEnvTemplate(cr *api.KieApp) (api.EnvTemplate, error) {
+	if len(cr.Spec.Version) == 0 {
+		cr.Spec.Version = constants.CurrentVersion
 	}
+	if len(cr.Spec.CommonConfig.AdminUser) == 0 {
+		cr.Spec.CommonConfig.AdminUser = constants.DefaultAdminUser
+	}
+	// NOTES for future upgrade dev
+	// Compare existing configmaps w/ prior version for differences, check differences against upgrade deltas
+	//  - use hard-coded deltas for now
+	// Reconcile ConfigMaps
+	// if versioned one already exists, reconcile??
+	// if not, but prior version exists, check deltas and apply as new versioned config
+	// Apply deltas if no conflicts
+	// Stop update otherwise
+	minor, micro, err := checkProductUpgrade(cr)
+	if err != nil {
+		return api.EnvTemplate{}, err
+	}
+
+	// How handle upgrade logic from here??
+	if minor || micro {
+		return api.EnvTemplate{}, nil
+	}
+
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
-	if len(config.ImageTag) == 0 {
-		config.ImageTag = constants.VersionConstants[config.Version].ImageStreamTag
-	}
+	config.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageStreamTag
 	if config.ApplicationName == "" {
 		config.ApplicationName = cr.Name
 	}
@@ -171,14 +189,14 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 
 	serversConfig, err := getServersConfig(cr, config)
 	if err != nil {
-		return v1.EnvTemplate{}, err
+		return api.EnvTemplate{}, err
 	}
-	envTemplate := v1.EnvTemplate{
+	envTemplate := api.EnvTemplate{
 		CommonConfig: config,
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
-		Constants:    *getTemplateConstants(cr.Spec.Environment, cr.Spec.CommonConfig.Version),
+		Constants:    *getTemplateConstants(cr.Spec.Environment, cr.Spec.Version),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -188,9 +206,9 @@ func getEnvTemplate(cr *v1.KieApp) (v1.EnvTemplate, error) {
 	return envTemplate, nil
 }
 
-func getTemplateConstants(env v1.EnvironmentType, productVersion string) *v1.TemplateConstants {
+func getTemplateConstants(env api.EnvironmentType, productVersion string) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Patch = MajorMinorPatch(productVersion)
+	c.Major, c.Minor, c.Micro = MajorMinorMicro(productVersion)
 	if envConstants, found := constants.EnvironmentConstants[env]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
@@ -204,9 +222,9 @@ func getTemplateConstants(env v1.EnvironmentType, productVersion string) *v1.Tem
 	return c
 }
 
-func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
+func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
-	template := v1.ConsoleTemplate{}
+	template := api.ConsoleTemplate{}
 	if !hasEnv {
 		return template
 	}
@@ -216,7 +234,7 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 		template.KeystoreSecret = cr.Spec.Objects.Console.KeystoreSecret
 	}
 	// Set replicas
-	envReplicas := v1.Replicas{}
+	envReplicas := api.Replicas{}
 	if hasEnv {
 		envReplicas = envConstants.Replica.Console
 	}
@@ -232,9 +250,9 @@ func getConsoleTemplate(cr *v1.KieApp) v1.ConsoleTemplate {
 	return template
 }
 
-func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
+func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
-	template := v1.SmartRouterTemplate{}
+	template := api.SmartRouterTemplate{}
 	if cr.Spec.Objects.SmartRouter != nil {
 		if !hasEnv {
 			return template
@@ -254,7 +272,7 @@ func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 		template.UseExternalRoute = cr.Spec.Objects.SmartRouter.UseExternalRoute
 
 		// Set replicas
-		envReplicas := v1.Replicas{}
+		envReplicas := api.Replicas{}
 		if hasEnv {
 			envReplicas = envConstants.Replica.SmartRouter
 		}
@@ -268,7 +286,7 @@ func getSmartRouterTemplate(cr *v1.KieApp) v1.SmartRouterTemplate {
 	return template
 }
 
-func setReplicas(object v1.KieAppObject, replicaConstant v1.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
+func setReplicas(object api.KieAppObject, replicaConstant api.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
 	if object.Replicas != nil {
 		if hasEnv && replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
 			log.Warnf("scaling not allowed for this environment, setting to default of %d", replicaConstant.Replicas)
@@ -284,8 +302,8 @@ func setReplicas(object v1.KieAppObject, replicaConstant v1.Replicas, hasEnv boo
 }
 
 // serverSortBlanks moves blank names to the end
-func serverSortBlanks(serverSets []v1.KieServerSet) []v1.KieServerSet {
-	var newSets []v1.KieServerSet
+func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
+	var newSets []api.KieServerSet
 	// servers with existing names should be placed in front
 	for index := range serverSets {
 		if serverSets[index].Name != "" {
@@ -307,10 +325,10 @@ func serverSortBlanks(serverSets []v1.KieServerSet) []v1.KieServerSet {
 
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
-func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.ServerTemplate, error) {
-	var servers []v1.ServerTemplate
+func getServersConfig(cr *api.KieApp, commonConfig *api.CommonConfig) ([]api.ServerTemplate, error) {
+	var servers []api.ServerTemplate
 	if len(cr.Spec.Objects.Servers) == 0 {
-		cr.Spec.Objects.Servers = []v1.KieServerSet{{}}
+		cr.Spec.Objects.Servers = []api.KieServerSet{{}}
 	}
 	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
 	product := GetProduct(cr.Spec.Environment)
@@ -334,13 +352,13 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 		for i := 0; i < *serverSet.Deployments; i++ {
 			name := getKieDeploymentName(cr.Spec.CommonConfig.ApplicationName, serverSet.Name, unsetNames, i)
 			if usedNames[name] {
-				return []v1.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", name)
+				return []api.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", name)
 			}
 			usedNames[name] = true
-			template := v1.ServerTemplate{
+			template := api.ServerTemplate{
 				KieName:        name,
 				KieServerID:    name,
-				Build:          getBuildConfig(product, commonConfig, serverSet.Build),
+				Build:          getBuildConfig(product, cr, serverSet.Build),
 				KeystoreSecret: serverSet.KeystoreSecret,
 			}
 			if serverSet.ID != "" {
@@ -348,7 +366,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 			}
 			if serverSet.Build != nil {
 				if *serverSet.Deployments > 1 {
-					return []v1.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
+					return []api.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
 				}
 				template.From = corev1.ObjectReference{
 					Kind:      "ImageStreamTag",
@@ -356,12 +374,12 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 					Namespace: "",
 				}
 			} else {
-				template.From = getDefaultKieServerImage(product, commonConfig, serverSet.From)
+				template.From = getDefaultKieServerImage(product, cr, serverSet.From)
 			}
 
 			// Set replicas
 			envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
-			envReplicas := v1.Replicas{}
+			envReplicas := api.Replicas{}
 			if hasEnv {
 				envReplicas = envConstants.Replica.Server
 			}
@@ -408,7 +426,7 @@ func getServersConfig(cr *v1.KieApp, commonConfig *v1.CommonConfig) ([]v1.Server
 }
 
 // GetServerSet retrieves to correct ServerSet for processing and the DeploymentName
-func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet, kieName string) {
+func GetServerSet(cr *api.KieApp, requestedIndex int) (serverSet api.KieServerSet, kieName string) {
 	count := 0
 	unnamedSets := 0
 	for _, thisServerSet := range cr.Spec.Objects.Servers {
@@ -428,7 +446,7 @@ func GetServerSet(cr *v1.KieApp, requestedIndex int) (serverSet v1.KieServerSet,
 }
 
 // ConsolidateObjects construct all CustomObjects prior to creation
-func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
+func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 	env.Console = ConstructObject(env.Console, cr.Spec.Objects.Console.KieAppObject)
 	if cr.Spec.Objects.SmartRouter != nil {
 		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Spec.Objects.SmartRouter.KieAppObject)
@@ -441,7 +459,7 @@ func ConsolidateObjects(env v1.Environment, cr *v1.KieApp) v1.Environment {
 }
 
 // ConstructObject returns an object after merging the environment object and the one defined in the CR
-func ConstructObject(object v1.CustomObject, appObject v1.KieAppObject) v1.CustomObject {
+func ConstructObject(object api.CustomObject, appObject api.KieAppObject) api.CustomObject {
 	for dcIndex, dc := range object.DeploymentConfigs {
 		for containerIndex, c := range dc.Spec.Template.Spec.Containers {
 			c.Env = shared.EnvOverride(c.Env, appObject.Env)
@@ -482,27 +500,27 @@ func getKieSetIndex(arrayIdx, deploymentsIdx int) string {
 	return name.String()
 }
 
-func getBuildConfig(product string, config *v1.CommonConfig, build *v1.KieAppBuildObject) v1.BuildTemplate {
+func getBuildConfig(product string, cr *api.KieApp, build *api.KieAppBuildObject) api.BuildTemplate {
 	if build == nil {
-		return v1.BuildTemplate{}
+		return api.BuildTemplate{}
 	}
-	buildTemplate := v1.BuildTemplate{
+	buildTemplate := api.BuildTemplate{
 		GitSource:                    build.GitSource,
-		GitHubWebhookSecret:          getWebhookSecret(v1.GitHubWebhook, build.Webhooks),
-		GenericWebhookSecret:         getWebhookSecret(v1.GenericWebhook, build.Webhooks),
+		GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, build.Webhooks),
+		GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, build.Webhooks),
 		KieServerContainerDeployment: build.KieServerContainerDeployment,
 		MavenMirrorURL:               build.MavenMirrorURL,
 		ArtifactDir:                  build.ArtifactDir,
 	}
-	buildTemplate.From = getDefaultKieServerImage(product, config, build.From)
+	buildTemplate.From = getDefaultKieServerImage(product, cr, build.From)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, config *v1.CommonConfig, from *corev1.ObjectReference) corev1.ObjectReference {
+func getDefaultKieServerImage(product string, cr *api.KieApp, from *corev1.ObjectReference) corev1.ObjectReference {
 	if from != nil {
 		return *from
 	}
-	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, getMinorImageVersion(config.Version), config.ImageTag)
+	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag)
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
 		Name:      imageName,
@@ -510,7 +528,7 @@ func getDefaultKieServerImage(product string, config *v1.CommonConfig, from *cor
 	}
 }
 
-func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObject) (*v1.DatabaseObject, error) {
+func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseObject) (*api.DatabaseObject, error) {
 	envConstants := constants.EnvironmentConstants[environment]
 	if envConstants == nil {
 		return nil, nil
@@ -520,7 +538,7 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 		return defaultDB, nil
 	}
 
-	if database.Type == v1.DatabaseExternal && database.ExternalConfig == nil {
+	if database.Type == api.DatabaseExternal && database.ExternalConfig == nil {
 		return nil, fmt.Errorf("external database configuration is mandatory for external database type")
 	}
 	if database.Size == "" && defaultDB != nil {
@@ -531,7 +549,7 @@ func getDatabaseConfig(environment v1.EnvironmentType, database *v1.DatabaseObje
 	return database, nil
 }
 
-func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.KieAppJmsObject, error) {
+func getJmsConfig(environment api.EnvironmentType, jms *api.KieAppJmsObject) (*api.KieAppJmsObject, error) {
 
 	envConstants := constants.EnvironmentConstants[environment]
 	if envConstants == nil || jms == nil || !jms.EnableIntegration {
@@ -552,7 +570,7 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 	}
 
 	// if enabled, prepare the default values
-	defaultJms := &v1.KieAppJmsObject{
+	defaultJms := &api.KieAppJmsObject{
 		QueueExecutor: "queue/KIE.SERVER.EXECUTOR",
 		QueueRequest:  "queue/KIE.SERVER.REQUEST",
 		QueueResponse: "queue/KIE.SERVER.RESPONSE",
@@ -595,7 +613,7 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	return ""
 }
 
-func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
+func setPasswords(config *api.CommonConfig, isTrialEnv bool) {
 	passwords := []*string{
 		&config.KeyStorePassword,
 		&config.AdminPassword,
@@ -618,7 +636,7 @@ func setPasswords(config *v1.CommonConfig, isTrialEnv bool) {
 	}
 }
 
-func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) string {
+func getWebhookSecret(webhookType api.WebhookType, webhooks []api.WebhookSecret) string {
 	for _, webhook := range webhooks {
 		if webhook.Type == webhookType {
 			return webhook.Secret
@@ -628,7 +646,8 @@ func getWebhookSecret(webhookType v1.WebhookType, webhooks []v1.WebhookSecret) s
 }
 
 // important to parse template first with this function, before unmarshalling into object
-func loadYaml(service v1.PlatformService, filename, productVersion, namespace string, env v1.EnvTemplate) ([]byte, error) {
+func loadYaml(service api.PlatformService, filename, productVersion, namespace string, env api.EnvTemplate) ([]byte, error) {
+	// prepend specified product version dir to filepath
 	filename = strings.Join([]string{productVersion, filename}, "/")
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
 		box := packr.New("config", "../../../../config")
@@ -655,7 +674,7 @@ func loadYaml(service v1.PlatformService, filename, productVersion, namespace st
 	return parseTemplate(env, configMap.Data[file]), nil
 }
 
-func parseTemplate(env v1.EnvTemplate, objYaml string) []byte {
+func parseTemplate(env api.EnvTemplate, objYaml string) []byte {
 	var b bytes.Buffer
 
 	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Parse(objYaml)
@@ -711,7 +730,7 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 				Name:      cmName,
 				Namespace: ns,
 				Annotations: map[string]string{
-					v1.SchemeGroupVersion.Group: version.Version,
+					api.SchemeGroupVersion.Group: version.Version,
 				},
 			},
 			Data: cmData,
@@ -731,52 +750,13 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 }
 
 // UseEmbeddedFiles checks environment variables WATCH_NAMESPACE & OPERATOR_NAME
-func UseEmbeddedFiles(service v1.PlatformService) (opName string, depNameSpace string, useEmbedded bool) {
+func UseEmbeddedFiles(service api.PlatformService) (opName string, depNameSpace string, useEmbedded bool) {
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	name := os.Getenv(constants.OpNameEnv)
 	if service.IsMockService() || namespace == "" || name == "" {
 		return name, namespace, true
 	}
 	return name, namespace, false
-}
-
-// setAppConstants sets the application-related constants to use in the template processing
-func setAppConstants(common *v1.CommonConfig) {
-	if len(common.Version) == 0 {
-		common.Version = constants.CurrentVersion
-	} else if common.Version == "74" {
-		common.Version = "7.4.1"
-	}
-	if len(common.AdminUser) == 0 {
-		common.AdminUser = constants.DefaultAdminUser
-	}
-}
-
-// getMinorImageVersion ...
-func getMinorImageVersion(productVersion string) string {
-	major, minor, _ := MajorMinorPatch(productVersion)
-	return fmt.Sprintf("%s%s", major, minor)
-}
-
-// MajorMinorPatch ...
-func MajorMinorPatch(productVersion string) (major, minor, patch string) {
-	version := strings.Split(productVersion, ".")
-	for len(version) < 3 {
-		version = append(version, "0")
-	}
-	return version[0], version[1], version[2]
-}
-
-// checkVersion ...
-func checkVersion(productVersion string) bool {
-	versionCheck := make(map[string]bool)
-	for _, v := range constants.SupportedVersions {
-		versionCheck[v] = true
-	}
-	if versionCheck[productVersion] {
-		return true
-	}
-	return false
 }
 
 // Pint returns a pointer to an integer
@@ -789,7 +769,8 @@ func Pint32(i int32) *int32 {
 	return &i
 }
 
-func GetProduct(env v1.EnvironmentType) (product string) {
+// GetProduct ...
+func GetProduct(env api.EnvironmentType) (product string) {
 	envConstants := constants.EnvironmentConstants[env]
 	if envConstants != nil {
 		product = envConstants.App.Product

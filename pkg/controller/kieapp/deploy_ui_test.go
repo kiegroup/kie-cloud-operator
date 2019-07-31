@@ -10,7 +10,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	v1 "github.com/openshift/api/route/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	operators "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -49,7 +49,7 @@ func TestUpdateLink(t *testing.T) {
 
 	var url string
 	service.CreateFunc = func(ctx context.Context, obj runtime.Object) error {
-		if route, matched := obj.(*v1.Route); matched {
+		if route, matched := obj.(*routev1.Route); matched {
 			url = fmt.Sprintf("%s.apps.example.com", route.Name)
 			route.Spec.Host = url
 		}
@@ -98,7 +98,7 @@ func TestUpdateExistingLink(t *testing.T) {
 
 	var url string
 	service.CreateFunc = func(ctx context.Context, obj runtime.Object) error {
-		if route, matched := obj.(*v1.Route); matched {
+		if route, matched := obj.(*routev1.Route); matched {
 			url = fmt.Sprintf("%s.apps.example.com", route.Name)
 			route.Spec.Host = url
 		}

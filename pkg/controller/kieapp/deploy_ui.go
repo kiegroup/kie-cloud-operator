@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	routev1 "github.com/openshift/api/route/v1"
@@ -349,7 +349,7 @@ func getRole(namespace string) *rbacv1.Role {
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
-				APIGroups: []string{v1.SchemeGroupVersion.Group},
+				APIGroups: []string{api.SchemeGroupVersion.Group},
 				Resources: []string{"*"},
 				Verbs:     []string{"*"},
 			},

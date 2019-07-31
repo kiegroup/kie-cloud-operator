@@ -2,9 +2,8 @@ package test
 
 import (
 	"context"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -16,6 +15,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var log = logs.GetLogger("kieapp.test")
@@ -38,10 +38,10 @@ func MockService() *MockPlatformService {
 }
 
 func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
-	registerObjs := []runtime.Object{&v1.KieApp{}, &v1.KieAppList{}, &corev1.PersistentVolumeClaim{}, &corev1.ServiceAccount{}, &corev1.Secret{}, &rbacv1.Role{}, &rbacv1.RoleBinding{}, &oappsv1.DeploymentConfig{}, &corev1.Service{}, &appsv1.StatefulSet{}, &routev1.Route{}, &oimagev1.ImageStream{}, &buildv1.BuildConfig{}, &oappsv1.DeploymentConfigList{}, &buildv1.BuildConfigList{}}
+	registerObjs := []runtime.Object{&api.KieApp{}, &api.KieAppList{}, &corev1.PersistentVolumeClaim{}, &corev1.ServiceAccount{}, &corev1.Secret{}, &rbacv1.Role{}, &rbacv1.RoleBinding{}, &oappsv1.DeploymentConfig{}, &corev1.Service{}, &appsv1.StatefulSet{}, &routev1.Route{}, &oimagev1.ImageStream{}, &buildv1.BuildConfig{}, &oappsv1.DeploymentConfigList{}, &buildv1.BuildConfigList{}}
 	registerObjs = append(registerObjs, objs...)
-	v1.SchemeBuilder.Register(registerObjs...)
-	scheme, _ := v1.SchemeBuilder.Build()
+	api.SchemeBuilder.Register(registerObjs...)
+	scheme, _ := api.SchemeBuilder.Build()
 	client := fake.NewFakeClientWithScheme(scheme)
 	log.Debugf("Fake client created as %v", client)
 	mockImageStreamTag := &MockImageStreamTag{}

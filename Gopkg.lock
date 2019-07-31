@@ -49,24 +49,21 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:c76e1c574ebc454c83f75a08d6dc524f04839625ec68890b73d47b6c98cf47cd"
+  digest = "1:a62b88d828341fb144a284a0cbb528c71f431551b0b24ccb52147a516d32efde"
   name = "github.com/RHsyseng/console-cr-form"
-  packages = [
-    "pkg/web",
-    "pkg/web/packrd",
-  ]
+  packages = ["pkg/web"]
   pruneopts = ""
-  revision = "3ba9910580873125049ef35c8166be29f12a0ec7"
+  revision = "f3dcf90d5d54295ab63ea24aaed7052b068a1d5e"
 
 [[projects]]
-  digest = "1:3d12798656f8436ec615f102278f312314697b30a2202df6b146ee95d2b4cecc"
+  digest = "1:4940a6707379ce619f7521dccca2f6c36005b4035cad7403a53ba0ba95a09788"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "ab479a3d6e3c70611947d1c1c18f5e157f11856c"
+  revision = "7b1462f3cd3456e08e0966df5df8fa784f117145"
 
 [[projects]]
   branch = "master"

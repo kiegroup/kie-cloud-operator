@@ -10,7 +10,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
 	"github.com/gobuffalo/packr/v2"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -33,7 +33,7 @@ func Listen() {
 
 func apply(cr string) error {
 	log.Debugf("Will deploy KieApp based on yaml %v", cr)
-	kieApp := &v1.KieApp{}
+	kieApp := &api.KieApp{}
 	err := yaml.Unmarshal([]byte(cr), kieApp)
 	if err != nil {
 		log.Debugf("Failed to parse CR based on %s. Cause: ", cr, err)
@@ -44,12 +44,12 @@ func apply(cr string) error {
 		log.Debug("Failed to get in-cluster config", err)
 		return err
 	}
-	err = v1.SchemeBuilder.AddToScheme(scheme.Scheme)
+	err = api.SchemeBuilder.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Debug("Failed to add scheme", err)
 		return err
 	}
-	config.ContentConfig.GroupVersion = &v1.SchemeGroupVersion
+	config.ContentConfig.GroupVersion = &api.SchemeGroupVersion
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
@@ -58,7 +58,7 @@ func apply(cr string) error {
 		log.Debug("Failed to get REST client", err)
 		return err
 	}
-	kieApp.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("KieApp"))
+	kieApp.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
 	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do().Into(kieApp)
 	if err != nil {
 		log.Debug("Failed to create KIE app", err)
@@ -81,7 +81,13 @@ type CustomResourceDefinition struct {
 }
 
 type CustomResourceDefinitionSpec struct {
+	Versions   []CustomResourceDefinitionVersion  `json:"versions,omitempty"`
 	Validation CustomResourceDefinitionValidation `json:"validation,omitempty"`
+}
+
+type CustomResourceDefinitionVersion struct {
+	Name   string                             `json:"Name,omitempty"`
+	Schema CustomResourceDefinitionValidation `json:"schema,omitempty"`
 }
 
 type CustomResourceDefinitionValidation struct {
@@ -89,6 +95,7 @@ type CustomResourceDefinitionValidation struct {
 }
 
 func getSchema() spec.Schema {
+	schema := spec.Schema{}
 	box := packr.New("CRD", "../../deploy/crds/")
 	yamlByte, err := box.Find("kieapp.crd.yaml")
 	if err != nil {
@@ -101,7 +108,12 @@ func getSchema() spec.Schema {
 		log.Fatal(err)
 		panic("Failed to unmarshal static schema, there must be an environment problem!")
 	}
-	return crd.Spec.Validation.OpenAPIV3Schema
+	for _, v := range crd.Spec.Versions {
+		if v.Name == api.SchemeGroupVersion.Version {
+			schema = v.Schema.OpenAPIV3Schema
+		}
+	}
+	return schema
 }
 
 func getForm() web.Form {
@@ -136,5 +148,5 @@ func getObjectKind() string {
 }
 
 func getApiVersion() string {
-	return v1.SchemeGroupVersion.String()
+	return api.SchemeGroupVersion.String()
 }

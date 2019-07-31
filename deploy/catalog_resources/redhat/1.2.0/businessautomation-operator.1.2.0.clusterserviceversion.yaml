@@ -14,7 +14,7 @@ metadata:
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
-      [{"apiVersion":"app.kiegroup.org/v1","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]
+      [{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]
   labels:
     operator-businessautomation: "true"
 spec:
@@ -63,7 +63,7 @@ spec:
       supported: false
   customresourcedefinitions:
     owned:
-      - version: v1
+      - version: v2
         kind: KieApp
         description: A project prescription running an RHPAM/RHDM environment.
         displayName: KieApp
@@ -92,6 +92,18 @@ spec:
           - kind: ImageStream
             version: image.openshift.io/v1
         specDescriptors:
+          - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
+            displayName: Enable Upgrades
+            value: false
+            path: upgrades.enabled
+            x-descriptors:
+              - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+          - description: Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
+            displayName: Include minor version upgrades
+            value: false
+            path: upgrades.minor
+            x-descriptors:
+              - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
           - description: Environment deployed.
             displayName: Environment
             path: environment
@@ -99,7 +111,7 @@ spec:
               - "urn:alm:descriptor:com.tectonic.ui:label"
           - description: Product version installed.
             displayName: Version
-            path: commonConfig.version
+            path: version
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:label"
         statusDescriptors:
@@ -108,6 +120,11 @@ spec:
             path: deployments
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
+          - description: Current phase.
+            displayName: Status
+            path: phase
+            x-descriptors:
+              - "urn:alm:descriptor:com.tectonic.ui:label"
           - description: The address for accessing Business Central, if it is deployed.
             displayName: Business/Decision Central URL
             path: consoleHost

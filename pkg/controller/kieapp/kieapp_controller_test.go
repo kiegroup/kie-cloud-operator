@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
@@ -20,14 +20,14 @@ import (
 )
 
 func TestGenerateSecret(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: defaults.Pint(3)},
 					{Name: "testing", Deployments: defaults.Pint(4)},
 					{Deployments: defaults.Pint(2)},
@@ -39,7 +39,7 @@ func TestGenerateSecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
 
-	scheme, err := v1.SchemeBuilder.Build()
+	scheme, err := api.SchemeBuilder.Build()
 	assert.Nil(t, err, "Failed to get scheme")
 	mockService := test.MockService()
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
@@ -62,29 +62,29 @@ func TestGenerateSecret(t *testing.T) {
 }
 
 func TestSpecifySecret(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Console: v1.SecuredKieAppObject{
-					KieAppObject: v1.KieAppObject{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Console: api.SecuredKieAppObject{
+					KieAppObject: api.KieAppObject{
 						KeystoreSecret: "console-ks-secret",
 					},
 				},
-				Servers: []v1.KieServerSet{
+				Servers: []api.KieServerSet{
 					{
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							KieAppObject: v1.KieAppObject{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							KieAppObject: api.KieAppObject{
 								KeystoreSecret: "server-ks-secret",
 							},
 						},
 					},
 				},
-				SmartRouter: &v1.SmartRouterObject{
-					KieAppObject: v1.KieAppObject{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{
 						KeystoreSecret: "smartrouter-ks-secret",
 					},
 				},
@@ -95,7 +95,7 @@ func TestSpecifySecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
 
-	scheme, err := v1.SchemeBuilder.Build()
+	scheme, err := api.SchemeBuilder.Build()
 	assert.Nil(t, err, "Failed to get scheme")
 	mockService := test.MockService()
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
@@ -125,16 +125,16 @@ func TestSpecifySecret(t *testing.T) {
 }
 
 func TestConsoleHost(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
 		},
 	}
 
-	scheme, err := v1.SchemeBuilder.Build()
+	scheme, err := api.SchemeBuilder.Build()
 	assert.Nil(t, err, "Failed to get scheme")
 	mockService := test.MockService()
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
@@ -147,13 +147,13 @@ func TestConsoleHost(t *testing.T) {
 }
 
 func TestCreateRhpamImageStreams(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -164,23 +164,23 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -191,23 +191,23 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.CommonConfig.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateTagVersionImageStreams(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -218,23 +218,23 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImageTag), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImageTag), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImageTag), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), isTag.Tag.From.Name)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
 		},
 	}
 	mockSvc := test.MockService()
@@ -245,21 +245,21 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Spec.Version].DatagridImage), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Spec.Version].DatagridImage), metav1.GetOptions{})
 	assert.Nil(t, err)
 	fmt.Print(isTag)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage), isTag.Tag.From.Name)
 }
 
 func TestStatusDeploymentsProgression(t *testing.T) {
 	crNamespacedName := getNamespacedName("namespace", "cr")
 	cr := getInstance(crNamespacedName)
-	cr.Spec = v1.KieAppSpec{
-		Environment: v1.RhpamTrial,
+	cr.Spec = api.KieAppSpec{
+		Environment: api.RhpamTrial,
 	}
 	service := test.MockService()
 	err := service.Create(context.TODO(), cr)
@@ -270,7 +270,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
 
 	cr = reloadCR(t, service, crNamespacedName)
-	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
 
 	//Let's now assume console pod is starting
@@ -292,7 +292,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
 
 	cr = reloadCR(t, service, crNamespacedName)
-	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
 
@@ -314,7 +314,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
 
 	cr = reloadCR(t, service, crNamespacedName)
-	assert.Equal(t, v1.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
 	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
@@ -327,15 +327,15 @@ func getNamespacedName(namespace string, name string) types.NamespacedName {
 	}
 }
 
-func reloadCR(t *testing.T, service *test.MockPlatformService, namespacedName types.NamespacedName) *v1.KieApp {
+func reloadCR(t *testing.T, service *test.MockPlatformService, namespacedName types.NamespacedName) *api.KieApp {
 	cr := getInstance(namespacedName)
 	err := service.Get(context.TODO(), namespacedName, cr)
 	assert.Nil(t, err)
 	return cr
 }
 
-func getInstance(namespacedName types.NamespacedName) *v1.KieApp {
-	cr := &v1.KieApp{
+func getInstance(namespacedName types.NamespacedName) *api.KieApp {
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      namespacedName.Name,
 			Namespace: namespacedName.Namespace,

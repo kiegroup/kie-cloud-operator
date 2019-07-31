@@ -1,8 +1,0 @@
-apiVersion: app.kiegroup.org/v1
-kind: KieApp
-metadata:
-  name: minor-upgrade
-spec:
-  environment: rhpam-trial
-  upgrades:
-    minor: true
