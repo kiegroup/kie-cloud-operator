@@ -25,10 +25,6 @@ console:
                 volumeMounts:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/kie/data"
-                ports:
-                  - name: git-ssh
-                    containerPort: 8001
-                    protocol: TCP
                 env:
                   - name: APPFORMER_INFINISPAN_SERVICE_NAME
                     value: "[[.ApplicationName]]-datagrid"
@@ -46,15 +42,6 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
-
-  services:
-    - spec:
-        ports:
-          - name: git-ssh
-            port: 8001
-            targetPort: 8001
-      metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]"
 
 # ES/AMQ BEGIN
 others:
