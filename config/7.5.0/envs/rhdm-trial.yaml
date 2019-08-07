@@ -12,10 +12,6 @@ console:
                   - name: JGROUPS_PING_PROTOCOL
                   - name: OPENSHIFT_DNS_PING_SERVICE_NAME
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                ports:
-                  - name: git-ssh
-                    containerPort: 8001
-                    protocol: TCP
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 emptyDir: {}
@@ -25,13 +21,6 @@ console:
         annotations:
           delete: "true"
   services:
-    - metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]"
-      spec:
-        ports:
-          - name: git-ssh
-            port: 8001
-            targetPort: 8001
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
         annotations:

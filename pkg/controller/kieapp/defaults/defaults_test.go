@@ -127,8 +127,8 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	wbServices := env.Console.Services
 	mainService := getService(wbServices, "test-rhpamcentr")
 	assert.NotNil(t, mainService, "rhpamcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 3, "The rhpamcentr service should have three ports")
-	assert.True(t, hasPort(mainService, 8001), "The rhpamcentr service should listen on port 8001")
+	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamcentr service should have two ports")
+	assert.False(t, hasPort(mainService, 8001), "The rhpamcentr service should NOT listen on port 8001")
 
 	pingService := getService(wbServices, "test-rhpamcentr-ping")
 	assert.NotNil(t, pingService, "Ping service not found")
@@ -161,8 +161,8 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	wbServices := env.Console.Services
 	mainService := getService(wbServices, "test-rhdmcentr")
 	assert.NotNil(t, mainService, "rhdmcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 3, "The rhdmcentr service should have three ports")
-	assert.True(t, hasPort(mainService, 8001), "The rhdmcentr service should listen on port 8001")
+	assert.Len(t, mainService.Spec.Ports, 2, "The rhdmcentr service should have three ports")
+	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
 	pingService := getService(wbServices, "test-rhdmcentr-ping")
 	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
