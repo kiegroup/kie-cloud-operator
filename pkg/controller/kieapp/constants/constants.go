@@ -9,14 +9,14 @@ import (
 const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.5.0"
-	// PastMicroVersion product version supported
-	PastMicroVersion = "7.4.1"
-	// PastMinorVersion product version supported
-	PastMinorVersion = "7.4.0"
+	// LastMicroVersion product version supported
+	LastMicroVersion = "7.4.1"
+	// LastMinorVersion product version supported
+	LastMinorVersion = "7.4.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PastMicroVersion, PastMinorVersion}
+var SupportedVersions = []string{CurrentVersion, LastMicroVersion, LastMinorVersion}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -78,7 +78,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.1",
 	},
-	PastMicroVersion: {
+	LastMicroVersion: {
 		APIVersion:       v1.SchemeGroupVersion.Version,
 		ImageTag:         "1.1",
 		BrokerImage:      "amq-broker-73-openshift",
@@ -86,7 +86,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.1",
 	},
-	PastMinorVersion: {
+	LastMinorVersion: {
 		APIVersion:       v1.SchemeGroupVersion.Version,
 		ImageTag:         "1.0",
 		BrokerImage:      "amq-broker-73-openshift",

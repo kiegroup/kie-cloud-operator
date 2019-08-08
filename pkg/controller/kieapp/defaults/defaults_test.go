@@ -370,7 +370,6 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
@@ -1844,7 +1843,7 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
 	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageTag, cr.Spec.CommonConfig.ImageTag)
-	assert.True(t, checkVersion(cr))
+	assert.True(t, checkVersion(cr.Spec.Version))
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(constants.CurrentVersion)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
@@ -1881,13 +1880,13 @@ func TestConfigVersioning(t *testing.T) {
 	}
 	_, err := GetEnvironment(cr, test.MockService())
 	assert.Error(t, err, "Incompatible product versions should throw an error")
-	assert.Equal(t, fmt.Sprintf("Product version %s is not supported in operator version %s. The following versions are supported - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
+	assert.Equal(t, fmt.Sprintf("Product version %s is not allowed in operator version %s. The following versions are allowed - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
 	assert.Equal(t, "6.3.1", cr.Spec.Version)
 	major, minor, micro := MajorMinorMicro(cr.Spec.Version)
 	assert.Equal(t, "6", major)
 	assert.Equal(t, "3", minor)
 	assert.Equal(t, "1", micro)
-	assert.False(t, checkVersion(cr))
+	assert.False(t, checkVersion(cr.Spec.Version))
 }
 
 func TestConfigMapNames(t *testing.T) {

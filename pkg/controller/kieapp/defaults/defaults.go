@@ -31,10 +31,29 @@ var log = logs.GetLogger("kieapp.defaults")
 // GetEnvironment returns an Environment from merging the common config and the config
 // related to the environment set in the KieApp definition
 func GetEnvironment(cr *api.KieApp, service api.PlatformService) (api.Environment, error) {
+	minor, micro, err := checkProductUpgrade(cr)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	// handle upgrade logic from here
+	cMajor, _, _ := MajorMinorMicro(cr.Spec.Version)
+	lMajor, _, _ := MajorMinorMicro(constants.CurrentVersion)
+	minorVersion := getMinorImageVersion(cr.Spec.Version)
+	latestMinorVersion := getMinorImageVersion(constants.CurrentVersion)
+	if (micro && minorVersion == latestMinorVersion) ||
+		(minor && minorVersion != latestMinorVersion && cMajor == lMajor) {
+		if err := getConfigVersionDiffs(cr.Spec.Version, constants.CurrentVersion, service); err != nil {
+			return api.Environment{}, err
+		}
+		// reset current annotations and update CR use to latest product version
+		cr.SetAnnotations(map[string]string{})
+		cr.Spec.Version = constants.CurrentVersion
+	}
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		return api.Environment{}, err
 	}
+
 	var common api.Environment
 	yamlBytes, err := loadYaml(service, "common.yaml", cr.Spec.Version, cr.Namespace, envTemplate)
 	if err != nil {
@@ -153,46 +172,14 @@ func findCustomObjectByName(template api.CustomObject, objects []api.CustomObjec
 	return api.CustomObject{}, false
 }
 
-func getEnvTemplate(cr *api.KieApp) (api.EnvTemplate, error) {
-	if len(cr.Spec.Version) == 0 {
-		cr.Spec.Version = constants.CurrentVersion
-	}
-	if len(cr.Spec.CommonConfig.AdminUser) == 0 {
-		cr.Spec.CommonConfig.AdminUser = constants.DefaultAdminUser
-	}
-	// NOTES for future upgrade dev
-	// Compare existing configmaps w/ prior version for differences, check differences against upgrade deltas
-	//  - use hard-coded deltas for now
-	// Reconcile ConfigMaps
-	// if versioned one already exists, reconcile??
-	// if not, but prior version exists, check deltas and apply as new versioned config
-	// Apply deltas if no conflicts
-	// Stop update otherwise
-	minor, micro, err := checkProductUpgrade(cr)
+func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
+	setDefaults(cr)
+	serversConfig, err := getServersConfig(cr)
 	if err != nil {
-		return api.EnvTemplate{}, err
+		return envTemplate, err
 	}
-
-	// How handle upgrade logic from here??
-	if minor || micro {
-		return api.EnvTemplate{}, nil
-	}
-
-	// set default values for go template where not provided
-	config := &cr.Spec.CommonConfig
-	config.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageTag
-	if config.ApplicationName == "" {
-		config.ApplicationName = cr.Name
-	}
-	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
-	setPasswords(config, isTrialEnv)
-
-	serversConfig, err := getServersConfig(cr, config)
-	if err != nil {
-		return api.EnvTemplate{}, err
-	}
-	envTemplate := api.EnvTemplate{
-		CommonConfig: config,
+	envTemplate = api.EnvTemplate{
+		CommonConfig: &cr.Spec.CommonConfig,
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
@@ -339,7 +326,7 @@ func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
 
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
-func getServersConfig(cr *api.KieApp, commonConfig *api.CommonConfig) ([]api.ServerTemplate, error) {
+func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	var servers []api.ServerTemplate
 	if len(cr.Spec.Objects.Servers) == 0 {
 		cr.Spec.Objects.Servers = []api.KieServerSet{{}}
@@ -384,7 +371,7 @@ func getServersConfig(cr *api.KieApp, commonConfig *api.CommonConfig) ([]api.Ser
 				}
 				template.From = corev1.ObjectReference{
 					Kind:      "ImageStreamTag",
-					Name:      fmt.Sprintf("%s-kieserver:latest", commonConfig.ApplicationName),
+					Name:      fmt.Sprintf("%s-kieserver:latest", cr.Spec.CommonConfig.ApplicationName),
 					Namespace: "",
 				}
 			} else {
@@ -638,16 +625,16 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	return ""
 }
 
-func setPasswords(config *api.CommonConfig, isTrialEnv bool) {
+func setPasswords(cr *api.KieApp, isTrialEnv bool) {
 	passwords := []*string{
-		&config.KeyStorePassword,
-		&config.AdminPassword,
-		&config.DBPassword,
-		&config.AMQPassword,
-		&config.AMQClusterPassword,
-		&config.ControllerPassword,
-		&config.MavenPassword,
-		&config.ServerPassword}
+		&cr.Spec.CommonConfig.KeyStorePassword,
+		&cr.Spec.CommonConfig.AdminPassword,
+		&cr.Spec.CommonConfig.DBPassword,
+		&cr.Spec.CommonConfig.AMQPassword,
+		&cr.Spec.CommonConfig.AMQClusterPassword,
+		&cr.Spec.CommonConfig.ControllerPassword,
+		&cr.Spec.CommonConfig.MavenPassword,
+		&cr.Spec.CommonConfig.ServerPassword}
 
 	for i := range passwords {
 		if len(*passwords[i]) != 0 {
@@ -716,6 +703,7 @@ func parseTemplate(env api.EnvTemplate, objYaml string) []byte {
 	return b.Bytes()
 }
 
+// convertToConfigMapName ...
 func convertToConfigMapName(filename string) (configMapName, file string) {
 	name := constants.ConfigMapPrefix
 	result := strings.Split(filename, "/")
@@ -727,10 +715,8 @@ func convertToConfigMapName(filename string) (configMapName, file string) {
 	return name, result[len(result)-1]
 }
 
-// ConfigMapsFromFile reads the files under the config folder and creates
-// configmaps in the given namespace. It sets OwnerRef to operator deployment.
-func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) []corev1.ConfigMap {
-	box := packr.New("config", "../../../../config")
+// getCMListfromBox reads the files under the config folder ...
+func getCMListfromBox(box *packr.Box) map[string][]map[string]string {
 	cmList := map[string][]map[string]string{}
 	for _, filename := range box.List() {
 		s, err := box.FindString(filename)
@@ -742,7 +728,14 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 		cmData[file] = s
 		cmList[cmName] = append(cmList[cmName], cmData)
 	}
-	var configMaps []corev1.ConfigMap
+	return cmList
+}
+
+// ConfigMapsFromFile reads the files under the config folder and creates
+// configmaps in the given namespace. It sets OwnerRef to operator deployment.
+func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) (configMaps []corev1.ConfigMap) {
+	box := packr.New("config", "../../../../config")
+	cmList := getCMListfromBox(box)
 	for cmName, dataSlice := range cmList {
 		cmData := map[string]string{}
 		for _, dataList := range dataSlice {
@@ -801,4 +794,30 @@ func GetProduct(env api.EnvironmentType) (product string) {
 		product = envConstants.App.Product
 	}
 	return
+}
+
+// setDefaults set default values where not provided
+func setDefaults(cr *api.KieApp) {
+	if cr.GetAnnotations() == nil {
+		cr.SetAnnotations(map[string]string{
+			api.SchemeGroupVersion.Group: version.Version,
+		})
+	}
+	if len(cr.Spec.Version) == 0 {
+		cr.Spec.Version = constants.CurrentVersion
+	}
+	if cr.Spec.Version == "74" {
+		cr.Spec.Version = "7.4.1"
+	}
+	if checkVersion(cr.Spec.Version) {
+		cr.Spec.CommonConfig.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageTag
+	}
+	if len(cr.Spec.CommonConfig.ApplicationName) == 0 {
+		cr.Spec.CommonConfig.ApplicationName = cr.Name
+	}
+	if len(cr.Spec.CommonConfig.AdminUser) == 0 {
+		cr.Spec.CommonConfig.AdminUser = constants.DefaultAdminUser
+	}
+	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
+	setPasswords(cr, isTrialEnv)
 }

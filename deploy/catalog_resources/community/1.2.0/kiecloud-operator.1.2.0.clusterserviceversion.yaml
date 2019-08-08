@@ -5,12 +5,12 @@ metadata:
   namespace: placeholder
   annotations:
     categories: "Integration & Delivery"
-    capabilities: "Basic Install"
+    capabilities: "Seamless Upgrades"
     certified: "false"
     description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.2
-    createdAt: 2019-06-03
+    createdAt: 2019-08-21
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
