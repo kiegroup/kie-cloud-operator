@@ -20,8 +20,8 @@ spec:
           # it will only be configured if all the next 5 parameters are set.
           # About how to configure the AMQ to support ssl, please visit:
           # https://access.redhat.com/documentation/en-us/red_hat_amq/7.3/html/deploying_amq_broker_on_openshift_container_platform/configure-ssl-broker-ocp#configuring-ssl_broker-ocp
-          amqSecretName: broker-secret
-          amqTruststoreName: broker.ts
-          amqTruststorePassword: "123456"
-          amqKeystoreName: broker.ks
-          amqKeystorePassword: "123456"
+          # amqSecretName: broker-secret
+          # amqTruststoreName: broker.ts
+          # amqTruststorePassword: "123456"
+          # amqKeystoreName: broker.ks
+          # amqKeystorePassword: "123456"

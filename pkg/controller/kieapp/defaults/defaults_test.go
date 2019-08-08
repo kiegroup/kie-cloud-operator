@@ -476,6 +476,7 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	assert.Equal(t, "amq-tcp-ssl", env.Servers[0].Routes[2].Name)
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+	assert.Equal(t, true, cr.Spec.Objects.Servers[0].Jms.AMQEnableSSL)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
