@@ -366,10 +366,11 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "test-jms-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
-
+	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-
 	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
@@ -424,9 +425,58 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
-
+	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
+}
+
+func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
+	f := false
+	cr := &v1.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-jms",
+		},
+		Spec: v1.KieAppSpec{
+			Environment: v1.RhpamProductionImmutable,
+			Objects: v1.KieAppObjects{
+				Servers: []v1.KieServerSet{
+					{
+						Jms: &v1.KieAppJmsObject{
+							EnableIntegration:     true,
+							ExecutorTransacted:    true,
+							Username:              "adminUser",
+							Password:              "adminPassword",
+							AuditTransacted:       &f,
+							EnableAudit:           true,
+							QueueAudit:            "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableSignal:          true,
+							AMQSecretName:         "broker-secret",
+							AMQTruststoreName:     "broker.ts",
+							AMQTruststorePassword: "changeme",
+							AMQKeystoreName:       "broker.ks",
+							AMQKeystorePassword:   "changeme",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.False(t, env.Servers[0].Routes[1].Spec.TLS == nil)
+	assert.Equal(t, "amq-tcp-ssl", env.Servers[0].Routes[2].Name)
+	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+	assert.Equal(t, true, cr.Spec.Objects.Servers[0].Jms.AMQEnableSSL)
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
@@ -464,6 +514,8 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_EXECUTOR_JMS"), "Variable should exist")
 	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_EXECUTOR_JMS_TRANSACTED"), "Variable should exist")
 	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_ENABLE_AUDIT"), "Variable should exist")
@@ -544,7 +596,7 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 			assert.Equal(t, "openwire", env.Value)
 
 		case "AMQ_REQUIRE_LOGIN":
-			assert.Equal(t, "false", env.Value)
+			assert.Equal(t, "true", env.Value)
 
 		case "AMQ_QUEUES":
 			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)

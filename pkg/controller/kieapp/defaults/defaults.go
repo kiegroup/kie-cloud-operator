@@ -538,6 +538,11 @@ func getJmsConfig(environment v1.EnvironmentType, jms *v1.KieAppJmsObject) (*v1.
 		return nil, nil
 	}
 
+	if jms.AMQSecretName != "" && jms.AMQKeystoreName != "" && jms.AMQKeystorePassword != "" &&
+		jms.AMQTruststoreName != "" && jms.AMQTruststorePassword != "" {
+		jms.AMQEnableSSL = true
+	}
+
 	t := true
 	if jms.Executor == nil {
 		jms.Executor = &t

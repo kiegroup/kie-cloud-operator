@@ -434,6 +434,24 @@ spec:
                           amqQueues:
                             type: string
                             description: AMQ broker broker comma separated queues, if empty the values from default queues will be used.
+                          amqSecretName:
+                            type: string
+                            description: The name of a secret containing AMQ SSL related files.
+                          amqTruststoreName:
+                            type: string
+                            description: The name of the AMQ SSL Trust Store file.
+                          amqTruststorePassword:
+                            type: string
+                            description: The password for the AMQ Trust Store.
+                          amqKeystoreName:
+                            type: string
+                            description: The name of the AMQ keystore file.
+                          amqKeystorePassword:
+                            type: string
+                            description: The password for the AMQ keystore and certificate.
+                          amqEnableSSL:
+                            type: boolean
+                            description: Not intended to be set by the user, if will be set to true if all required SSL parameters are set.
                 smartRouter:
                   type: object
                   description: Configuration of the RHPAM smart router
