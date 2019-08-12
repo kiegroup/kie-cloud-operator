@@ -54,10 +54,10 @@ console:
                     path: /rest/ready
                     port: 8080
                     scheme: HTTP
-                  initialDelaySeconds: 60
+                  initialDelaySeconds: 30
                   timeoutSeconds: 2
-                  periodSeconds: 30
-                  failureThreshold: 6
+                  periodSeconds: 5
+                  failureThreshold: 36
                 ports:
                   - name: jolokia
                     containerPort: 8778
@@ -662,10 +662,10 @@ servers:
                       path: /services/rest/server/readycheck
                       port: 8080
                       scheme: HTTP
-                    initialDelaySeconds: 60
+                    initialDelaySeconds: 30
                     timeoutSeconds: 2
-                    periodSeconds: 30
-                    failureThreshold: 6
+                    periodSeconds: 5
+                    failureThreshold: 36
                   ports:
                     - name: jolokia
                       containerPort: 8778
