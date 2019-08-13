@@ -1,4 +1,4 @@
-apiVersion: app.kiegroup.org/v1
+apiVersion: app.kiegroup.org/v2
 kind: KieApp
 metadata:
   name: production

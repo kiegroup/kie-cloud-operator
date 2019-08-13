@@ -1,10 +1,11 @@
 package ui
 
 import (
+	"testing"
+
 	"github.com/RHsyseng/console-cr-form/pkg/web"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestValidSchema(t *testing.T) {

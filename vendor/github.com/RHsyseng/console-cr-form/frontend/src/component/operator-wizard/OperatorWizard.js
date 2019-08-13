@@ -161,7 +161,9 @@ export default class OperatorWizard extends Component {
             return;
           }
         } else if (
-          (field.type === "dropDown" || field.type === "fieldGroup") &&
+          (field.type === "dropDown" ||
+            field.type === "fieldGroup" ||
+            field.type === "checkbox") &&
           field.fields !== undefined
         ) {
           if (field.visible !== undefined && field.visible !== false) {
@@ -206,6 +208,13 @@ export default class OperatorWizard extends Component {
             ) {
               jsonObject = this.addObjectFields(field, jsonObject);
             }
+            if (
+              field.type === "checkbox" &&
+              field.fields !== undefined &&
+              field.visible !== false
+            ) {
+              jsonObject = this.addObjectFields(field, jsonObject);
+            }
             if (field.type === "object" || field.type === "fieldGroup") {
               jsonObject = this.addObjectFields(field, jsonObject);
             } else {
@@ -234,6 +243,13 @@ export default class OperatorWizard extends Component {
             subPageFields.forEach(field => {
               if (
                 field.type === "dropDown" &&
+                field.fields !== undefined &&
+                field.visible !== false
+              ) {
+                jsonObject = this.addObjectFields(field, jsonObject);
+              }
+              if (
+                field.type === "checkbox" &&
                 field.fields !== undefined &&
                 field.visible !== false
               ) {
@@ -272,6 +288,14 @@ export default class OperatorWizard extends Component {
         ) {
           jsonObject = this.addObjectFields(field, jsonObject);
         }
+        if (
+          field.type === "checkbox" &&
+          field.fields !== undefined &&
+          field.visible !== false
+        ) {
+          jsonObject = this.addObjectFields(field, jsonObject);
+        }
+
         if (field.type === "object" || field.type === "fieldGroup") {
           jsonObject = this.addObjectFields(field, jsonObject);
         } else {

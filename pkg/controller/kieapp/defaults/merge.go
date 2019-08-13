@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -17,23 +17,23 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
-func merge(baseline v1.Environment, overwrite v1.Environment) (v1.Environment, error) {
-	var env v1.Environment
+func merge(baseline api.Environment, overwrite api.Environment) (api.Environment, error) {
+	var env api.Environment
 	var err error
 	env.Console = mergeCustomObject(baseline.Console, overwrite.Console)
 	env.SmartRouter = mergeCustomObject(baseline.SmartRouter, overwrite.SmartRouter)
 	env.Others, err = mergeCustomObjects(baseline.Others, overwrite.Others)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	env.Servers, err = mergeCustomObjects(baseline.Servers, overwrite.Servers)
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	return env, nil
 }
 
-func mergeCustomObjects(baseline, overwrite []v1.CustomObject) ([]v1.CustomObject, error) {
+func mergeCustomObjects(baseline, overwrite []api.CustomObject) ([]api.CustomObject, error) {
 	if len(overwrite) == 0 {
 		return baseline, nil
 	}
@@ -43,7 +43,7 @@ func mergeCustomObjects(baseline, overwrite []v1.CustomObject) ([]v1.CustomObjec
 	if len(baseline) != len(overwrite) {
 		return nil, errors.New("incompatible objects with different array lengths cannot be merged")
 	}
-	var result []v1.CustomObject
+	var result []api.CustomObject
 	for index := range baseline {
 		mergedObject := mergeCustomObject(baseline[index], overwrite[index])
 		result = append(result, mergedObject)
@@ -51,8 +51,8 @@ func mergeCustomObjects(baseline, overwrite []v1.CustomObject) ([]v1.CustomObjec
 	return result, nil
 }
 
-func mergeCustomObject(baseline v1.CustomObject, overwrite v1.CustomObject) v1.CustomObject {
-	var object v1.CustomObject
+func mergeCustomObject(baseline api.CustomObject, overwrite api.CustomObject) api.CustomObject {
+	var object api.CustomObject
 	if overwrite.Omit {
 		object.Omit = overwrite.Omit
 	}
@@ -88,8 +88,8 @@ func mergePersistentVolumeClaims(baseline []corev1.PersistentVolumeClaim, overwr
 	}
 }
 
-func getPersistentVolumeClaimReferenceSlice(objects []corev1.PersistentVolumeClaim) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getPersistentVolumeClaimReferenceSlice(objects []corev1.PersistentVolumeClaim) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -114,8 +114,8 @@ func mergeServiceAccounts(baseline []corev1.ServiceAccount, overwrite []corev1.S
 	}
 }
 
-func getServiceAccountReferenceSlice(objects []corev1.ServiceAccount) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getServiceAccountReferenceSlice(objects []corev1.ServiceAccount) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -140,8 +140,8 @@ func mergeSecrets(baseline []corev1.Secret, overwrite []corev1.Secret) []corev1.
 	}
 }
 
-func getSecretReferenceSlice(objects []corev1.Secret) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getSecretReferenceSlice(objects []corev1.Secret) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -184,16 +184,16 @@ func mergeRoleBindings(baseline []rbacv1.RoleBinding, overwrite []rbacv1.RoleBin
 	}
 }
 
-func getRoleReferenceSlice(objects []rbacv1.Role) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getRoleReferenceSlice(objects []rbacv1.Role) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
 	return slice
 }
 
-func getRoleBindingReferenceSlice(objects []rbacv1.RoleBinding) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getRoleBindingReferenceSlice(objects []rbacv1.RoleBinding) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -292,8 +292,8 @@ func mergeImageStreams(baseline, overwrite []oimagev1.ImageStream) []oimagev1.Im
 	}
 }
 
-func getImageStreamReferenceSlice(objects []oimagev1.ImageStream) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getImageStreamReferenceSlice(objects []oimagev1.ImageStream) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -637,24 +637,24 @@ func findVolumeMount(object corev1.VolumeMount, slice []corev1.VolumeMount) (int
 	return -1, corev1.VolumeMount{}
 }
 
-func getDeploymentConfigReferenceSlice(objects []oappsv1.DeploymentConfig) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getDeploymentConfigReferenceSlice(objects []oappsv1.DeploymentConfig) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
 	return slice
 }
 
-func getStatefulSetReferenceSlice(objects []appsv1.StatefulSet) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getStatefulSetReferenceSlice(objects []appsv1.StatefulSet) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
 	return slice
 }
 
-func getBuildConfigReferenceSlice(objects []buildv1.BuildConfig) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getBuildConfigReferenceSlice(objects []buildv1.BuildConfig) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -692,8 +692,8 @@ func mergeServices(baseline []corev1.Service, overwrite []corev1.Service) []core
 	}
 }
 
-func getServiceReferenceSlice(objects []corev1.Service) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getServiceReferenceSlice(objects []corev1.Service) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
@@ -752,15 +752,15 @@ func mergeRoutes(baseline []routev1.Route, overwrite []routev1.Route) []routev1.
 	}
 }
 
-func getRouteReferenceSlice(objects []routev1.Route) []v1.OpenShiftObject {
-	slice := make([]v1.OpenShiftObject, len(objects))
+func getRouteReferenceSlice(objects []routev1.Route) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
 	for index := range objects {
 		slice[index] = &objects[index]
 	}
 	return slice
 }
 
-func combinedSize(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject) int {
+func combinedSize(baseline []api.OpenShiftObject, overwrite []api.OpenShiftObject) int {
 	count := 0
 	for _, object := range overwrite {
 		_, found := findOpenShiftObject(object, baseline)
@@ -776,7 +776,7 @@ func combinedSize(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject)
 	return count
 }
 
-func mergeObjects(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject, objectSlice interface{}) error {
+func mergeObjects(baseline []api.OpenShiftObject, overwrite []api.OpenShiftObject, objectSlice interface{}) error {
 	slice := reflect.ValueOf(objectSlice)
 	sliceIndex := 0
 	for _, object := range baseline {
@@ -810,7 +810,7 @@ func mergeObjects(baseline []v1.OpenShiftObject, overwrite []v1.OpenShiftObject,
 	return nil
 }
 
-func findOpenShiftObject(object v1.OpenShiftObject, slice []v1.OpenShiftObject) (int, v1.OpenShiftObject) {
+func findOpenShiftObject(object api.OpenShiftObject, slice []api.OpenShiftObject) (int, api.OpenShiftObject) {
 	for index, candidate := range slice {
 		if candidate.GetName() == object.GetName() {
 			return index, candidate

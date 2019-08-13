@@ -19,7 +19,7 @@ all: build
 
 .PHONY: npm
 npm:
-	rm -f frontend/package-lock.json
+	#rm -f frontend/package-lock.json
 	cd frontend; npm install
 	npm --prefix frontend run build
 

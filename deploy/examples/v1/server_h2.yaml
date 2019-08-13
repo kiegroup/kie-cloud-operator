@@ -1,0 +1,12 @@
+apiVersion: app.kiegroup.org/v1
+kind: KieApp
+metadata:
+  name: server-h2
+spec:
+  environment: rhpam-trial
+  objects:
+    servers:
+      - deployments: 2
+        database:
+          type: h2
+          size: 30Gi

@@ -1,7 +1,7 @@
 package defaults
 
 import (
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/pkg/errors"
@@ -13,7 +13,7 @@ const ssoClientVar = "SSO_CLIENT"
 
 // ConfigureHostname sets the HOSTNAME_HTTPS environment variable with the provided hostname
 // IF not yet set AND SSO auth is configured AND SSO_CLIENT exists
-func ConfigureHostname(object *v1.CustomObject, cr *v1.KieApp, hostname string) {
+func ConfigureHostname(object *api.CustomObject, cr *api.KieApp, hostname string) {
 	if cr.Spec.Auth.SSO == nil {
 		return
 	}
@@ -36,7 +36,7 @@ func ConfigureHostname(object *v1.CustomObject, cr *v1.KieApp, hostname string) 
 	}
 }
 
-func configureAuth(cr *v1.KieApp, envTemplate *v1.EnvTemplate) (err error) {
+func configureAuth(cr *api.KieApp, envTemplate *api.EnvTemplate) (err error) {
 	if cr.Spec.Auth.SSO == nil && cr.Spec.Auth.LDAP == nil && cr.Spec.Auth.RoleMapper == nil {
 		return
 	}
@@ -55,7 +55,7 @@ func configureAuth(cr *v1.KieApp, envTemplate *v1.EnvTemplate) (err error) {
 	return
 }
 
-func configureSSO(cr *v1.KieApp, envTemplate *v1.EnvTemplate) error {
+func configureSSO(cr *api.KieApp, envTemplate *api.EnvTemplate) error {
 	if len(cr.Spec.Auth.SSO.URL) == 0 || len(cr.Spec.Auth.SSO.Realm) == 0 {
 		return errors.New("neither url nor realm can be empty")
 	}
@@ -78,7 +78,7 @@ func configureSSO(cr *v1.KieApp, envTemplate *v1.EnvTemplate) error {
 	return nil
 }
 
-func configureLDAP(config *v1.LDAPAuthConfig, envTemplate *v1.EnvTemplate) error {
+func configureLDAP(config *api.LDAPAuthConfig, envTemplate *api.EnvTemplate) error {
 	if len(config.URL) == 0 {
 		return errors.New("the url must not be empty")
 	}
@@ -86,7 +86,7 @@ func configureLDAP(config *v1.LDAPAuthConfig, envTemplate *v1.EnvTemplate) error
 	return nil
 }
 
-func configureRoleMapper(config *v1.RoleMapperAuthConfig, envTemplate *v1.EnvTemplate) {
+func configureRoleMapper(config *api.RoleMapperAuthConfig, envTemplate *api.EnvTemplate) {
 	if config != nil {
 		envTemplate.Auth.RoleMapper = *config.DeepCopy()
 	}

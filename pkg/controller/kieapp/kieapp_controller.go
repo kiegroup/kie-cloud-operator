@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/RHsyseng/operator-utils/pkg/olm"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
@@ -36,7 +36,7 @@ var log = logs.GetLogger("kieapp.controller")
 
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
-	Service v1.PlatformService
+	Service api.PlatformService
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -49,11 +49,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		myDep := &appsv1.Deployment{}
 		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
 		if err == nil {
-			// Reconcile ConfigMaps
-			// NOTES FOR FUTURE DEV
-			// started creating as versioned configs
-			// if versioned one already exists, reconcile??
-			// if not, but prior version exists, check deltas and apply as new versioned config
 			reconciler.CreateConfigMaps(myDep)
 			if shouldDeployConsole() {
 				deployConsole(reconciler, myDep)
@@ -64,7 +59,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Fetch the KieApp instance
-	instance := &v1.KieApp{}
+	instance := &api.KieApp{}
 	err := reconciler.Service.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -74,18 +69,18 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
+		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
 	if instance.GetAnnotations() == nil {
 		instance.SetAnnotations(map[string]string{
-			v1.SchemeGroupVersion.Group: version.Version,
+			api.SchemeGroupVersion.Group: version.Version,
 		})
 	}
 
 	env, rResult, err := reconciler.newEnv(instance)
 	if err != nil {
-		reconciler.setFailedStatus(instance, v1.ConfigurationErrorReason, err)
+		reconciler.setFailedStatus(instance, api.ConfigurationErrorReason, err)
 		return rResult, err
 	}
 
@@ -108,7 +103,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	reconciler.checkKieServerConfigMap(instance, env)
 
 	// Fetch the cached KieApp instance
-	cachedInstance := &v1.KieApp{}
+	cachedInstance := &api.KieApp{}
 	err = reconciler.Service.GetCached(context.TODO(), request.NamespacedName, cachedInstance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -118,7 +113,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
+		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
 
@@ -145,14 +140,14 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v1.Environment) (bool, error) {
+func (reconciler *Reconciler) updateDeploymentConfigs(instance *api.KieApp, env api.Environment) (bool, error) {
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &oappsv1.DeploymentConfigList{}
 	err := reconciler.Service.List(context.TODO(), listOps, dcList)
 	if err != nil {
 		log.Warn("Failed to list dc's. ", err)
-		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
+		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return false, err
 	}
 	var dcs []oappsv1.DeploymentConfig
@@ -198,7 +193,7 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 		for _, uDc := range dcUpdates {
 			_, err := reconciler.UpdateObj(&uDc)
 			if err != nil {
-				reconciler.setFailedStatus(instance, v1.DeploymentFailedReason, err)
+				reconciler.setFailedStatus(instance, api.DeploymentFailedReason, err)
 				return false, err
 			}
 		}
@@ -207,14 +202,14 @@ func (reconciler *Reconciler) updateDeploymentConfigs(instance *v1.KieApp, env v
 	return false, nil
 }
 
-func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Environment) (bool, error) {
+func (reconciler *Reconciler) updateBuildConfigs(instance *api.KieApp, env api.Environment) (bool, error) {
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	bcList := &buildv1.BuildConfigList{}
 	err := reconciler.Service.List(context.TODO(), listOps, bcList)
 	if err != nil {
 		log.Warn("Failed to list bc's. ", err)
-		reconciler.setFailedStatus(instance, v1.UnknownReason, err)
+		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return false, err
 	}
 
@@ -232,7 +227,7 @@ func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Env
 		for _, uBc := range bcUpdates {
 			_, err := reconciler.UpdateObj(&uBc)
 			if err != nil {
-				reconciler.setFailedStatus(instance, v1.DeploymentFailedReason, err)
+				reconciler.setFailedStatus(instance, api.DeploymentFailedReason, err)
 				return false, err
 			}
 		}
@@ -241,7 +236,7 @@ func (reconciler *Reconciler) updateBuildConfigs(instance *v1.KieApp, env v1.Env
 	return false, nil
 }
 
-func (reconciler *Reconciler) hasSpecChanges(instance, cached *v1.KieApp) bool {
+func (reconciler *Reconciler) hasSpecChanges(instance, cached *api.KieApp) bool {
 	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
 		return true
 	}
@@ -258,14 +253,14 @@ func (reconciler *Reconciler) hasSpecChanges(instance, cached *v1.KieApp) bool {
 	return false
 }
 
-func (reconciler *Reconciler) hasStatusChanges(instance, cached *v1.KieApp) bool {
+func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) bool {
 	if !reflect.DeepEqual(instance.Status, cached.Status) {
 		return true
 	}
 	return false
 }
 
-func (reconciler *Reconciler) setFailedStatus(instance *v1.KieApp, reason v1.ReasonType, err error) {
+func (reconciler *Reconciler) setFailedStatus(instance *api.KieApp, reason api.ReasonType, err error) {
 	status.SetFailed(instance, reason, err)
 	_, updateError := reconciler.UpdateObj(instance)
 	if updateError != nil {
@@ -290,7 +285,7 @@ func (reconciler *Reconciler) checkImageStreamTag(name, namespace string) bool {
 }
 
 // Create local ImageStreamTag
-func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieApp) error {
+func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.KieApp) error {
 	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
@@ -298,11 +293,11 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	product := defaults.GetProduct(cr.Spec.Environment)
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	imageName := tagName
-	major, _, _ := defaults.MajorMinorPatch(cr.Spec.CommonConfig.Version)
+	major, _, _ := defaults.MajorMinorMicro(cr.Spec.Version)
 	regContext := fmt.Sprintf("%s-%s", product, major)
 
 	// default registry settings
-	registry := &v1.KieAppRegistry{
+	registry := &api.KieAppRegistry{
 		Insecure: logs.GetBoolEnv("INSECURE"),
 	}
 	if cr.Spec.ImageRegistry != nil {
@@ -358,7 +353,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *v1.KieA
 	return nil
 }
 
-func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *v1.KieApp) []oappsv1.DeploymentConfig {
+func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfig, dcUpdates []oappsv1.DeploymentConfig, cr *api.KieApp) []oappsv1.DeploymentConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
 	if !reflect.DeepEqual(current.Spec.Template.Labels, new.Spec.Template.Labels) {
@@ -395,7 +390,7 @@ func (reconciler *Reconciler) dcUpdateCheck(current, new oappsv1.DeploymentConfi
 	return dcUpdates
 }
 
-func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bcUpdates []buildv1.BuildConfig, cr *v1.KieApp) []buildv1.BuildConfig {
+func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bcUpdates []buildv1.BuildConfig, cr *api.KieApp) []buildv1.BuildConfig {
 	log := log.With("kind", current.GetObjectKind().GroupVersionKind().Kind, "name", current.Name, "namespace", current.Namespace)
 	update := false
 
@@ -428,7 +423,7 @@ func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bc
 }
 
 // newEnv creates an Environment generated from the given KieApp
-func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.Result, error) {
+func (reconciler *Reconciler) newEnv(cr *api.KieApp) (api.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
 		return env, reconcile.Result{Requeue: true}, err
@@ -537,7 +532,7 @@ func (reconciler *Reconciler) newEnv(cr *v1.KieApp) (v1.Environment, reconcile.R
 	return env, rResult, nil
 }
 
-func generateKeystoreSecret(secretName, keystoreCN string, cr *v1.KieApp) corev1.Secret {
+func generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) corev1.Secret {
 	return corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
@@ -554,11 +549,11 @@ func generateKeystoreSecret(secretName, keystoreCN string, cr *v1.KieApp) corev1
 }
 
 // CreateCustomObjects goes through all the different object types in the given CustomObject and creates them, if necessary
-func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *Reconciler) CreateCustomObjects(object api.CustomObject, cr *api.KieApp) (reconcile.Result, error) {
 	if object.Omit {
 		return reconcile.Result{}, nil
 	}
-	var allObjects []v1.OpenShiftObject
+	var allObjects []api.OpenShiftObject
 	for index := range object.PersistentVolumeClaims {
 		object.PersistentVolumeClaims[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim"))
 		allObjects = append(allObjects, &object.PersistentVolumeClaims[index])
@@ -631,7 +626,7 @@ func (reconciler *Reconciler) CreateCustomObjects(object v1.CustomObject, cr *v1
 	return reconcile.Result{}, nil
 }
 
-func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *v1.KieApp) (string, error) {
+func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *api.KieApp) (string, error) {
 	if cr.Spec.ImageRegistry != nil {
 		if reconciler.checkImageStreamTag(name, cr.Namespace) {
 			return cr.Namespace, nil
@@ -661,7 +656,7 @@ func (reconciler *Reconciler) ensureImageStream(name string, namespace string, c
 }
 
 // createCustomObject checks for an object's existence before creating it
-func (reconciler *Reconciler) createCustomObject(obj v1.OpenShiftObject, cr *v1.KieApp) (reconcile.Result, error) {
+func (reconciler *Reconciler) createCustomObject(obj api.OpenShiftObject, cr *api.KieApp) (reconcile.Result, error) {
 	name := obj.GetName()
 	namespace := cr.GetNamespace()
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", name, "namespace", namespace)
@@ -680,7 +675,7 @@ func (reconciler *Reconciler) createCustomObject(obj v1.OpenShiftObject, cr *v1.
 }
 
 // createObj creates an object based on the error passed in from a `client.Get`
-func (reconciler *Reconciler) createObj(obj v1.OpenShiftObject, err error) (reconcile.Result, error) {
+func (reconciler *Reconciler) createObj(obj api.OpenShiftObject, err error) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 
 	if err != nil && errors.IsNotFound(err) {
@@ -702,7 +697,7 @@ func (reconciler *Reconciler) createObj(obj v1.OpenShiftObject, err error) (reco
 }
 
 // UpdateObj reconciles the given object
-func (reconciler *Reconciler) UpdateObj(obj v1.OpenShiftObject) (reconcile.Result, error) {
+func (reconciler *Reconciler) UpdateObj(obj api.OpenShiftObject) (reconcile.Result, error) {
 	log := log.With("kind", obj.GetObjectKind().GroupVersionKind().Kind, "name", obj.GetName(), "namespace", obj.GetNamespace())
 	log.Info("Updating")
 	err := reconciler.Service.Update(context.TODO(), obj)
@@ -722,7 +717,7 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 }
 
 // GetRouteHost returns the Hostname of the route provided
-func (reconciler *Reconciler) GetRouteHost(route routev1.Route, cr *v1.KieApp) string {
+func (reconciler *Reconciler) GetRouteHost(route routev1.Route, cr *api.KieApp) string {
 	route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
 	log := log.With("kind", route.GetObjectKind().GroupVersionKind().Kind, "name", route.Name, "namespace", route.Namespace)
 	err := controllerutil.SetControllerReference(cr, &route, reconciler.Service.GetScheme())
@@ -777,7 +772,7 @@ func (reconciler *Reconciler) CreateConfigMaps(myDep *appsv1.Deployment) {
 					log.Infof("Differences detected in %s ConfigMap.", configMap.Name)
 					existingCM.Name = strings.Join([]string{configMap.Name, "bak"}, "-")
 					for annotation, ver := range configMap.Annotations {
-						if annotation == v1.SchemeGroupVersion.Group {
+						if annotation == api.SchemeGroupVersion.Group {
 							existingCM.Name = strings.Join([]string{configMap.Name, ver, "bak"}, "-")
 						}
 					}
@@ -799,7 +794,7 @@ func (reconciler *Reconciler) CreateConfigMaps(myDep *appsv1.Deployment) {
 }
 
 // createConfigMap creates an individual ConfigMap, will return the existing ConfigMap object should one exist
-func (reconciler *Reconciler) createConfigMap(obj v1.OpenShiftObject) (*corev1.ConfigMap, bool) {
+func (reconciler *Reconciler) createConfigMap(obj api.OpenShiftObject) (*corev1.ConfigMap, bool) {
 	emptyObj := &corev1.ConfigMap{}
 	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, emptyObj)
 	if errors.IsNotFound(err) {
@@ -816,7 +811,7 @@ func (reconciler *Reconciler) createConfigMap(obj v1.OpenShiftObject) (*corev1.C
 }
 
 // checkKieServerConfigMap checks ConfigMaps owned by Kie Servers
-func (reconciler *Reconciler) checkKieServerConfigMap(instance *v1.KieApp, env v1.Environment) {
+func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env api.Environment) {
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	cmList := &corev1.ConfigMapList{}
 	if err := reconciler.Service.List(context.TODO(), listOps, cmList); err != nil {

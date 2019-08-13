@@ -9,7 +9,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
@@ -33,26 +33,26 @@ func TestLoadUnknownEnvironment(t *testing.T) {
 		}
 	}()
 
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "unknown",
 		},
 	}
 
 	_, err := GetEnvironment(cr, test.MockService())
-	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.CommonConfig.Version, cr.Spec.Environment, cr.Name), err.Error())
+	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Version, cr.Spec.Environment, cr.Name), err.Error())
 }
 
 func TestInaccessibleConfigMap(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "map-test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "na",
 		},
 	}
@@ -73,7 +73,7 @@ func TestInaccessibleConfigMap(t *testing.T) {
 		return client.Get(ctx, key, obj)
 	}
 	_, err := GetEnvironment(cr, mockService)
-	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.CommonConfig.Version, cr.Spec.Environment, cr.Name), err.Error())
+	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Version, cr.Spec.Environment, cr.Name), err.Error())
 }
 
 func TestMultipleServerDeployment(t *testing.T) {
@@ -84,15 +84,15 @@ func TestMultipleServerDeployment(t *testing.T) {
 			log.Error(err)
 		}
 	}()
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -108,14 +108,14 @@ func TestMultipleServerDeployment(t *testing.T) {
 
 func TestRHPAMTrialEnvironment(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -135,21 +135,21 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 }
 
 func TestRHDMTrialEnvironment(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -168,19 +168,19 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 }
 
 func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProduction,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -188,7 +188,7 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
@@ -199,12 +199,12 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 }
 
 func TestRhdmAuthoringHAEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmAuthoringHA,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmAuthoringHA,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -214,23 +214,23 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq-broker-7/%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].BrokerImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq-broker-7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "test-amq-scaledown-controller", env.Others[0].DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
 }
 
 func TestRhpamAuthoringHAEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamAuthoringHA,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			CommonConfig: api.CommonConfig{
 				AMQPassword:        "amq",
 				AMQClusterPassword: "cluster",
 			},
@@ -243,10 +243,10 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq-broker-7/%s:%s", constants.VersionConstants[cr.Spec.CommonConfig.Version].BrokerImage, constants.VersionConstants[cr.Spec.CommonConfig.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq-broker-7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "test-amq-scaledown-controller", env.Others[0].DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	amqPassword := getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
@@ -260,12 +260,12 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 }
 
 func TestRhdmProdImmutableEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmProductionImmutable,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -277,18 +277,18 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdwSmartRouter(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProduction,
-			Objects: v1.KieAppObjects{
-				SmartRouter: &v1.SmartRouterObject{},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
 			},
 		},
 	}
@@ -302,18 +302,18 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 	assert.Equal(t, "", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProduction,
-			Objects: v1.KieAppObjects{
-				SmartRouter: &v1.SmartRouterObject{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
 					Protocol:         "https",
 					UseExternalRoute: true,
 				},
@@ -330,21 +330,21 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	f := false
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Jms: &v1.KieAppJmsObject{
+						Jms: &api.KieAppJmsObject{
 							EnableIntegration:  true,
 							ExecutorTransacted: true,
 							Username:           "adminUser",
@@ -369,17 +369,17 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -388,21 +388,21 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	f := false
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Jms: &v1.KieAppJmsObject{
+						Jms: &api.KieAppJmsObject{
 							EnableIntegration:  true,
 							ExecutorTransacted: true,
 							Username:           "adminUser",
@@ -428,22 +428,22 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
 func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	f := false
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Jms: &v1.KieAppJmsObject{
+						Jms: &api.KieAppJmsObject{
 							EnableIntegration:     true,
 							ExecutorTransacted:    true,
 							Username:              "adminUser",
@@ -477,22 +477,22 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, true, cr.Spec.Objects.Servers[0].Jms.AMQEnableSSL)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
 func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	f := false
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Jms: &v1.KieAppJmsObject{
+						Jms: &api.KieAppJmsObject{
 							EnableIntegration:  true,
 							Executor:           &f,
 							ExecutorTransacted: true,
@@ -524,7 +524,7 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.SIGNAL", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_SIGNAL"), "Variable should exist")
 	assert.Equal(t, "queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AMQ_QUEUES"), "Variable should exist")
 
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
@@ -605,27 +605,27 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 }
 
 func TestInvalidBuildConfiguration(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
-						Build: &v1.KieAppBuildObject{
+						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
-							GitSource: v1.GitSource{
+							GitSource: api.GitSource{
 								URI:       "http://git.example.com",
 								Reference: "somebranch",
 							},
-							Webhooks: []v1.WebhookSecret{
+							Webhooks: []api.WebhookSecret{
 								{
-									Type:   v1.GitHubWebhook,
+									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
 								},
 							},
@@ -640,27 +640,27 @@ func TestInvalidBuildConfiguration(t *testing.T) {
 }
 
 func TestBuildConfiguration(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Build: &v1.KieAppBuildObject{
+						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
-							GitSource: v1.GitSource{
+							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
 								ContextDir: "example",
 							},
-							Webhooks: []v1.WebhookSecret{
+							Webhooks: []api.WebhookSecret{
 								{
-									Type:   v1.GitHubWebhook,
+									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
 								},
 							},
@@ -728,13 +728,13 @@ func hasPort(service corev1.Service, portNum int32) bool {
 }
 
 func TestAuthoringEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamAuthoring,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			CommonConfig: api.CommonConfig{
 				DBPassword: "Database",
 			},
 		},
@@ -746,7 +746,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
-	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
+	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
 
 	// test kieserver probes
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/readycheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
@@ -754,19 +754,19 @@ func TestAuthoringEnvironment(t *testing.T) {
 }
 
 func TestAuthoringHAEnvironment(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamAuthoringHA,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-	assert.NotEqual(t, v1.Environment{}, env, "Environment should not be empty")
+	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
 }
 
 func TestConstructConsoleObject(t *testing.T) {
@@ -779,7 +779,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.Console.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -795,7 +795,7 @@ func TestConstructSmartRouterObject(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -811,7 +811,7 @@ func TestConstructServerObject(t *testing.T) {
 		env = ConsolidateObjects(env, cr)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
 		assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
 			assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
@@ -828,7 +828,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -857,7 +857,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -883,24 +883,24 @@ var sampleResources = corev1.ResourceRequirements{
 }
 
 func TestUnknownEnvironmentObjects(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "unknown",
 		},
 	}
 
 	env, err := GetEnvironment(cr, test.MockService())
-	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.CommonConfig.Version, cr.Spec.Environment, cr.Name), err.Error())
+	assert.Equal(t, fmt.Sprintf("%s/envs/%s.yaml does not exist, '%s' KieApp not deployed", cr.Spec.Version, cr.Spec.Environment, cr.Name), err.Error())
 
 	env = ConsolidateObjects(env, cr)
 	assert.NotNil(t, err)
 
 	log.Debug("Testing with environment ", cr.Spec.Environment)
-	assert.Equal(t, v1.Environment{}, env, "Env object should be empty")
+	assert.Equal(t, api.Environment{}, env, "Env object should be empty")
 }
 
 func TestTrialServerEnv(t *testing.T) {
@@ -918,18 +918,18 @@ func TestTrialServerEnv(t *testing.T) {
 		Name:  "COMMON_TEST",
 		Value: "test",
 	}
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							KieAppObject: v1.KieAppObject{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							KieAppObject: api.KieAppObject{
 								Env: []corev1.EnvVar{
 									envReplace,
 									envAddition,
@@ -950,7 +950,7 @@ func TestTrialServerEnv(t *testing.T) {
 
 	assert.Equal(t, deployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -975,18 +975,18 @@ func TestTrialServersEnv(t *testing.T) {
 		Name:  "COMMON_TEST",
 		Value: "test",
 	}
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Name: "server-a",
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							KieAppObject: v1.KieAppObject{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							KieAppObject: api.KieAppObject{
 								Env: []corev1.EnvVar{
 									envReplace,
 									envAddition,
@@ -1014,7 +1014,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -1042,18 +1042,18 @@ func TestTrialConsoleEnv(t *testing.T) {
 		Name:  "CONSOLE_TEST",
 		Value: "test",
 	}
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			CommonConfig: api.CommonConfig{
 				ApplicationName: "trial",
 			},
-			Objects: v1.KieAppObjects{
-				Console: v1.SecuredKieAppObject{
-					KieAppObject: v1.KieAppObject{
+			Objects: api.KieAppObjects{
+				Console: api.SecuredKieAppObject{
+					KieAppObject: api.KieAppObject{
 						Env: []corev1.EnvVar{
 							envReplace,
 							envAddition,
@@ -1071,7 +1071,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	adminUser := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
 	assert.Equal(t, constants.DefaultAdminUser, adminUser, "AdminUser default not being set correctly")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
@@ -1083,12 +1083,12 @@ func TestTrialConsoleEnv(t *testing.T) {
 }
 
 func TestKieAppDefaults(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -1097,33 +1097,17 @@ func TestKieAppDefaults(t *testing.T) {
 	assert.NotContains(t, cr.Spec.Objects.Console.Env, corev1.EnvVar{
 		Name: "empty",
 	})
-	assert.Nil(t, cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be empty by default")
+	assert.False(t, cr.Spec.Upgrades.Enabled, "Spec.Upgrades.Enabled should be false by default")
 	assert.False(t, cr.Spec.Upgrades.Minor, "Spec.Upgrades.Minor should be false by default")
 }
 
-func TestUpgradesTrue(t *testing.T) {
-	patch := true
-	cr := &v1.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Upgrades:    v1.KieAppUpgrades{Patch: &patch},
-		},
-	}
-	_, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err)
-	assert.True(t, *cr.Spec.Upgrades.Patch, "Spec.Upgrades.Patch should be true")
-}
-
 func TestMergeTrialAndCommonConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -1166,14 +1150,14 @@ func TestServerConflict(t *testing.T) {
 	deployments := 2
 	name := "test"
 	duplicate := "testing"
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Name: duplicate, Deployments: Pint(deployments)},
 					{Name: duplicate},
 				},
@@ -1189,14 +1173,14 @@ func TestServerConflictGenerated(t *testing.T) {
 	deployments := 2
 	name := "test"
 	duplicate := "test-kieserver-2"
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Name: duplicate},
 					{Deployments: Pint(deployments)},
 				},
@@ -1212,14 +1196,14 @@ func TestServerConflictGenerated(t *testing.T) {
 func TestServersDefaultNameDeployments(t *testing.T) {
 	deployments := 3
 	name := "test"
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -1240,14 +1224,14 @@ func TestServersDefaultNameDeployments(t *testing.T) {
 func TestServersDefaultNameArray(t *testing.T) {
 	deployments := 3
 	name := "test"
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{}, {}, {},
 				},
 			},
@@ -1273,14 +1257,14 @@ func TestServersDefaultNameMixed(t *testing.T) {
 	deployments2 := 2
 	deployments := 7
 	name := "test"
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments0)},
 					{},
 					{Deployments: Pint(deployments2)},
@@ -1313,12 +1297,12 @@ func TestImageRegistry(t *testing.T) {
 	defer os.Unsetenv("REGISTRY")
 	os.Setenv("INSECURE", "true")
 	defer os.Unsetenv("INSECURE")
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -1328,13 +1312,13 @@ func TestImageRegistry(t *testing.T) {
 	assert.Nil(t, cr.Spec.ImageRegistry)
 
 	registry2 := "registry2.test.com:5000"
-	cr2 := &v1.KieApp{
+	cr2 := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			ImageRegistry: &v1.KieAppRegistry{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			ImageRegistry: &api.KieAppRegistry{
 				Registry: registry2,
 			},
 		},
@@ -1347,33 +1331,33 @@ func TestImageRegistry(t *testing.T) {
 	assert.Equal(t, false, cr2.Spec.ImageRegistry.Insecure)
 }
 
-func buildKieApp(name string, deployments int) *v1.KieApp {
-	cr := &v1.KieApp{
+func buildKieApp(name string, deployments int) *api.KieApp {
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Console: v1.SecuredKieAppObject{
-					KieAppObject: v1.KieAppObject{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Console: api.SecuredKieAppObject{
+					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
 					},
 				},
-				Servers: []v1.KieServerSet{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							KieAppObject: v1.KieAppObject{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							KieAppObject: api.KieAppObject{
 								Env:       sampleEnv,
 								Resources: sampleResources,
 							},
 						},
 					},
 				},
-				SmartRouter: &v1.SmartRouterObject{
-					KieAppObject: v1.KieAppObject{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
 					},
@@ -1385,13 +1369,13 @@ func buildKieApp(name string, deployments int) *v1.KieApp {
 }
 
 func TestPartialTemplateConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmAuthoring,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmAuthoring,
+			CommonConfig: api.CommonConfig{
 				AdminUser:     "NewAdmin",
 				AdminPassword: "MyPassword",
 			},
@@ -1418,13 +1402,13 @@ func getEnvVariable(container corev1.Container, name string) string {
 }
 
 func TestOverwritePartialTrialPasswords(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			CommonConfig: api.CommonConfig{
 				AdminPassword: "MyPassword",
 			},
 		},
@@ -1439,12 +1423,12 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 }
 
 func TestDefaultKieServerNum(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -1456,14 +1440,14 @@ func TestDefaultKieServerNum(t *testing.T) {
 
 func TestZeroKieServerDeployments(t *testing.T) {
 	deployments := 0
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -1481,14 +1465,14 @@ func TestZeroKieServerDeployments(t *testing.T) {
 
 func TestDefaultKieServerID(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
 				},
 			},
@@ -1502,14 +1486,14 @@ func TestDefaultKieServerID(t *testing.T) {
 }
 
 func TestSetKieServerID(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Name: "alpha",
 						ID:   "omega",
@@ -1529,14 +1513,14 @@ func TestSetKieServerID(t *testing.T) {
 }
 
 func TestSetKieServerFrom(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Name: "one",
 						From: &corev1.ObjectReference{
@@ -1564,14 +1548,14 @@ func TestSetKieServerFrom(t *testing.T) {
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						From: &corev1.ObjectReference{
 							Kind: "ImageStreamTag",
@@ -1583,7 +1567,7 @@ func TestSetKieServerFromBuild(t *testing.T) {
 							Kind: "ImageStreamTag",
 							Name: "bye-rules:latest",
 						},
-						Build: &v1.KieAppBuildObject{},
+						Build: &api.KieAppBuildObject{},
 					},
 				},
 			},
@@ -1599,25 +1583,25 @@ func TestSetKieServerFromBuild(t *testing.T) {
 }
 
 func TestMultipleBuildConfigurations(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhdmProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Build: &v1.KieAppBuildObject{
+						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
-							GitSource: v1.GitSource{
+							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
 								ContextDir: "test",
 							},
-							Webhooks: []v1.WebhookSecret{
+							Webhooks: []api.WebhookSecret{
 								{
-									Type:   v1.GitHubWebhook,
+									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
 								},
 							},
@@ -1629,16 +1613,16 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 						},
 					},
 					{
-						Build: &v1.KieAppBuildObject{
+						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
-							GitSource: v1.GitSource{
+							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "anotherbranch",
 								ContextDir: "test",
 							},
-							Webhooks: []v1.WebhookSecret{
+							Webhooks: []api.WebhookSecret{
 								{
-									Type:   v1.GitHubWebhook,
+									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
 								},
 							},
@@ -1660,13 +1644,13 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 
 	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	imgName := fmt.Sprintf("rhdm%v-kieserver-openshift:%v", getMinorImageVersion(cr.Spec.CommonConfig.Version), cr.Spec.CommonConfig.ImageTag)
+	imgName := fmt.Sprintf("rhdm%v-kieserver-openshift:%v", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag)
 	assert.Equal(t, imgName, env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 }
 
 func TestExampleServerCommonConfig(t *testing.T) {
-	kieApp := LoadKieApp(t, "examples", "server_config.yaml")
+	kieApp := LoadKieApp(t, "examples/"+api.SchemeGroupVersion.Version, "server_config.yaml")
 	env, err := GetEnvironment(&kieApp, test.MockService())
 	assert.NoError(t, err, "Error getting environment for %v", kieApp.Spec.Environment)
 	assert.Equal(t, 6, len(env.Servers), "Expect six servers")
@@ -1692,18 +1676,18 @@ func TestGetKieSetIndex(t *testing.T) {
 }
 
 func TestDatabaseExternalInvalid(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseExternal,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseExternal,
 						},
 					},
 				},
@@ -1716,19 +1700,19 @@ func TestDatabaseExternalInvalid(t *testing.T) {
 
 func TestDatabaseExternal(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseExternal,
-							ExternalConfig: &v1.ExternalDatabaseObject{
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseExternal,
+							ExternalConfig: &api.ExternalDatabaseObject{
 								Dialect:              "org.hibernate.dialect.Oracle10gDialect",
 								Driver:               "oracle",
 								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
@@ -1739,8 +1723,8 @@ func TestDatabaseExternal(t *testing.T) {
 								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
 							},
 						},
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							KieAppObject: v1.KieAppObject{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							KieAppObject: api.KieAppObject{
 								Env: []corev1.EnvVar{
 									{
 										Name:  "RHPAM_JNDI",
@@ -1760,7 +1744,7 @@ func TestDatabaseExternal(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1800,18 +1784,18 @@ func TestDatabaseExternal(t *testing.T) {
 
 func TestDatabaseH2(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseH2,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseH2,
 							Size: "10Mi",
 						},
 					},
@@ -1824,7 +1808,7 @@ func TestDatabaseH2(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1847,78 +1831,102 @@ func TestDatabaseH2(t *testing.T) {
 }
 
 func TestDefaultVersioning(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProduction,
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, constants.CurrentVersion, cr.Spec.CommonConfig.Version)
-	assert.True(t, checkVersion(cr.Spec.CommonConfig.Version))
+	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
+	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageStreamTag, cr.Spec.CommonConfig.ImageTag)
+	assert.True(t, checkVersion(cr))
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(constants.CurrentVersion)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestOldConfigVersioning(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment:  v1.RhpamProduction,
-			CommonConfig: v1.CommonConfig{Version: "74"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Version:     "74",
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "7.4.1", cr.Spec.CommonConfig.Version)
-	major, minor, patch := MajorMinorPatch(cr.Spec.CommonConfig.Version)
+	assert.Equal(t, "7.4.1", cr.Spec.Version)
+	major, minor, micro := MajorMinorMicro(cr.Spec.Version)
 	assert.Equal(t, "7", major)
 	assert.Equal(t, "4", minor)
-	assert.Equal(t, "1", patch)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "1", micro)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestConfigVersioning(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment:  v1.RhpamProduction,
-			CommonConfig: v1.CommonConfig{Version: "6.3.1"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Version:     "6.3.1",
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
 	assert.Error(t, err, "Incompatible product versions should throw an error")
-	assert.Equal(t, fmt.Sprintf("Product version %s is not supported by this Operator, %s", cr.Spec.CommonConfig.Version, version.Version), err.Error())
-	assert.Equal(t, "6.3.1", cr.Spec.CommonConfig.Version)
-	major, minor, patch := MajorMinorPatch(cr.Spec.CommonConfig.Version)
+	assert.Equal(t, fmt.Sprintf("Product version %s is not supported in operator version %s. The following versions are supported - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
+	assert.Equal(t, "6.3.1", cr.Spec.Version)
+	major, minor, micro := MajorMinorMicro(cr.Spec.Version)
 	assert.Equal(t, "6", major)
 	assert.Equal(t, "3", minor)
-	assert.Equal(t, "1", patch)
-	assert.False(t, checkVersion(cr.Spec.CommonConfig.Version))
+	assert.Equal(t, "1", micro)
+	assert.False(t, checkVersion(cr))
+}
+
+func TestConfigMapNames(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+		},
+	}
+	_, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	filepath := "envs/rhpam-trial.yaml"
+	filename := strings.Join([]string{cr.Spec.Version, filepath}, "/")
+	cmNameT, fileT := convertToConfigMapName(filename)
+
+	fileslice := strings.Split(filepath, "/")
+	file := fileslice[len(fileslice)-1]
+	assert.Equal(t, file, fileT)
+
+	cmName := strings.Join([]string{constants.ConfigMapPrefix, cr.Spec.Version, fileslice[0]}, "-")
+	assert.Equal(t, cmName, cmNameT)
 }
 
 func TestDatabaseH2Ephemeral(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseH2,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseH2,
 						},
 					},
 				},
@@ -1930,7 +1938,7 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1952,18 +1960,18 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 
 func TestDatabaseMySQL(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseMySQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseMySQL,
 							Size: "10Mi",
 						},
 					},
@@ -1976,7 +1984,7 @@ func TestDatabaseMySQL(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2005,18 +2013,18 @@ func TestDatabaseMySQL(t *testing.T) {
 
 func TestDatabaseMySQLDefaultSize(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseMySQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseMySQL,
 							Size: "",
 						},
 					},
@@ -2029,7 +2037,7 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2068,18 +2076,18 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 }
 func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabaseMySQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseMySQL,
 						},
 					},
 				},
@@ -2091,7 +2099,7 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2118,18 +2126,18 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 
 func TestDatabasePostgresql(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabasePostgreSQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabasePostgreSQL,
 							Size: "10Mi",
 						},
 					},
@@ -2142,7 +2150,7 @@ func TestDatabasePostgresql(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2171,18 +2179,18 @@ func TestDatabasePostgresql(t *testing.T) {
 
 func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabasePostgreSQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabasePostgreSQL,
 							Size: "",
 						},
 					},
@@ -2195,7 +2203,7 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2234,18 +2242,18 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 }
 func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 	deployments := 2
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamTrial,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						Database: &v1.DatabaseObject{
-							Type: v1.DatabasePostgreSQL,
+						Database: &api.DatabaseObject{
+							Type: api.DatabasePostgreSQL,
 						},
 					},
 				},
@@ -2257,7 +2265,7 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.CommonConfig.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2283,17 +2291,17 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 }
 
 func TestCustomImageTag(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "prod",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProduction,
-			CommonConfig: v1.CommonConfig{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
 				ImageTag: "1.2",
 			},
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
 					},
@@ -2321,11 +2329,11 @@ func getImageChangeName(dc appsv1.DeploymentConfig) string {
 	return ""
 }
 
-func LoadKieApp(t *testing.T, folder string, fileName string) v1.KieApp {
+func LoadKieApp(t *testing.T, folder string, fileName string) api.KieApp {
 	box := packr.New("deploy/"+folder, "../../../../deploy/"+folder)
 	yamlString, err := box.FindString(fileName)
 	assert.NoError(t, err, "Error reading yaml %v/%v", folder, fileName)
-	var kieApp v1.KieApp
+	var kieApp api.KieApp
 	err = yaml.Unmarshal([]byte(yamlString), &kieApp)
 	assert.NoError(t, err, "Error parsing yaml %v/%v", folder, fileName)
 	return kieApp
