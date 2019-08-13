@@ -72,6 +72,10 @@ console:
                     containerPort: 8888
                     protocol: TCP
                 env:
+                  - name: APPLICATION_USERS_PROPERTIES
+                    value: "/opt/kie/data/configuration/application-users.properties"
+                  - name: APPLICATION_ROLES_PROPERTIES
+                    value: "/opt/kie/data/configuration/application-roles.properties"
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
