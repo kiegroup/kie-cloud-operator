@@ -3,7 +3,6 @@ frontend/dist/bundle.js
 frontend/dist/*.jpg
 build
 target/
-*-packr.go
 
 # Should not be in root directory:
 package-lock.json
