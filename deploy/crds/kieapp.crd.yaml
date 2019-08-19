@@ -100,6 +100,12 @@ spec:
                       type: object
                       description: Configuration of the RHPAM workbench
                       properties:
+                        image:
+                          type: string
+                          description: The image to use for console.
+                        imageTag:
+                          type: string
+                          description: The image tag to use for console.
                         replicas:
                           type: integer
                           format: int32
@@ -166,6 +172,12 @@ spec:
                           id:
                             type: string
                             description: Server ID
+                          image:
+                            type: string
+                            description: The image to use for server.
+                          imageTag:
+                            type: string
+                            description: The image tag to use for server.
                           deployments:
                             type: integer
                             format: int
@@ -456,6 +468,12 @@ spec:
                       type: object
                       description: Configuration of the RHPAM smart router
                       properties:
+                        image:
+                          type: string
+                          description: The image to use for smart router.
+                        imageTag:
+                          type: string
+                          description: The image tag to use for smart router.
                         replicas:
                           type: integer
                           format: int32

@@ -7,6 +7,7 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/validation"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
+	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/stretchr/testify/assert"
@@ -25,16 +26,23 @@ func TestSampleCustomResources(t *testing.T) {
 }
 
 func TestExampleCustomResources(t *testing.T) {
-	for _, version := range getAPIVersions(t) {
-		schema := getSchema(t, version)
-		box := packr.New("deploy/examples"+version, "../../../../deploy/examples"+version)
-		for _, file := range box.List() {
-			yamlString, err := box.FindString(file)
-			assert.NoError(t, err, "Error reading %v CR yaml", file)
-			var input map[string]interface{}
-			assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
-			assert.NoError(t, schema.Validate(input), "File %v does not validate against the CRD schema", file)
-		}
+	schema := getSchema(t, v1.SchemeGroupVersion.Version)
+	box := packr.New("deploy/examples/v1", "../../../../deploy/examples/v1")
+	for _, file := range box.List() {
+		yamlString, err := box.FindString(file)
+		assert.NoError(t, err, "Error reading %v CR yaml", file)
+		var input map[string]interface{}
+		assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
+		assert.NoError(t, schema.Validate(input), "File %v does not validate against the CRD schema", file)
+	}
+	schema = getSchema(t, api.SchemeGroupVersion.Version)
+	box = packr.New("deploy/examples/v2", "../../../../deploy/examples/v2")
+	for _, file := range box.List() {
+		yamlString, err := box.FindString(file)
+		assert.NoError(t, err, "Error reading %v CR yaml", file)
+		var input map[string]interface{}
+		assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
+		assert.NoError(t, schema.Validate(input), "File %v does not validate against the CRD schema", file)
 	}
 }
 

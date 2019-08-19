@@ -180,7 +180,7 @@ func getEnvTemplate(cr *api.KieApp) (api.EnvTemplate, error) {
 
 	// set default values for go template where not provided
 	config := &cr.Spec.CommonConfig
-	config.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageStreamTag
+	config.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageTag
 	if config.ApplicationName == "" {
 		config.ApplicationName = cr.Name
 	}
@@ -243,9 +243,15 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		cr.Spec.Objects.Console.Replicas = Pint32(replicas)
 	}
 	template.Replicas = replicas
-
 	template.Name = envConstants.App.Prefix
-	template.ImageName = envConstants.App.ImageName
+	template.Image = fmt.Sprintf("%s%s-%s-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version), envConstants.App.ImageName)
+	template.ImageTag = cr.Spec.CommonConfig.ImageTag
+	if cr.Spec.Objects.Console.ImageTag != "" {
+		template.ImageTag = cr.Spec.Objects.Console.ImageTag
+	}
+	if cr.Spec.Objects.Console.Image != "" {
+		template.Image = cr.Spec.Objects.Console.Image
+	}
 
 	return template
 }
@@ -281,6 +287,14 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
+		template.Image = fmt.Sprintf("%s%s-smartrouter-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version))
+		template.ImageTag = cr.Spec.CommonConfig.ImageTag
+		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
+			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+		}
+		if cr.Spec.Objects.SmartRouter.Image != "" {
+			template.Image = cr.Spec.Objects.SmartRouter.Image
+		}
 	}
 
 	return template
@@ -358,7 +372,7 @@ func getServersConfig(cr *api.KieApp, commonConfig *api.CommonConfig) ([]api.Ser
 			template := api.ServerTemplate{
 				KieName:        name,
 				KieServerID:    name,
-				Build:          getBuildConfig(product, cr, serverSet.Build),
+				Build:          getBuildConfig(product, cr, serverSet),
 				KeystoreSecret: serverSet.KeystoreSecret,
 			}
 			if serverSet.ID != "" {
@@ -374,7 +388,7 @@ func getServersConfig(cr *api.KieApp, commonConfig *api.CommonConfig) ([]api.Ser
 					Namespace: "",
 				}
 			} else {
-				template.From = getDefaultKieServerImage(product, cr, serverSet.From)
+				template.From = getDefaultKieServerImage(product, cr, serverSet)
 			}
 
 			// Set replicas
@@ -500,30 +514,41 @@ func getKieSetIndex(arrayIdx, deploymentsIdx int) string {
 	return name.String()
 }
 
-func getBuildConfig(product string, cr *api.KieApp, build *api.KieAppBuildObject) api.BuildTemplate {
-	if build == nil {
+func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet) api.BuildTemplate {
+	if serverSet.Build == nil {
 		return api.BuildTemplate{}
 	}
 	buildTemplate := api.BuildTemplate{
-		GitSource:                    build.GitSource,
-		GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, build.Webhooks),
-		GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, build.Webhooks),
-		KieServerContainerDeployment: build.KieServerContainerDeployment,
-		MavenMirrorURL:               build.MavenMirrorURL,
-		ArtifactDir:                  build.ArtifactDir,
+		GitSource:                    serverSet.Build.GitSource,
+		GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, serverSet.Build.Webhooks),
+		GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, serverSet.Build.Webhooks),
+		KieServerContainerDeployment: serverSet.Build.KieServerContainerDeployment,
+		MavenMirrorURL:               serverSet.Build.MavenMirrorURL,
+		ArtifactDir:                  serverSet.Build.ArtifactDir,
 	}
-	buildTemplate.From = getDefaultKieServerImage(product, cr, build.From)
+	buildTemplate.From = getDefaultKieServerImage(product, cr, serverSet)
+	if serverSet.Build.From != nil {
+		buildTemplate.From = *serverSet.Build.From
+	}
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, cr *api.KieApp, from *corev1.ObjectReference) corev1.ObjectReference {
-	if from != nil {
-		return *from
+func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet) corev1.ObjectReference {
+	if serverSet.From != nil {
+		return *serverSet.From
 	}
-	imageName := fmt.Sprintf("%s%s-kieserver-openshift:%s", product, getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag)
+
+	image := fmt.Sprintf("%s%s-kieserver-openshift", product, getMinorImageVersion(cr.Spec.Version))
+	imageTag := cr.Spec.CommonConfig.ImageTag
+	if serverSet.ImageTag != "" {
+		imageTag = serverSet.ImageTag
+	}
+	if serverSet.Image != "" {
+		image = serverSet.Image
+	}
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
-		Name:      imageName,
+		Name:      strings.Join([]string{image, imageTag}, ":"),
 		Namespace: constants.ImageStreamNamespace,
 	}
 }
