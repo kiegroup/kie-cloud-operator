@@ -1843,7 +1843,7 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
-	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageStreamTag, cr.Spec.CommonConfig.ImageTag)
+	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageTag, cr.Spec.CommonConfig.ImageTag)
 	assert.True(t, checkVersion(cr))
 	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(constants.CurrentVersion)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
@@ -2291,33 +2291,41 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 }
 
 func TestCustomImageTag(t *testing.T) {
+	image := "testing-images"
+	imageTag := "1.5"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "prod",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			CommonConfig: api.CommonConfig{
-				ImageTag: "1.2",
-			},
 			Objects: api.KieAppObjects{
+				Console: api.SecuredKieAppObject{},
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
 					},
 				},
+				SmartRouter: &api.SmartRouterObject{},
 			},
 		},
 	}
+	cr.Spec.Objects.Console.Image = image
+	cr.Spec.Objects.Console.ImageTag = imageTag
+	cr.Spec.Objects.Servers[0].Image = image
+	cr.Spec.Objects.Servers[0].ImageTag = imageTag
+	cr.Spec.Objects.SmartRouter.Image = image
+	cr.Spec.Objects.SmartRouter.ImageTag = imageTag
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
 
-	assert.True(t, strings.HasSuffix(getImageChangeName(env.Console.DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
-	assert.True(t, strings.HasSuffix(getImageChangeName(env.Servers[0].DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
-	assert.True(t, strings.HasSuffix(getImageChangeName(env.Servers[1].DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
-	assert.True(t, strings.HasSuffix(getImageChangeName(env.SmartRouter.DeploymentConfigs[0]), cr.Spec.CommonConfig.ImageTag), "Image expected to have tag of %s", cr.Spec.CommonConfig.ImageTag)
+	imageName := strings.Join([]string{image, imageTag}, ":")
+	assert.Equal(t, getImageChangeName(env.Console.DeploymentConfigs[0]), imageName)
+	assert.Equal(t, getImageChangeName(env.Servers[0].DeploymentConfigs[0]), imageName)
+	assert.Equal(t, getImageChangeName(env.Servers[1].DeploymentConfigs[0]), imageName)
+	assert.Equal(t, getImageChangeName(env.SmartRouter.DeploymentConfigs[0]), imageName)
 }
 
 func getImageChangeName(dc appsv1.DeploymentConfig) string {

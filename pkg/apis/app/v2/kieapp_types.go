@@ -171,6 +171,8 @@ type KieAppObject struct {
 	Replicas       *int32                      `json:"replicas,omitempty"`
 	Resources      corev1.ResourceRequirements `json:"resources"`
 	KeystoreSecret string                      `json:"keystoreSecret,omitempty"`
+	Image          string                      `json:"image,omitempty"`
+	ImageTag       string                      `json:"imageTag,omitempty"`
 }
 
 type Environment struct {
@@ -371,7 +373,8 @@ type ConsoleTemplate struct {
 	SSOAuthClient  SSOAuthClient `json:"ssoAuthClient,omitempty"`
 	Name           string        `json:"name,omitempty"`
 	Replicas       int32         `json:"replicas,omitempty"`
-	ImageName      string        `json:"imageName,omitempty"`
+	Image          string        `json:"image,omitempty"`
+	ImageTag       string        `json:"imageTag,omitempty"`
 	KeystoreSecret string        `json:"keystoreSecret,omitempty"`
 }
 
@@ -395,6 +398,8 @@ type SmartRouterTemplate struct {
 	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
+	Image            string `json:"image,omitempty"`
+	ImageTag         string `json:"imageTag,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -439,7 +444,7 @@ type CommonConfig struct {
 // VersionConfigs ...
 type VersionConfigs struct {
 	APIVersion       string `json:"apiVersion,omitempty"`
-	ImageStreamTag   string `json:"imageStreamTag,omitempty"`
+	ImageTag         string `json:"imageTag,omitempty"`
 	BrokerImage      string `json:"brokerImage,omitempty"`
 	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
 	DatagridImage    string `json:"datagridImage,omitempty"`
@@ -494,6 +499,7 @@ type KieAppStatus struct {
 	Phase       ConditionType        `json:"phase,omitempty"`
 }
 
+// PlatformService ...
 type PlatformService interface {
 	Create(ctx context.Context, obj runtime.Object) error
 	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
