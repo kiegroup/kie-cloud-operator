@@ -31,14 +31,13 @@ osbs:
   configuration:
     container:
       compose:
-          include_unpublished_pulp_repos: true
           pulp_repos: true
       platforms:
         only:
           - x86_64
   repository:
     name: containers/rhpam-7-operator-openshift
-    branch: rhba-7.5-openshift-rhel-8
+    branch: rhpam-7.5-openshift-rhel8
 run:
   entrypoint:
     - "/usr/local/bin/entrypoint"
