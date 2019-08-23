@@ -27,6 +27,21 @@ func TestUpgradesTrue(t *testing.T) {
 	assert.True(t, cr.Spec.Upgrades.Enabled, "Spec.Upgrades.Enabled should be true")
 }
 
+func TestGetConfigVersionDiffs(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Version:     constants.LastMicroVersion,
+			Upgrades:    api.KieAppUpgrades{Enabled: true},
+		},
+	}
+	err := getConfigVersionDiffs(cr.Spec.Version, constants.CurrentVersion, test.MockService())
+	assert.Error(t, err)
+}
+
 func TestCheckProductUpgrade(t *testing.T) {
 	// Incompatible version
 	cr := &api.KieApp{
@@ -41,9 +56,12 @@ func TestCheckProductUpgrade(t *testing.T) {
 	}
 	minor, micro, err := checkProductUpgrade(cr)
 	assert.Error(t, err, "Incompatible product versions should throw an error")
-	assert.Equal(t, fmt.Sprintf("Product version %s is not supported in operator version %s. The following versions are supported - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
+	assert.Equal(t, fmt.Sprintf("Product version %s is not allowed in operator version %s. The following versions are allowed - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
 	assert.False(t, minor)
 	assert.False(t, micro)
+
+	diffs := configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	assert.Empty(t, diffs)
 
 	// Upgrades default to false
 	cr = &api.KieApp{
@@ -52,7 +70,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PastMicroVersion,
+			Version:     constants.LastMicroVersion,
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -67,7 +85,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PastMicroVersion,
+			Version:     constants.LastMicroVersion,
 			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
@@ -76,6 +94,9 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, minor)
 	assert.True(t, micro)
 
+	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	assert.NotEmpty(t, diffs)
+
 	// Past version, all upgrades true
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,7 +104,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PastMinorVersion,
+			Version:     constants.LastMinorVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
@@ -92,6 +113,9 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.True(t, minor)
 	assert.True(t, micro)
 
+	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	assert.NotEmpty(t, diffs)
+
 	// Current version, no upgrades
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -99,7 +123,6 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.CurrentVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
@@ -108,6 +131,9 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, minor)
 	assert.False(t, micro)
 
+	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	assert.Empty(t, diffs)
+
 	// Upgrades disabled with minor true
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +141,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PastMinorVersion,
+			Version:     constants.LastMinorVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: false},
 		},
 	}
@@ -123,4 +149,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, minor)
 	assert.False(t, micro)
+
+	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	assert.NotEmpty(t, diffs)
 }

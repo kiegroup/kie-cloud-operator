@@ -15,7 +15,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
-	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -45,6 +44,8 @@ type Reconciler struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	// The next several lines only execute if the operator is running in a pod, via deployment.
+	// Otherwise, embedded configs are used and no console is deployed.
 	if opName, depNameSpace, useEmbedded := defaults.UseEmbeddedFiles(reconciler.Service); !useEmbedded {
 		myDep := &appsv1.Deployment{}
 		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
@@ -71,11 +72,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
-	}
-	if instance.GetAnnotations() == nil {
-		instance.SetAnnotations(map[string]string{
-			api.SchemeGroupVersion.Group: version.Version,
-		})
 	}
 
 	env, rResult, err := reconciler.newEnv(instance)
@@ -426,7 +422,7 @@ func (reconciler *Reconciler) bcUpdateCheck(current, new buildv1.BuildConfig, bc
 func (reconciler *Reconciler) newEnv(cr *api.KieApp) (api.Environment, reconcile.Result, error) {
 	env, err := defaults.GetEnvironment(cr, reconciler.Service)
 	if err != nil {
-		return env, reconcile.Result{Requeue: true}, err
+		return env, reconcile.Result{}, err
 	}
 
 	// console keystore generation

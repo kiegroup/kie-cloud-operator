@@ -79,6 +79,10 @@ required = [
   version = "=v2.2.0"
 
 [[constraint]]
+  name = "github.com/google/go-cmp"
+  revision = "2d0692c2e9617365a95b295612ac0d4415ba4627"
+
+[[constraint]]
   name = "github.com/pavel-v-chernykh/keystore-go"
   version = "=v2.1.0"
 
