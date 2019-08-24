@@ -20,6 +20,34 @@
           "type": "dropDown"
         },
         {
+          "label": "Enable Upgrades",
+          "type": "checkbox",
+          "required": false,
+          "description": "Set true to enable automatic micro version product upgrades.",
+          "jsonPath": "$.spec.upgrades.enabled",
+          "originalJsonPath": "$.spec.upgrades.enabled",
+          "fields": [
+            {
+              "label": "Upgrades enabled",
+              "type": "fieldGroup",
+              "jsonPath": "$.spec.upgrades",
+              "originalJsonPath": "$.spec.upgrades",
+              "displayWhen": "true",
+              "visible": false,
+              "fields": [
+                {
+                  "label": "Include minor version upgrades",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "Set true to enable automatic minor product version upgrades.",
+                  "jsonPath": "$.spec.upgrades.minor",
+                  "originalJsonPath": "$.spec.upgrades.minor"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "label": "Custom registry",
           "type": "fieldGroup",
           "required": false,

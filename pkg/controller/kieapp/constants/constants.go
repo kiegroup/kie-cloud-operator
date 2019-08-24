@@ -2,20 +2,21 @@ package constants
 
 import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.5.0"
-	// PastPatchVersion product version supported
-	PastPatchVersion = "7.4.1"
-	// PastMinorVersion product version supported
-	PastMinorVersion = "7.4.0"
+	// LastMicroVersion product version supported
+	LastMicroVersion = "7.4.1"
+	// LastMinorVersion product version supported
+	LastMinorVersion = "7.4.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PastPatchVersion, PastMinorVersion}
+var SupportedVersions = []string{CurrentVersion, LastMicroVersion, LastMinorVersion}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -68,23 +69,26 @@ const (
 )
 
 // VersionConstants ...
-var VersionConstants = map[string]*v1.VersionConfigs{
+var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
-		ImageStreamTag:   "1.0",
+		APIVersion:       api.SchemeGroupVersion.Version,
+		ImageTag:         "1.0",
 		BrokerImage:      "amq-broker-73-openshift",
 		BrokerImageTag:   "7.3",
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.1",
 	},
-	PastPatchVersion: {
-		ImageStreamTag:   "1.1",
+	LastMicroVersion: {
+		APIVersion:       v1.SchemeGroupVersion.Version,
+		ImageTag:         "1.1",
 		BrokerImage:      "amq-broker-73-openshift",
 		BrokerImageTag:   "7.3",
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.1",
 	},
-	PastMinorVersion: {
-		ImageStreamTag:   "1.0",
+	LastMinorVersion: {
+		APIVersion:       v1.SchemeGroupVersion.Version,
+		ImageTag:         "1.0",
 		BrokerImage:      "amq-broker-73-openshift",
 		BrokerImageTag:   "7.3",
 		DatagridImage:    "datagrid73-openshift",
@@ -92,53 +96,53 @@ var VersionConstants = map[string]*v1.VersionConfigs{
 	},
 }
 
-var rhpamAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
-var rhpamMonitorAppConstants = v1.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
-var rhdmAppConstants = v1.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR"}
 
-var replicasTrial = v1.ReplicaConstants{
-	Console:     v1.Replicas{Replicas: 1, DenyScale: true},
-	Server:      v1.Replicas{Replicas: 1},
-	SmartRouter: v1.Replicas{Replicas: 1},
+var replicasTrial = api.ReplicaConstants{
+	Console:     api.Replicas{Replicas: 1, DenyScale: true},
+	Server:      api.Replicas{Replicas: 1},
+	SmartRouter: api.Replicas{Replicas: 1},
 }
-var replicasRhpamProductionImmutable = v1.ReplicaConstants{
-	Console:     v1.Replicas{Replicas: 1},
-	Server:      v1.Replicas{Replicas: 2},
-	SmartRouter: v1.Replicas{Replicas: 1},
+var replicasRhpamProductionImmutable = api.ReplicaConstants{
+	Console:     api.Replicas{Replicas: 1},
+	Server:      api.Replicas{Replicas: 2},
+	SmartRouter: api.Replicas{Replicas: 1},
 }
-var replicasRhpamProduction = v1.ReplicaConstants{
-	Console:     v1.Replicas{Replicas: 3},
-	Server:      v1.Replicas{Replicas: 3},
-	SmartRouter: v1.Replicas{Replicas: 1},
+var replicasRhpamProduction = api.ReplicaConstants{
+	Console:     api.Replicas{Replicas: 3},
+	Server:      api.Replicas{Replicas: 3},
+	SmartRouter: api.Replicas{Replicas: 1},
 }
-var replicasAuthoringHA = v1.ReplicaConstants{
-	Console:     v1.Replicas{Replicas: 2},
-	Server:      v1.Replicas{Replicas: 2},
-	SmartRouter: v1.Replicas{Replicas: 1},
+var replicasAuthoringHA = api.ReplicaConstants{
+	Console:     api.Replicas{Replicas: 2},
+	Server:      api.Replicas{Replicas: 2},
+	SmartRouter: api.Replicas{Replicas: 1},
 }
 
 // DefaultDatabaseConfig defines the default Database to use for each environment
-var databaseRhpamAuthoring = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: DefaultDatabaseSize}
-var databaseRhpamAuthoringHA = &v1.DatabaseObject{Type: v1.DatabaseMySQL, Size: DefaultDatabaseSize}
-var databaseRhpamProduction = &v1.DatabaseObject{Type: v1.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamProductionImmutable = &v1.DatabaseObject{Type: v1.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamTrial = &v1.DatabaseObject{Type: v1.DatabaseH2, Size: ""}
+var databaseRhpamAuthoring = &api.DatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}
+var databaseRhpamAuthoringHA = &api.DatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}
+var databaseRhpamProduction = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
+var databaseRhpamProductionImmutable = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
+var databaseRhpamTrial = &api.DatabaseObject{Type: api.DatabaseH2, Size: ""}
 
 // EnvironmentConstants contains
-var EnvironmentConstants = map[v1.EnvironmentType]*v1.EnvironmentConstants{
-	v1.RhpamProduction:          {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
-	v1.RhpamProductionImmutable: {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
-	v1.RhpamTrial:               {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
-	v1.RhpamAuthoring:           {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
-	v1.RhpamAuthoringHA:         {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
-	v1.RhdmTrial:                {App: rhdmAppConstants, Replica: replicasTrial},
-	v1.RhdmAuthoring:            {App: rhdmAppConstants, Replica: replicasTrial},
-	v1.RhdmAuthoringHA:          {App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	v1.RhdmProductionImmutable:  {App: rhdmAppConstants, Replica: replicasTrial},
+var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
+	api.RhpamProduction:          {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
+	api.RhpamProductionImmutable: {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
+	api.RhpamTrial:               {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
+	api.RhpamAuthoring:           {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
+	api.RhpamAuthoringHA:         {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
+	api.RhdmTrial:                {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoring:            {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoringHA:          {App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:  {App: rhdmAppConstants, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates
-var TemplateConstants = v1.TemplateConstants{
+var TemplateConstants = api.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
 }

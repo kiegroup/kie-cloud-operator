@@ -2,6 +2,7 @@ package apis
 
 import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -13,6 +14,7 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
+		api.SchemeBuilder.AddToScheme,
 		v1.SchemeBuilder.AddToScheme,
 		rbacv1.SchemeBuilder.AddToScheme,
 		oappsv1.SchemeBuilder.AddToScheme,

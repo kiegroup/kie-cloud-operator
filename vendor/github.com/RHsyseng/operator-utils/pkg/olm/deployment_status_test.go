@@ -170,3 +170,192 @@ func TestDeploymentConfigsStatus(t *testing.T) {
 	assert.Len(t, status.Ready, 1, "Expected one ready deployment")
 	assert.Equal(t, "ReadyDeployment", status.Ready[0])
 }
+
+func TestSingleDaemonSetStatus(t *testing.T) {
+	obj := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "ReadyDeployment",
+		},
+		Status: appsv1.DaemonSetStatus{
+			DesiredNumberScheduled: 3,
+			NumberReady:            3,
+		},
+	}
+	status := GetSingleDaemonSetStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 3, "Expected three ready deployments")
+	assert.Equal(t, "ReadyDeployment-1", status.Ready[0])
+	assert.Equal(t, "ReadyDeployment-2", status.Ready[1])
+	assert.Equal(t, "ReadyDeployment-3", status.Ready[2])
+}
+
+func TestStartingSingleDaemonSetStatus(t *testing.T) {
+	obj := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StartingDeployment",
+		},
+		Status: appsv1.DaemonSetStatus{
+			DesiredNumberScheduled: 3,
+			NumberReady:            1,
+		},
+	}
+	status := GetSingleDaemonSetStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Ready, 1, "Expected one ready deployment")
+	assert.Equal(t, "StartingDeployment-1", status.Ready[0])
+	assert.Len(t, status.Starting, 2, "Expected two starting deployments")
+	assert.Equal(t, "StartingDeployment-2", status.Starting[0])
+	assert.Equal(t, "StartingDeployment-3", status.Starting[1])
+}
+
+func TestStoppedSingleDaemonSetStatus(t *testing.T) {
+	obj := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StoppedDeployment",
+		},
+		Status: appsv1.DaemonSetStatus{
+			DesiredNumberScheduled: 0,
+			NumberReady:            0,
+		},
+	}
+	status := GetSingleDaemonSetStatus(obj)
+	assert.Len(t, status.Stopped, 1, "Expected one stopped deployment")
+	assert.Equal(t, "StoppedDeployment", status.Stopped[0])
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 0, "Expected no ready deployments")
+}
+
+func TestSingleDeploymentStatus(t *testing.T) {
+	three := int32(3)
+	obj := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "ReadyDeployment",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &three,
+		},
+		Status: appsv1.DeploymentStatus{
+			Replicas:      3,
+			ReadyReplicas: 3,
+		},
+	}
+	status := GetSingleDeploymentStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 3, "Expected three ready deployments")
+	assert.Equal(t, "ReadyDeployment-1", status.Ready[0])
+	assert.Equal(t, "ReadyDeployment-2", status.Ready[1])
+	assert.Equal(t, "ReadyDeployment-3", status.Ready[2])
+}
+
+func TestStartingSingleDeploymentStatus(t *testing.T) {
+	three := int32(3)
+	obj := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StartingDeployment",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &three,
+		},
+		Status: appsv1.DeploymentStatus{
+			Replicas:      3,
+			ReadyReplicas: 1,
+		},
+	}
+	status := GetSingleDeploymentStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Ready, 1, "Expected one ready deployment")
+	assert.Equal(t, "StartingDeployment-1", status.Ready[0])
+	assert.Len(t, status.Starting, 2, "Expected two starting deployments")
+	assert.Equal(t, "StartingDeployment-2", status.Starting[0])
+	assert.Equal(t, "StartingDeployment-3", status.Starting[1])
+}
+
+func TestStoppedSingleDeploymentStatus(t *testing.T) {
+	zero := int32(0)
+	obj := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StoppedDeployment",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &zero,
+		},
+		Status: appsv1.DeploymentStatus{
+			Replicas:      0,
+			ReadyReplicas: 0,
+		},
+	}
+	status := GetSingleDeploymentStatus(obj)
+	assert.Len(t, status.Stopped, 1, "Expected one stopped deployment")
+	assert.Equal(t, "StoppedDeployment", status.Stopped[0])
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 0, "Expected no ready deployments")
+}
+
+func TestSingleStatefulSetStatus(t *testing.T) {
+	three := int32(3)
+	obj := appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "ReadyDeployment",
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Replicas: &three,
+		},
+		Status: appsv1.StatefulSetStatus{
+			Replicas:      3,
+			ReadyReplicas: 3,
+		},
+	}
+	status := GetSingleStatefulSetStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 3, "Expected three ready deployments")
+	assert.Equal(t, "ReadyDeployment-1", status.Ready[0])
+	assert.Equal(t, "ReadyDeployment-2", status.Ready[1])
+	assert.Equal(t, "ReadyDeployment-3", status.Ready[2])
+}
+
+func TestStartingSingleStatefulSetStatus(t *testing.T) {
+	three := int32(3)
+	obj := appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StartingDeployment",
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Replicas: &three,
+		},
+		Status: appsv1.StatefulSetStatus{
+			Replicas:      3,
+			ReadyReplicas: 1,
+		},
+	}
+	status := GetSingleStatefulSetStatus(obj)
+	assert.Len(t, status.Stopped, 0, "Expected no stopped deployments")
+	assert.Len(t, status.Ready, 1, "Expected one ready deployment")
+	assert.Equal(t, "StartingDeployment-1", status.Ready[0])
+	assert.Len(t, status.Starting, 2, "Expected two starting deployments")
+	assert.Equal(t, "StartingDeployment-2", status.Starting[0])
+	assert.Equal(t, "StartingDeployment-3", status.Starting[1])
+}
+
+func TestStoppedSingleStatefulSetStatus(t *testing.T) {
+	zero := int32(0)
+	obj := appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "StoppedDeployment",
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Replicas: &zero,
+		},
+		Status: appsv1.StatefulSetStatus{
+			Replicas:      0,
+			ReadyReplicas: 0,
+		},
+	}
+	status := GetSingleStatefulSetStatus(obj)
+	assert.Len(t, status.Stopped, 1, "Expected one stopped deployment")
+	assert.Equal(t, "StoppedDeployment", status.Stopped[0])
+	assert.Len(t, status.Starting, 0, "Expected no starting deployments")
+	assert.Len(t, status.Ready, 0, "Expected no ready deployments")
+}

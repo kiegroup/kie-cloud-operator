@@ -1,6 +1,5 @@
 package olm
 
-
 type DeploymentStatus struct {
 	// Deployments are ready to serve requests
 	Ready []string `json:"ready,omitempty"`

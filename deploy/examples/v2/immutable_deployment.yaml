@@ -1,0 +1,33 @@
+###
+# This CR deploys 2 kie server sets that will use 2 different images
+# that already contain a process deployed.
+###
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: immutable-deployment
+spec:
+  environment: rhpam-production-immutable
+  objects:
+    # Kieserver resources will be named sequentially rhpam-production-immutable-kieserver-0
+    servers:
+      - name: kieserver-a
+        replicas: 3
+        # Replace the default image stream
+        from:
+          kind: ImageStreamTag
+          name: library-s2i:latest
+        env:
+          # This environment variable must be specified to use the
+          - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+            value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+      - name: kieserver-b
+        # Replace the default image stream
+        from:
+          kind: ImageStreamTag
+          name: approval-hr:latest
+          namespace: builds
+        env:
+          # This environment variable must be specified to use the
+          - name: KIE_SERVER_CONTAINER_DEPLOYMENT
+            value: rhpam-kieserver-hr=org.openshift.quickstarts:rhpam-kieserver-approval:1.5.0-SNAPSHOT

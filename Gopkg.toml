@@ -61,12 +61,12 @@ required = [
 [[constraint]]
   name = "github.com/RHsyseng/operator-utils"
   # revision for branch "master"
-  revision = "ab479a3d6e3c70611947d1c1c18f5e157f11856c"
+  revision = "7b1462f3cd3456e08e0966df5df8fa784f117145"
 
 [[constraint]]
   name = "github.com/RHsyseng/console-cr-form"
   # revision for branch "master"
-  revision = "3ba9910580873125049ef35c8166be29f12a0ec7"
+  revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[constraint]]
   name = "github.com/operator-framework/operator-sdk"
@@ -77,6 +77,10 @@ required = [
 [[constraint]]
   name = "github.com/gobuffalo/packr"
   version = "=v2.2.0"
+
+[[constraint]]
+  name = "github.com/google/go-cmp"
+  revision = "2d0692c2e9617365a95b295612ac0d4415ba4627"
 
 [[constraint]]
   name = "github.com/pavel-v-chernykh/keystore-go"

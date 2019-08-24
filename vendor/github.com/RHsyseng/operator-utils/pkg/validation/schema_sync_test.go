@@ -123,7 +123,7 @@ spec:
 	}
 
 	type myApp struct {
-		Spec   myAppSpec       `json:"spec,omitempty"`
+		Spec myAppSpec `json:"spec,omitempty"`
 	}
 
 	cr := myApp{

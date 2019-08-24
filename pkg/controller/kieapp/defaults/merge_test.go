@@ -6,7 +6,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 
 	"github.com/ghodss/yaml"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -110,34 +110,34 @@ func TestMergeRoutes(t *testing.T) {
 	assert.Equal(t, "test-rhdmcentr-3", finalRoute4.Name, "Second route name should end with -3")
 }
 
-func getEnvironment(environment v1.EnvironmentType, name string) (v1.Environment, error) {
-	cr := &v1.KieApp{
+func getEnvironment(environment api.EnvironmentType, name string) (api.Environment, error) {
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: environment,
 		},
 	}
 
 	env, err := GetEnvironment(cr, test.MockService())
 	if err != nil {
-		return v1.Environment{}, err
+		return api.Environment{}, err
 	}
 	return env, nil
 }
 
 func TestMergeServerDeploymentConfigs(t *testing.T) {
-	var dbEnv v1.Environment
+	var dbEnv api.Environment
 	err := getParsedTemplate("dbs/postgresql.yaml", "prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var prodEnv v1.Environment
+	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplate("common.yaml", "prod", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -158,19 +158,19 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 }
 
 func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
-	var dbEnv v1.Environment
+	var dbEnv api.Environment
 	err := getParsedTemplate("dbs/h2.yaml", "immutable-prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var jmsEnv v1.Environment
+	var jmsEnv api.Environment
 	err = getParsedTemplate("jms/activemq-jms-config.yaml", "immutable-prod", &jmsEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var prodEnv v1.Environment
+	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production-immutable.yaml", "immutable-prod", &prodEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplate("common.yaml", "immutable-prod", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -192,11 +192,11 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 }
 
 func TestMergeConfigsWithoutOverrides(t *testing.T) {
-	var authEnv v1.Environment
+	var authEnv api.Environment
 	err := getParsedTemplate("envs/rhdm-authoring.yaml", "authoring", &authEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplate("common.yaml", "authoring", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -210,11 +210,11 @@ func TestMergeConfigsWithoutOverrides(t *testing.T) {
 }
 
 func TestMergeConfigsWithoutBaseline(t *testing.T) {
-	var authEnv v1.Environment
+	var authEnv api.Environment
 	err := getParsedTemplate("envs/rhdm-authoring.yaml", "authoring", &authEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplate("common.yaml", "authoring", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -229,12 +229,12 @@ func TestMergeConfigsWithoutBaseline(t *testing.T) {
 }
 
 func TestMergeConsoleOmitted(t *testing.T) {
-	var trialEnv v1.Environment
+	var trialEnv api.Environment
 
 	err := getParsedTemplate("envs/rhpam-trial.yaml", "test", &trialEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplate("common.yaml", "test", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -244,17 +244,17 @@ func TestMergeConsoleOmitted(t *testing.T) {
 }
 
 func TestMergeBuildConfigandIStreams(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		},
-		Spec: v1.KieAppSpec{
-			Environment: v1.RhpamProductionImmutable,
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{
-						Build: &v1.KieAppBuildObject{
+						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "test",
 						},
 					},
@@ -262,11 +262,11 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 			},
 		},
 	}
-	var prodImmutableEnv v1.Environment
+	var prodImmutableEnv api.Environment
 	err := getParsedTemplateFromCR(cr, "envs/rhpam-production-immutable.yaml", &prodImmutableEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
-	var common v1.Environment
+	var common api.Environment
 	err = getParsedTemplateFromCR(cr, "common.yaml", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
@@ -471,7 +471,7 @@ func TestMergeDeploymentconfigs_PodSpec_Volumes(t *testing.T) {
 }
 
 func getParsedTemplate(filename string, name string, object interface{}) error {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: "test-ns",
@@ -480,13 +480,13 @@ func getParsedTemplate(filename string, name string, object interface{}) error {
 	return getParsedTemplateFromCR(cr, filename, object)
 }
 
-func getParsedTemplateFromCR(cr *v1.KieApp, filename string, object interface{}) error {
+func getParsedTemplateFromCR(cr *api.KieApp, filename string, object interface{}) error {
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		log.Error("Error getting environment template", err)
 	}
 
-	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Spec.CommonConfig.Version, cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Spec.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}

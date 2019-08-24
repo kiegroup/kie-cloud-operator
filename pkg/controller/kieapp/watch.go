@@ -1,7 +1,7 @@
 package kieapp
 
 import (
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -27,7 +27,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 
 	watchObjects := []runtime.Object{
 		// Watch for changes to primary resource KieApp
-		&v1.KieApp{},
+		&api.KieApp{},
 		&appsv1.Deployment{},
 	}
 	objectHandler := &handler.EnqueueRequestForObject{}
@@ -73,7 +73,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 	}
 	ownerHandler = &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1.KieApp{},
+		OwnerType:    &api.KieApp{},
 	}
 	for _, watchObject := range watchOwnedObjects {
 		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)

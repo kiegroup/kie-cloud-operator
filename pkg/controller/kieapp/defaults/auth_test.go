@@ -3,7 +3,7 @@ package defaults
 import (
 	"testing"
 
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestConfigureHostnameNoAuth(t *testing.T) {
-	object := &v1.CustomObject{
+	object := &api.CustomObject{
 		DeploymentConfigs: []appsv1.DeploymentConfig{
 			{
 				Spec: appsv1.DeploymentConfigSpec{
@@ -27,7 +27,7 @@ func TestConfigureHostnameNoAuth(t *testing.T) {
 			},
 		},
 	}
-	cr := &v1.KieApp{}
+	cr := &api.KieApp{}
 	hostname := "https://rhpam.example.com"
 
 	ConfigureHostname(object, cr, hostname)
@@ -41,7 +41,7 @@ func TestConfigureHostnameNoAuth(t *testing.T) {
 
 func TestConfigureHostname(t *testing.T) {
 	testHostname := "test-hostname.example.com"
-	object := &v1.CustomObject{
+	object := &api.CustomObject{
 		DeploymentConfigs: []appsv1.DeploymentConfig{
 			{
 				Spec: appsv1.DeploymentConfigSpec{
@@ -82,10 +82,10 @@ func TestConfigureHostname(t *testing.T) {
 			},
 		},
 	}
-	cr := &v1.KieApp{
-		Spec: v1.KieAppSpec{
-			Auth: v1.KieAppAuthObject{
-				SSO: &v1.SSOAuthConfig{
+	cr := &api.KieApp{
+		Spec: api.KieAppSpec{
+			Auth: api.KieAppAuthObject{
+				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com",
 					Realm: "therealm",
 				},
@@ -111,15 +111,15 @@ func TestConfigureHostname(t *testing.T) {
 }
 
 func TestAuthMultipleType(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				SSO:  &v1.SSOAuthConfig{},
-				LDAP: &v1.LDAPAuthConfig{},
+			Auth: api.KieAppAuthObject{
+				SSO:  &api.SSOAuthConfig{},
+				LDAP: &api.LDAPAuthConfig{},
 			},
 		},
 	}
@@ -128,14 +128,14 @@ func TestAuthMultipleType(t *testing.T) {
 }
 
 func TestAuthOnlyRoleMapper(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				RoleMapper: &v1.RoleMapperAuthConfig{},
+			Auth: api.KieAppAuthObject{
+				RoleMapper: &api.RoleMapperAuthConfig{},
 			},
 		},
 	}
@@ -144,11 +144,11 @@ func TestAuthOnlyRoleMapper(t *testing.T) {
 }
 
 func TestAuthNotConfigured(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
 		},
 	}
@@ -157,14 +157,14 @@ func TestAuthNotConfigured(t *testing.T) {
 }
 
 func TestAuthSSOEmptyConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				SSO: &v1.SSOAuthConfig{},
+			Auth: api.KieAppAuthObject{
+				SSO: &api.SSOAuthConfig{},
 			},
 		},
 	}
@@ -173,14 +173,14 @@ func TestAuthSSOEmptyConfig(t *testing.T) {
 }
 
 func TestAuthSSOConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				SSO: &v1.SSOAuthConfig{
+			Auth: api.KieAppAuthObject{
+				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
 				},
@@ -222,33 +222,33 @@ func TestAuthSSOConfig(t *testing.T) {
 }
 
 func TestAuthSSOConfigWithClients(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				SSO: &v1.SSOAuthConfig{
+			Auth: api.KieAppAuthObject{
+				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
 				},
 			},
-			Objects: v1.KieAppObjects{
-				Console: v1.SecuredKieAppObject{
-					SSOClient: &v1.SSOAuthClient{
+			Objects: api.KieAppObjects{
+				Console: api.SecuredKieAppObject{
+					SSOClient: &api.SSOAuthClient{
 						Name:          "test-rhpamcentr-client",
 						Secret:        "supersecret",
 						HostnameHTTP:  "test-rhpamcentr.example.com",
 						HostnameHTTPS: "secure-test-rhpamcentr.example.com",
 					},
 				},
-				Servers: []v1.KieServerSet{
+				Servers: []api.KieServerSet{
 					{
 						Name:        "one",
 						Deployments: Pint(2),
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							SSOClient: &v1.SSOAuthClient{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							SSOClient: &api.SSOAuthClient{
 								Name:   "test-kieserver-a-client",
 								Secret: "supersecret-a",
 							},
@@ -256,8 +256,8 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 					},
 					{
 						Deployments: Pint(3),
-						SecuredKieAppObject: v1.SecuredKieAppObject{
-							SSOClient: &v1.SSOAuthClient{
+						SecuredKieAppObject: api.SecuredKieAppObject{
+							SSOClient: &api.SSOAuthClient{
 								Name:          "test-kieserver-b-client",
 								Secret:        "supersecret-b",
 								HostnameHTTPS: "test-kieserver-b.example.com",
@@ -318,14 +318,14 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 }
 
 func TestAuthLDAPEmptyConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: v1.KieAppAuthObject{
-				LDAP: &v1.LDAPAuthConfig{},
+			Auth: api.KieAppAuthObject{
+				LDAP: &api.LDAPAuthConfig{},
 			},
 		},
 	}
@@ -334,19 +334,19 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 }
 
 func TestAuthLDAPConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: v1.KieAppAuthObject{
-				LDAP: &v1.LDAPAuthConfig{
+			Auth: api.KieAppAuthObject{
+				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",
 				},
@@ -370,23 +370,23 @@ func TestAuthLDAPConfig(t *testing.T) {
 }
 
 func TestAuthRoleMapperConfig(t *testing.T) {
-	cr := &v1.KieApp{
+	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: v1.KieAppSpec{
+		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Objects: v1.KieAppObjects{
-				Servers: []v1.KieServerSet{
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: v1.KieAppAuthObject{
-				LDAP: &v1.LDAPAuthConfig{
+			Auth: api.KieAppAuthObject{
+				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",
 				},
-				RoleMapper: &v1.RoleMapperAuthConfig{
+				RoleMapper: &api.RoleMapperAuthConfig{
 					RolesProperties: "mapping.properties",
 					ReplaceRole:     true,
 				},

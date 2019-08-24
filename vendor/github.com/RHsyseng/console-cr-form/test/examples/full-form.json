@@ -20,6 +20,34 @@
           "type": "dropDown"
         },
         {
+          "label": "Upgrades",
+          "type": "checkbox",
+          "required": false,
+          "description": "Specifies whether or not to execute product upgrades. When true, allows micro upgrades.",
+          "jsonPath": "$.spec.upgrades.enabled",
+          "originalJsonPath": "$.spec.upgrades.enabled",
+          "fields": [
+            {
+              "label": "Upgrades",
+              "type": "fieldGroup",
+              "jsonPath": "$.spec.upgrades",
+              "originalJsonPath": "$.spec.upgrades",
+              "displayWhen": "true",
+              "visible": false,
+              "fields": [
+                {
+                  "label": "Allow Minor Upgrades",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "When true, allows both micro and minor upgrades.",
+                  "jsonPath": "$.spec.upgrades.minor",
+                  "originalJsonPath": "$.spec.upgrades.minor"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "label": "Custom registry",
           "type": "fieldGroup",
           "required": false,
@@ -146,6 +174,12 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
+                },
+                {
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
                 }
               ]
             },
@@ -312,6 +346,12 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
+                },
+                {
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
                 }
               ]
             },
@@ -385,12 +425,6 @@
           "visible": true,
           "fields": [
             {
-              "label": "Roles properties file",
-              "type": "text",
-              "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-              "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-            },
-            {
               "label": "Replace roles",
               "type": "checkbox",
               "jsonPath": "$.spec.auth.roleMapper.replaceRole",
@@ -460,14 +494,14 @@
                 {
                   "label": "Memory request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.memory",
+                  "jsonPath": "$.spec.objects.console.resources.requests.memory",
                   "description": "Minimum amount of memory requested by the container",
                   "default": "2Gi"
                 },
                 {
                   "label": "CPU request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.cpu",
+                  "jsonPath": "$.spec.objects.console.resources.requests.cpu",
                   "description": "Minimum processing power requested by the container",
                   "default": "500m"
                 },
@@ -581,7 +615,10 @@
                       "description": "Specify whether containers are to be created from an image stream, or a container image.",
                       "default": "ImageStreamTag",
                       "options": [
-                        { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                        {
+                          "value": "ImageStreamTag",
+                          "label": "ImageStreamTag"
+                        },
                         { "value": "DockerImage", "label": "DockerImage" }
                       ]
                     },
@@ -646,7 +683,10 @@
                           "description": "Specify whether build config is created from an image stream, or a container image.",
                           "default": "ImageStreamTag",
                           "options": [
-                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                            {
+                              "value": "ImageStreamTag",
+                              "label": "ImageStreamTag"
+                            },
                             { "value": "DockerImage", "label": "DockerImage" }
                           ]
                         },
@@ -755,14 +795,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.memory",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.cpu",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },
@@ -1012,14 +1052,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },

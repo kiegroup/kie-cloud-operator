@@ -156,7 +156,6 @@ type KieAppJmsObject struct {
 	Username           string `json:"username,omitempty"`
 	Password           string `json:"password,omitempty"`
 	AMQQueues          string `json:"amqQueues,omitempty"` // It will receive the default value for the Executor, Request, Response, Signal and Audit queues.
-
 }
 
 // KieAppObject Generic object definition

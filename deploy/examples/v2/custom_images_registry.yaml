@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: image-registry
+spec:
+  environment: rhpam-trial
+  imageRegistry:
+    insecure: true
+    registry: registry.example.com:5000
+  objects:
+    console:
+      image: console-image
+      imageTag: "1.2"
+    servers:
+      - image: server-image
+        imageTag: "1.2"
+      - image: server-image2
+        imageTag: "1.1"
+    smartRouter:
+      image: router-image
+      imageTag: "1.2"

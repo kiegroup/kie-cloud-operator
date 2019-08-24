@@ -49,24 +49,24 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:c76e1c574ebc454c83f75a08d6dc524f04839625ec68890b73d47b6c98cf47cd"
+  digest = "1:59cc79c5578041cbfe30ab05c08f297f0730166186862e0c2d860ec710b188dd"
   name = "github.com/RHsyseng/console-cr-form"
   packages = [
     "pkg/web",
     "pkg/web/packrd",
   ]
   pruneopts = ""
-  revision = "3ba9910580873125049ef35c8166be29f12a0ec7"
+  revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[projects]]
-  digest = "1:3d12798656f8436ec615f102278f312314697b30a2202df6b146ee95d2b4cecc"
+  digest = "1:4940a6707379ce619f7521dccca2f6c36005b4035cad7403a53ba0ba95a09788"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "ab479a3d6e3c70611947d1c1c18f5e157f11856c"
+  revision = "7b1462f3cd3456e08e0966df5df8fa784f117145"
 
 [[projects]]
   branch = "master"
@@ -424,7 +424,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:4c7b0fbaba9c61f310f3c5b34d7fbafad0b245a0cb94e2da7aed5c97600d84db"
+  digest = "1:9fcb267c272bc5054564b392e3ff7e65e35400fd9914afb1d169f92b95e7dbc9"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -434,8 +434,7 @@
     "cmp/internal/value",
   ]
   pruneopts = ""
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
-  version = "v0.3.0"
+  revision = "2d0692c2e9617365a95b295612ac0d4415ba4627"
 
 [[projects]]
   digest = "1:8d4a577a9643f713c25a32151c0f26af7228b4b97a219b5ddb7fd38d16f6e673"
@@ -1448,6 +1447,7 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",

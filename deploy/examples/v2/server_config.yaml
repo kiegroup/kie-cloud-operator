@@ -1,0 +1,38 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-config
+spec:
+  environment: rhpam-trial
+  objects:
+    console:
+      env:
+        - name: MY_VALUE
+          value: "example"
+    servers:
+      # Kieserver sets will be named sequentially server-config-kieserver, server-config-kieserver-2
+      - deployments: 2
+        # Env variables that will be added to all the kie servers in this set
+        env:
+          - name: MY_VALUE
+            value: "example"
+        # Override default memory limits for all the kie servers in this set
+        resources:
+          limits:
+            memory: 2Gi
+      # Kieserver sets will be named sequentially server-config-kieserver2, server-config-kieserver2-2
+      - deployments: 2
+        # Env variables that will be added to all the kie servers in this set
+        env:
+          - name: MY_VALUE
+            value: "example"
+      # Kieserver sets will be named sequentially server, server-2
+      - name: server
+        deployments: 2
+        env:
+          - name: MY_VALUE
+            value: "example"
+        # Override default memory limits for all the kie servers in this set
+        resources:
+          limits:
+            memory: 2Gi
