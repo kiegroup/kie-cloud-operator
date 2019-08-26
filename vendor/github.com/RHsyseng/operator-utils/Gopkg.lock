@@ -34,6 +34,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:ac425d784b13d49b37a5bbed3ce022677f8f3073b216f05d6adcb9303e27fa0f"
+  name = "github.com/evanphx/json-patch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "026c730a0dcc5d11f93f1cf1cc65b01247ea7b6f"
+  version = "v4.5.0"
+
+[[projects]]
   digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
   name = "github.com/ghodss/yaml"
   packages = ["."]
@@ -249,9 +257,12 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:94b521dc449e4a6758c681e35f3b97a4a5699090dccd9c25eba0fb0bcf60f48b"
+  digest = "1:cc18cf101cc07b176fcf6d04137d267afbd9b88c9c3dbe0dde3ddae072992a6e"
   name = "github.com/openshift/api"
-  packages = ["apps/v1"]
+  packages = [
+    "apps/v1",
+    "route/v1",
+  ]
   pruneopts = "UT"
   revision = "0d921e363e951d89f583292c60d013c318df64dc"
   version = "v3.9.0"
@@ -520,10 +531,11 @@
   version = "kubernetes-1.14.1"
 
 [[projects]]
-  digest = "1:3710e0b4d199b54c41e8489c7ee6360fcdda1cdb84c34d96224ecc7287225535"
+  digest = "1:72b7cb4419164da285783acc5bd4a306df21bd05a05fe59c98e1139cb196d5bb"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "dynamic",
     "kubernetes/scheme",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
@@ -532,6 +544,7 @@
     "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
+    "restmapper",
     "tools/auth",
     "tools/clientcmd",
     "tools/clientcmd/api",
@@ -566,10 +579,13 @@
   revision = "c55fbcfc754a5b2ec2fbae8fb9dcac36bdba6a12"
 
 [[projects]]
-  digest = "1:82101051647e269ded57707ffeca1154c873c7cefc40985647f17224e0b412fb"
+  digest = "1:f281493889e2ca62ab6fed2ae3c7a277a1143ff2f944f519ff5126719e1f3d08"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
+    "pkg/client",
+    "pkg/client/apiutil",
     "pkg/client/config",
+    "pkg/controller/controllerutil",
     "pkg/internal/log",
     "pkg/log",
     "pkg/log/zap",
@@ -597,14 +613,20 @@
     "github.com/go-openapi/validate",
     "github.com/googleapis/gnostic/OpenAPIv2",
     "github.com/openshift/api/apps/v1",
+    "github.com/openshift/api/route/v1",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
     "k8s.io/api/apps/v1",
+    "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/rest",
+    "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
+    "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/runtime/log",
   ]
   solver-name = "gps-cdcl"

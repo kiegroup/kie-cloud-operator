@@ -36,6 +36,10 @@ func (service *KubernetesPlatformService) Create(ctx context.Context, obj runtim
 	return service.client.Create(ctx, obj)
 }
 
+func (service *KubernetesPlatformService) Delete(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOptionFunc) error {
+	return service.client.Delete(ctx, obj, opts...)
+}
+
 func (service *KubernetesPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
 	return service.client.Get(ctx, key, obj)
 }

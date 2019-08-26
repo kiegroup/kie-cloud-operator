@@ -45,9 +45,12 @@ func TestGenerateSecret(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	env, _, err = reconciler.newEnv(cr)
-	assert.Nil(t, err, "Error creating a new environment")
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	reconciler := Reconciler{
+		Service: mockService,
+	}
+	env = reconciler.setEnvironmentProperties(cr, env)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -101,8 +104,7 @@ func TestSpecifySecret(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	env, _, err = reconciler.newEnv(cr)
+	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "Zero secrets should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 0, "Zero secrets should be generated for the trial kieserver")
@@ -140,9 +142,10 @@ func TestConsoleHost(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	_, _, err = reconciler.newEnv(cr)
+	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
+	reconciler := &Reconciler{Service: mockService}
+	reconciler.setEnvironmentProperties(cr, env)
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
 
