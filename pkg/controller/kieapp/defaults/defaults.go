@@ -23,7 +23,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var log = logs.GetLogger("kieapp.defaults")
@@ -713,13 +712,7 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 		}
 
 		cm.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
-		err := controllerutil.SetControllerReference(myDep, &cm, scheme)
-		if err != nil {
-			log.Error("Error setting controller reference. ", err)
-		}
-		for index := range cm.OwnerReferences {
-			cm.OwnerReferences[index].BlockOwnerDeletion = nil
-		}
+		cm.SetOwnerReferences(myDep.GetOwnerReferences())
 		configMaps = append(configMaps, cm)
 	}
 	return configMaps
