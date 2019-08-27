@@ -11,6 +11,19 @@ type ResourceDelta struct {
 	Removed []resource.KubernetesResource
 }
 
+func (delta *ResourceDelta) HasChanges() bool {
+	if len(delta.Added) > 0 {
+		return true
+	}
+	if len(delta.Updated) > 0 {
+		return true
+	}
+	if len(delta.Removed) > 0 {
+		return true
+	}
+	return false
+}
+
 type ResourceComparator interface {
 	SetDefaultComparator(compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool)
 	GetDefaultComparator() func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool

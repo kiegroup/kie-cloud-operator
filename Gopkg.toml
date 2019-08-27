@@ -61,7 +61,7 @@ required = [
 [[constraint]]
   name = "github.com/RHsyseng/operator-utils"
   # revision for branch "master"
-  revision = "292d20af5d942f8e20dccaf41556af936d0417e5"
+  revision = "67fa4a34c55608d6bf84968af03fb949e220c15c"
 
 [[constraint]]
   name = "github.com/RHsyseng/console-cr-form"

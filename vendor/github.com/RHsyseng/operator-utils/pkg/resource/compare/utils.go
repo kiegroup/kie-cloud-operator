@@ -14,28 +14,14 @@ func NewMapBuilder() *mapBuilder {
 	return this
 }
 
-func (this *mapBuilder) Map() map[reflect.Type][]resource.KubernetesResource {
+func (this *mapBuilder) ResourceMap() map[reflect.Type][]resource.KubernetesResource {
 	return this.resourceMap
 }
 
-func (this *mapBuilder) SameTypeItems(items ...resource.KubernetesResource) *mapBuilder {
-	if len(items) == 0 {
-		return this
+func (this *mapBuilder) Add(resources ...resource.KubernetesResource) *mapBuilder {
+	for index := range resources {
+		resourceType := reflect.ValueOf(resources[index]).Elem().Type()
+		this.resourceMap[resourceType] = append(this.resourceMap[resourceType], resources[index])
 	}
-	resourceType := reflect.ValueOf(items[0]).Elem().Type()
-	this.resourceMap[resourceType] = append(this.resourceMap[resourceType], items...)
-	return this
-}
-
-func (this *mapBuilder) DisparateTypeItems(items ...resource.KubernetesResource) *mapBuilder {
-	for index := range items {
-		this.Item(items[index])
-	}
-	return this
-}
-
-func (this *mapBuilder) Item(item resource.KubernetesResource) *mapBuilder {
-	resourceType := reflect.ValueOf(item).Elem().Type()
-	this.resourceMap[resourceType] = append(this.resourceMap[resourceType], item)
 	return this
 }

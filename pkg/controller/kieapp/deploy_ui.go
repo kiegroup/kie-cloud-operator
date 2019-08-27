@@ -44,7 +44,6 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
-	role.SetOwnerReferences()
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
 	image := getImage(operator)

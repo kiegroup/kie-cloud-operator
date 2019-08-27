@@ -59,7 +59,7 @@
   revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[projects]]
-  digest = "1:ea0284a0739e4227e5ef0007e4fa94592ebe6a4e710072c943a71a3c4ef02243"
+  digest = "1:33e52f3b3d2e7ffff7d9de5efd36cadaa4e8b3543e04666f6cd0e06f725ae51a"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
@@ -69,7 +69,7 @@
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "292d20af5d942f8e20dccaf41556af936d0417e5"
+  revision = "67fa4a34c55608d6bf84968af03fb949e220c15c"
 
 [[projects]]
   branch = "master"

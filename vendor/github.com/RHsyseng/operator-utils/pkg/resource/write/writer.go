@@ -23,11 +23,12 @@ func AddResources(owner resource.KubernetesResource, scheme *runtime.Scheme, wri
 		if err != nil {
 			return added, err
 		}
+		added = true
 	}
 	return added, nil
 }
 
-// AddResources finds the updated counterpart for each of the provided resources in the existing array and uses it to set resource version and GVK
+// UpdateResources finds the updated counterpart for each of the provided resources in the existing array and uses it to set resource version and GVK
 // It also sets ownership to the provided owner, and then uses the writer to update them
 // the boolean result is true if any changes were made
 func UpdateResources(owner resource.KubernetesResource, existing []resource.KubernetesResource, scheme *runtime.Scheme, writer clientv1.Writer, resources []resource.KubernetesResource) (bool, error) {
@@ -54,6 +55,7 @@ func UpdateResources(owner resource.KubernetesResource, existing []resource.Kube
 		if err != nil {
 			return updated, err
 		}
+		updated = true
 	}
 	return updated, nil
 }
@@ -67,6 +69,7 @@ func RemoveResources(writer clientv1.Writer, resources []resource.KubernetesReso
 		if err != nil {
 			return removed, err
 		}
+		removed = true
 	}
 	return removed, nil
 }
