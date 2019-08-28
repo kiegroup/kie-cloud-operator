@@ -19,6 +19,7 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -309,6 +310,9 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"
+		if strings.Contains(result[0], "scaledown") {
+			regContext = "amq-broker-7-tech-preview"
+		}
 	} else if result[0] == "postgresql" || result[0] == "mysql" {
 		registryAddress = constants.ImageRegistry
 		regContext = "rhscl"
@@ -843,4 +847,20 @@ func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env 
 			}
 		}
 	}
+}
+
+func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1alpha1.ClusterServiceVersion {
+	csv := &operatorsv1alpha1.ClusterServiceVersion{}
+	for _, ref := range operator.GetOwnerReferences() {
+		if ref.Kind == "ClusterServiceVersion" {
+			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: operator.Namespace, Name: ref.Name}, csv)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.Debug("CSV not found. ", err)
+				}
+				log.Error("Failed to get CSV. ", err)
+			}
+		}
+	}
+	return csv
 }

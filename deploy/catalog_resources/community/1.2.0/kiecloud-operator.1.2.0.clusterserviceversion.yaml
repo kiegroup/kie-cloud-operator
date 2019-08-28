@@ -31,6 +31,7 @@ spec:
     - automation
     - operator
   version: 1.2.0
+  replaces: kiecloud-operator.1.1.1
   maturity: stable
   maintainers:
     - name: Red Hat, Inc.
@@ -176,7 +177,10 @@ spec:
           spec:
             replicas: 1
             strategy:
-              type: Recreate
+              type: RollingUpdate
+              rollingUpdate:
+                maxSurge: 1
+                maxUnavailable: 1
             selector:
               matchLabels:
                 name: kie-cloud-operator

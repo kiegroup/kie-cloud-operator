@@ -202,7 +202,7 @@ others:
                     - --localOnly
                     - --v
                     - "3"
-                  image: "amq-broker-72-scaledown-controller-openshift"
+                  image: "amq-broker-72-scaledown-openshift"
                   imagePullPolicy: IfNotPresent
                   name: "[[.ApplicationName]]-amq"
               terminationGracePeriodSeconds: 30
@@ -214,7 +214,7 @@ others:
                 from:
                   kind: ImageStreamTag
                   namespace: "openshift"
-                  name: "amq-broker-72-scaledown-controller-openshift:1.0"
+                  name: "amq-broker-72-scaledown-openshift:0.4"
               type: ImageChange
             - type: ConfigChange
 

@@ -20,7 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var name = "console-cr-form"
@@ -41,12 +40,8 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
-	err := controllerutil.SetControllerReference(operator, role, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for role. ", err)
-		return
-	}
-	err = reconciler.Service.Create(context.TODO(), role)
+	role.SetOwnerReferences(operator.GetOwnerReferences())
+	err := reconciler.Service.Create(context.TODO(), role)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			log.Debug("Could not create role as it already exists", role)
@@ -56,11 +51,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		}
 	}
 	roleBinding := getRoleBinding(namespace)
-	err = controllerutil.SetControllerReference(operator, roleBinding, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for roleBinding. ", err)
-		return
-	}
+	roleBinding.SetOwnerReferences(operator.GetOwnerReferences())
 	err = reconciler.Service.Create(context.TODO(), roleBinding)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
@@ -71,11 +62,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		}
 	}
 	sa := getServiceAccount(namespace)
-	err = controllerutil.SetControllerReference(operator, sa, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for serviceaccount. ", err)
-		return
-	}
+	sa.SetOwnerReferences(operator.GetOwnerReferences())
 	err = reconciler.Service.Create(context.TODO(), sa)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
@@ -87,14 +74,20 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	}
 	image := getImage(operator)
 	pod := getPod(namespace, image, sa.Name, operator)
-	err = controllerutil.SetControllerReference(operator, pod, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for pod. ", err)
-		return
-	}
+	pod.SetOwnerReferences(operator.GetOwnerReferences())
 	err = reconciler.Service.Create(context.TODO(), pod)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
+			// Update console pod image
+			podExisting := &corev1.Pod{}
+			if err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}, podExisting); err == nil {
+				if podExisting.Spec.Containers[1].Image != pod.Spec.Containers[1].Image {
+					podExisting.Spec.Containers[1].Image = pod.Spec.Containers[1].Image
+					if err = reconciler.Service.Update(context.TODO(), podExisting); err != nil {
+						log.Error("Could not update console pod image ", pod.Spec.Containers[1].Image)
+					}
+				}
+			}
 			log.Debug("Could not create pod as it already exists", pod)
 		} else {
 			log.Error("Failed to create pod. ", err)
@@ -102,11 +95,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		}
 	}
 	service := getService(namespace)
-	err = controllerutil.SetControllerReference(operator, service, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for service. ", err)
-		return
-	}
+	service.SetOwnerReferences(operator.GetOwnerReferences())
 	err = reconciler.Service.Create(context.TODO(), service)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
@@ -117,11 +106,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		}
 	}
 	route := getRoute(namespace)
-	err = controllerutil.SetControllerReference(operator, route, reconciler.Service.GetScheme())
-	if err != nil {
-		log.Error("Failed to set owner reference for route. ", err)
-		return
-	}
+	route.SetOwnerReferences(operator.GetOwnerReferences())
 	err = reconciler.Service.Create(context.TODO(), route)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
@@ -136,7 +121,6 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 
 func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
 	var update bool
-	csv := &operatorsv1alpha1.ClusterServiceVersion{}
 	found := &routev1.Route{}
 	for i := 1; i < 60; i++ {
 		time.Sleep(time.Duration(100) * time.Millisecond)
@@ -149,38 +133,26 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 		log.Warn("Unable to get Route url. ", route.Name)
 		return
 	}
-	for _, ref := range operator.GetOwnerReferences() {
-		if ref.Kind == "ClusterServiceVersion" {
-			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: operator.Namespace, Name: ref.Name}, csv)
-			if err != nil {
-				if errors.IsNotFound(err) {
-					log.Debug("CSV not found. ", err)
-					return
-				}
-				log.Error("Failed to get CSV. ", err)
-				return
-			}
-			url := fmt.Sprintf("https://%s", found.Spec.Host)
-			link := getConsoleLink(csv)
-			if link == nil || link.URL != url {
-				update = true
-				if link == nil {
-					csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
-				} else {
-					link.URL = url
-				}
-			}
-			if !strings.Contains(csv.Spec.Description, constants.ConsoleDescription) {
-				update = true
-				csv.Spec.Description = strings.Join([]string{csv.Spec.Description, constants.ConsoleDescription}, "\n\n")
-			}
-			if update {
-				log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
-				err := reconciler.Service.Update(context.TODO(), csv)
-				if err != nil {
-					log.Error("Failed to update CSV. ", err)
-				}
-			}
+	url := fmt.Sprintf("https://%s", found.Spec.Host)
+	csv := reconciler.getCSV(operator)
+	link := getConsoleLink(csv)
+	if link == nil || link.URL != url {
+		update = true
+		if link == nil {
+			csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
+		} else {
+			link.URL = url
+		}
+	}
+	if !strings.Contains(csv.Spec.Description, constants.ConsoleDescription) {
+		update = true
+		csv.Spec.Description = strings.Join([]string{csv.Spec.Description, constants.ConsoleDescription}, "\n\n")
+	}
+	if update {
+		log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
+		err := reconciler.Service.Update(context.TODO(), csv)
+		if err != nil {
+			log.Error("Failed to update CSV. ", err)
 		}
 	}
 }
