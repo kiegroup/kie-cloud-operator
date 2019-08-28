@@ -58,23 +58,24 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	}
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
+	writer := write.New().WithOwnerReferences(operator.GetOwnerReferences()...)
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
 		if !delta.HasChanges() {
 			continue
 		}
 		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := write.AddResources(operator, reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
+		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return
 		}
-		updated, err := write.UpdateResources(operator, deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
+		updated, err := writer.UpdateResources(deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return
 		}
-		removed, err := write.RemoveResources(reconciler.Service, delta.Removed)
+		removed, err := writer.RemoveResources(reconciler.Service, delta.Removed)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return

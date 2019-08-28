@@ -90,11 +90,13 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+	writer := write.New().WithOwnerController(instance)
 	//If not all created, then create the missing ones:
 	if len(deployedRoutes) < len(requestedRoutes) {
 		missingRoutes := getMissingRoutes(requestedRoutes, deployedRoutes)
 		log.Debugf("Will create %d routes that were not found", len(missingRoutes))
-		added, err := write.AddResources(instance, reconciler.Service.GetScheme(), reconciler.Service, missingRoutes)
+		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, missingRoutes)
 		if err != nil {
 			return reconcile.Result{}, err
 		} else if added {
@@ -131,15 +133,15 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			continue
 		}
 		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := write.AddResources(instance, reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
+		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		updated, err := write.UpdateResources(instance, deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
+		updated, err := writer.UpdateResources(deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		removed, err := write.RemoveResources(reconciler.Service, delta.Removed)
+		removed, err := writer.RemoveResources(reconciler.Service, delta.Removed)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
