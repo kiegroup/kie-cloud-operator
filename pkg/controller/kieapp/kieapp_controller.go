@@ -310,6 +310,9 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	} else if strings.Contains(result[0], "amq-broker-7") {
 		registryAddress = constants.ImageRegistry
 		regContext = "amq-broker-7"
+		if strings.Contains(result[0], "scaledown") {
+			regContext = "amq-broker-7-tech-preview"
+		}
 	} else if result[0] == "postgresql" || result[0] == "mysql" {
 		registryAddress = constants.ImageRegistry
 		regContext = "rhscl"
