@@ -22,3 +22,13 @@ func TestMapBuilder(t *testing.T) {
 	assert.Len(t, resMap[reflect.TypeOf(corev1.Service{})], 1, "Expect map to have 1 service")
 	assert.Len(t, resMap[reflect.TypeOf(oappsv1.DeploymentConfig{})], 1, "Expect map to have 1 deployment config")
 }
+
+func TestNilResources(t *testing.T) {
+	mapBuilder := compare.NewMapBuilder()
+	mapBuilder.Add(nil)
+	assert.Len(t, mapBuilder.ResourceMap(), 0, "Expect map to have zero entries")
+	dcPtr := &oappsv1.DeploymentConfig{}
+	dcPtr = nil
+	mapBuilder.Add(dcPtr)
+	assert.Len(t, mapBuilder.ResourceMap(), 0, "Expect map to have zero entries")
+}

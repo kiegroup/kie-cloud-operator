@@ -20,6 +20,9 @@ func (this *mapBuilder) ResourceMap() map[reflect.Type][]resource.KubernetesReso
 
 func (this *mapBuilder) Add(resources ...resource.KubernetesResource) *mapBuilder {
 	for index := range resources {
+		if resources[index] == nil || reflect.ValueOf(resources[index]).IsNil() {
+			continue
+		}
 		resourceType := reflect.ValueOf(resources[index]).Elem().Type()
 		this.resourceMap[resourceType] = append(this.resourceMap[resourceType], resources[index])
 	}

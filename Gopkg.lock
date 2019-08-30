@@ -59,17 +59,18 @@
   revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[projects]]
-  digest = "1:eac3869bf5aecaa80599de546e1f2678a0b56bb140a43fbd87b48bba36fb7114"
+  digest = "1:1f9dbdfc3cd87c8895d3d9412a17603e600f6846d3a70cea6393c4b3ddd8a189"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
     "pkg/resource",
     "pkg/resource/compare",
     "pkg/resource/write",
+    "pkg/resource/write/hooks",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "a345ca9aa8d5f37720bcdda588dc6054f04bad23"
+  revision = "4df1e0b603d2efc9673c3fd532a379148d092fd9"
 
 [[projects]]
   branch = "master"

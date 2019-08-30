@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write/hooks"
 	newerror "github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -10,13 +11,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type UpdateHooks interface {
+	Trigger(existing resource.KubernetesResource, requested resource.KubernetesResource) error
+}
+
 type resourceWriter struct {
-	ownerRefs []metav1.OwnerReference
+	ownerRefs       []metav1.OwnerReference
 	ownerController metav1.Object
+	updateHooks     UpdateHooks
 }
 
 func New() *resourceWriter {
-	return &resourceWriter{}
+	return &resourceWriter{
+		updateHooks: hooks.DefaultUpdateHooks(),
+	}
 }
 
 func (this *resourceWriter) WithOwnerReferences(ownerRefs ...metav1.OwnerReference) *resourceWriter {
@@ -28,6 +36,11 @@ func (this *resourceWriter) WithOwnerReferences(ownerRefs ...metav1.OwnerReferen
 func (this *resourceWriter) WithOwnerController(ownerController metav1.Object) *resourceWriter {
 	this.ownerController = ownerController
 	this.ownerRefs = nil
+	return this
+}
+
+func (this *resourceWriter) WithCustomUpdateHooks(updateHooks UpdateHooks) *resourceWriter {
+	this.updateHooks = updateHooks
 	return this
 }
 
@@ -71,8 +84,10 @@ func (this *resourceWriter) UpdateResources(existing []resource.KubernetesResour
 		if counterpart == nil {
 			return updated, newerror.New("Failed to find a deployed counterpart to resource being updated")
 		}
-		requested.SetResourceVersion(counterpart.GetResourceVersion())
-		requested.GetObjectKind().SetGroupVersionKind(counterpart.GetObjectKind().GroupVersionKind())
+		err := this.updateHooks.Trigger(counterpart, requested)
+		if err != nil {
+			return updated, err
+		}
 		if this.ownerRefs != nil {
 			requested.SetOwnerReferences(this.ownerRefs)
 		} else if this.ownerController != nil {
@@ -81,7 +96,7 @@ func (this *resourceWriter) UpdateResources(existing []resource.KubernetesResour
 				return updated, err
 			}
 		}
-		err := writer.Update(context.TODO(), requested)
+		err = writer.Update(context.TODO(), requested)
 		if err != nil {
 			return updated, err
 		}

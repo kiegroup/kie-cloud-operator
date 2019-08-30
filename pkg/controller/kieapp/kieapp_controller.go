@@ -101,7 +101,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, err
 		} else if added {
 			//Requeue after a little while to load route and its hostname
-			return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(200) * time.Millisecond}, err
+			return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, err
 		}
 	}
 
@@ -124,8 +124,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	//Compare what's deployed with what should be deployed
 	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
-	comparator := compare.NewMapComparator()
-	ignoreSecretDataValues(&comparator)
+	comparator := getComparator()
 	deltas := comparator.Compare(deployed, requested)
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
@@ -149,6 +148,8 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	if hasUpdates && status.SetProvisioning(instance) {
 		return reconciler.UpdateObj(instance)
+	} else if !hasUpdates {
+		log.Debug("Reconcile loop did not find any resource changes to apply")
 	}
 
 	// Check the KieServer ConfigMaps for necessary changes
@@ -192,6 +193,61 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
+func getComparator() compare.MapComparator {
+	resourceComparator := compare.DefaultComparator()
+
+	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
+	defaultDCComparator := resourceComparator.GetComparator(dcType)
+	resourceComparator.SetComparator(dcType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+		dc1 := deployed.(*oappsv1.DeploymentConfig)
+		dc2 := requested.(*oappsv1.DeploymentConfig)
+		for i := range dc1.Spec.Triggers {
+			if len(dc2.Spec.Triggers) <= i {
+				return false
+			}
+			trigger1 := dc1.Spec.Triggers[i]
+			trigger2 := dc2.Spec.Triggers[i]
+			if trigger1.ImageChangeParams != nil && trigger2.ImageChangeParams != nil && trigger2.ImageChangeParams.From.Namespace == "" {
+				//This value is generated based on image stream being found in current or openshift project:
+				trigger1.ImageChangeParams.From.Namespace = ""
+			}
+		}
+		return defaultDCComparator(deployed, requested)
+	})
+
+	bcType := reflect.TypeOf(buildv1.BuildConfig{})
+	defaultBCComparator := resourceComparator.GetComparator(bcType)
+	resourceComparator.SetComparator(bcType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+		bc1 := deployed.(*buildv1.BuildConfig)
+		bc2 := requested.(*buildv1.BuildConfig).DeepCopy()
+		if bc1.Spec.Strategy.SourceStrategy != nil {
+			//This value is generated based on image stream being found in current or openshift project:
+			bc1.Spec.Strategy.SourceStrategy.From.Namespace = bc2.Spec.Strategy.SourceStrategy.From.Namespace
+		}
+		if len(bc1.Spec.Triggers) > 0 && len(bc2.Spec.Triggers) == 0 {
+			//Triggers are generated based on provided github repo
+			bc1.Spec.Triggers = bc2.Spec.Triggers
+		}
+		return defaultBCComparator(deployed, requested)
+	})
+
+	secretType := reflect.TypeOf(corev1.Secret{})
+	defaultSecretComparator := resourceComparator.GetComparator(secretType)
+	resourceComparator.SetComparator(secretType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+		secret1 := deployed.(*corev1.Secret)
+		secret2 := requested.(*corev1.Secret).DeepCopy()
+		for key := range secret1.Data {
+			secret1.Data[key] = []byte{}
+		}
+		for key := range secret2.Data {
+			secret2.Data[key] = []byte{}
+		}
+		return defaultSecretComparator(secret1, secret2)
+	})
+
+	return compare.MapComparator{Comparator: resourceComparator}
+}
+
 func setDeploymentStatus(instance *api.KieApp, resources []resource.KubernetesResource) {
 	var dcs []oappsv1.DeploymentConfig
 	for index := range resources {
@@ -224,23 +280,6 @@ func getMissingRoutes(requestedRoutes []resource.KubernetesResource, deployedRou
 		}
 	}
 	return missingRoutes
-}
-
-func ignoreSecretDataValues(comparator *compare.MapComparator) {
-	secretType := reflect.TypeOf(corev1.Secret{})
-	secretComparator := comparator.Comparator.GetComparator(secretType)
-	newSecretComparator := func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
-		secret1 := deployed.(*corev1.Secret).DeepCopy()
-		secret2 := requested.(*corev1.Secret).DeepCopy()
-		for key := range secret1.Data {
-			secret1.Data[key] = []byte{}
-		}
-		for key := range secret2.Data {
-			secret2.Data[key] = []byte{}
-		}
-		return secretComparator(secret1, secret2)
-	}
-	comparator.Comparator.SetComparator(secretType, newSecretComparator)
 }
 
 func (reconciler *Reconciler) hasSpecChanges(instance, cached *api.KieApp) bool {

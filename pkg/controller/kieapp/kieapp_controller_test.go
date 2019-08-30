@@ -282,7 +282,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	reconciler := Reconciler{Service: service}
 	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
-	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(200) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
+	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
 
 	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")

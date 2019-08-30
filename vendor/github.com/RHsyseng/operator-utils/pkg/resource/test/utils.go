@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,13 +43,25 @@ func GetDeploymentConfigs(count int) []oappsv1.DeploymentConfig {
 		dc := oappsv1.DeploymentConfig{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{},
-			Spec:       oappsv1.DeploymentConfigSpec{},
+			Spec: oappsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{},
+			},
 			Status: oappsv1.DeploymentConfigStatus{
 				ReadyReplicas: 0,
 			},
 		}
 		dc.Name = fmt.Sprintf("%s%d", "dc", (i + 1))
 		slice = append(slice, dc)
+	}
+	return slice
+}
+
+func GetBuildConfigs(count int) []buildv1.BuildConfig {
+	var slice []buildv1.BuildConfig
+	for i := 0; i < count; i++ {
+		bc := buildv1.BuildConfig{}
+		bc.Name = fmt.Sprintf("%s%d", "bc", (i + 1))
+		slice = append(slice, bc)
 	}
 	return slice
 }

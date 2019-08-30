@@ -123,6 +123,10 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 	}
 	url := fmt.Sprintf("https://%s", found.Spec.Host)
 	csv := reconciler.getCSV(operator)
+	if reflect.DeepEqual(csv, &operatorsv1alpha1.ClusterServiceVersion{}) {
+		log.Info("No ClusterServiceVersion found, likely because no such owner was set on the operator. This might be because the operator was not installed through OLM")
+		return
+	}
 	link := getConsoleLink(csv)
 	if link == nil || link.URL != url {
 		update = true

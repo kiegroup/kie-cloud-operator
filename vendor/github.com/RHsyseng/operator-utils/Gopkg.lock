@@ -257,10 +257,11 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:cc18cf101cc07b176fcf6d04137d267afbd9b88c9c3dbe0dde3ddae072992a6e"
+  digest = "1:cd1052701c9640c2d3d594ab729243a2a03315a970586c060861b28f98922909"
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
+    "build/v1",
     "route/v1",
   ]
   pruneopts = "UT"
@@ -487,7 +488,7 @@
   revision = "1d1b8b084b3057162613acc6cba8af4e30dc2ec4"
 
 [[projects]]
-  digest = "1:78f6a824d205c6cb0d011cce241407646b773cb57ee27e8c7e027753b4111075"
+  digest = "1:81683bf6c1b4aecdc3ff5691254983eeab14705d3bca1cb2db10656d4ff347ce"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -515,15 +516,18 @@
     "pkg/util/framer",
     "pkg/util/intstr",
     "pkg/util/json",
+    "pkg/util/mergepatch",
     "pkg/util/naming",
     "pkg/util/net",
     "pkg/util/runtime",
     "pkg/util/sets",
+    "pkg/util/strategicpatch",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/yaml",
     "pkg/version",
     "pkg/watch",
+    "third_party/forked/golang/json",
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
@@ -531,7 +535,7 @@
   version = "kubernetes-1.14.1"
 
 [[projects]]
-  digest = "1:72b7cb4419164da285783acc5bd4a306df21bd05a05fe59c98e1139cb196d5bb"
+  digest = "1:c460475440532e591371b7171acffd908aa16a7a75c82ab6b1d631bcd3c3120d"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -545,6 +549,7 @@
     "rest",
     "rest/watch",
     "restmapper",
+    "testing",
     "tools/auth",
     "tools/clientcmd",
     "tools/clientcmd/api",
@@ -572,6 +577,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:22abb5d4204ab1a0dcc9cda64906a31c43965ff5159e8b9f766c9d2a162dbed5"
+  name = "k8s.io/kube-openapi"
+  packages = ["pkg/util/proto"]
+  pruneopts = "UT"
+  revision = "743ec37842bffe49dd4221d9026f30fb1d5adbc4"
+
+[[projects]]
+  branch = "master"
   digest = "1:8b40227d4bf8b431fdab4f9026e6e346f00ac3be5662af367a183f78c57660b3"
   name = "k8s.io/utils"
   packages = ["integer"]
@@ -579,14 +592,16 @@
   revision = "c55fbcfc754a5b2ec2fbae8fb9dcac36bdba6a12"
 
 [[projects]]
-  digest = "1:f281493889e2ca62ab6fed2ae3c7a277a1143ff2f944f519ff5126719e1f3d08"
+  digest = "1:9324f3733f2ac874864c360a030b335cb0786dd91a2b36156f146da2b2dad140"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/client",
     "pkg/client/apiutil",
     "pkg/client/config",
+    "pkg/client/fake",
     "pkg/controller/controllerutil",
     "pkg/internal/log",
+    "pkg/internal/objectutil",
     "pkg/log",
     "pkg/log/zap",
     "pkg/runtime/log",
@@ -613,6 +628,7 @@
     "github.com/go-openapi/validate",
     "github.com/googleapis/gnostic/OpenAPIv2",
     "github.com/openshift/api/apps/v1",
+    "github.com/openshift/api/build/v1",
     "github.com/openshift/api/route/v1",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
@@ -621,11 +637,13 @@
     "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/rest",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
+    "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/runtime/log",
   ]
