@@ -7,6 +7,8 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"math/big"
 	"math/rand"
 	"time"
@@ -165,4 +167,11 @@ func EnvVarCheck(dst, src []corev1.EnvVar) bool {
 		}
 	}
 	return true
+}
+
+func GetNamespacedName(object metav1.Object) types.NamespacedName {
+	return types.NamespacedName{
+		Name:      object.GetName(),
+		Namespace: object.GetNamespace(),
+	}
 }

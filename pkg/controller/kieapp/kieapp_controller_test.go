@@ -3,8 +3,11 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
 	"testing"
+	"time"
 
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -45,9 +48,12 @@ func TestGenerateSecret(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	env, _, err = reconciler.newEnv(cr)
-	assert.Nil(t, err, "Error creating a new environment")
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	reconciler := Reconciler{
+		Service: mockService,
+	}
+	env = reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -59,6 +65,15 @@ func TestGenerateSecret(t *testing.T) {
 			}
 		}
 	}
+}
+
+func mockDeployedRoutes(env api.Environment, instance *api.KieApp) map[types.NamespacedName]routev1.Route {
+	deployedRoutes := make(map[types.NamespacedName]routev1.Route)
+	for _, resource := range getRequestedRoutes(env, instance) {
+		route := resource.(*routev1.Route)
+		deployedRoutes[shared.GetNamespacedName(resource)] = *route
+	}
+	return deployedRoutes
 }
 
 func TestSpecifySecret(t *testing.T) {
@@ -101,8 +116,7 @@ func TestSpecifySecret(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	env, _, err = reconciler.newEnv(cr)
+	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "Zero secrets should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 0, "Zero secrets should be generated for the trial kieserver")
@@ -140,9 +154,10 @@ func TestConsoleHost(t *testing.T) {
 	mockService.GetSchemeFunc = func() *runtime.Scheme {
 		return scheme
 	}
-	reconciler := &Reconciler{mockService}
-	_, _, err = reconciler.newEnv(cr)
+	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
+	reconciler := &Reconciler{Service: mockService}
+	reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
 
@@ -267,7 +282,13 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	reconciler := Reconciler{Service: service}
 	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
-	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
 
 	cr = reloadCR(t, service, crNamespacedName)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
