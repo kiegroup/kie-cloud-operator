@@ -502,6 +502,7 @@ type KieAppStatus struct {
 // PlatformService ...
 type PlatformService interface {
 	Create(ctx context.Context, obj runtime.Object) error
+	Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOptionFunc) error
 	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
 	List(ctx context.Context, opts *client.ListOptions, list runtime.Object) error
 	Update(ctx context.Context, obj runtime.Object) error

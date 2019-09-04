@@ -59,14 +59,18 @@
   revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[projects]]
-  digest = "1:4940a6707379ce619f7521dccca2f6c36005b4035cad7403a53ba0ba95a09788"
+  digest = "1:1f9dbdfc3cd87c8895d3d9412a17603e600f6846d3a70cea6393c4b3ddd8a189"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
+    "pkg/resource",
+    "pkg/resource/compare",
+    "pkg/resource/write",
+    "pkg/resource/write/hooks",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "7b1462f3cd3456e08e0966df5df8fa784f117145"
+  revision = "4df1e0b603d2efc9673c3fd532a379148d092fd9"
 
 [[projects]]
   branch = "master"
@@ -1413,6 +1417,9 @@
   input-imports = [
     "github.com/RHsyseng/console-cr-form/pkg/web",
     "github.com/RHsyseng/operator-utils/pkg/olm",
+    "github.com/RHsyseng/operator-utils/pkg/resource",
+    "github.com/RHsyseng/operator-utils/pkg/resource/compare",
+    "github.com/RHsyseng/operator-utils/pkg/resource/write",
     "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/ghodss/yaml",
     "github.com/go-logr/logr",

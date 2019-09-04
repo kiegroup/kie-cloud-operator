@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -36,87 +40,71 @@ func shouldDeployConsole() bool {
 }
 
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
-	log.Debugf("Will deploy operator-ui")
+	log.Debugf("Checking operator-ui deployment")
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
-	role.SetOwnerReferences(operator.GetOwnerReferences())
-	err := reconciler.Service.Create(context.TODO(), role)
-	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Debug("Could not create role as it already exists", role)
-		} else {
-			log.Error("Failed to create role. ", err)
-			return
-		}
-	}
 	roleBinding := getRoleBinding(namespace)
-	roleBinding.SetOwnerReferences(operator.GetOwnerReferences())
-	err = reconciler.Service.Create(context.TODO(), roleBinding)
-	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Debug("Could not create roleBinding as it already exists", roleBinding)
-		} else {
-			log.Error("Failed to create roleBinding. ", err)
-			return
-		}
-	}
 	sa := getServiceAccount(namespace)
-	sa.SetOwnerReferences(operator.GetOwnerReferences())
-	err = reconciler.Service.Create(context.TODO(), sa)
-	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Debug("Could not create serviceaccount as it already exists", sa)
-		} else {
-			log.Error("Failed to create serviceaccount. ", err)
-			return
-		}
-	}
 	image := getImage(operator)
 	pod := getPod(namespace, image, sa.Name, operator)
-	pod.SetOwnerReferences(operator.GetOwnerReferences())
-	err = reconciler.Service.Create(context.TODO(), pod)
-	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			// Update console pod image
-			podExisting := &corev1.Pod{}
-			if err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}, podExisting); err == nil {
-				if podExisting.Spec.Containers[1].Image != pod.Spec.Containers[1].Image {
-					podExisting.Spec.Containers[1].Image = pod.Spec.Containers[1].Image
-					if err = reconciler.Service.Update(context.TODO(), podExisting); err != nil {
-						log.Error("Could not update console pod image ", pod.Spec.Containers[1].Image)
-					}
-				}
-			}
-			log.Debug("Could not create pod as it already exists", pod)
-		} else {
-			log.Error("Failed to create pod. ", err)
-			return
-		}
-	}
 	service := getService(namespace)
-	service.SetOwnerReferences(operator.GetOwnerReferences())
-	err = reconciler.Service.Create(context.TODO(), service)
-	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Debug("Could not create service as it already exists", service)
-		} else {
-			log.Error("Failed to create service. ", err)
-			return
-		}
-	}
 	route := getRoute(namespace)
-	route.SetOwnerReferences(operator.GetOwnerReferences())
-	err = reconciler.Service.Create(context.TODO(), route)
+	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
+	deployed, err := loadCounterparts(reconciler, requested)
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Debug("Could not create route as it already exists", route)
-		} else {
-			log.Error("Failed to create route. ", err)
+		log.Error("Failed to load deployed resources.", err)
+		return
+	}
+	comparator := compare.NewMapComparator()
+	deltas := comparator.Compare(deployed, requested)
+	writer := write.New().WithOwnerReferences(operator.GetOwnerReferences()...)
+	var hasUpdates bool
+	for resourceType, delta := range deltas {
+		if !delta.HasChanges() {
+			continue
+		}
+		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
+		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
+		if err != nil {
+			log.Warnf("Got error applying changes %v", err)
 			return
 		}
+		updated, err := writer.UpdateResources(deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
+		if err != nil {
+			log.Warnf("Got error applying changes %v", err)
+			return
+		}
+		removed, err := writer.RemoveResources(reconciler.Service, delta.Removed)
+		if err != nil {
+			log.Warnf("Got error applying changes %v", err)
+			return
+		}
+		hasUpdates = hasUpdates || added || updated || removed
 	}
 	updateCSVlinks(reconciler, route, operator)
+}
+
+func loadCounterparts(reconciler *Reconciler, requestedMap map[reflect.Type][]resource.KubernetesResource) (map[reflect.Type][]resource.KubernetesResource, error) {
+	deployedMap := make(map[reflect.Type][]resource.KubernetesResource)
+	for resourceType, requestedArray := range requestedMap {
+		var deployedArray []resource.KubernetesResource
+		for _, requested := range requestedArray {
+			deployed := reflect.New(resourceType).Interface().(resource.KubernetesResource)
+			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: requested.GetName(), Namespace: requested.GetNamespace()}, deployed)
+			if err == nil {
+				deployedArray = append(deployedArray, deployed)
+			} else {
+				if errors.IsNotFound(err) {
+					//Not found, just don't add it to array
+				} else {
+					return nil, err
+				}
+			}
+		}
+		deployedMap[resourceType] = deployedArray
+	}
+	return deployedMap, nil
 }
 
 func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
@@ -135,6 +123,10 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 	}
 	url := fmt.Sprintf("https://%s", found.Spec.Host)
 	csv := reconciler.getCSV(operator)
+	if reflect.DeepEqual(csv, &operatorsv1alpha1.ClusterServiceVersion{}) {
+		log.Info("No ClusterServiceVersion found, likely because no such owner was set on the operator. This might be because the operator was not installed through OLM")
+		return
+	}
 	link := getConsoleLink(csv)
 	if link == nil || link.URL != url {
 		update = true
@@ -254,7 +246,6 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 
 func getImage(operator *appsv1.Deployment) string {
 	image := operator.Spec.Template.Spec.Containers[0].Image
-	log.Debugf("Own image retrieved as %v", image)
 	return image
 }
 
