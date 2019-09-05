@@ -1,5 +1,0 @@
-#! package-manifest: deploy/catalog_resources/community/1.0.1/kiecloud-operator.1.0.1.clusterserviceversion.yaml
-packageName: kiecloud-operator
-channels:
-  - name: beta
-    currentCSV: kiecloud-operator.1.0.1
