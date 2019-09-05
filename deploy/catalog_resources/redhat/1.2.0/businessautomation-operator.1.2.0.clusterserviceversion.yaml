@@ -5,7 +5,7 @@ metadata:
   namespace: placeholder
   annotations:
     categories: "Integration & Delivery"
-    capabilities: "Seamless Upgrades"
+    capabilities: "Basic Install"
     certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator    
@@ -31,7 +31,6 @@ spec:
     - automation
     - operator
   version: 1.2.0
-  replaces: businessautomation-operator.1.1.1
   maturity: stable
   maintainers:
     - name: Red Hat, Inc.
