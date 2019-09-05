@@ -159,10 +159,7 @@ spec:
           spec:
             replicas: 1
             strategy:
-              type: RollingUpdate
-              rollingUpdate:
-                maxSurge: 1
-                maxUnavailable: 1
+              type: Recreate
             selector:
               matchLabels:
                 name: kie-cloud-operator
