@@ -45,8 +45,7 @@ console:
 
 # ES/AMQ BEGIN
 others:
-  - roles:
-    statefulsets:
+  - statefulsets:
       - metadata:
           name: "[[.ApplicationName]]-datagrid"
           labels:
