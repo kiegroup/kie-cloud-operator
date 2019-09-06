@@ -4,18 +4,15 @@
 
 [[constraint]]
   name = "sigs.k8s.io/controller-runtime"
-  # 0.2.0-beta.2 latest @dev time
-  version = "0.2.0-beta.2"
+  version = "v0.1.10"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  # req'd by controller-runtime latest (v0.2.-beta.2)
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  # req'd by controller-runtime latest (v0.2.-beta.2)
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.13.1"
 
 [prune]
   go-tests = true

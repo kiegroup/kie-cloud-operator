@@ -3,8 +3,6 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -53,7 +51,7 @@ func TestGenerateSecret(t *testing.T) {
 	reconciler := Reconciler{
 		Service: mockService,
 	}
-	env = reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -65,15 +63,6 @@ func TestGenerateSecret(t *testing.T) {
 			}
 		}
 	}
-}
-
-func mockDeployedRoutes(env api.Environment, instance *api.KieApp) map[types.NamespacedName]routev1.Route {
-	deployedRoutes := make(map[types.NamespacedName]routev1.Route)
-	for _, resource := range getRequestedRoutes(env, instance) {
-		route := resource.(*routev1.Route)
-		deployedRoutes[shared.GetNamespacedName(resource)] = *route
-	}
-	return deployedRoutes
 }
 
 func TestSpecifySecret(t *testing.T) {
@@ -157,7 +146,7 @@ func TestConsoleHost(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	reconciler := &Reconciler{Service: mockService}
-	reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
+	reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
 }
 

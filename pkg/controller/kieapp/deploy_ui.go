@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/read"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/RHsyseng/operator-utils/pkg/resource"
-	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
-	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -51,31 +52,31 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	service := getService(namespace)
 	route := getRoute(namespace)
 	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
-	deployed, err := loadCounterparts(reconciler, requested)
+	deployed, err := loadCounterparts(reconciler, namespace, requested)
 	if err != nil {
 		log.Error("Failed to load deployed resources.", err)
 		return
 	}
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
-	writer := write.New().WithOwnerReferences(operator.GetOwnerReferences()...)
+	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
 		if !delta.HasChanges() {
 			continue
 		}
 		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
+		added, err := writer.AddResources(delta.Added)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return
 		}
-		updated, err := writer.UpdateResources(deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
+		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return
 		}
-		removed, err := writer.RemoveResources(reconciler.Service, delta.Removed)
+		removed, err := writer.RemoveResources(delta.Removed)
 		if err != nil {
 			log.Warnf("Got error applying changes %v", err)
 			return
@@ -85,13 +86,12 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	updateCSVlinks(reconciler, route, operator)
 }
 
-func loadCounterparts(reconciler *Reconciler, requestedMap map[reflect.Type][]resource.KubernetesResource) (map[reflect.Type][]resource.KubernetesResource, error) {
-	deployedMap := make(map[reflect.Type][]resource.KubernetesResource)
+func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map[reflect.Type][]resource.KubernetesResource) (map[reflect.Type][]resource.KubernetesResource, error) {
+	reader := read.New(reconciler.Service).WithNamespace(namespace)
+	var deployedArray []resource.KubernetesResource
 	for resourceType, requestedArray := range requestedMap {
-		var deployedArray []resource.KubernetesResource
 		for _, requested := range requestedArray {
-			deployed := reflect.New(resourceType).Interface().(resource.KubernetesResource)
-			err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: requested.GetName(), Namespace: requested.GetNamespace()}, deployed)
+			deployed, err := reader.Load(resourceType, requested.GetName())
 			if err == nil {
 				deployedArray = append(deployedArray, deployed)
 			} else {
@@ -102,8 +102,8 @@ func loadCounterparts(reconciler *Reconciler, requestedMap map[reflect.Type][]re
 				}
 			}
 		}
-		deployedMap[resourceType] = deployedArray
 	}
+	deployedMap := compare.NewMapBuilder().Add(deployedArray...).ResourceMap()
 	return deployedMap, nil
 }
 

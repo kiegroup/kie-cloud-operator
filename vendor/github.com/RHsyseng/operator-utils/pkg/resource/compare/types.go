@@ -30,6 +30,7 @@ type ResourceComparator interface {
 	SetComparator(resourceType reflect.Type, compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool)
 	GetComparator(resourceType reflect.Type) func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
 	Compare(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
+	CompareArrays(deployed []resource.KubernetesResource, requested []resource.KubernetesResource) ResourceDelta
 }
 
 func DefaultComparator() ResourceComparator {
