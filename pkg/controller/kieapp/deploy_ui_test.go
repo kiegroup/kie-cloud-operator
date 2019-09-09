@@ -23,8 +23,8 @@ import (
 func TestUpdateLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.1.0")
-	bytes, err := box.Find("businessautomation-operator.1.1.0.clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.2.1")
+	bytes, err := box.Find("businessautomation-operator.1.2.1.clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
@@ -70,8 +70,8 @@ func TestUpdateLink(t *testing.T) {
 func TestUpdateExistingLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.1.0")
-	bytes, err := box.Find("businessautomation-operator.1.1.0.clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.2.1")
+	bytes, err := box.Find("businessautomation-operator.1.2.1.clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
