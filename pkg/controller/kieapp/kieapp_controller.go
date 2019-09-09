@@ -3,15 +3,15 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/olm"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
-	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
-	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/olm"
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -868,7 +868,12 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 					log.Warn("Failed to load Secret", err)
 					return nil, err
 				}
-				secrets = append(secrets, secret)
+				for _, ownerRef := range secret.GetOwnerReferences() {
+					if ownerRef.UID == instance.UID {
+						secrets = append(secrets, secret)
+						break
+					}
+				}
 			}
 		}
 	}
