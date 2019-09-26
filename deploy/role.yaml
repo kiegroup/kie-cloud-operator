@@ -3,38 +3,37 @@ kind: Role
 metadata:
   name: kie-cloud-operator
 rules:
-  - apiGroups:
-      - ""
-      - apps
-      - app.kiegroup.org
-      - rbac.authorization.k8s.io
-      - apps.openshift.io
-      - image.openshift.io
-      - build.openshift.io
-      - route.openshift.io
-    resources:
-      - "*"
-    verbs:
-      - "*"
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
-      - create
-  - apiGroups:
-      - operators.coreos.com
-    resources:
-      - clusterserviceversions
-    verbs:
-      - "*"
-  - apiGroups:
-      - apps
-    resourceNames:
-      - kie-cloud-operator
-      - business-automation-operator
-    resources:
-      - deployments/finalizers
-    verbs:
-      - update
+- apiGroups:
+  - ""
+  - apps
+  - apps.openshift.io
+  - rbac.authorization.k8s.io
+  - route.openshift.io
+  - build.openshift.io
+  - image.openshift.io
+  - app.kiegroup.org
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resourceNames:
+  - kie-cloud-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
