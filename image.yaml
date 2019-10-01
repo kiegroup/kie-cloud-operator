@@ -1,6 +1,6 @@
 schema_version: 1
 
-name: "rhpam-7/rhpam75-operator"
+name: "rhpam-7/rhpam76-operator"
 description: "Red Hat Business Automation Operator"
 version: "1.1"
 from: "ubi8:8-released"
@@ -8,7 +8,7 @@ labels:
   - name: "maintainer"
     value: "bsig-cloud@redhat.com"
   - name: "com.redhat.component"
-    value: "rhpam-7-rhpam75-operator-container"
+    value: "rhpam-7-rhpam76-operator-openshift-container"
   - name: "io.k8s.description"
     value: "Operator for deploying RHPAM & RHDM"
   - name: "io.k8s.display-name"
@@ -37,7 +37,7 @@ osbs:
           - x86_64
   repository:
     name: containers/rhpam-7-operator-openshift
-    branch: rhpam-7.5-openshift-rhel8
+    branch: rhba-7.6-openshift-rhel-8
 run:
   entrypoint:
     - "/usr/local/bin/entrypoint"
