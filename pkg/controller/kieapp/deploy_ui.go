@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
-	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
-	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -166,10 +166,10 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 	volume := corev1.Volume{Name: "proxy-tls"}
 	volume.Secret = &corev1.SecretVolumeSource{SecretName: volume.Name}
 	sar, err := json.Marshal(map[string]string{
-		"namespace": namespace,
-		"resource":  "kieapps",
 		"name":      name,
-		"verb":      "create",
+		"namespace": namespace,
+		"resource":  "roles",
+		"verb":      "get",
 	})
 	if err != nil {
 		log.Error("Failed to marshal sar config to json. ", err)
