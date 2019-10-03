@@ -168,8 +168,8 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 	sar, err := json.Marshal(map[string]string{
 		"name":      name,
 		"namespace": namespace,
-		"resource":  "roles",
-		"verb":      "get",
+		"resource":  "services",
+		"verb":      "patch",
 	})
 	if err != nil {
 		log.Error("Failed to marshal sar config to json. ", err)
