@@ -1,5 +1,9 @@
 import React, { Component } from "react";
-
+import {
+  ENV_FIELD,
+  ENV_KEY,
+  INSTALLATION_STEP
+} from "../../../common/GuiConstants";
 import {
   FormGroup,
   FormSelectOption,
@@ -101,6 +105,13 @@ export class DropdownField extends Component {
       </FormGroup>
     );
     jsxArray.push(this.addChildren());
+    if (
+      this.props.props.page !== undefined &&
+      this.props.props.page.props.pageDef.label === INSTALLATION_STEP &&
+      this.props.props.fieldDef.label === ENV_FIELD
+    ) {
+      this.props.props.page.props.storeObjectMap(ENV_KEY, value);
+    }
     return jsxArray;
   }
 
@@ -159,6 +170,12 @@ export class DropdownField extends Component {
     this.isValidField(value);
     this.reBuildChildren(value);
 
+    if (
+      this.props.props.page.props.pageDef.label === INSTALLATION_STEP &&
+      this.props.props.fieldDef.label === ENV_FIELD
+    ) {
+      this.props.props.page.props.storeObjectMap(ENV_KEY, value);
+    }
     this.props.props.page.loadPageChildren();
   };
 

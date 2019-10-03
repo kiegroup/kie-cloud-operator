@@ -6,7 +6,17 @@ import Dot from "dot-object";
 import CopyToClipboard from "react-copy-to-clipboard";
 
 import OperatorWizardFooter from "./OperatorWizardFooter";
-import { BACKEND_URL } from "../common/GuiConstants";
+import {
+  BACKEND_URL,
+  RHDM_ENV_PREFIX,
+  SMART_ROUTER_STEP,
+  ENV_KEY,
+  EXTERNAL_DB,
+  EXTENSIONS_IMAGE_KEY,
+  EXTENSIONS_IMAGE_VALUE,
+  EXTENSIONS_IMAGE_NAMESPACE_KEY,
+  EXTENSIONS_IMAGE_NAMESPACE_VALUE
+} from "../common/GuiConstants";
 import FormJsonLoader from "./FormJsonLoader";
 import StepBuilder from "./StepBuilder";
 import ReviewPage from "./page-component/ReviewPage";
@@ -54,7 +64,7 @@ export default class OperatorWizard extends Component {
 
   onDeploy = () => {
     const result = this.createResultYaml();
-    console.log(result);
+
     fetch(BACKEND_URL, {
       method: "POST",
       body: JSON.stringify(result),
@@ -126,7 +136,15 @@ export default class OperatorWizard extends Component {
           if (!result.isValid) {
             return;
           }
-          result = this.validateFields(subPage.fields, errorStep);
+
+          if (
+            subPage.label === SMART_ROUTER_STEP &&
+            this.stepBuilder.getObjectMap(ENV_KEY).startsWith(RHDM_ENV_PREFIX)
+          ) {
+            //do not validate
+          } else {
+            result = this.validateFields(subPage.fields, errorStep);
+          }
           errorStep++;
         });
         if (!result.isValid) {
@@ -247,39 +265,48 @@ export default class OperatorWizard extends Component {
           page.subPages.length > 0
         ) {
           page.subPages.forEach(subPage => {
-            let subPageFields = subPage.fields;
+            if (
+              subPage.label === SMART_ROUTER_STEP &&
+              this.stepBuilder.getObjectMap(ENV_KEY).startsWith(RHDM_ENV_PREFIX)
+            ) {
+              //do not add in yaml
+            } else {
+              let subPageFields = subPage.fields;
 
-            subPageFields.forEach(field => {
-              if (
-                field.type === "dropDown" &&
-                field.fields !== undefined &&
-                field.visible !== false
-              ) {
-                jsonObject = this.addObjectFields(field, jsonObject);
-              }
-              if (
-                field.type === "checkbox" &&
-                field.fields !== undefined &&
-                field.visible !== false
-              ) {
-                jsonObject = this.addObjectFields(field, jsonObject);
-              }
-              if (field.type === "object" || field.type === "fieldGroup") {
-                jsonObject = this.addObjectFields(field, jsonObject);
-              } else {
-                const value =
-                  field.type === "checkbox" ? field.checked : field.value;
+              subPageFields.forEach(field => {
                 if (
-                  field.jsonPath !== undefined &&
-                  field.jsonPath !== "" &&
-                  value !== undefined &&
-                  value !== ""
+                  field.type === "dropDown" &&
+                  field.fields !== undefined &&
+                  field.visible !== false
                 ) {
-                  let jsonPath = this.getJsonSchemaPathForYaml(field.jsonPath);
-                  jsonObject[jsonPath] = value;
+                  jsonObject = this.addObjectFields(field, jsonObject);
                 }
-              }
-            });
+                if (
+                  field.type === "checkbox" &&
+                  field.fields !== undefined &&
+                  field.visible !== false
+                ) {
+                  jsonObject = this.addObjectFields(field, jsonObject);
+                }
+                if (field.type === "object" || field.type === "fieldGroup") {
+                  jsonObject = this.addObjectFields(field, jsonObject);
+                } else {
+                  const value =
+                    field.type === "checkbox" ? field.checked : field.value;
+                  if (
+                    field.jsonPath !== undefined &&
+                    field.jsonPath !== "" &&
+                    value !== undefined &&
+                    value !== ""
+                  ) {
+                    let jsonPath = this.getJsonSchemaPathForYaml(
+                      field.jsonPath
+                    );
+                    jsonObject[jsonPath] = value;
+                  }
+                }
+              });
+            }
           });
         }
       });
@@ -329,6 +356,43 @@ export default class OperatorWizard extends Component {
     return jsonPath.slice(2, jsonPath.length);
   }
 
+  addExternalDBEnvVars(jsonObject) {
+    const tempEnv = [
+      { name: EXTENSIONS_IMAGE_KEY, value: EXTENSIONS_IMAGE_VALUE },
+      {
+        name: EXTENSIONS_IMAGE_NAMESPACE_KEY,
+        value: EXTENSIONS_IMAGE_NAMESPACE_VALUE
+      }
+    ];
+
+    let tempJsonObj = Dot.object(jsonObject);
+    if (
+      tempJsonObj.spec !== undefined &&
+      tempJsonObj.spec.objects !== undefined &&
+      tempJsonObj.spec.objects.servers !== undefined
+    ) {
+      let servers = tempJsonObj.spec.objects.servers;
+
+      servers.map(server => {
+        if (
+          server.database !== undefined &&
+          server.database.type !== undefined &&
+          server.database.type === EXTERNAL_DB
+        ) {
+          if (server.env !== undefined) {
+            server.env = server.env.concat(tempEnv);
+          } else {
+            server.env = tempEnv;
+          }
+        }
+      });
+
+      tempJsonObj.spec.objects.servers = servers;
+    }
+
+    return tempJsonObj;
+  }
+
   createResultYaml() {
     const jsonObject = this.createYamlFromPages();
     var resultYaml =
@@ -339,7 +403,13 @@ export default class OperatorWizard extends Component {
       this.state.spec.kind +
       "\n";
     if (Object.getOwnPropertyNames(jsonObject).length > 0) {
-      resultYaml = resultYaml + YAML.safeDump(Dot.object(jsonObject));
+      let tempJsonObj = this.addExternalDBEnvVars(jsonObject);
+
+      resultYaml =
+        resultYaml +
+        YAML.safeDump(Dot.object(tempJsonObj), {
+          noRefs: true
+        });
     }
     this.setState({
       resultYaml: resultYaml
