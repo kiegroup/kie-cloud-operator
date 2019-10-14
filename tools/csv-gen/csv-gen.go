@@ -302,7 +302,7 @@ func main() {
 		*/
 		createFile(csvFile, templateStruct)
 
-		packageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + version.Version + "/" + csv.Name + "." + version.Version + ".package.yaml"
+		packageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + csv.Name + ".package.yaml"
 		p, err := os.Create(packageFile)
 		defer p.Close()
 		if err != nil {
