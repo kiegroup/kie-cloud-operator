@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -230,7 +231,10 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
-	template.Image = fmt.Sprintf("%s%s-%s-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version), envConstants.App.ImageName)
+	template.Image = fmt.Sprintf("%s-%s-rhel8", envConstants.App.Product, envConstants.App.ImageName)
+	if lessThan75(cr.Spec.Version) {
+		template.Image = fmt.Sprintf("%s%s-%s-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version), envConstants.App.ImageName)
+	}
 	template.ImageTag = cr.Spec.CommonConfig.ImageTag
 	if cr.Spec.Objects.Console.ImageTag != "" {
 		template.ImageTag = cr.Spec.Objects.Console.ImageTag
@@ -273,7 +277,10 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
-		template.Image = fmt.Sprintf("%s%s-smartrouter-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version))
+		template.Image = fmt.Sprintf("%s-smartrouter-rhel8", envConstants.App.Product)
+		if lessThan75(cr.Spec.Version) {
+			template.Image = fmt.Sprintf("%s%s-smartrouter-openshift", envConstants.App.Product, getMinorImageVersion(cr.Spec.Version))
+		}
 		template.ImageTag = cr.Spec.CommonConfig.ImageTag
 		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
 			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
@@ -519,12 +526,23 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	return buildTemplate
 }
 
+func lessThan75(version string) bool {
+	minorInt, _ := strconv.Atoi(getMinorImageVersion(version))
+	if minorInt < 75 {
+		return true
+	}
+	return false
+}
+
 func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet) corev1.ObjectReference {
 	if serverSet.From != nil {
 		return *serverSet.From
 	}
 
-	image := fmt.Sprintf("%s%s-kieserver-openshift", product, getMinorImageVersion(cr.Spec.Version))
+	image := fmt.Sprintf("%s-kieserver-rhel8", product)
+	if lessThan75(cr.Spec.Version) {
+		image = fmt.Sprintf("%s%s-kieserver-openshift", product, getMinorImageVersion(cr.Spec.Version))
+	}
 	imageTag := cr.Spec.CommonConfig.ImageTag
 	if serverSet.ImageTag != "" {
 		imageTag = serverSet.ImageTag
