@@ -72,7 +72,7 @@ const (
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         "1.1",
+		ImageTag:         CurrentVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",
@@ -88,7 +88,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 	LastMinorVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         "1.0",
+		ImageTag:         LastMinorVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",

@@ -6,8 +6,8 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "true"
-    containerImage: registry.redhat.io/rhpam-7/rhpam75-operator:1.1
-    createdAt: "2019-10-14 13:28:47"
+    containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.5.1
+    createdAt: "2019-10-18 13:28:22"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM
       environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -146,7 +146,7 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                image: registry.redhat.io/rhpam-7/rhpam75-operator:1.1
+                image: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.5.1
                 imagePullPolicy: Always
                 name: business-automation-operator
                 resources: {}
