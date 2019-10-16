@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.6.0
-    createdAt: "2019-10-31 09:41:17"
+    createdAt: "2019-11-06 16:25:19"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM
       environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -155,17 +155,117 @@ spec:
       - rules:
         - apiGroups:
           - ""
+          resources:
+          - configmaps
+          - pods
+          - services
+          - serviceaccounts
+          - persistentvolumeclaims
+          - secrets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - apps
+          resources:
+          - deployments
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - build.openshift.io
+          resources:
+          - buildconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - image.openshift.io
+          resources:
+          - imagestreams
+          - imagestreamtags
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - app.kiegroup.org
           resources:
-          - '*'
+          - kieapps
+          - kieapps/finalizers
           verbs:
-          - '*'
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - monitoring.coreos.com
           resources:
@@ -178,7 +278,11 @@ spec:
           resources:
           - clusterserviceversions
           verbs:
-          - '*'
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - apps
           resourceNames:

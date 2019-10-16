@@ -19,6 +19,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+var Verbs = []string{
+	"create",
+	"delete",
+	"deletecollection",
+	"get",
+	"list",
+	"patch",
+	"update",
+	"watch",
+}
+
 func GetDeployment(operatorName, repository, context, imageName, tag, imagePullPolicy string) *appsv1.Deployment {
 	registryName := strings.Join([]string{repository, context, imageName}, "/")
 	image := strings.Join([]string{registryName, tag}, ":")
@@ -114,16 +125,83 @@ func GetRole(operatorName string) *rbacv1.Role {
 			{
 				APIGroups: []string{
 					"",
+				},
+				Resources: []string{
+					"configmaps",
+					"pods",
+					"services",
+					"serviceaccounts",
+					"persistentvolumeclaims",
+					"secrets",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					appsv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"deployments",
+					"statefulsets",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					oappsv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"deploymentconfigs",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					rbacv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"rolebindings",
+					"roles",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					routev1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"routes",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					buildv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"buildconfigs",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					oimagev1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"imagestreams",
+					"imagestreamtags",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					api.SchemeGroupVersion.Group,
 				},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
+				Resources: []string{
+					"kieapps",
+					"kieapps/finalizers",
+				},
+				Verbs: Verbs,
 			},
 			{
 				APIGroups: []string{
@@ -137,7 +215,13 @@ func GetRole(operatorName string) *rbacv1.Role {
 					csvv1.SchemeGroupVersion.Group,
 				},
 				Resources: []string{"clusterserviceversions"},
-				Verbs:     []string{"*"},
+				Verbs: []string{
+					"get",
+					"list",
+					"patch",
+					"update",
+					"watch",
+				},
 			},
 			{
 				APIGroups: []string{
