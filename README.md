@@ -30,7 +30,7 @@ Push the operator bundle to your quay application repository as follows:
 
 ```bash
 REGISTRY_NS=<registry namespace in quay.io>
-operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator 1.2.1 "basic XXXXXXXXX"
+operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator $(go run getversion.go -operator) "basic XXXXXXXXX"
 ```
 
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
