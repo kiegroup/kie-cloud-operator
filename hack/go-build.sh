@@ -1,9 +1,8 @@
 #!/bin/sh
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=1.2.1
+BRANCH=$(go run getversion.go -operator)
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
-TAG=1.2.1
 TAR=${BRANCH}.tar.gz
 URL=${REPO}/archive/${TAR}
 CFLAGS="docker"
@@ -18,7 +17,7 @@ if [[ -z ${CI} ]]; then
     echo
     echo Now building operator:
     echo
-    operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
+    operator-sdk build ${REGISTRY}/${IMAGE}:${BRANCH}
     if [[ ${1} == "rhel" ]]; then
         if [[ ${LOCAL} != true ]]; then
             CFLAGS="osbs"

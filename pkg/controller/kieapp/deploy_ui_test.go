@@ -10,6 +10,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	"github.com/kiegroup/kie-cloud-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
 	operators "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	"github.com/stretchr/testify/assert"
@@ -23,8 +24,8 @@ import (
 func TestUpdateLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.2.1")
-	bytes, err := box.Find("businessautomation-operator.1.2.1.clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+version.Version)
+	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
@@ -70,8 +71,8 @@ func TestUpdateLink(t *testing.T) {
 func TestUpdateExistingLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/1.2.1")
-	bytes, err := box.Find("businessautomation-operator.1.2.1.clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+version.Version)
+	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
