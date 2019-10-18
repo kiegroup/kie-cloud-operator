@@ -211,9 +211,17 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	var partitionValue int32
+	partitionValue = 0
+
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[0].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[0].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[1].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[1].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "rhdm-decisioncentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -237,11 +245,19 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
+	var partitionValue int32
+	partitionValue = 0
+
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[0].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[0].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[1].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[1].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -294,13 +310,19 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
 	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
+	assert.Equal(t, env.SmartRouter.DeploymentConfigs[0].Spec.Strategy.Type, appsv1.DeploymentStrategyTypeRolling)
+	assert.Equal(t, env.SmartRouter.DeploymentConfigs[0].Spec.Strategy.RollingParams.MaxSurge, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"})
+
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, env.Console.DeploymentConfigs[0].Spec.Strategy.RollingParams.MaxSurge)
 }
 
 func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
@@ -745,6 +767,9 @@ func TestAuthoringEnvironment(t *testing.T) {
 	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
 	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
 
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+
 	// test kieserver probes
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/readycheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/healthcheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -764,6 +789,9 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
+
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func TestConstructConsoleObject(t *testing.T) {
@@ -1387,6 +1415,9 @@ func TestPartialTemplateConfig(t *testing.T) {
 	assert.Equal(t, cr.Spec.CommonConfig.AdminPassword, adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Len(t, mavenPassword, 8, "Expected a password with length of 8 to be generated, but got %v", mavenPassword)
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func getEnvVariable(container corev1.Container, name string) string {
@@ -1417,6 +1448,9 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func TestDefaultKieServerNum(t *testing.T) {
@@ -2072,9 +2106,11 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {

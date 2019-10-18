@@ -1,6 +1,7 @@
 package defaults
 
 import (
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
@@ -132,6 +133,8 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var dbEnv api.Environment
 	err := getParsedTemplate("dbs/postgresql.yaml", "prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
+	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.RollingParams.MaxSurge)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
@@ -155,6 +158,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.True(t, mergedEnvCount > prodEnvCount, "Merged DC should have a higher number of environment variables than the server")
 
 	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
+
 }
 
 func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
@@ -165,6 +169,9 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	var jmsEnv api.Environment
 	err = getParsedTemplate("jms/activemq-jms-config.yaml", "immutable-prod", &jmsEnv)
 	assert.Nil(t, err, "Error: %v", err)
+	assert.Equal(t, jmsEnv.Servers[0].DeploymentConfigs[1].Name, "immutable-prod-kieserver-amq")
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, jmsEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
+	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, jmsEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.RollingParams.MaxSurge)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production-immutable.yaml", "immutable-prod", &prodEnv)

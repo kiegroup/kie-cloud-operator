@@ -3,6 +3,11 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
+        strategy:
+          rollingParams:
+            maxSurge: 100%
+            maxUnavailable: 0
+          type: Rolling
         containers:
           - name: "[[.ApplicationName]]-[[.Console.Name]]"
             env:
