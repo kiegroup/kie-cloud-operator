@@ -74,9 +74,9 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		APIVersion:       api.SchemeGroupVersion.Version,
 		ImageTag:         "1.1",
 		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
+		BrokerImageTag:   "7.5",
 		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.2",
+		DatagridImageTag: "1.3",
 	},
 	LastMicroVersion: {
 		APIVersion:       v1.SchemeGroupVersion.Version,
