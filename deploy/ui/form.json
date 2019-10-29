@@ -488,14 +488,14 @@
                 {
                   "label": "Memory request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.memory",
+                  "jsonPath": "$.spec.objects.console.resources.requests.memory",
                   "description": "Minimum amount of memory requested by the container",
                   "default": "2Gi"
                 },
                 {
                   "label": "CPU request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.cpu",
+                  "jsonPath": "$.spec.objects.console.resources.requests.cpu",
                   "description": "Minimum processing power requested by the container",
                   "default": "500m"
                 },
@@ -782,14 +782,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.memory",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.cpu",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },
@@ -1039,14 +1039,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },
