@@ -174,7 +174,13 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
-                }
+                },
+		{
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+		}
               ]
             },
             {
@@ -340,7 +346,14 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
-                }
+                },
+		{
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+		}
+
               ]
             },
             {
@@ -412,12 +425,6 @@
           "jsonPath": "$.spec",
           "visible": true,
           "fields": [
-            {
-              "label": "Roles properties file",
-              "type": "text",
-              "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-              "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-            },
             {
               "label": "Replace roles",
               "type": "checkbox",
