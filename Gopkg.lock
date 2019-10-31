@@ -59,18 +59,19 @@
   revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
 
 [[projects]]
-  digest = "1:1f9dbdfc3cd87c8895d3d9412a17603e600f6846d3a70cea6393c4b3ddd8a189"
+  digest = "1:987e4ce354cf4e9f992e8324c8d02f0c77c673a255b7e7cbc601c9e5062885d0"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
     "pkg/resource",
     "pkg/resource/compare",
+    "pkg/resource/read",
     "pkg/resource/write",
     "pkg/resource/write/hooks",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "4df1e0b603d2efc9673c3fd532a379148d092fd9"
+  revision = "942a3f9c85a9638585c45cb90af49a08fac6e22d"
 
 [[projects]]
   branch = "master"
@@ -1419,6 +1420,7 @@
     "github.com/RHsyseng/operator-utils/pkg/olm",
     "github.com/RHsyseng/operator-utils/pkg/resource",
     "github.com/RHsyseng/operator-utils/pkg/resource/compare",
+    "github.com/RHsyseng/operator-utils/pkg/resource/read",
     "github.com/RHsyseng/operator-utils/pkg/resource/write",
     "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/blang/semver",

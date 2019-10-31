@@ -13,15 +13,16 @@ import (
 )
 
 func TestFluentAPI(t *testing.T) {
-	noOwnership := New()
+	scheme := getScheme(t)
+	noOwnership := New(fake.NewFakeClientWithScheme(scheme))
 	assert.Nil(t, noOwnership.ownerRefs, "Do not expect ownerRefs to be set")
 	assert.Nil(t, noOwnership.ownerController, "Do not expect ownerController to be set")
 
-	ownerRefs := New().WithOwnerController(&corev1.Service{})
+	ownerRefs := New(fake.NewFakeClientWithScheme(scheme)).WithOwnerController(&corev1.Service{}, scheme)
 	assert.Nil(t, ownerRefs.ownerRefs, "Do not expect ownerRefs to be set")
 	assert.NotNil(t, ownerRefs.ownerController, "Expect ownerController to be set")
 
-	controler := New().WithOwnerReferences(v1.OwnerReference{})
+	controler := New(fake.NewFakeClientWithScheme(scheme)).WithOwnerReferences(v1.OwnerReference{})
 	assert.NotNil(t, controler.ownerRefs, "Expect ownerRefs to be set")
 	assert.Nil(t, controler.ownerController, "Do not expect ownerController to be set")
 }
@@ -39,7 +40,7 @@ func TestCreateService(t *testing.T) {
 		},
 	}
 	requestedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	added, err := New().AddResources(scheme, client, []resource.KubernetesResource{&requestedService})
+	added, err := New(client).AddResources([]resource.KubernetesResource{&requestedService})
 	assert.Nil(t, err, "Expect no errors creating a simple object")
 	assert.True(t, added, "Object should be added")
 
@@ -64,7 +65,7 @@ func TestUpdateService(t *testing.T) {
 		},
 	}
 	requestedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	added, err := New().AddResources(scheme, client, []resource.KubernetesResource{&requestedService})
+	added, err := New(client).AddResources([]resource.KubernetesResource{&requestedService})
 	assert.Nil(t, err, "Expect no errors creating a simple object")
 	assert.True(t, added, "Object should be added")
 
@@ -78,7 +79,7 @@ func TestUpdateService(t *testing.T) {
 		},
 	}
 	updatedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	updated, err := New().UpdateResources([]resource.KubernetesResource{&requestedService}, scheme, client, []resource.KubernetesResource{&updatedService})
+	updated, err := New(client).UpdateResources([]resource.KubernetesResource{&requestedService}, []resource.KubernetesResource{&updatedService})
 	assert.Nil(t, err, "Expect no errors updating object")
 	assert.True(t, updated, "Object should be updated")
 

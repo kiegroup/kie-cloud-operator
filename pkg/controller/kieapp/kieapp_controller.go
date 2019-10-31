@@ -11,6 +11,7 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -86,17 +87,18 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	//Get requested routes based on environment template:
 	requestedRoutes := getRequestedRoutes(env, instance)
 	//Then check if all these routes are already created:
-	deployedRoutes, err := reconciler.loadRoutes(requestedRoutes)
+	reader := read.New(reconciler.Service).WithNamespace(instance.Namespace).WithOwnerObject(instance)
+	deployedRoutes, err := reader.List(&routev1.RouteList{})
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	delta := compare.DefaultComparator().CompareArrays(deployedRoutes, requestedRoutes)
 
-	writer := write.New().WithOwnerController(instance)
-	//If not all created, then create the missing ones:
-	if len(deployedRoutes) < len(requestedRoutes) {
-		missingRoutes := getMissingRoutes(requestedRoutes, deployedRoutes)
-		log.Debugf("Will create %d routes that were not found", len(missingRoutes))
-		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, missingRoutes)
+	writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
+	//If not all routes are created, then create the missing ones. Other changes can be applied later.
+	if len(delta.Added) > 0 {
+		log.Debugf("Will create %d routes that were not found", len(delta.Added))
+		added, err := writer.AddResources(delta.Added)
 		if err != nil {
 			return reconcile.Result{}, err
 		} else if added {
@@ -132,15 +134,15 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			continue
 		}
 		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := writer.AddResources(reconciler.Service.GetScheme(), reconciler.Service, delta.Added)
+		added, err := writer.AddResources(delta.Added)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		updated, err := writer.UpdateResources(deployed[resourceType], reconciler.Service.GetScheme(), reconciler.Service, delta.Updated)
+		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		removed, err := writer.RemoveResources(reconciler.Service, delta.Removed)
+		removed, err := writer.RemoveResources(delta.Removed)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -270,16 +272,6 @@ func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.Ku
 		}
 	}
 	return requestedRoutes
-}
-
-func getMissingRoutes(requestedRoutes []resource.KubernetesResource, deployedRoutes map[types.NamespacedName]routev1.Route) []resource.KubernetesResource {
-	var missingRoutes []resource.KubernetesResource
-	for _, route := range requestedRoutes {
-		if _, exists := deployedRoutes[shared.GetNamespacedName(route)]; !exists {
-			missingRoutes = append(missingRoutes, route)
-		}
-	}
-	return missingRoutes
 }
 
 func (reconciler *Reconciler) hasSpecChanges(instance, cached *api.KieApp) bool {
@@ -418,14 +410,14 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 	return deployedRoutes, nil
 }
 
-func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routeMap map[types.NamespacedName]routev1.Route) api.Environment {
+func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) api.Environment {
 	// console keystore generation
 	if !env.Console.Omit {
 		consoleCN := ""
 		for _, rt := range env.Console.Routes {
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
-				consoleCN = reconciler.GetRouteHost(rt, routeMap)
+				consoleCN = reconciler.GetRouteHost(rt, routes)
 				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
 				break
 			}
@@ -454,7 +446,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		for _, rt := range server.Routes {
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
-				serverCN = reconciler.GetRouteHost(rt, routeMap)
+				serverCN = reconciler.GetRouteHost(rt, routes)
 				break
 			}
 		}
@@ -479,7 +471,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		for _, rt := range env.SmartRouter.Routes {
 			if checkTLS(rt.Spec.TLS) {
 				// use host of first tls route in env template
-				smartCN = reconciler.GetRouteHost(rt, routeMap)
+				smartCN = reconciler.GetRouteHost(rt, routes)
 				break
 			}
 		}
@@ -685,12 +677,14 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 }
 
 // GetRouteHost returns the Hostname of the route provided
-func (reconciler *Reconciler) GetRouteHost(route routev1.Route, routeMap map[types.NamespacedName]routev1.Route) string {
-	if found, ok := routeMap[shared.GetNamespacedName(&route)]; ok {
-		return found.Spec.Host
-	} else {
-		return ""
+func (reconciler *Reconciler) GetRouteHost(route routev1.Route, routes []resource.KubernetesResource) string {
+	for index := range routes {
+		candidate := routes[index].(*routev1.Route)
+		if candidate.Name == route.Name && candidate.Namespace == route.Namespace {
+			return candidate.Spec.Host
+		}
 	}
+	return ""
 }
 
 // CreateConfigMaps generates & creates necessary ConfigMaps from embedded files
@@ -792,71 +786,33 @@ func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env 
 
 func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[reflect.Type][]resource.KubernetesResource, error) {
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
-	resourceMap := make(map[reflect.Type][]resource.KubernetesResource)
 
-	listOps := &client.ListOptions{Namespace: instance.Namespace}
-
-	dcList := &oappsv1.DeploymentConfigList{}
-	err := reconciler.Service.List(context.TODO(), listOps, dcList)
+	reader := read.New(reconciler.Service).WithNamespace(instance.Namespace).WithOwnerObject(instance)
+	resourceMap, err := reader.ListAll(
+		&oappsv1.DeploymentConfigList{},
+		&corev1.PersistentVolumeClaimList{},
+		&corev1.ServiceAccountList{},
+		&rbacv1.RoleList{},
+		&rbacv1.RoleBindingList{},
+		&corev1.ServiceList{},
+		&appsv1.StatefulSetList{},
+		&routev1.RouteList{},
+		&oimagev1.ImageStreamList{},
+		&buildv1.BuildConfigList{},
+	)
 	if err != nil {
-		log.Warn("Failed to list DCs. ", err)
+		log.Warn("Failed to list deployed objects. ", err)
 		return nil, err
 	}
-	var dcs []resource.KubernetesResource
-	for index := range dcList.Items {
-		dc := dcList.Items[index]
-		for _, ownerRef := range dc.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				dcs = append(dcs, &dc)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(oappsv1.DeploymentConfig{})] = dcs
-
-	pvcList := &corev1.PersistentVolumeClaimList{}
-	err = reconciler.Service.List(context.TODO(), listOps, pvcList)
-	if err != nil {
-		log.Warn("Failed to list PersistentVolumeClaims. ", err)
-		return nil, err
-	}
-	var pvcs []resource.KubernetesResource
-	for index := range pvcList.Items {
-		pvc := pvcList.Items[index]
-		for _, ownerRef := range pvc.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				pvcs = append(pvcs, &pvc)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(corev1.PersistentVolumeClaim{})] = pvcs
-
-	saList := &corev1.ServiceAccountList{}
-	err = reconciler.Service.List(context.TODO(), listOps, saList)
-	if err != nil {
-		log.Warn("Failed to list ServiceAccounts. ", err)
-		return nil, err
-	}
-	var sas []resource.KubernetesResource
-	for index := range saList.Items {
-		sa := saList.Items[index]
-		for _, ownerRef := range sa.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				sas = append(sas, &sa)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(corev1.ServiceAccount{})] = sas
 
 	//secretList := &corev1.SecretList{}
-	var secrets []resource.KubernetesResource
-	//err = reconciler.Service.List(context.TODO(), listOps, secretList) //TODO: can't list secrets due bug:
+	//err = reconciler.Service.List(context.TODO(), listOps, secretList) //TODO: can't list secrets due to bug:
 	// https://github.com/kubernetes-sigs/controller-runtime/issues/362
 	// multiple group-version-kinds associated with type *api.SecretList, refusing to guess at one
 	// Will work around by loading known secrets instead
 
+	var secrets []resource.KubernetesResource
+	dcs := resourceMap[reflect.TypeOf(oappsv1.DeploymentConfig{})]
 	for _, res := range dcs {
 		dc := res.(*oappsv1.DeploymentConfig)
 		for _, volume := range dc.Spec.Template.Spec.Volumes {
@@ -877,168 +833,9 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 			}
 		}
 	}
-	//if err != nil {
-	//	log.Warn("Failed to list Secrets. ", err)
-	//	return nil, err
-	//}
-	//for index := range secretList.Items {
-	//	secret := secretList.Items[index]
-	//	for _, ownerRef := range secret.GetOwnerReferences() {
-	//		if ownerRef.UID == instance.UID {
-	//			secrets = append(secrets, &secret)
-	//			break
-	//		}
-	//	}
-	//}
 	resourceMap[reflect.TypeOf(corev1.Secret{})] = secrets
 
-	roleList := &rbacv1.RoleList{}
-	err = reconciler.Service.List(context.TODO(), listOps, roleList)
-	if err != nil {
-		log.Warn("Failed to list roles. ", err)
-		return nil, err
-	}
-	var roles []resource.KubernetesResource
-	for index := range roleList.Items {
-		role := roleList.Items[index]
-		for _, ownerRef := range role.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				roles = append(roles, &role)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(rbacv1.Role{})] = roles
-
-	roleBindingList := &rbacv1.RoleBindingList{}
-	err = reconciler.Service.List(context.TODO(), listOps, roleBindingList)
-	if err != nil {
-		log.Warn("Failed to list roleBindings. ", err)
-		return nil, err
-	}
-	var roleBindings []resource.KubernetesResource
-	for index := range roleBindingList.Items {
-		roleBinding := roleBindingList.Items[index]
-		for _, ownerRef := range roleBinding.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				roleBindings = append(roleBindings, &roleBinding)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(rbacv1.RoleBinding{})] = roleBindings
-
-	serviceList := &corev1.ServiceList{}
-	err = reconciler.Service.List(context.TODO(), listOps, serviceList)
-	if err != nil {
-		log.Warn("Failed to list services. ", err)
-		return nil, err
-	}
-	var services []resource.KubernetesResource
-	for index := range serviceList.Items {
-		service := serviceList.Items[index]
-		for _, ownerRef := range service.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				services = append(services, &service)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(corev1.Service{})] = services
-
-	statefulSetList := &appsv1.StatefulSetList{}
-	err = reconciler.Service.List(context.TODO(), listOps, statefulSetList)
-	if err != nil {
-		log.Warn("Failed to list statefulSets. ", err)
-		return nil, err
-	}
-	var statefulSets []resource.KubernetesResource
-	for index := range statefulSetList.Items {
-		statefulSet := statefulSetList.Items[index]
-		for _, ownerRef := range statefulSet.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				statefulSets = append(statefulSets, &statefulSet)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(appsv1.StatefulSet{})] = statefulSets
-
-	RouteList := &routev1.RouteList{}
-	err = reconciler.Service.List(context.TODO(), listOps, RouteList)
-	if err != nil {
-		log.Warn("Failed to list routes. ", err)
-		return nil, err
-	}
-	var routes []resource.KubernetesResource
-	for index := range RouteList.Items {
-		route := RouteList.Items[index]
-		for _, ownerRef := range route.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				routes = append(routes, &route)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(routev1.Route{})] = routes
-
-	imageStreamList := &oimagev1.ImageStreamList{}
-	err = reconciler.Service.List(context.TODO(), listOps, imageStreamList)
-	if err != nil {
-		log.Warn("Failed to list imageStreams. ", err)
-		return nil, err
-	}
-	var imageStreams []resource.KubernetesResource
-	for index := range imageStreamList.Items {
-		imageStream := imageStreamList.Items[index]
-		for _, ownerRef := range imageStream.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				imageStreams = append(imageStreams, &imageStream)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(oimagev1.ImageStream{})] = imageStreams
-
-	buildConfigList := &buildv1.BuildConfigList{}
-	err = reconciler.Service.List(context.TODO(), listOps, buildConfigList)
-	if err != nil {
-		log.Warn("Failed to list buildConfigs. ", err)
-		return nil, err
-	}
-	var buildConfigs []resource.KubernetesResource
-	for index := range buildConfigList.Items {
-		buildConfig := buildConfigList.Items[index]
-		for _, ownerRef := range buildConfig.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				buildConfigs = append(buildConfigs, &buildConfig)
-				break
-			}
-		}
-	}
-	resourceMap[reflect.TypeOf(buildv1.BuildConfig{})] = buildConfigs
-
 	return resourceMap, nil
-}
-
-func (reconciler *Reconciler) getDeployedRoutes(instance *api.KieApp) ([]resource.KubernetesResource, error) {
-	RouteList := &routev1.RouteList{}
-	err := reconciler.Service.List(context.TODO(), &client.ListOptions{Namespace: instance.Namespace}, RouteList)
-	if err != nil {
-		log.Warn("Failed to list routes. ", err)
-		return nil, err
-	}
-	var routes []resource.KubernetesResource
-	for index := range RouteList.Items {
-		route := RouteList.Items[index]
-		for _, ownerRef := range route.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				routes = append(routes, &route)
-				break
-			}
-		}
-	}
-	return routes, nil
 }
 
 func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1alpha1.ClusterServiceVersion {

@@ -44,6 +44,40 @@ func (this *resourceComparator) Compare(deployed resource.KubernetesResource, re
 	return compareFunc(deployed, requested)
 }
 
+func (this *resourceComparator) CompareArrays(deployed []resource.KubernetesResource, requested []resource.KubernetesResource) ResourceDelta {
+	deployedMap := getObjectMap(deployed)
+	requestedMap := getObjectMap(requested)
+	var added []resource.KubernetesResource
+	var updated []resource.KubernetesResource
+	var removed []resource.KubernetesResource
+	for name, requestedObject := range requestedMap {
+		deployedObject := deployedMap[name]
+		if deployedObject == nil {
+			added = append(added, requestedObject)
+		} else if !this.Compare(deployedObject, requestedObject) {
+			updated = append(updated, requestedObject)
+		}
+	}
+	for name, deployedObject := range deployedMap {
+		if requestedMap[name] == nil {
+			removed = append(removed, deployedObject)
+		}
+	}
+	return ResourceDelta{
+		Added:   added,
+		Updated: updated,
+		Removed: removed,
+	}
+}
+
+func getObjectMap(objects []resource.KubernetesResource) map[string]resource.KubernetesResource {
+	objectMap := make(map[string]resource.KubernetesResource)
+	for index := range objects {
+		objectMap[objects[index].GetName()] = objects[index]
+	}
+	return objectMap
+}
+
 func defaultMap() map[reflect.Type]func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
 	equalsMap := make(map[reflect.Type]func(resource.KubernetesResource, resource.KubernetesResource) bool)
 	equalsMap[reflect.TypeOf(oappsv1.DeploymentConfig{})] = equalDeploymentConfigs
