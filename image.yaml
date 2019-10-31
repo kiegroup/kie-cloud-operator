@@ -2,7 +2,7 @@ schema_version: 1
 
 name: "rhpam-7/rhpam-rhel8-operator"
 description: "Red Hat Business Automation Operator"
-version: "7.5.0"
+version: "7.5.1"
 from: "ubi8:8-released"
 labels:
   - name: "maintainer"

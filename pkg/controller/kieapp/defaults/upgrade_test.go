@@ -104,7 +104,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMinorVersion,
+			Version:     constants.LastMicroVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
@@ -141,7 +141,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMinorVersion,
+			Version:     constants.LastMicroVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: false},
 		},
 	}
