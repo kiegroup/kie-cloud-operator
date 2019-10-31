@@ -1,16 +1,15 @@
 package constants
 
 import (
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.5.1"
+	CurrentVersion = "7.6.0"
 	// LastMicroVersion product version supported
-	LastMicroVersion = "7.4.1"
+	LastMicroVersion = "7.5.1"
 	// LastMinorVersion product version supported
 	LastMinorVersion = "7.5.0"
 )
@@ -79,12 +78,12 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridImageTag: "1.2",
 	},
 	LastMicroVersion: {
-		APIVersion:       v1.SchemeGroupVersion.Version,
-		ImageTag:         "1.1",
-		BrokerImage:      "amq-broker-73-openshift",
-		BrokerImageTag:   "7.3",
+		APIVersion:       api.SchemeGroupVersion.Version,
+		ImageTag:         CurrentVersion,
+		BrokerImage:      "amq-broker",
+		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.1",
+		DatagridImageTag: "1.2",
 	},
 	LastMinorVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
