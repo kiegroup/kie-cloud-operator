@@ -28,11 +28,10 @@ import (
 )
 
 var (
-	replacesCsvVersion = "1.2.0"
-	rh                 = "Red Hat, Inc."
-	maturity           = "stable"
-	major, minor, _    = defaults.MajorMinorMicro(constants.CurrentVersion)
-	csvs               = []csvSetting{
+	rh              = "Red Hat, Inc."
+	maturity        = "stable"
+	major, minor, _ = defaults.MajorMinorMicro(constants.CurrentVersion)
+	csvs            = []csvSetting{
 		{
 			Name:         "kiecloud",
 			DisplayName:  "Kie Cloud",
@@ -137,7 +136,7 @@ func main() {
 		var opVersion olmversion.OperatorVersion
 		opVersion.Version = semver.MustParse(version.Version)
 		templateStruct.Spec.Version = opVersion
-		templateStruct.Spec.Replaces = operatorName + "." + replacesCsvVersion
+		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
 		templateStruct.Spec.Description = descrip
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = maturity

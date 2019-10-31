@@ -1,5 +1,5 @@
-#! package-manifest: deploy/catalog_resources/redhat/1.2.1/businessautomation-operator.1.2.1.clusterserviceversion.yaml
+#! package-manifest: deploy/catalog_resources/redhat/1.3.0/businessautomation-operator.1.3.0.clusterserviceversion.yaml
 channels:
-- currentCSV: businessautomation-operator.1.2.1
+- currentCSV: businessautomation-operator.1.3.0
   name: stable
 packageName: businessautomation-operator

@@ -1844,27 +1844,6 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
-func TestOldConfigVersioning(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamProduction,
-			Version:     "74",
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "7.4.1", cr.Spec.Version)
-	major, minor, micro := MajorMinorMicro(cr.Spec.Version)
-	assert.Equal(t, "7", major)
-	assert.Equal(t, "4", minor)
-	assert.Equal(t, "1", micro)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-}
-
 func TestConfigVersioning(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
