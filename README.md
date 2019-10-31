@@ -29,14 +29,26 @@ To install this operator on OpenShift 4 for end-to-end testing, make sure you ha
 Push the operator bundle to your quay application repository as follows:
 
 ```bash
-operator-courier push deploy/catalog_resources/courier/bundle_dir/1.2.0 kiegroup kiecloud-operator 1.2.0 "basic XXXXXXXXX"
-# operator-courier push deploy/catalog_resources/courier/bundle_dir/1.1.1 kiegroup kiecloud-operator 1.1.1 "basic XXXXXXXXX"
+REGISTRY_NS=<registry namespace in quay.io>
+operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator $(go run getversion.go -operator) "basic XXXXXXXXX"
 ```
 
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
 
 ```bash
-oc create -f deploy/catalog_resources/courier/kiecloud-operatorsource.yaml
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  name: kiecloud-operators
+  namespace: openshift-marketplace
+spec:
+  type: appregistry
+  endpoint: https://quay.io/cnr
+  registryNamespace: ${REGISTRY_NS}
+  displayName: "KIE Cloud Operators"
+  publisher: "Red Hat"
+EOF
 ```
 
 Remember to replace _registryNamespace_ with your quay namespace. The name, display name and publisher of the operator are the only other attributes that may be modified.

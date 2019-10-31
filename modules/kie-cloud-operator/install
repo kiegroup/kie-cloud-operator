@@ -32,7 +32,7 @@ if [[ ! -f ${UI_PATH} ]] ; then
 fi
 
 mv build/bin/* /usr/local/bin/
-rsync -arL deploy/catalog_resources/redhat/ /manifests
+rsync -arLv deploy/catalog_resources/redhat/ /manifests
 /usr/local/bin/user_setup
 
 yum -y autoremove ${INSTALL_PKGS}

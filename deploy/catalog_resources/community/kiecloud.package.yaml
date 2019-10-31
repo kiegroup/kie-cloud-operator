@@ -1,5 +1,5 @@
-#! package-manifest: deploy/catalog_resources/community/1.2.0/kiecloud-operator.1.2.0.clusterserviceversion.yaml
-packageName: kiecloud-operator
+#! package-manifest: deploy/catalog_resources/community/1.2.1/kiecloud-operator.1.2.1.clusterserviceversion.yaml
 channels:
-  - name: stable
-    currentCSV: kiecloud-operator.1.2.0
+- currentCSV: kiecloud-operator.1.2.1
+  name: stable
+packageName: kiecloud-operator
