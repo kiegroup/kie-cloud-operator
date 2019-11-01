@@ -95,8 +95,8 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.True(t, micro)
 
 	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
-	// assert.NotEmpty(t, diffs)
-	assert.Empty(t, diffs)
+	assert.NotEmpty(t, diffs)
+	// assert.Empty(t, diffs)
 
 	// Past version, all upgrades true
 	cr = &api.KieApp{
@@ -115,8 +115,8 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.True(t, micro)
 
 	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
-	// assert.NotEmpty(t, diffs)
-	assert.Empty(t, diffs)
+	assert.NotEmpty(t, diffs)
+	// assert.Empty(t, diffs)
 
 	// Current version, no upgrades
 	cr = &api.KieApp{
@@ -153,6 +153,6 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, micro)
 
 	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
-	// assert.NotEmpty(t, diffs)
-	assert.Empty(t, diffs)
+	assert.NotEmpty(t, diffs)
+	// assert.Empty(t, diffs)
 }

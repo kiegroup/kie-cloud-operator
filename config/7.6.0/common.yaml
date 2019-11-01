@@ -304,7 +304,10 @@ smartRouter:
           service: "[[.ApplicationName]]-smartrouter"
       spec:
         strategy:
-          type: Recreate
+          rollingParams:
+            maxSurge: 100%
+            maxUnavailable: 0
+          type: Rolling
         triggers:
           - type: ImageChange
             imageChangeParams:
