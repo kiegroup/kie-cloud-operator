@@ -17,5 +17,8 @@ spec:
       roleFilter: (memberOf={1})
       defaultRole: guest
     roleMapper:
-      rolesProperties: /conf/roleMapper.properties
+      rolesProperties: /config/roleMapper.properties
       replaceRole: true
+      from:
+        kind: ConfigMap
+        name: roles-configmap

@@ -1,9 +1,11 @@
 package defaults
 
 import (
+	"strconv"
 	"testing"
 
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
@@ -235,7 +237,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 				},
 			},
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					SSOClient: &api.SSOAuthClient{
 						Name:          "test-rhpamcentr-client",
 						Secret:        "supersecret",
@@ -247,21 +249,17 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 					{
 						Name:        "one",
 						Deployments: Pint(2),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							SSOClient: &api.SSOAuthClient{
-								Name:   "test-kieserver-a-client",
-								Secret: "supersecret-a",
-							},
+						SSOClient: &api.SSOAuthClient{
+							Name:   "test-kieserver-a-client",
+							Secret: "supersecret-a",
 						},
 					},
 					{
 						Deployments: Pint(3),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							SSOClient: &api.SSOAuthClient{
-								Name:          "test-kieserver-b-client",
-								Secret:        "supersecret-b",
-								HostnameHTTPS: "test-kieserver-b.example.com",
-							},
+						SSOClient: &api.SSOAuthClient{
+							Name:          "test-kieserver-b-client",
+							Secret:        "supersecret-b",
+							HostnameHTTPS: "test-kieserver-b.example.com",
 						},
 					},
 				},
@@ -370,6 +368,130 @@ func TestAuthLDAPConfig(t *testing.T) {
 }
 
 func TestAuthRoleMapperConfig(t *testing.T) {
+	var defaultMode int32 = 420
+	tests := []struct {
+		name                string
+		roleMapper          *api.RoleMapperAuthConfig
+		expectedVolumeMount *corev1.VolumeMount
+		expectedVolume      *corev1.Volume
+		expectedPath        string
+	}{{
+		name: "RoleMapper config is set with defaults",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "mapping.properties",
+		},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "mapping.properties",
+	}, {
+		name: "RoleMapper config has ReplaceRole",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "mapping.properties",
+			ReplaceRole:     true,
+		},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "mapping.properties",
+	}, {
+		name: "RoleMapper config from a ConfigMap",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "mapping.properties",
+			From: &corev1.ObjectReference{
+				Name: "test-cm",
+				Kind: "ConfigMap",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.RoleMapperVolume,
+			MountPath: constants.RoleMapperDefaultDir,
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.RoleMapperVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "test-cm",
+					},
+					DefaultMode: &defaultMode,
+				},
+			},
+		},
+		expectedPath: "mapping.properties",
+	}, {
+		name: "RoleMapper config from a Secret",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "mapping.properties",
+			From: &corev1.ObjectReference{
+				Name: "test-secret",
+				Kind: "Secret",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.RoleMapperVolume,
+			MountPath: constants.RoleMapperDefaultDir,
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.RoleMapperVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "test-secret",
+				},
+			},
+		},
+		expectedPath: "mapping.properties",
+	}, {
+		name: "RoleMapper config from a PersistentVolumeClaim",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "mapping.properties",
+			From: &corev1.ObjectReference{
+				Name: "test-pvc",
+				Kind: "PersistentVolumeClaim",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.RoleMapperVolume,
+			MountPath: constants.RoleMapperDefaultDir,
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.RoleMapperVolume,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: "test-pvc",
+				},
+			},
+		},
+		expectedPath: "mapping.properties",
+	}, {
+		name: "RoleMapper config is mounted on a different path",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "/other/path/mapping.properties",
+			From: &corev1.ObjectReference{
+				Name: "test-cm",
+				Kind: "ConfigMap",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.RoleMapperVolume,
+			MountPath: "/other/path",
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.RoleMapperVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "test-cm",
+					},
+					DefaultMode: &defaultMode,
+				},
+			},
+		},
+		expectedPath: "/other/path/mapping.properties",
+	}}
+
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -386,27 +508,40 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",
 				},
-				RoleMapper: &api.RoleMapperAuthConfig{
-					RolesProperties: "mapping.properties",
-					ReplaceRole:     true,
-				},
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnvs := []corev1.EnvVar{
-		{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
-		{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
-		{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
-		{Name: "AUTH_ROLE_MAPPER_ROLES_PROPERTIES", Value: "mapping.properties"},
-		{Name: "AUTH_ROLE_MAPPER_REPLACE_ROLE", Value: "true"},
-	}
-	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
-		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
+	for _, item := range tests {
+		cr.Spec.Auth.RoleMapper = item.roleMapper
+		env, err := GetEnvironment(cr, test.MockService())
+		assert.Nil(t, err, "Error getting trial environment")
+
+		expectedEnvs := []corev1.EnvVar{
+			{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
+			{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
+			{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
+			{Name: "AUTH_ROLE_MAPPER_ROLES_PROPERTIES", Value: item.expectedPath},
+			{Name: "AUTH_ROLE_MAPPER_REPLACE_ROLE", Value: strconv.FormatBool(item.roleMapper.ReplaceRole)},
+		}
+		for _, expectedEnv := range expectedEnvs {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Console does not contain env %v", item.name, expectedEnv)
+			if item.expectedVolume != nil {
+				assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+			}
+			if item.expectedVolumeMount != nil {
+				assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+			}
+
+			for i := range env.Servers {
+				assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Server %v does not contain env %v", item.name, i, expectedEnv)
+				if item.expectedVolume != nil {
+					assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+				}
+				if item.expectedVolumeMount != nil {
+					assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+				}
+			}
 		}
 	}
 }

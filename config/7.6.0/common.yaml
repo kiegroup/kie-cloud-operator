@@ -94,6 +94,10 @@ console:
                     value: "[[.ServerPassword]]"
                   - name: KIE_MBEANS
                     value: enabled
+                  #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
+                  - name: GIT_HOOKS_DIR
+                    value: "[[.Console.GitHooks.MountPath]]"
+                  #[[end]]
                   ## OpenShift Enhancement BEGIN
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
                     value: "true"
@@ -208,6 +212,16 @@ console:
                     readOnly: true
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/kie/data"
+                  #[[if .Auth.RoleMapper.From]]
+                  - name: "[[.Constants.RoleMapperVolume]]"
+                    mountPath: "[[.Auth.RoleMapper.MountPath]]"
+                    readOnly: true
+                  #[[end]]
+                  #[[if .Console.GitHooks.From]]
+                  - name: "[[.Constants.GitHooksVolume]]"
+                    mountPath: "[[.Console.GitHooks.MountPath]]"
+                    readOnly: true
+                  #[[end]]
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
@@ -215,6 +229,38 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
+              #[[if .Auth.RoleMapper.From]]
+              - name: "[[.Constants.RoleMapperVolume]]"
+              #[[if eq .Auth.RoleMapper.From.Kind "ConfigMap"]]
+                configMap:
+                  name: "[[.Auth.RoleMapper.From.Name]]"
+                  defaultMode: 420
+              #[[end]]
+              #[[if eq .Auth.RoleMapper.From.Kind "Secret"]]
+                secret:
+                  secretName: "[[.Auth.RoleMapper.From.Name]]"
+              #[[end]]
+              #[[if eq .Auth.RoleMapper.From.Kind "PersistentVolumeClaim"]]
+                persistentVolumeClaim:
+                  claimName: "[[.Auth.RoleMapper.From.Name]]"
+              #[[end]]
+              #[[end]]
+              #[[if .Console.GitHooks.From]]
+              - name: "[[.Constants.GitHooksVolume]]"
+              #[[if eq .Console.GitHooks.From.Kind "ConfigMap"]]
+                configMap:
+                  name: "[[.Console.GitHooks.From.Name]]"
+                  defaultMode: 420
+              #[[end]]
+              #[[if eq .Console.GitHooks.From.Kind "Secret"]]
+                secret:
+                  secretName: "[[.Console.GitHooks.From.Name]]"
+              #[[end]]
+              #[[if eq .Console.GitHooks.From.Kind "PersistentVolumeClaim"]]
+                persistentVolumeClaim:
+                  claimName: "[[.Console.GitHooks.From.Name]]"
+              #[[end]]
+              #[[end]]
   persistentVolumeClaims:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
@@ -690,10 +736,31 @@ servers:
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
+                    #[[if $.Auth.RoleMapper.From]]
+                    - name: "[[$.Constants.RoleMapperVolume]]"
+                      mountPath: "[[$.Auth.RoleMapper.MountPath]]"
+                      readOnly: true
+                    #[[end]]
               volumes:
                 - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
+                #[[if $.Auth.RoleMapper.From]]
+                - name: "[[$.Constants.RoleMapperVolume]]"
+                #[[if eq $.Auth.RoleMapper.From.Kind "ConfigMap"]]
+                  configMap:
+                    name: "[[$.Auth.RoleMapper.From.Name]]"
+                    defaultMode: 420
+                #[[end]]
+                #[[if eq $.Auth.RoleMapper.From.Kind "Secret"]]
+                  secret:
+                    secretName: "[[$.Auth.RoleMapper.From.Name]]"
+                #[[end]]
+                #[[if eq $.Auth.RoleMapper.From.Kind "PersistentVolumeClaim"]]
+                  persistentVolumeClaim:
+                    claimName: "[[$.Auth.RoleMapper.From.Name]]"
+                #[[end]]
+                #[[end]]
       ## KIE server deployment config END
     ## KIE server services BEGIN
     services:
