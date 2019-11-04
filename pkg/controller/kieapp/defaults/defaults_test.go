@@ -953,12 +953,10 @@ func TestTrialServerEnv(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									envReplace,
-									envAddition,
-								},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								envReplace,
+								envAddition,
 							},
 						},
 					},
@@ -1010,13 +1008,11 @@ func TestTrialServersEnv(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Name: "server-a",
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									envReplace,
-									envAddition,
-									commonAddition,
-								},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								envReplace,
+								envAddition,
+								commonAddition,
 							},
 						},
 						Deployments: Pint(1),
@@ -1077,7 +1073,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 				ApplicationName: "trial",
 			},
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env: []corev1.EnvVar{
 							envReplace,
@@ -1364,7 +1360,7 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
@@ -1373,11 +1369,9 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env:       sampleEnv,
-								Resources: sampleResources,
-							},
+						KieAppObject: api.KieAppObject{
+							Env:       sampleEnv,
+							Resources: sampleResources,
 						},
 					},
 				},
@@ -1753,13 +1747,11 @@ func TestDatabaseExternal(t *testing.T) {
 								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
 							},
 						},
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									{
-										Name:  "RHPAM_JNDI",
-										Value: "java:jboss/OracleDS",
-									},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "RHPAM_JNDI",
+									Value: "java:jboss/OracleDS",
 								},
 							},
 						},
@@ -2311,7 +2303,7 @@ func TestCustomImageTag(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{},
+				Console: api.ConsoleObject{},
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
@@ -2337,6 +2329,140 @@ func TestCustomImageTag(t *testing.T) {
 	assert.Equal(t, getImageChangeName(env.Servers[0].DeploymentConfigs[0]), imageName)
 	assert.Equal(t, getImageChangeName(env.Servers[1].DeploymentConfigs[0]), imageName)
 	assert.Equal(t, getImageChangeName(env.SmartRouter.DeploymentConfigs[0]), imageName)
+}
+
+func TestGitHooks(t *testing.T) {
+	var defaultMode int32 = 420
+	tests := []struct {
+		name                string
+		gitHooks            *api.GitHooksVolume
+		expectedVolumeMount *corev1.VolumeMount
+		expectedVolume      *corev1.Volume
+		expectedPath        string
+	}{{
+		name:                "GitHooks EnvVar is not present",
+		gitHooks:            nil,
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "",
+	}, {
+		name:                "GitHooks EnvVar is present and has default value",
+		gitHooks:            &api.GitHooksVolume{},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        constants.GitHooksDefaultDir,
+	}, {
+		name: "GitHooks DIR is configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+		},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "/some/path",
+	}, {
+		name: "ConfigMap GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Kind: "ConfigMap",
+				Name: "test-cm",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: constants.GitHooksDefaultDir,
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "test-cm",
+					},
+					DefaultMode: &defaultMode,
+				},
+			},
+		},
+		expectedPath: constants.GitHooksDefaultDir,
+	}, {
+		name: "Secret GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+			From: &corev1.ObjectReference{
+				Kind: "Secret",
+				Name: "test-secret",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: "/some/path",
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "test-secret",
+				},
+			},
+		},
+		expectedPath: "/some/path",
+	}, {
+		name: "PersistentVolumeClaim GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+			From: &corev1.ObjectReference{
+				Kind: "PersistentVolumeClaim",
+				Name: "test-pvc",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: "/some/path",
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: "test-pvc",
+				},
+			},
+		},
+		expectedPath: "/some/path",
+	},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prod",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+
+	for _, item := range tests {
+		expectedEnv := corev1.EnvVar{Name: "GIT_HOOKS_DIR", Value: item.expectedPath}
+		cr.Spec.Objects.Console.GitHooks = item.gitHooks
+		env, err := GetEnvironment(cr, test.MockService())
+		assert.Nil(t, err, "Error getting prod environment")
+		if item.expectedPath != "" {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s failed", item.name)
+		} else {
+			expectedEnv.Value = constants.GitHooksDefaultDir
+			assert.NotContainsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s failed", item.name)
+		}
+		if item.expectedVolumeMount != nil {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+		}
+		if item.expectedVolume != nil {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+		}
+	}
 }
 
 func getImageChangeName(dc appsv1.DeploymentConfig) string {

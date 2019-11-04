@@ -238,6 +238,12 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	if cr.Spec.Objects.Console.Image != "" {
 		template.Image = cr.Spec.Objects.Console.Image
 	}
+	if cr.Spec.Objects.Console.GitHooks != nil {
+		template.GitHooks = *cr.Spec.Objects.Console.GitHooks.DeepCopy()
+		if template.GitHooks.MountPath == "" {
+			template.GitHooks.MountPath = constants.GitHooksDefaultDir
+		}
+	}
 
 	return template
 }

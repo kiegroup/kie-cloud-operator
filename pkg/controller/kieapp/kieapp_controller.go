@@ -29,6 +29,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -81,6 +82,13 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	env, err := defaults.GetEnvironment(instance, reconciler.Service)
 	if err != nil {
 		reconciler.setFailedStatus(instance, api.ConfigurationErrorReason, err)
+		return reconcile.Result{}, err
+	}
+
+	//Verify the external references exist
+	err = reconciler.verifyExternalReferences(instance)
+	if err != nil {
+		reconciler.setFailedStatus(instance, api.MissingDependenciesReason, err)
 		return reconcile.Result{}, err
 	}
 
@@ -257,6 +265,33 @@ func setDeploymentStatus(instance *api.KieApp, resources []resource.KubernetesRe
 		dcs = append(dcs, *dc)
 	}
 	instance.Status.Deployments = olm.GetDeploymentConfigStatus(dcs)
+}
+
+func (reconciler *Reconciler) verifyExternalReferences(instance *api.KieApp) error {
+	var err error
+	if instance.Spec.Auth.RoleMapper != nil {
+		err = reconciler.verifyExternalReference(instance.GetNamespace(), instance.Spec.Auth.RoleMapper.From)
+	}
+	if err == nil && instance.Spec.Objects.Console.GitHooks != nil {
+		err = reconciler.verifyExternalReference(instance.GetNamespace(), instance.Spec.Objects.Console.GitHooks.From)
+	}
+	return err
+}
+
+func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *corev1.ObjectReference) error {
+	name := types.NamespacedName{
+		Name:      ref.Name,
+		Namespace: namespace,
+	}
+	allowedObjects := []runtime.Object{&corev1.ConfigMap{}, &corev1.Secret{}, &corev1.PersistentVolumeClaim{}}
+	for _, obj := range allowedObjects {
+		expected := reflect.Indirect(reflect.ValueOf(obj)).Type().Name()
+		if ref.Kind == expected {
+			log.Debugf("Get external reference %s", ref)
+			return reconciler.Service.Get(context.TODO(), name, obj)
+		}
+	}
+	return fmt.Errorf("Unsupported Kind: %s", ref.Kind)
 }
 
 func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.KubernetesResource {

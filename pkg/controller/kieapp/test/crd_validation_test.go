@@ -130,6 +130,8 @@ func TestCompleteCRD(t *testing.T) {
 			//The valueFrom is not expected to be used and is not fully defined TODO: verify
 		} else if strings.HasSuffix(missing.Path, "/from/uid") {
 			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
+		} else if strings.HasSuffix(missing.Path, "/from/namespace") {
+			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
 		} else if strings.HasSuffix(missing.Path, "/from/apiVersion") {
 			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
 		} else if strings.HasSuffix(missing.Path, "/from/resourceVersion") {

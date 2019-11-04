@@ -65,6 +65,14 @@ const (
 	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
 	// SmartRouterProtocol - default SmartRouter protocol
 	SmartRouterProtocol = "http"
+	// GitHooksDefaultDir Default path where to mount the GitHooks volume
+	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
+	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
+	GitHooksVolume = "githooks-volume"
+	// RoleMapperVolume Name of the mounted volume name when RoleMapper reference is set
+	RoleMapperVolume = "rolemapper-volume"
+	// RoleMapperDefaultDir Default path for the rolemapping properties file
+	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
 )
 
 // VersionConstants ...
@@ -144,6 +152,8 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 var TemplateConstants = api.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
+	RoleMapperVolume:     RoleMapperVolume,
+	GitHooksVolume:       GitHooksVolume,
 }
 
 // DebugTrue - used to enable debug logs in objects

@@ -88,6 +88,19 @@ func configureLDAP(config *api.LDAPAuthConfig, envTemplate *api.EnvTemplate) err
 
 func configureRoleMapper(config *api.RoleMapperAuthConfig, envTemplate *api.EnvTemplate) {
 	if config != nil {
-		envTemplate.Auth.RoleMapper = *config.DeepCopy()
+		envTemplate.Auth.RoleMapper.RoleMapperAuthConfig = *config.DeepCopy()
+		if envTemplate.Auth.RoleMapper.RoleMapperAuthConfig.RolesProperties != "" {
+			pos := -1
+			for i, c := range config.RolesProperties {
+				if c == '/' {
+					pos = i
+				}
+			}
+			if pos != -1 {
+				envTemplate.Auth.RoleMapper.MountPath = config.RolesProperties[:pos]
+			} else {
+				envTemplate.Auth.RoleMapper.MountPath = constants.RoleMapperDefaultDir
+			}
+		}
 	}
 }
