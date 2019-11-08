@@ -114,6 +114,12 @@
           ],
           "fields": [
             {
+              "label": "External authentication only",
+              "type": "boolean",
+              "jsonPath": "$.spec.auth.externalOnly",
+              "description": "Authenticate only users defined in the external IdP"
+            },
+            {
               "label": "SSO",
               "type": "fieldGroup",
               "required": true,
@@ -163,24 +169,11 @@
                   "description": "RH-SSO Principal Attribute to use as username"
                 },
                 {
-                  "label": "Controller password",
-                  "type": "password",
-                  "required": true,
-                  "jsonPath": "$.spec.commonConfig.controllerPassword",
-                  "description": "The password used for 'controllerUser' in external provider"
-                },
-                {
-                  "label": "KIE Server password",
-                  "type": "password",
-                  "jsonPath": "$.spec.commonConfig.serverPassword",
-                  "description": "The password to use for 'executionUser' in external provider"
-                },
-		{
                   "label": "Roles properties file",
                   "type": "text",
                   "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
                   "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-		},
+                },
                 {
                   "label": "Replace roles",
                   "type": "checkbox",
@@ -342,24 +335,11 @@
                   "description": "If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
                 },
                 {
-                  "label": "Controller password",
-                  "type": "password",
-                  "required": true,
-                  "jsonPath": "$.spec.commonConfig.controllerPassword",
-                  "description": "The password used for 'controllerUser' in external provider"
-                },
-                {
-                  "label": "KIE Server password",
-                  "type": "password",
-                  "jsonPath": "$.spec.commonConfig.serverPassword",
-                  "description": "The password to use for 'executionUser' in external provider"
-                },
-		{
                   "label": "Roles properties file",
                   "type": "text",
                   "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
                   "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-		},
+                },
                 {
                   "label": "Replace roles",
                   "type": "checkbox",
@@ -368,29 +348,6 @@
                   "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
                 }
 
-              ]
-            },
-            {
-              "label": "Internal",
-              "type": "fieldGroup",
-              "required": true,
-              "jsonPath": "$.spec",
-              "displayWhen": "default",
-              "visible": true,
-              "fields": [
-                {
-                  "label": "Controller password",
-                  "type": "password",
-                  "jsonPath": "$.spec.commonConfig.controllerPassword",
-                  "description": "The password to use for 'controllerUser'. Generated if empty"
-                },
-                {
-                  "label": "KIE Server password",
-                  "type": "password",
-                  "required": false,
-                  "jsonPath": "$.spec.commonConfig.serverPassword",
-                  "description": "The password to use for 'executionUser'. Generated if empty"
-                }
               ]
             }
           ]

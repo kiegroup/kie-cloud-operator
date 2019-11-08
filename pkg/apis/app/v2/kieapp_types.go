@@ -449,8 +449,6 @@ type CommonConfig struct {
 	DBPassword         string `json:"dbPassword,omitempty"`
 	AMQPassword        string `json:"amqPassword,omitempty"`
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
-	ControllerPassword string `json:"controllerPassword,omitempty"`
-	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
@@ -465,9 +463,10 @@ type VersionConfigs struct {
 
 // AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
-	SSO        SSOAuthConfig      `json:"sso,omitempty"`
-	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
-	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
+	ExternalOnly bool               `json:"externalOnly,omitempty"`
+	SSO          SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP         LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper   RoleMapperTemplate `json:"roleMapper,omitempty"`
 }
 
 // RoleMapperTemplate RoleMapper definition used in the template
