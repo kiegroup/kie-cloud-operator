@@ -449,6 +449,8 @@ type CommonConfig struct {
 	DBPassword         string `json:"dbPassword,omitempty"`
 	AMQPassword        string `json:"amqPassword,omitempty"`
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	ControllerPassword string `json:"controllerPassword,omitempty"`
+	ServerPassword     string `json:"serverPassword,omitempty"`
 	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
