@@ -837,14 +837,31 @@ others:
         rules:
           - apiGroups:
               - ""
-              - app.kiegroup.org
-              - apps.openshift.io
-              - image.openshift.io
-              - route.openshift.io
             resources:
-              - "*"
+              - configmaps
+              - serviceaccounts
             verbs:
-              - "*"
+              - create
+              - delete
+              - deletecollection
+              - get
+              - list
+              - patch
+              - update
+              - watch
+          - apiGroups:
+              - apps.openshift.io
+            resources:
+              - deploymentconfigs
+            verbs:
+              - create
+              - delete
+              - deletecollection
+              - get
+              - list
+              - patch
+              - update
+              - watch
 
     serviceAccounts:
       - metadata:
