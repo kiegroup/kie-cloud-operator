@@ -1,0 +1,25 @@
+console:
+  deploymentConfigs:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
+      spec:
+        template:
+          metadata:
+            name: "[[.ApplicationName]]-[[.Console.Name]]"
+          spec:
+            containers:
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
+  persistentVolumeClaims:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  services:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
+        annotations:
+          delete: "true"

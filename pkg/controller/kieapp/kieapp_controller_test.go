@@ -3,8 +3,6 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
-	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -15,6 +13,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,7 +52,7 @@ func TestGenerateSecret(t *testing.T) {
 	reconciler := Reconciler{
 		Service: mockService,
 	}
-	env = reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -67,15 +66,6 @@ func TestGenerateSecret(t *testing.T) {
 	}
 }
 
-func mockDeployedRoutes(env api.Environment, instance *api.KieApp) map[types.NamespacedName]routev1.Route {
-	deployedRoutes := make(map[types.NamespacedName]routev1.Route)
-	for _, resource := range getRequestedRoutes(env, instance) {
-		route := resource.(*routev1.Route)
-		deployedRoutes[shared.GetNamespacedName(resource)] = *route
-	}
-	return deployedRoutes
-}
-
 func TestSpecifySecret(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -84,17 +74,15 @@ func TestSpecifySecret(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						KeystoreSecret: "console-ks-secret",
 					},
 				},
 				Servers: []api.KieServerSet{
 					{
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								KeystoreSecret: "server-ks-secret",
-							},
+						KieAppObject: api.KieAppObject{
+							KeystoreSecret: "server-ks-secret",
 						},
 					},
 				},
@@ -157,8 +145,218 @@ func TestConsoleHost(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	reconciler := &Reconciler{Service: mockService}
-	reconciler.setEnvironmentProperties(cr, env, mockDeployedRoutes(env, cr))
+	reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
+}
+
+func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
+	tests := []struct {
+		name       string
+		roleMapper *api.RoleMapperAuthConfig
+		errMsg     string
+	}{{
+		name: "Unsupported Kind: Service",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Service",
+			},
+		},
+		errMsg: "Unsupported Kind: Service",
+	}, {
+		name: "Not found ConfigMap",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "ConfigMap",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Not found Secret",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Secret",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Not found PersistentVolumeClaim",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "PersistentVolumeClaim",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Found ConfigMap",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "ConfigMap",
+			},
+		},
+	}, {
+		name: "Found Secret",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Secret",
+			},
+		},
+	}, {
+		name: "Found PersistentVolumeClaim",
+		roleMapper: &api.RoleMapperAuthConfig{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "PersistentVolumeClaim",
+			},
+		},
+	}}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Auth:        api.KieAppAuthObject{},
+		},
+	}
+	scheme, err := api.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+
+	reconciler := &Reconciler{Service: mockService}
+	for _, test := range tests {
+		mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+			if test.errMsg == "" {
+				return nil
+			}
+			return fmt.Errorf("Mock: Not found")
+		}
+		cr.Spec.Auth.RoleMapper = test.roleMapper
+		err = reconciler.verifyExternalReferences(cr)
+		if test.errMsg == "" {
+			assert.Nil(t, err, "%s: Expected nil found [%s]", test.name, err)
+		} else {
+			assert.Error(t, err, "%s: Expected error [%s]", test.name, test.errMsg)
+			if err != nil {
+				assert.EqualError(t, err, test.errMsg, "Test case %s got an Unexpected error", test.name)
+			}
+		}
+	}
+}
+
+func TestVerifyExternalReferencesGitHooks(t *testing.T) {
+	tests := []struct {
+		name     string
+		gitHooks *api.GitHooksVolume
+		errMsg   string
+	}{{
+		name: "Unsupported type",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Service",
+			},
+		},
+		errMsg: "Unsupported Kind: Service",
+	}, {
+		name: "Not found ConfigMap",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "ConfigMap",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Not found Secret",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Secret",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Not found PersistentVolumeClaim",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "PersistentVolumeClaim",
+			},
+		},
+		errMsg: "Mock: Not found",
+	}, {
+		name: "Found ConfigMap",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "ConfigMap",
+			},
+		},
+	}, {
+		name: "Found Secret",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "Secret",
+			},
+		},
+	}, {
+		name: "Found PersistentVolumeClaim",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Name: "test",
+				Kind: "PersistentVolumeClaim",
+			},
+		},
+	}}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+	scheme, err := api.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+	reconciler := &Reconciler{Service: mockService}
+
+	for _, test := range tests {
+		mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+			if test.errMsg == "" {
+				return nil
+			}
+			return fmt.Errorf("Mock: Not found")
+		}
+		cr.Spec.Objects.Console.GitHooks = test.gitHooks
+		err = reconciler.verifyExternalReferences(cr)
+		if test.errMsg == "" {
+			assert.Nil(t, err, "%s: Expected nil found [%s]", test.name, err)
+		} else {
+			assert.Error(t, err, "%s: Expected error [%s]", test.name, test.errMsg)
+			if err != nil {
+				assert.EqualError(t, err, test.errMsg, "Test case %s got an Unexpected error", test.name)
+			}
+		}
+	}
 }
 
 func TestCreateRhpamImageStreams(t *testing.T) {

@@ -4,44 +4,41 @@ metadata:
   name: kie-cloud-operator
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
   selector:
     matchLabels:
       name: kie-cloud-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
         name: kie-cloud-operator
     spec:
-      serviceAccountName: kie-cloud-operator
       containers:
-        - name: kie-cloud-operator
-          image: quay.io/kiegroup/kie-cloud-operator:1.2.1
-          command:
-            - kie-cloud-operator
-          imagePullPolicy: Always
-          env:
-            - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: OPERATOR_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['name']
-            - name: DEBUG
-              value: "false"
-            - name: OPERATOR_UI
-              value: "true"
-            #- name: INSECURE
-            #  value: ""
-            #- name: REGISTRY
-            #  value: ""
+      - command:
+        - kie-cloud-operator
+        env:
+        - name: OPERATOR_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['name']
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: WATCH_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: OPERATOR_UI
+          value: "true"
+        - name: DEBUG
+          value: "false"
+        image: quay.io/kiegroup/kie-cloud-operator:1.3.0
+        imagePullPolicy: Always
+        name: kie-cloud-operator
+        resources: {}
+      serviceAccountName: kie-cloud-operator

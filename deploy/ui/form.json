@@ -174,6 +174,19 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
+                },
+		{
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+		},
+                {
+                  "label": "Replace roles",
+                  "type": "checkbox",
+                  "jsonPath": "$.spec.auth.roleMapper.replaceRole",
+                  "default": "false",
+                  "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
                 }
               ]
             },
@@ -340,7 +353,21 @@
                   "type": "password",
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
+                },
+		{
+                  "label": "Roles properties file",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                  "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+		},
+                {
+                  "label": "Replace roles",
+                  "type": "checkbox",
+                  "jsonPath": "$.spec.auth.roleMapper.replaceRole",
+                  "default": "false",
+                  "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
                 }
+
               ]
             },
             {
@@ -413,19 +440,6 @@
           "visible": true,
           "fields": [
             {
-              "label": "Roles properties file",
-              "type": "text",
-              "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-              "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-            },
-            {
-              "label": "Replace roles",
-              "type": "checkbox",
-              "jsonPath": "$.spec.auth.roleMapper.replaceRole",
-              "default": "false",
-              "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
-            },
-            {
               "label": "Image tag",
               "type": "text",
               "default": "1.0",
@@ -488,14 +502,14 @@
                 {
                   "label": "Memory request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.memory",
+                  "jsonPath": "$.spec.objects.console.resources.requests.memory",
                   "description": "Minimum amount of memory requested by the container",
                   "default": "2Gi"
                 },
                 {
                   "label": "CPU request",
                   "type": "text",
-                  "jsonPath": "$.spec.objects.console.resources.request.cpu",
+                  "jsonPath": "$.spec.objects.console.resources.requests.cpu",
                   "description": "Minimum processing power requested by the container",
                   "default": "500m"
                 },
@@ -782,14 +796,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.memory",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.servers[*].resources.request.cpu",
+                      "jsonPath": "$.spec.objects.servers[*].resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },
@@ -838,6 +852,191 @@
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].ssoClient.hostnameHTTPS",
                       "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
+                    }
+                  ]
+                },
+                {
+                  "label": "Enable JMS integration",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.",
+                  "jsonPath": "$.spec.objects.servers[*].jms.enableIntegration",
+                  "originalJsonPath": "$.spec.objects.servers[*].jms.enableIntegration",
+                  "fields": [
+                    {
+                      "label": "Enable JMS integration",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*].jms",
+                      "originalJsonPath": "$.spec.objects.servers[*].jms",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Executor",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Set false to disable the JMS executor, it is enabled by default.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.executor",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.executor"
+                        },
+                        {
+                          "label": "Queue executor",
+                          "type": "text",
+                          "required": false,
+                          "description": "JNDI name of executor queue for JMS, example queue/CUSTOM.KIE.SERVER.EXECUTOR, default is queue/KIE.SERVER.EXECUTOR.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.queueExecutor",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.queueExecutor"
+                        },
+                        {
+                          "label": "Executor transacted",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Enable transactions for JMS executor, disabled by default.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.executorTransacted",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.executorTransacted"
+                        },
+                        {
+                          "label": "Queue request",
+                          "type": "text",
+                          "required": false,
+                          "description": "JNDI name of request queue for JMS, example queue/CUSTOM.KIE.SERVER.REQUEST, default is queue/KIE.SERVER.REQUEST.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.queueRequest",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.queueRequest"
+                        },
+                        {
+                          "label": "Queue response",
+                          "type": "text",
+                          "required": false,
+                          "description": "JNDI name of executor queue for JMS, example queue/CUSTOM.KIE.SERVER.RESPONSE, default is queue/KIE.SERVER.RESPONSEx`x`.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.queueResponse",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.queueResponse"
+                        },
+                        {
+                          "label": "Enable signal",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Enable the Signal configuration through JMS. Default is false.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.enableSignal",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.enableSignal"
+                        },
+                        {
+                          "label": "Queue signal",
+                          "type": "text",
+                          "required": false,
+                          "description": "JNDI name of signal queue for JMS, example queue/CUSTOM.KIE.SERVER.SIGNAL, default is queue/KIE.SERVER.SIGNAL.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.queueSignal",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.queueSignal"
+                        },
+
+                         {
+                          "label": "Enable audit",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Enable the Audit logging through JMS. Default is false.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.enableAudit",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.enableAudit"
+                        },
+                        {
+                          "label": "Queue audit",
+                          "type": "text",
+                          "required": false,
+                          "description": "JNDI name of audit logging queue for JMS, example queue/CUSTOM.KIE.SERVER.AUDIT, default is queue/KIE.SERVER.AUDIT.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.queueAudit",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.queueAudit"
+                        },
+                        {
+                          "label": "Audit transacted",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Enable transactions for JMS executor, disabled by default.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.auditTransacted",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.auditTransacted"
+                        },
+                        {
+                          "label": "User name",
+                          "type": "text",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].jms.username",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.username",
+                          "description": "AMQ broker username to connect do the AMQ, generated if empty."
+                        },
+                        {
+                          "label": "Password",
+                          "type": "password",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].jms.password",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.password",
+                          "description": "AMQ broker password to connect do the AMQ, generated if empty."
+                        },
+                        {
+                          "label": "AMQ queues",
+                          "type": "text",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].jms.amqQueues",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.amqQueues",
+                          "description": "AMQ broker broker comma separated queues, if empty the values from default queues will be used."
+                        },
+                        {
+                          "label": "Enable SSL integration",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.",
+                          "jsonPath": "$.spec.objects.servers[*].jms.amqEnableSSL",
+                          "originalJsonPath": "$.spec.objects.servers[*].jms.amqEnableSSL",
+                          "fields": [
+                            {
+                              "label": "Enable SSL integration",
+                              "type": "fieldGroup",
+                              "jsonPath": "$.spec.objects.servers[*].jms",
+                              "originalJsonPath": "$.spec.objects.servers[*].jms",
+                              "displayWhen": "true",
+                              "visible": false,
+                              "fields": [
+                                {
+                                  "label": "AMQ secret name",
+                                  "type": "text",
+                                  "required": false,
+                                  "jsonPath": "$.spec.objects.servers[*].jms.amqSecretName",
+                                  "originalJsonPath": "$.spec.objects.servers[*].jms.amqSecretName",
+                                  "description": "The name of a secret containing AMQ SSL related files."
+                                },
+                                {
+                                  "label": "AMQ truststore name",
+                                  "type": "text",
+                                  "required": false,
+                                  "jsonPath": "$.spec.objects.servers[*].jms.amqTruststoreName",
+                                  "originalJsonPath": "$.spec.objects.servers[*].jms.amqTruststoreName",
+                                  "description": "The name of the AMQ SSL Trust Store file."
+                                },
+                                {
+                                  "label": "AMQ truststore password",
+                                  "type": "password",
+                                  "required": false,
+                                  "jsonPath": "$.spec.objects.servers[*].jms.amqTruststorePassword",
+                                  "originalJsonPath": "$.spec.objects.servers[*].jms.amqTruststorePassword",
+                                  "description": "The password for the AMQ Trust Store."
+                                },
+                                {
+                                  "label": "AMQ Keystore Name",
+                                  "type": "text",
+                                  "required": false,
+                                  "jsonPath": "$.spec.objects.servers[*].jms.amqKeystoreName",
+                                  "originalJsonPath": "$.spec.objects.servers[*].jms.amqKeystoreName",
+                                  "description": "The name of the AMQ SSL Trust Store file."
+                                },
+                                {
+                                  "label": "AMQ keystore password",
+                                  "type": "password",
+                                  "required": false,
+                                  "jsonPath": "$.spec.objects.servers[*].jms.amqKeystorePassword",
+                                  "originalJsonPath": "$.spec.objects.servers[*].jms.amqKeystorePassword",
+                                  "description": "The password for the AMQ keystore and certificate."
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -1039,14 +1238,14 @@
                     {
                       "label": "Memory request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.memory",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.memory",
                       "default": "2Gi",
                       "description": "Minimum amount of memory requested by the container"
                     },
                     {
                       "label": "CPU request",
                       "type": "text",
-                      "jsonPath": "$.spec.objects.smartRouter.resources.request.cpu",
+                      "jsonPath": "$.spec.objects.smartRouter.resources.requests.cpu",
                       "default": "500m",
                       "description": "Minimum processing power requested by the container"
                     },

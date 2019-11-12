@@ -49,28 +49,29 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:59cc79c5578041cbfe30ab05c08f297f0730166186862e0c2d860ec710b188dd"
+  digest = "1:7086f986a11f2134e6a2fcefd91d3f123b6aa7cd8400cef5164101c3f7ac780d"
   name = "github.com/RHsyseng/console-cr-form"
   packages = [
     "pkg/web",
     "pkg/web/packrd",
   ]
   pruneopts = ""
-  revision = "4dc698c325ee5db4067a01c030d9a473fe1d581f"
+  revision = "35043ad591add9a91ef5f25673cab36ebe51ceb0"
 
 [[projects]]
-  digest = "1:1f9dbdfc3cd87c8895d3d9412a17603e600f6846d3a70cea6393c4b3ddd8a189"
+  digest = "1:987e4ce354cf4e9f992e8324c8d02f0c77c673a255b7e7cbc601c9e5062885d0"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
     "pkg/olm",
     "pkg/resource",
     "pkg/resource/compare",
+    "pkg/resource/read",
     "pkg/resource/write",
     "pkg/resource/write/hooks",
     "pkg/validation",
   ]
   pruneopts = ""
-  revision = "4df1e0b603d2efc9673c3fd532a379148d092fd9"
+  revision = "942a3f9c85a9638585c45cb90af49a08fac6e22d"
 
 [[projects]]
   branch = "master"
@@ -1419,8 +1420,11 @@
     "github.com/RHsyseng/operator-utils/pkg/olm",
     "github.com/RHsyseng/operator-utils/pkg/resource",
     "github.com/RHsyseng/operator-utils/pkg/resource/compare",
+    "github.com/RHsyseng/operator-utils/pkg/resource/read",
     "github.com/RHsyseng/operator-utils/pkg/resource/write",
     "github.com/RHsyseng/operator-utils/pkg/validation",
+    "github.com/blang/semver",
+    "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1",
     "github.com/ghodss/yaml",
     "github.com/go-logr/logr",
     "github.com/go-openapi/spec",
@@ -1434,6 +1438,7 @@
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
     "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/log/zap",

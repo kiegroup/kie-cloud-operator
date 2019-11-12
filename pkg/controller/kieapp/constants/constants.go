@@ -1,16 +1,15 @@
 package constants
 
 import (
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.5.1"
+	CurrentVersion = "7.6.0"
 	// LastMicroVersion product version supported
-	LastMicroVersion = "7.4.1"
+	LastMicroVersion = "7.5.1"
 	// LastMinorVersion product version supported
 	LastMinorVersion = "7.5.0"
 )
@@ -66,29 +65,37 @@ const (
 	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
 	// SmartRouterProtocol - default SmartRouter protocol
 	SmartRouterProtocol = "http"
+	// GitHooksDefaultDir Default path where to mount the GitHooks volume
+	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
+	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
+	GitHooksVolume = "githooks-volume"
+	// RoleMapperVolume Name of the mounted volume name when RoleMapper reference is set
+	RoleMapperVolume = "rolemapper-volume"
+	// RoleMapperDefaultDir Default path for the rolemapping properties file
+	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
 )
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         "1.1",
+		ImageTag:         CurrentVersion,
+		BrokerImage:      "amq-broker",
+		BrokerImageTag:   "7.5",
+		DatagridImage:    "datagrid73-openshift",
+		DatagridImageTag: "1.3",
+	},
+	LastMicroVersion: {
+		APIVersion:       api.SchemeGroupVersion.Version,
+		ImageTag:         CurrentVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.2",
 	},
-	LastMicroVersion: {
-		APIVersion:       v1.SchemeGroupVersion.Version,
-		ImageTag:         "1.1",
-		BrokerImage:      "amq-broker-73-openshift",
-		BrokerImageTag:   "7.3",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.1",
-	},
 	LastMinorVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         "1.0",
+		ImageTag:         LastMinorVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",
@@ -145,6 +152,8 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 var TemplateConstants = api.TemplateConstants{
 	KeystoreVolumeSuffix: KeystoreVolumeSuffix,
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
+	RoleMapperVolume:     RoleMapperVolume,
+	GitHooksVolume:       GitHooksVolume,
 }
 
 // DebugTrue - used to enable debug logs in objects

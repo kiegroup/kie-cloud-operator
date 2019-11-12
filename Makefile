@@ -64,6 +64,10 @@ rhel-scratch:
 rhel-release:
 	./hack/go-build.sh rhel release
 
+.PHONY: csv
+csv:
+	go run ./tools/csv-gen/csv-gen.go
+
 .PHONY: clean
 clean:
 	rm -rf build/_output \

@@ -135,7 +135,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 }
@@ -168,7 +168,7 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhdm-decisioncentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -188,7 +188,7 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
@@ -211,12 +211,20 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 
+	var partitionValue int32
+	partitionValue = 0
+
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[0].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[0].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[1].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[1].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhdm-decisioncentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -237,14 +245,22 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
+	var partitionValue int32
+	partitionValue = 0
+
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 	assert.Equal(t, "test-datagrid", env.Others[0].StatefulSets[0].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[0].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[0].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, "test-amq", env.Others[0].StatefulSets[1].ObjectMeta.Name)
+	assert.Equal(t, "RollingUpdate", string(env.Others[0].StatefulSets[1].Spec.UpdateStrategy.Type))
+	assert.Equal(t, &partitionValue, env.Others[0].StatefulSets[1].Spec.UpdateStrategy.RollingUpdate.Partition)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Spec.Version].BrokerImage, constants.VersionConstants[cr.Spec.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	amqPassword := getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
@@ -275,7 +291,7 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhdm-decisioncentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdwSmartRouter(t *testing.T) {
@@ -294,13 +310,19 @@ func TestRhpamProdwSmartRouter(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
 	assert.Equal(t, "http", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
+	assert.Equal(t, env.SmartRouter.DeploymentConfigs[0].Spec.Strategy.Type, appsv1.DeploymentStrategyTypeRolling)
+	assert.Equal(t, env.SmartRouter.DeploymentConfigs[0].Spec.Strategy.RollingParams.MaxSurge, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"})
+
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, env.Console.DeploymentConfigs[0].Spec.Strategy.RollingParams.MaxSurge)
 }
 
 func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
@@ -328,7 +350,7 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
@@ -367,7 +389,7 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhdm-decisioncentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
@@ -385,7 +407,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
@@ -425,7 +447,7 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
@@ -474,7 +496,7 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, true, cr.Spec.Objects.Servers[0].Jms.AMQEnableSSL)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
@@ -521,7 +543,7 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.SIGNAL", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_SIGNAL"), "Variable should exist")
 	assert.Equal(t, "queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AMQ_QUEUES"), "Variable should exist")
 
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
 
@@ -745,6 +767,9 @@ func TestAuthoringEnvironment(t *testing.T) {
 	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
 	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
 
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+
 	// test kieserver probes
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/readycheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/healthcheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -764,6 +789,9 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Spec.CommonConfig.ApplicationName), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
+
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func TestConstructConsoleObject(t *testing.T) {
@@ -776,7 +804,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.Console.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -792,7 +820,7 @@ func TestConstructSmartRouterObject(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-smartrouter-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-smartrouter-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -808,7 +836,7 @@ func TestConstructServerObject(t *testing.T) {
 		env = ConsolidateObjects(env, cr)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
 		assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
 			assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
@@ -825,7 +853,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -854,7 +882,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -925,12 +953,10 @@ func TestTrialServerEnv(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									envReplace,
-									envAddition,
-								},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								envReplace,
+								envAddition,
 							},
 						},
 					},
@@ -947,7 +973,7 @@ func TestTrialServerEnv(t *testing.T) {
 
 	assert.Equal(t, deployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -982,13 +1008,11 @@ func TestTrialServersEnv(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Name: "server-a",
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									envReplace,
-									envAddition,
-									commonAddition,
-								},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								envReplace,
+								envAddition,
+								commonAddition,
 							},
 						},
 						Deployments: Pint(1),
@@ -1011,7 +1035,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam%s-kieserver-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -1049,7 +1073,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 				ApplicationName: "trial",
 			},
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env: []corev1.EnvVar{
 							envReplace,
@@ -1068,7 +1092,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhdm%s-decisioncentral-openshift:%s", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm-decisioncentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	adminUser := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
 	assert.Equal(t, constants.DefaultAdminUser, adminUser, "AdminUser default not being set correctly")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
@@ -1336,7 +1360,7 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{
+				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
@@ -1345,11 +1369,9 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env:       sampleEnv,
-								Resources: sampleResources,
-							},
+						KieAppObject: api.KieAppObject{
+							Env:       sampleEnv,
+							Resources: sampleResources,
 						},
 					},
 				},
@@ -1387,6 +1409,9 @@ func TestPartialTemplateConfig(t *testing.T) {
 	assert.Equal(t, cr.Spec.CommonConfig.AdminPassword, adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Len(t, mavenPassword, 8, "Expected a password with length of 8 to be generated, but got %v", mavenPassword)
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func getEnvVariable(container corev1.Container, name string) string {
@@ -1417,6 +1442,9 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Equal(t, "RedHat", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
 
 func TestDefaultKieServerNum(t *testing.T) {
@@ -1641,8 +1669,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 
 	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	imgName := fmt.Sprintf("rhdm%v-kieserver-openshift:%v", getMinorImageVersion(cr.Spec.Version), cr.Spec.CommonConfig.ImageTag)
-	assert.Equal(t, imgName, env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%v", cr.Spec.CommonConfig.ImageTag), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 }
 
@@ -1720,13 +1747,11 @@ func TestDatabaseExternal(t *testing.T) {
 								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
 							},
 						},
-						SecuredKieAppObject: api.SecuredKieAppObject{
-							KieAppObject: api.KieAppObject{
-								Env: []corev1.EnvVar{
-									{
-										Name:  "RHPAM_JNDI",
-										Value: "java:jboss/OracleDS",
-									},
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "RHPAM_JNDI",
+									Value: "java:jboss/OracleDS",
 								},
 							},
 						},
@@ -1741,7 +1766,7 @@ func TestDatabaseExternal(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1805,7 +1830,7 @@ func TestDatabaseH2(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1842,28 +1867,7 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
 	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageTag, cr.Spec.CommonConfig.ImageTag)
 	assert.True(t, checkVersion(cr.Spec.Version))
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(constants.CurrentVersion)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-}
-
-func TestOldConfigVersioning(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamProduction,
-			Version:     "74",
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "7.4.1", cr.Spec.Version)
-	major, minor, micro := MajorMinorMicro(cr.Spec.Version)
-	assert.Equal(t, "7", major)
-	assert.Equal(t, "4", minor)
-	assert.Equal(t, "1", micro)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestConfigVersioning(t *testing.T) {
@@ -1935,7 +1939,7 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -1981,7 +1985,7 @@ func TestDatabaseMySQL(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2034,7 +2038,7 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2094,9 +2098,11 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2147,7 +2153,7 @@ func TestDatabasePostgresql(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2200,7 +2206,7 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-monitoring-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2262,7 +2268,7 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, fmt.Sprintf("rhpam%s-businesscentral-openshift", getMinorImageVersion(cr.Spec.Version)), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "rhpam-businesscentral-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2297,7 +2303,7 @@ func TestCustomImageTag(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Objects: api.KieAppObjects{
-				Console: api.SecuredKieAppObject{},
+				Console: api.ConsoleObject{},
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
@@ -2323,6 +2329,140 @@ func TestCustomImageTag(t *testing.T) {
 	assert.Equal(t, getImageChangeName(env.Servers[0].DeploymentConfigs[0]), imageName)
 	assert.Equal(t, getImageChangeName(env.Servers[1].DeploymentConfigs[0]), imageName)
 	assert.Equal(t, getImageChangeName(env.SmartRouter.DeploymentConfigs[0]), imageName)
+}
+
+func TestGitHooks(t *testing.T) {
+	var defaultMode int32 = 420
+	tests := []struct {
+		name                string
+		gitHooks            *api.GitHooksVolume
+		expectedVolumeMount *corev1.VolumeMount
+		expectedVolume      *corev1.Volume
+		expectedPath        string
+	}{{
+		name:                "GitHooks EnvVar is not present",
+		gitHooks:            nil,
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "",
+	}, {
+		name:                "GitHooks EnvVar is present and has default value",
+		gitHooks:            &api.GitHooksVolume{},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        constants.GitHooksDefaultDir,
+	}, {
+		name: "GitHooks DIR is configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+		},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "/some/path",
+	}, {
+		name: "ConfigMap GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			From: &corev1.ObjectReference{
+				Kind: "ConfigMap",
+				Name: "test-cm",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: constants.GitHooksDefaultDir,
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "test-cm",
+					},
+					DefaultMode: &defaultMode,
+				},
+			},
+		},
+		expectedPath: constants.GitHooksDefaultDir,
+	}, {
+		name: "Secret GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+			From: &corev1.ObjectReference{
+				Kind: "Secret",
+				Name: "test-secret",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: "/some/path",
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "test-secret",
+				},
+			},
+		},
+		expectedPath: "/some/path",
+	}, {
+		name: "PersistentVolumeClaim GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+			From: &corev1.ObjectReference{
+				Kind: "PersistentVolumeClaim",
+				Name: "test-pvc",
+			},
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksVolume,
+			MountPath: "/some/path",
+			ReadOnly:  true,
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksVolume,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: "test-pvc",
+				},
+			},
+		},
+		expectedPath: "/some/path",
+	},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prod",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+
+	for _, item := range tests {
+		expectedEnv := corev1.EnvVar{Name: "GIT_HOOKS_DIR", Value: item.expectedPath}
+		cr.Spec.Objects.Console.GitHooks = item.gitHooks
+		env, err := GetEnvironment(cr, test.MockService())
+		assert.Nil(t, err, "Error getting prod environment")
+		if item.expectedPath != "" {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s failed", item.name)
+		} else {
+			expectedEnv.Value = constants.GitHooksDefaultDir
+			assert.NotContainsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s failed", item.name)
+		}
+		if item.expectedVolumeMount != nil {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+		}
+		if item.expectedVolume != nil {
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+		}
+	}
 }
 
 func getImageChangeName(dc appsv1.DeploymentConfig) string {

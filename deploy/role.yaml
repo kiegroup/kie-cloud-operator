@@ -3,38 +3,141 @@ kind: Role
 metadata:
   name: kie-cloud-operator
 rules:
-  - apiGroups:
-      - ""
-      - apps
-      - app.kiegroup.org
-      - rbac.authorization.k8s.io
-      - apps.openshift.io
-      - image.openshift.io
-      - build.openshift.io
-      - route.openshift.io
-    resources:
-      - "*"
-    verbs:
-      - "*"
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
-      - create
-  - apiGroups:
-      - operators.coreos.com
-    resources:
-      - clusterserviceversions
-    verbs:
-      - "*"
-  - apiGroups:
-      - apps
-    resourceNames:
-      - kie-cloud-operator
-      - business-automation-operator
-    resources:
-      - deployments/finalizers
-    verbs:
-      - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - services
+  - serviceaccounts
+  - persistentvolumeclaims
+  - secrets
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - buildconfigs
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - imagestreams
+  - imagestreamtags
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - app.kiegroup.org
+  resources:
+  - kieapps
+  - kieapps/finalizers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resourceNames:
+  - kie-cloud-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update

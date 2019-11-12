@@ -71,7 +71,7 @@ export class CheckboxField extends Component {
             i,
             this.props.pageNumber,
             this.props.jsonSchema,
-            this.props.page
+            this.props.props.page
           );
           elements.push(oneComponent);
         } else {
@@ -83,7 +83,7 @@ export class CheckboxField extends Component {
             i,
             this.props.pageNumber,
             this.props.jsonSchema,
-            this.props.page,
+            this.props.props.page,
             this.props.fieldNumber
           );
           elements.push(oneComponent);

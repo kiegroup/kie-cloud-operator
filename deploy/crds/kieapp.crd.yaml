@@ -158,6 +158,30 @@ spec:
                             hostnameHTTPS:
                               type: string
                               description: Secure hostname to set as redirect URL
+                        gitHooks:
+                          type: object
+                          description: GitHooks configuration object
+                          properties:
+                            mountPath:
+                              type: string
+                              description: Absolute path where the gitHooks folder will be mounted.
+                            from:
+                              type: object
+                              required:
+                                - kind
+                                - name
+                              description: Object reference containing the GitHooks in case they are not included in the base image.
+                              properties:
+                                kind:
+                                  type: string
+                                  description: Reference Kind for the GitHooks
+                                  enum:
+                                    - ConfigMap
+                                    - Secret
+                                    - PersistentVolumeClaim
+                                name:
+                                  type: string
+                                  description: Reference object Name for the GitHooks
                     servers:
                       type: array
                       description: Configuration of the each individual KIE server
@@ -636,16 +660,32 @@ spec:
                           description: If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
                     roleMapper:
                       type: object
-                      description: RoleMapper configuration
+                      description: When present, the RoleMapping Login Module will be configured.
                       required:
                         - rolesProperties
                       properties:
                         rolesProperties:
                           type: string
-                          description: When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3
+                          description: The RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3
                         replaceRole:
                           type: boolean
                           description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.
+                        from:
+                          type: object
+                          description: The reference to a namespaced object containing the roleMapping file. The object must exist beforehand.
+                          required:
+                            - kind
+                            - name
+                          properties:
+                            kind:
+                              type: string
+                              description: Namespaced object kind
+                              enum:
+                                - ConfigMap
+                                - Secret
+                            name:
+                              type: string
+                              description: Namespaced object name
                 upgrades:
                   type: object
                   description: Specify the level of upgrade that should be allowed when an older product version is detected

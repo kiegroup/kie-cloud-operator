@@ -104,7 +104,7 @@ type KieAppList struct {
 // KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
 	// Business Central container configs
-	Console SecuredKieAppObject `json:"console,omitempty"`
+	Console ConsoleObject `json:"console,omitempty"`
 	// KIE Server configuration for individual sets
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
@@ -119,26 +119,28 @@ type KieAppUpgrades struct {
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
 type KieServerSet struct {
-	Deployments         *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	Name                string                  `json:"name,omitempty"`
-	ID                  string                  `json:"id,omitempty"`
-	From                *corev1.ObjectReference `json:"from,omitempty"`
-	Build               *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
-	SecuredKieAppObject `json:",inline"`
-	Database            *DatabaseObject  `json:"database,omitempty"`
-	Jms                 *KieAppJmsObject `json:"jms,omitempty"`
+	Deployments  *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	Name         string                  `json:"name,omitempty"`
+	ID           string                  `json:"id,omitempty"`
+	From         *corev1.ObjectReference `json:"from,omitempty"`
+	Build        *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
+	SSOClient    *SSOAuthClient          `json:"ssoClient,omitempty"`
+	KieAppObject `json:",inline"`
+	Database     *DatabaseObject  `json:"database,omitempty"`
+	Jms          *KieAppJmsObject `json:"jms,omitempty"`
+}
+
+// ConsoleObject Console deployment object
+type ConsoleObject struct {
+	KieAppObject `json:",inline"`
+	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
+	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
 }
 
 type SmartRouterObject struct {
 	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
-}
-
-// SecuredKieAppObject Generic object definition
-type SecuredKieAppObject struct {
-	SSOClient    *SSOAuthClient `json:"ssoClient,omitempty"`
-	KieAppObject `json:",inline"`
 }
 
 // KieAppJmsObject messaging specification to be used by the KieApp
@@ -230,6 +232,12 @@ type WebhookSecret struct {
 	Secret string      `json:"secret,omitempty"`
 }
 
+// GitHooksVolume GitHooks volume configuration
+type GitHooksVolume struct {
+	MountPath string                  `json:"mountPath,omitempty"`
+	From      *corev1.ObjectReference `json:"from,omitempty"`
+}
+
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
 	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
@@ -294,8 +302,9 @@ const (
 
 // RoleMapperAuthConfig Configuration for RoleMapper Authentication
 type RoleMapperAuthConfig struct {
-	RolesProperties string `json:"rolesProperties,omitempty"`
-	ReplaceRole     bool   `json:"replaceRole,omitempty"`
+	RolesProperties string                  `json:"rolesProperties"`
+	ReplaceRole     bool                    `json:"replaceRole,omitempty"`
+	From            *corev1.ObjectReference `json:"from,omitempty"`
 }
 
 // DatabaseType to define what kind of database will be used for the Kie Servers
@@ -366,16 +375,19 @@ type TemplateConstants struct {
 	BrokerImageTag       string `json:"brokerImageTag"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
+	RoleMapperVolume     string `json:"roleMapperVolume"`
+	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	SSOAuthClient  SSOAuthClient `json:"ssoAuthClient,omitempty"`
-	Name           string        `json:"name,omitempty"`
-	Replicas       int32         `json:"replicas,omitempty"`
-	Image          string        `json:"image,omitempty"`
-	ImageTag       string        `json:"imageTag,omitempty"`
-	KeystoreSecret string        `json:"keystoreSecret,omitempty"`
+	SSOAuthClient  SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name           string         `json:"name,omitempty"`
+	Replicas       int32          `json:"replicas,omitempty"`
+	Image          string         `json:"image,omitempty"`
+	ImageTag       string         `json:"imageTag,omitempty"`
+	KeystoreSecret string         `json:"keystoreSecret,omitempty"`
+	GitHooks       GitHooksVolume `json:"gitHooks,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -453,9 +465,15 @@ type VersionConfigs struct {
 
 // AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
-	SSO        SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP       LDAPAuthConfig       `json:"ldap,omitempty"`
-	RoleMapper RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+	SSO        SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
+}
+
+// RoleMapperTemplate RoleMapper definition used in the template
+type RoleMapperTemplate struct {
+	MountPath            string `json:"mountPath,omitempty"`
+	RoleMapperAuthConfig `json:",inline"`
 }
 
 // ConditionType - type of condition
@@ -478,6 +496,8 @@ const (
 	DeploymentFailedReason ReasonType = "DeploymentFailed"
 	// ConfigurationErrorReason - An invalid configuration caused an error
 	ConfigurationErrorReason ReasonType = "ConfigurationError"
+	// MissingDependenciesReason - Dependencies does not exist or cannot be found
+	MissingDependenciesReason ReasonType = "MissingDependencies"
 	// UnknownReason - Unable to determine the error
 	UnknownReason ReasonType = "Unknown"
 )
