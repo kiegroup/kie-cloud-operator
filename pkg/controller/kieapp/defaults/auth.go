@@ -1,6 +1,8 @@
 package defaults
 
 import (
+	"strings"
+
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
@@ -51,6 +53,11 @@ func configureAuth(cr *api.KieApp, envTemplate *api.EnvTemplate) (err error) {
 	}
 	if cr.Spec.Auth.RoleMapper != nil {
 		configureRoleMapper(cr.Spec.Auth.RoleMapper, envTemplate)
+	}
+	if strings.HasPrefix(cr.Spec.Version, "7.5") {
+		envTemplate.Auth.ExternalOnly = true
+	} else {
+		envTemplate.Auth.ExternalOnly = cr.Spec.Auth.ExternalOnly
 	}
 	return
 }

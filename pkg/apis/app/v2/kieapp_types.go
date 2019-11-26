@@ -241,9 +241,10 @@ type GitHooksVolume struct {
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
-	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
-	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+	ExternalOnly bool                  `json:"externalOnly,omitempty"`
+	SSO          *SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP         *LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper   *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 // SSOAuthConfig Authentication configuration for SSO
