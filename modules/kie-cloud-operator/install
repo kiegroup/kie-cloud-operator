@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INSTALL_PKGS="rsync go-toolset-1.11.*"
+INSTALL_PKGS="rsync go-toolset-1.12.*"
 OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
 UI_PATH=/usr/local/bin/console-cr-form
 
