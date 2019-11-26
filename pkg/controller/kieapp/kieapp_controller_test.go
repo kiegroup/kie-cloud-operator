@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -676,4 +678,389 @@ func getInstance(namespacedName types.NamespacedName) *api.KieApp {
 		},
 	}
 	return cr
+}
+
+func TestGetComparatorConfigMap(t *testing.T) {
+	comparator := getComparator()
+
+	type args struct {
+		deployed  map[reflect.Type][]resource.KubernetesResource
+		requested map[reflect.Type][]resource.KubernetesResource
+	}
+	tests := []struct {
+		name string
+		args args
+		want compare.ResourceDelta
+	}{
+		{
+			"NoChange",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{},
+		},
+		{
+			"Add",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Added: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"Removed",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{},
+			},
+			compare.ResourceDelta{
+				Removed: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedData",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test1",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test1",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedBinaryData",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't', '1'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't', '1'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedLabels",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test1",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test1",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, ok := comparator.Compare(tt.args.deployed, tt.args.requested)[reflect.TypeOf(corev1.ConfigMap{})]; !ok || !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getComparator_ConfigMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -12,21 +12,21 @@ spec:
   scope: Namespaced
   version: v2
   additionalPrinterColumns:
-  - name: Version
-    type: string
-    description: The version of the application deployment
-    JSONPath: .spec.version
-  - name: Environment
-    type: string
-    description: The name of the environment used as a baseline
-    JSONPath: .spec.environment
-  - name: Status
-    type: string
-    description: The status of the KieApp deployment
-    JSONPath: .status.phase
-  - name: Age
-    type: date
-    JSONPath: .metadata.creationTimestamp  
+    - name: Version
+      type: string
+      description: The version of the application deployment
+      JSONPath: .spec.version
+    - name: Environment
+      type: string
+      description: The name of the environment used as a baseline
+      JSONPath: .spec.environment
+    - name: Status
+      type: string
+      description: The status of the KieApp deployment
+      JSONPath: .status.phase
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   versions:
     - name: v2
       served: true
@@ -516,7 +516,7 @@ spec:
                             type: object
                             description: Configuration for JMS integration with KIE Server.
                             required:
-                            - enableIntegration
+                              - enableIntegration
                             properties:
                               enableIntegration:
                                 type: boolean
@@ -687,6 +687,72 @@ spec:
                         storageClassName:
                           type: string
                           description: The storageClassName to use for smart router pvc's.
+                    processMigration:
+                      type: object
+                      description: Configuration of the RHPAM Process Instance Migration
+                      properties:
+                        image:
+                          type: string
+                          description: The image to use for Process Instance Migration.
+                        imageTag:
+                          type: string
+                          description: The image tag to use for Process Instance Migration.
+                        database:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              description: Database type to use
+                              enum:
+                                - mysql
+                                - postgresql
+                                - external
+                                - h2
+                            size:
+                              type: string
+                              description: Size of the PersistentVolumeClaim to create. For example, 100Gi
+                            storageClassName:
+                              type: string
+                              description: The storageClassName to use for database pvc's.
+                            externalConfig:
+                              type: object
+                              description: External Database configuration
+                              required:
+                                - driver
+                                - username
+                                - password
+                                - jdbcURL
+                              properties:
+                                driver:
+                                  type: string
+                                  description: Driver name to use. For example, mysql
+                                jdbcURL:
+                                  type: string
+                                  description: Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
+                                username:
+                                  type: string
+                                  description: External database username
+                                password:
+                                  type: string
+                                  description: External database password
+                                minPoolSize:
+                                  type: string
+                                  description: Sets xa-pool/min-pool-size for the configured datasource.
+                                maxPoolSize:
+                                  type: string
+                                  description: Sets xa-pool/max-pool-size for the configured datasource.
+                                connectionChecker:
+                                  type: string
+                                  description: An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid.
+                                exceptionSorter:
+                                  type: string
+                                  description: An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred.
+                                backgroundValidation:
+                                  type: string
+                                  description: Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used.
+                                backgroundValidationMillis:
+                                  type: string
+                                  description: Defines the interval for the background-validation check for the jdbc connections.
                 imageRegistry:
                   type: object
                   description: If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
@@ -1211,7 +1277,7 @@ spec:
                             type: object
                             description: Configuration for JMS integration with KIE Server.
                             required:
-                            - enableIntegration
+                              - enableIntegration
                             properties:
                               enableIntegration:
                                 type: boolean

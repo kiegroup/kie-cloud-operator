@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -441,11 +443,11 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
-	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
-	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
-	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8"+":"+cr.Spec.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 }
@@ -486,13 +488,13 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
-	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
-	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.False(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	assert.Equal(t, "amq-tcp-ssl", env.Servers[0].Routes[2].Name)
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
-	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, true, cr.Spec.Objects.Servers[0].Jms.AMQEnableSSL)
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8"+":"+cr.Spec.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
@@ -528,8 +530,8 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
-	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
-	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_EXECUTOR_JMS"), "Variable should exist")
@@ -730,18 +732,22 @@ func TestExtensionImageBuildConfiguration(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseExternal,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								Dialect:              "org.hibernate.dialect.SQLServerDialect",
-								Driver:               "mssql",
-								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-								BackgroundValidation: "true",
-								MinPoolSize:          "10",
-								MaxPoolSize:          "10",
-								Username:             "sqlserverUser",
-								Password:             "sqlserverPwd",
-								JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+									Driver:               "mssql",
+									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+									BackgroundValidation: "true",
+									MinPoolSize:          "10",
+									MaxPoolSize:          "10",
+									Username:             "sqlserverUser",
+									Password:             "sqlserverPwd",
+									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								},
+								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
 						},
 						Build: &api.KieAppBuildObject{
@@ -778,18 +784,22 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseExternal,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								Dialect:              "org.hibernate.dialect.SQLServerDialect",
-								Driver:               "mssql",
-								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-								BackgroundValidation: "true",
-								MinPoolSize:          "10",
-								MaxPoolSize:          "10",
-								Username:             "sqlserverUser",
-								Password:             "sqlserverPwd",
-								JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+									Driver:               "mssql",
+									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+									BackgroundValidation: "true",
+									MinPoolSize:          "10",
+									MaxPoolSize:          "10",
+									Username:             "sqlserverUser",
+									Password:             "sqlserverPwd",
+									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								},
+								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
 						},
 						Build: &api.KieAppBuildObject{
@@ -1885,7 +1895,9 @@ func TestDatabaseExternalInvalid(t *testing.T) {
 					{
 						Deployments: Pint(2),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseExternal,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
 						},
 					},
 				},
@@ -1909,16 +1921,20 @@ func TestDatabaseExternal(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseExternal,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								Dialect:              "org.hibernate.dialect.Oracle10gDialect",
-								Driver:               "oracle",
-								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
-								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
-								BackgroundValidation: "false",
-								Username:             "oracleUser",
-								Password:             "oraclePwd",
-								JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+									Driver:               "oracle",
+									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
+									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
+									BackgroundValidation: "false",
+									Username:             "oracleUser",
+									Password:             "oraclePwd",
+									JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+								},
+								Dialect: "org.hibernate.dialect.Oracle10gDialect",
 							},
 						},
 						KieAppObject: api.KieAppObject{
@@ -1991,8 +2007,10 @@ func TestDatabaseH2(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseH2,
-							Size: "10Mi",
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseH2,
+								Size: "10Mi",
+							},
 						},
 					},
 				},
@@ -2101,7 +2119,9 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseH2,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseH2,
+							},
 						},
 					},
 				},
@@ -2146,8 +2166,10 @@ func TestDatabaseMySQL(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseMySQL,
-							Size: "10Mi",
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseMySQL,
+								Size: "10Mi",
+							},
 						},
 					},
 				},
@@ -2165,24 +2187,26 @@ func TestDatabaseMySQL(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("10Mi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
+		assert.Equal(t, 1, len(env.Databases[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
+		assert.Equal(t, resource.MustParse("10Mi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
 
@@ -2199,8 +2223,10 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseMySQL,
-							Size: "",
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseMySQL,
+								Size: "",
+							},
 						},
 					},
 				},
@@ -2218,35 +2244,37 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// MYSQL Credentials
 		adminUser := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_USERNAME")
 		assert.NotEmpty(t, adminUser, "The admin user must not be empty")
-		assert.Equal(t, adminUser, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_USER"))
+		assert.Equal(t, adminUser, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "MYSQL_USER"))
 		adminPwd := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
 		assert.NotEmpty(t, adminPwd, "The admin password should have been generated")
-		assert.Equal(t, adminPwd, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_PASSWORD"))
+		assert.Equal(t, adminPwd, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "MYSQL_PASSWORD"))
 		dbName := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE")
 		assert.NotEmpty(t, dbName, "The Database Name must not be empty")
-		assert.Equal(t, dbName, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_DATABASE"))
+		assert.Equal(t, dbName, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "MYSQL_DATABASE"))
 
 		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("1Gi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
+		assert.Equal(t, 1, len(env.Databases[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
+		assert.Equal(t, resource.MustParse("1Gi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
 func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
@@ -2262,7 +2290,9 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabaseMySQL,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseMySQL,
+							},
 						},
 					},
 				},
@@ -2282,22 +2312,24 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.NotNil(t, env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].EmptyDir)
-		assert.Equal(t, 0, len(env.Servers[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.NotNil(t, env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].EmptyDir)
+		assert.Equal(t, 0, len(env.Databases[i].PersistentVolumeClaims))
 	}
 }
 
@@ -2314,8 +2346,10 @@ func TestDatabasePostgresql(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabasePostgreSQL,
-							Size: "10Mi",
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabasePostgreSQL,
+								Size: "10Mi",
+							},
 						},
 					},
 				},
@@ -2333,24 +2367,26 @@ func TestDatabasePostgresql(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "postgresql", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// PostgreSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("10Mi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
+		assert.Equal(t, 1, len(env.Databases[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
+		assert.Equal(t, resource.MustParse("10Mi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
 
@@ -2367,8 +2403,10 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabasePostgreSQL,
-							Size: "",
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabasePostgreSQL,
+								Size: "",
+							},
 						},
 					},
 				},
@@ -2386,35 +2424,37 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "postgresql", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// PostgreSQL Credentials
 		adminUser := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_USERNAME")
 		assert.NotEmpty(t, adminUser, "The admin user must not be empty")
-		assert.Equal(t, adminUser, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "POSTGRESQL_USER"))
+		assert.Equal(t, adminUser, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "POSTGRESQL_USER"))
 		adminPwd := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
 		assert.NotEmpty(t, adminPwd, "The admin password should have been generated")
-		assert.Equal(t, adminPwd, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "POSTGRESQL_PASSWORD"))
+		assert.Equal(t, adminPwd, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "POSTGRESQL_PASSWORD"))
 		dbName := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE")
 		assert.NotEmpty(t, dbName, "The Database Name must not be empty")
-		assert.Equal(t, dbName, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "POSTGRESQL_DATABASE"))
+		assert.Equal(t, dbName, getEnvVariable(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "POSTGRESQL_DATABASE"))
 
 		// PostgreSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("1Gi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
+		assert.Equal(t, 1, len(env.Databases[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
+		assert.Equal(t, resource.MustParse("1Gi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
 func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
@@ -2430,7 +2470,9 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 					{
 						Deployments: Pint(deployments),
 						Database: &api.DatabaseObject{
-							Type: api.DatabasePostgreSQL,
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabasePostgreSQL,
+							},
 						},
 					},
 				},
@@ -2448,22 +2490,24 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
+		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
+		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, "postgresql", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
 
 		// PostgreSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.NotNil(t, env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].EmptyDir)
-		assert.Equal(t, 0, len(env.Servers[i].PersistentVolumeClaims))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].DeploymentConfigs[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes))
+		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
+		assert.NotNil(t, env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].EmptyDir)
+		assert.Equal(t, 0, len(env.Databases[i].PersistentVolumeClaims))
 	}
 }
 
@@ -2481,7 +2525,8 @@ func TestEnvCustomImageTag(t *testing.T) {
 						Deployments: Pint(2),
 					},
 				},
-				SmartRouter: &api.SmartRouterObject{},
+				SmartRouter:      &api.SmartRouterObject{},
+				ProcessMigration: &api.ProcessMigrationObject{},
 			},
 		},
 	}
@@ -2494,6 +2539,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 	os.Setenv(envConstants.App.ImageVar+constants.CurrentVersion, imageURL)
 	os.Setenv(constants.PamKieImageVar+constants.CurrentVersion, imageURL)
 	os.Setenv(constants.PamSmartRouterVar+constants.CurrentVersion, imageURL)
+	os.Setenv(constants.PamProcessMigrationVar+constants.CurrentVersion, imageURL)
 	checkImageNames(cr, imageName, imageURL, t)
 
 	// test setting image with env vars, DM product, and different image url
@@ -2524,12 +2570,21 @@ func TestEnvCustomImageTag(t *testing.T) {
 	assert.Equal(t, constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Spec.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting imagetag in CR overrides env vars
+	cr.Spec.Environment = api.RhpamAuthoring
+	imageURL = image + ":" + imageTag
+	os.Setenv(envConstants.App.ImageVar+constants.CurrentVersion, imageURL)
+	os.Setenv(constants.PamKieImageVar+constants.CurrentVersion, imageURL)
+	os.Setenv(constants.PamBusinessCentralVar+constants.CurrentVersion, imageURL)
+	os.Setenv(constants.PamSmartRouterVar+constants.CurrentVersion, imageURL)
+	os.Setenv(constants.PamProcessMigrationVar+constants.CurrentVersion, imageURL)
+
 	cr.Spec.UseImageTags = false
 	imageTag = "1.5"
 	imageName = image + ":" + imageTag
 	cr.Spec.Objects.Console.ImageTag = imageTag
 	cr.Spec.Objects.Servers[0].ImageTag = imageTag
 	cr.Spec.Objects.SmartRouter.ImageTag = imageTag
+	cr.Spec.Objects.ProcessMigration.ImageTag = imageTag
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
@@ -2545,11 +2600,15 @@ func TestEnvCustomImageTag(t *testing.T) {
 	if isTagImage := getImageChangeName(env.SmartRouter.DeploymentConfigs[0]); isTagImage != "" {
 		assert.Equal(t, imageName, isTagImage)
 	}
+	if isTagImage := getImageChangeName(env.ProcessMigration.DeploymentConfigs[0]); isTagImage != "" {
+		assert.Equal(t, imageName, isTagImage)
+	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
 	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting image in CR overrides env vars
 	image = "testing-images"
@@ -2557,6 +2616,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 	cr.Spec.Objects.Console.Image = image
 	cr.Spec.Objects.Servers[0].Image = image
 	cr.Spec.Objects.SmartRouter.Image = image
+	cr.Spec.Objects.ProcessMigration.Image = image
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
@@ -2572,11 +2632,15 @@ func TestEnvCustomImageTag(t *testing.T) {
 	if isTagImage := getImageChangeName(env.SmartRouter.DeploymentConfigs[0]); isTagImage != "" {
 		assert.Equal(t, imageName, isTagImage)
 	}
+	if isTagImage := getImageChangeName(env.ProcessMigration.DeploymentConfigs[0]); isTagImage != "" {
+		assert.Equal(t, imageName, isTagImage)
+	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
 	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestStorageClassName(t *testing.T) {
@@ -2590,15 +2654,15 @@ func TestStorageClassName(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(1),
-						Database:    &api.DatabaseObject{Type: api.DatabaseMySQL},
+						Database:    &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL}},
 					},
 					{
 						Deployments: Pint(1),
-						Database:    &api.DatabaseObject{Type: api.DatabasePostgreSQL},
+						Database:    &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL}},
 					},
 					{
 						Deployments: Pint(1),
-						Database:    &api.DatabaseObject{Type: api.DatabaseH2},
+						Database:    &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2}},
 					},
 				},
 				SmartRouter: &api.SmartRouterObject{},
@@ -2608,8 +2672,8 @@ func TestStorageClassName(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Nil(t, env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Nil(t, env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Nil(t, env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Nil(t, env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Nil(t, env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Len(t, env.Others[0].StatefulSets, 0)
@@ -2625,8 +2689,8 @@ func TestStorageClassName(t *testing.T) {
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Nil(t, env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Nil(t, env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Nil(t, env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Len(t, env.Others[0].StatefulSets, 0)
 	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
@@ -2636,8 +2700,8 @@ func TestStorageClassName(t *testing.T) {
 	cr.Spec.Objects.Servers[2].Database.StorageClassName = "gold2"
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
-	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Len(t, env.Others[0].StatefulSets, 0)
 
@@ -2645,8 +2709,8 @@ func TestStorageClassName(t *testing.T) {
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "fast", *env.Others[0].StatefulSets[0].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
@@ -2656,8 +2720,8 @@ func TestStorageClassName(t *testing.T) {
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Len(t, env.Others[0].StatefulSets, 0)
@@ -2666,8 +2730,8 @@ func TestStorageClassName(t *testing.T) {
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
-	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Databases[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Databases[1].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
 	assert.Equal(t, "fast", *env.Others[0].StatefulSets[0].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
@@ -2858,4 +2922,1086 @@ func checkImageNames(cr *api.KieApp, imageName, imageURL string, t *testing.T) {
 	assert.Equal(t, imageURL, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageURL, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageURL, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	if len(env.ProcessMigration.DeploymentConfigs) > 0 {
+		if isTagImage := getImageChangeName(env.ProcessMigration.DeploymentConfigs[0]); isTagImage != "" {
+			assert.Equal(t, imageName, isTagImage)
+		}
+		assert.Equal(t, imageURL, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	}
+}
+
+func TestDeployProcessMigration(t *testing.T) {
+	type args struct {
+		cr *api.KieApp
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"RhpamTrial",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"RhpamProduction",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamProduction,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"RhpamProductionImmutable",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamProductionImmutable,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"RhpamAuthoring",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamAuthoring,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"RhpamAuthoringHA",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamAuthoringHA,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"RhdmTrial",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmProductionImmutable",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmProductionImmutable,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmAuthoring",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmAuthoring,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmAuthoringHA",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmAuthoringHA,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhpamTrial_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhpamProduction_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamProduction,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhpamProductionImmutable_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamProductionImmutable,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhpamAuthoring_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamAuthoring,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhpamAuthoringHA_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamAuthoringHA,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmTrial_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmTrial,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmProductionImmutable_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmProductionImmutable,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmAuthoring_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmAuthoring,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"RhdmAuthoringHA_NoProcessMigration",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhdmAuthoringHA,
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := deployProcessMigration(tt.args.cr); got != tt.want {
+				t.Errorf("deployProcessMigration() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetProcessMigrationTemplate(t *testing.T) {
+	type args struct {
+		cr            *api.KieApp
+		serversConfig []api.ServerTemplate
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *api.ProcessMigrationTemplate
+		wantErr bool
+	}{
+		{
+			"ProcessMigration_Custom",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{
+								Image:    "test-pim-image",
+								ImageTag: "test-pim-image-tag",
+								Database: api.ProcessMigrationDatabaseObject{
+									InternalDatabaseObject: api.InternalDatabaseObject{
+										Type:             api.DatabaseMySQL,
+										StorageClassName: "gold",
+										Size:             "32Gi",
+									},
+								},
+							},
+						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     "testuser",
+							AdminPassword: "testpassword",
+						},
+						Version: "test",
+					},
+				},
+				[]api.ServerTemplate{
+					{KieName: "kieserver1"},
+					{KieName: "kieserver2"},
+				},
+			},
+			&api.ProcessMigrationTemplate{
+				Image:    "test-pim-image",
+				ImageTag: "test-pim-image-tag",
+				ImageURL: "test-pim-image:test-pim-image-tag",
+				KieServerClients: []api.KieServerClient{
+					{
+						Host:     "http://kieserver1:8080/services/rest/server",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+					{
+						Host:     "http://kieserver2:8080/services/rest/server",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+				},
+				Database: api.ProcessMigrationDatabaseObject{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type:             api.DatabaseMySQL,
+						StorageClassName: "gold",
+						Size:             "32Gi",
+					},
+				},
+			},
+			false,
+		},
+		{
+			"ProcessMigration_Default",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{},
+						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     "testuser",
+							AdminPassword: "testpassword",
+						},
+						Version: "test",
+					},
+				},
+				[]api.ServerTemplate{
+					{KieName: "kieserver1"},
+				},
+			},
+			&api.ProcessMigrationTemplate{
+				Image:    "rhpam-process-migration-rhel8",
+				ImageTag: "test",
+				ImageURL: "rhpam-process-migration-rhel8:test",
+				KieServerClients: []api.KieServerClient{
+					{
+						Host:     "http://kieserver1:8080/services/rest/server",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+				},
+				Database: api.ProcessMigrationDatabaseObject{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type: api.DatabaseH2,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"ProcessMigration_Empty",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						CommonConfig: api.CommonConfig{
+							AdminUser:     "testuser",
+							AdminPassword: "testpassword",
+						},
+						Version: "test",
+					},
+				},
+				[]api.ServerTemplate{
+					{KieName: "kieserver1"},
+				},
+			},
+			&api.ProcessMigrationTemplate{},
+			false,
+		},
+		{
+			"ProcessMigration_ExternalDB_Error",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{
+								Image:    "test-pim-image",
+								ImageTag: "test-pim-image-tag",
+								Database: api.ProcessMigrationDatabaseObject{
+									InternalDatabaseObject: api.InternalDatabaseObject{
+										Type: api.DatabaseExternal,
+									},
+								},
+							},
+						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     "testuser",
+							AdminPassword: "testpassword",
+						},
+						Version: "test",
+					},
+				},
+				[]api.ServerTemplate{
+					{KieName: "kieserver1"},
+					{KieName: "kieserver2"},
+				},
+			},
+			nil,
+			true,
+		},
+		{
+			"ProcessMigration_ExternalDB",
+			args{
+				&api.KieApp{
+					Spec: api.KieAppSpec{
+						Environment: api.RhpamTrial,
+						Objects: api.KieAppObjects{
+							ProcessMigration: &api.ProcessMigrationObject{
+								Image:    "test-pim-image",
+								ImageTag: "test-pim-image-tag",
+								Database: api.ProcessMigrationDatabaseObject{
+									InternalDatabaseObject: api.InternalDatabaseObject{
+										Type: api.DatabaseExternal,
+									},
+									ExternalConfig: &api.CommonExternalDatabaseObject{
+										Driver:                     "mariadb",
+										JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
+										Username:                   "pim",
+										Password:                   "pim",
+										MinPoolSize:                "10",
+										MaxPoolSize:                "10",
+										ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+										ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+										BackgroundValidation:       "true",
+										BackgroundValidationMillis: "150000",
+									},
+								},
+							},
+						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     "testuser",
+							AdminPassword: "testpassword",
+						},
+						Version: "test",
+					},
+				},
+				[]api.ServerTemplate{
+					{KieName: "kieserver1"},
+					{KieName: "kieserver2"},
+				},
+			},
+			&api.ProcessMigrationTemplate{
+				Image:    "test-pim-image",
+				ImageTag: "test-pim-image-tag",
+				ImageURL: "test-pim-image:test-pim-image-tag",
+				KieServerClients: []api.KieServerClient{
+					{
+						Host:     "http://kieserver1:8080/services/rest/server",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+					{
+						Host:     "http://kieserver2:8080/services/rest/server",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+				},
+				Database: api.ProcessMigrationDatabaseObject{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type: api.DatabaseExternal,
+					},
+					ExternalConfig: &api.CommonExternalDatabaseObject{
+						Driver:                     "mariadb",
+						JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
+						Username:                   "pim",
+						Password:                   "pim",
+						MinPoolSize:                "10",
+						MaxPoolSize:                "10",
+						ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+						ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+						BackgroundValidation:       "true",
+						BackgroundValidationMillis: "150000",
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getProcessMigrationTemplate(tt.args.cr, tt.args.serversConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getProcessMigrationTemplate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			} else if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getProcessMigrationTemplate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeProcessMigrationDB(t *testing.T) {
+	type args struct {
+		service     kubernetes.PlatformService
+		cr          *api.KieApp
+		env         api.Environment
+		envTemplate api.EnvTemplate
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    api.Environment
+		wantErr bool
+	}{
+		{
+			"ProcessMigration_ExternalDB",
+			args{
+				test.MockService(),
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test-ns",
+					},
+					Spec: api.KieAppSpec{
+						Version: constants.CurrentVersion,
+					},
+				},
+				api.Environment{},
+				api.EnvTemplate{
+					CommonConfig: &api.CommonConfig{
+						ApplicationName: "kietest",
+					},
+					ProcessMigration: api.ProcessMigrationTemplate{
+						Database: api.ProcessMigrationDatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.CommonExternalDatabaseObject{
+								Driver:   "mariadb",
+								JdbcURL:  "jdbc:mariadb://test-process-migration-mysql:3306/pimdb",
+								Username: "pim",
+								Password: "pim",
+							},
+						},
+					},
+				},
+			},
+			api.Environment{
+				ProcessMigration: api.CustomObject{
+					ConfigMaps: []corev1.ConfigMap{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "kietest-process-migration",
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"ProcessMigration_H2",
+			args{
+				test.MockService(),
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test-ns",
+					},
+					Spec: api.KieAppSpec{
+						Version: constants.CurrentVersion,
+					},
+				},
+				api.Environment{},
+				api.EnvTemplate{
+					CommonConfig: &api.CommonConfig{
+						ApplicationName: "kietest",
+					},
+					ProcessMigration: api.ProcessMigrationTemplate{
+						Database: api.ProcessMigrationDatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseH2,
+							},
+						},
+					},
+				},
+			},
+			api.Environment{},
+			false,
+		},
+		{
+			"ProcessMigration_MySQL",
+			args{
+				test.MockService(),
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test-ns",
+					},
+					Spec: api.KieAppSpec{
+						Version: constants.CurrentVersion,
+					},
+				},
+				api.Environment{},
+				api.EnvTemplate{
+					CommonConfig: &api.CommonConfig{
+						ApplicationName: "kietest",
+					},
+					ProcessMigration: api.ProcessMigrationTemplate{
+						Database: api.ProcessMigrationDatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseMySQL,
+							},
+						},
+					},
+				},
+			},
+			api.Environment{
+				ProcessMigration: api.CustomObject{
+					DeploymentConfigs: []appsv1.DeploymentConfig{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "kietest-process-migration",
+							},
+						},
+					},
+					ConfigMaps: []corev1.ConfigMap{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "kietest-process-migration",
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"ProcessMigration_POSTGRESSQL",
+			args{
+				test.MockService(),
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test-ns",
+					},
+					Spec: api.KieAppSpec{
+						Version: constants.CurrentVersion,
+					},
+				},
+				api.Environment{},
+				api.EnvTemplate{
+					CommonConfig: &api.CommonConfig{
+						ApplicationName: "kietest",
+					},
+					ProcessMigration: api.ProcessMigrationTemplate{
+						Database: api.ProcessMigrationDatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabasePostgreSQL,
+							},
+						},
+					},
+				},
+			},
+			api.Environment{
+				ProcessMigration: api.CustomObject{
+					DeploymentConfigs: []appsv1.DeploymentConfig{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "kietest-process-migration",
+							},
+						},
+					},
+					ConfigMaps: []corev1.ConfigMap{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "kietest-process-migration",
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeProcessMigrationDB(tt.args.service, tt.args.cr, tt.args.env, tt.args.envTemplate)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("mergeProcessMigrationDB() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got.ProcessMigration, tt.want.ProcessMigration) {
+				if len(got.ProcessMigration.DeploymentConfigs) != len(tt.want.ProcessMigration.DeploymentConfigs) ||
+					(len(tt.want.ProcessMigration.DeploymentConfigs) == 1 &&
+						got.ProcessMigration.DeploymentConfigs[0].ObjectMeta.Name != tt.want.ProcessMigration.DeploymentConfigs[0].ObjectMeta.Name) {
+					t.Errorf("mergeProcessMigrationDB() got = %v, want %v", got, tt.want)
+					return
+				}
+
+				if len(got.ProcessMigration.ConfigMaps) != len(tt.want.ProcessMigration.ConfigMaps) ||
+					(len(tt.want.ProcessMigration.ConfigMaps) == 1 &&
+						got.ProcessMigration.ConfigMaps[0].ObjectMeta.Name != tt.want.ProcessMigration.ConfigMaps[0].ObjectMeta.Name) {
+					t.Errorf("mergeProcessMigrationDB() got = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestGetDatabaseDeploymentTemplate(t *testing.T) {
+	type args struct {
+		cr                       *api.KieApp
+		serversConfig            []api.ServerTemplate
+		processMigrationTemplate *api.ProcessMigrationTemplate
+	}
+	tests := []struct {
+		name string
+		args args
+		want []api.DatabaseTemplate
+	}{
+		{
+			"KieServerDeployment",
+			args{
+				&api.KieApp{},
+				[]api.ServerTemplate{
+					{
+						KieName: "mysql",
+						Database: api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type:             api.DatabaseMySQL,
+								Size:             "30Gi",
+								StorageClassName: "gold",
+							},
+						},
+					},
+					{
+						KieName: "postgresql",
+						Database: api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type:             api.DatabasePostgreSQL,
+								Size:             "20Gi",
+								StorageClassName: "gold1",
+							},
+						},
+					},
+					{
+						KieName: "h2",
+						Database: api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseH2,
+							},
+						},
+					},
+					{
+						KieName: "external",
+						Database: api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.ExternalDatabaseObject{},
+						},
+					},
+				},
+				nil,
+			},
+			[]api.DatabaseTemplate{
+				{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type:             api.DatabaseMySQL,
+						Size:             "30Gi",
+						StorageClassName: "gold",
+					},
+					ServerName:   "mysql",
+					DatabaseName: constants.DefaultKieServerDatabaseName,
+					Username:     constants.DefaultKieServerDatabaseUsername,
+				},
+				{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type:             api.DatabasePostgreSQL,
+						Size:             "20Gi",
+						StorageClassName: "gold1",
+					},
+					ServerName:   "postgresql",
+					DatabaseName: constants.DefaultKieServerDatabaseName,
+					Username:     constants.DefaultKieServerDatabaseUsername,
+				},
+			},
+		},
+		{
+			"ProcessMigrationDeployment_Mysql",
+			args{
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "mysql",
+					},
+				},
+				nil,
+				&api.ProcessMigrationTemplate{
+					Database: api.ProcessMigrationDatabaseObject{
+						InternalDatabaseObject: api.InternalDatabaseObject{
+							Type:             api.DatabaseMySQL,
+							Size:             "30Gi",
+							StorageClassName: "gold",
+						},
+					},
+				},
+			},
+			[]api.DatabaseTemplate{
+				{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type:             api.DatabaseMySQL,
+						Size:             "30Gi",
+						StorageClassName: "gold",
+					},
+					ServerName:   "mysql-process-migration",
+					DatabaseName: constants.DefaultProcessMigrationDatabaseName,
+					Username:     constants.DefaultProcessMigrationDatabaseUsername,
+				},
+			},
+		},
+		{
+			"ProcessMigrationDeployment_Postgresql",
+			args{
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "postgresql",
+					},
+				},
+				nil,
+				&api.ProcessMigrationTemplate{
+					Database: api.ProcessMigrationDatabaseObject{
+						InternalDatabaseObject: api.InternalDatabaseObject{
+							Type:             api.DatabasePostgreSQL,
+							Size:             "30Gi",
+							StorageClassName: "gold",
+						},
+					},
+				},
+			},
+			[]api.DatabaseTemplate{
+				{
+					InternalDatabaseObject: api.InternalDatabaseObject{
+						Type:             api.DatabasePostgreSQL,
+						Size:             "30Gi",
+						StorageClassName: "gold",
+					},
+					ServerName:   "postgresql-process-migration",
+					DatabaseName: constants.DefaultProcessMigrationDatabaseName,
+					Username:     constants.DefaultProcessMigrationDatabaseUsername,
+				},
+			},
+		},
+		{
+			"ProcessMigrationDeployment_h2",
+			args{
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "h2",
+					},
+				},
+				nil,
+				&api.ProcessMigrationTemplate{
+					Database: api.ProcessMigrationDatabaseObject{
+						InternalDatabaseObject: api.InternalDatabaseObject{
+							Type: api.DatabaseH2,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"ProcessMigrationDeployment_external",
+			args{
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "external",
+					},
+				},
+				nil,
+				&api.ProcessMigrationTemplate{
+					Database: api.ProcessMigrationDatabaseObject{
+						InternalDatabaseObject: api.InternalDatabaseObject{
+							Type: api.DatabaseExternal,
+						},
+						ExternalConfig: &api.CommonExternalDatabaseObject{},
+					},
+				},
+			},
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getDatabaseDeploymentTemplate(tt.args.cr, tt.args.serversConfig, tt.args.processMigrationTemplate); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getDatabaseDeploymentTemplate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeDBDeployment(t *testing.T) {
+	type args struct {
+		service     kubernetes.PlatformService
+		cr          *api.KieApp
+		env         api.Environment
+		envTemplate api.EnvTemplate
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    api.Environment
+		wantErr bool
+	}{
+		{
+			"MergeDBDeployment",
+			args{
+				test.MockService(),
+				&api.KieApp{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test-ns",
+					},
+					Spec: api.KieAppSpec{
+						Version: constants.CurrentVersion,
+					},
+				},
+				api.Environment{},
+				api.EnvTemplate{
+					CommonConfig: &api.CommonConfig{
+						ApplicationName: "kietest",
+					},
+					Databases: []api.DatabaseTemplate{
+						{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type:             api.DatabaseMySQL,
+								Size:             "30Gi",
+								StorageClassName: "gold",
+							},
+							ServerName:   "mysql",
+							DatabaseName: constants.DefaultKieServerDatabaseName,
+							Username:     constants.DefaultKieServerDatabaseUsername,
+						},
+						{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type:             api.DatabasePostgreSQL,
+								Size:             "20Gi",
+								StorageClassName: "gold1",
+							},
+							ServerName:   "postgresql",
+							DatabaseName: constants.DefaultKieServerDatabaseName,
+							Username:     constants.DefaultKieServerDatabaseUsername,
+						},
+						{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type:             api.DatabaseMySQL,
+								Size:             "10Gi",
+								StorageClassName: "gold2",
+							},
+							ServerName:   "mysql-process-migration",
+							DatabaseName: constants.DefaultProcessMigrationDatabaseName,
+							Username:     constants.DefaultProcessMigrationDatabaseUsername,
+						},
+					},
+				},
+			},
+			api.Environment{
+				Databases: []api.CustomObject{
+					{
+						DeploymentConfigs: []appsv1.DeploymentConfig{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-mysql",
+								},
+							},
+						},
+						PersistentVolumeClaims: []corev1.PersistentVolumeClaim{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-mysql-claim",
+								},
+							},
+						},
+						Services: []corev1.Service{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-mysql",
+								},
+							},
+						},
+					},
+					{
+						DeploymentConfigs: []appsv1.DeploymentConfig{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "postgresql-postgresql",
+								},
+							},
+						},
+						PersistentVolumeClaims: []corev1.PersistentVolumeClaim{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "postgresql-postgresql-claim",
+								},
+							},
+						},
+						Services: []corev1.Service{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "postgresql-postgresql",
+								},
+							},
+						},
+					},
+					{
+						DeploymentConfigs: []appsv1.DeploymentConfig{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-process-migration-mysql",
+								},
+							},
+						},
+						PersistentVolumeClaims: []corev1.PersistentVolumeClaim{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-process-migration-mysql-claim",
+								},
+							},
+						},
+						Services: []corev1.Service{
+							{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: "mysql-process-migration-mysql",
+								},
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeDBDeployment(tt.args.service, tt.args.cr, tt.args.env, tt.args.envTemplate)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("mergeDBDeployment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				if len(got.Databases) != len(tt.want.Databases) {
+					t.Errorf("mergeDBDeployment() got = %v, want %v", got, tt.want)
+					return
+				}
+
+				for i := range got.Databases {
+					if len(got.Databases[i].DeploymentConfigs) != len(tt.want.Databases[i].DeploymentConfigs) ||
+						(len(tt.want.Databases[i].DeploymentConfigs) == 1 &&
+							got.Databases[i].DeploymentConfigs[0].ObjectMeta.Name != tt.want.Databases[i].DeploymentConfigs[0].ObjectMeta.Name) {
+						t.Errorf("mergeDBDeployment() got = %v, want %v", got, tt.want)
+						return
+					}
+
+					if len(got.Databases[i].PersistentVolumeClaims) != len(tt.want.Databases[i].PersistentVolumeClaims) ||
+						(len(tt.want.Databases[i].PersistentVolumeClaims) == 1 &&
+							got.Databases[i].PersistentVolumeClaims[0].ObjectMeta.Name != tt.want.Databases[i].PersistentVolumeClaims[0].ObjectMeta.Name) {
+						t.Errorf("mergeDBDeployment() got = %v, want %v", got, tt.want)
+						return
+					}
+
+					if len(got.Databases[i].Services) != len(tt.want.Databases[i].Services) ||
+						(len(tt.want.Databases[i].Services) == 1 &&
+							got.Databases[i].Services[0].ObjectMeta.Name != tt.want.Databases[i].Services[0].ObjectMeta.Name) {
+						t.Errorf("mergeDBDeployment() got = %v, want %v", got, tt.want)
+					}
+				}
+			}
+		})
+	}
 }
