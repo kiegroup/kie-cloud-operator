@@ -840,6 +840,7 @@ others:
             resources:
               - configmaps
               - serviceaccounts
+              - pods
             verbs:
               - create
               - delete
