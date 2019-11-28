@@ -197,21 +197,11 @@ func TestExternalOnlyDefaultConfig(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnvs := []corev1.EnvVar{
-		{Name: "EXTERNAL_AUTH_ONLY", Value: "false"},
-		{Name: "KIE_ADMIN_USER", Value: "testUser"},
-		{Name: "KIE_ADMIN_PWD", Value: "testPwd"},
-		{Name: "KIE_SERVER_USER", Value: "testUser"},
-		{Name: "KIE_SERVER_PWD", Value: "testPwd"},
-		{Name: "KIE_SERVER_CONTROLLER_USER", Value: "testUser"},
-		{Name: "KIE_SERVER_CONTROLLER_PWD", Value: "testPwd"},
-	}
+	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "false"}
 
-	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-		}
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
+	for i := range env.Servers {
+		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 	}
 }
 
@@ -239,21 +229,11 @@ func TestExternalOnlyConfig(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnvs := []corev1.EnvVar{
-		{Name: "EXTERNAL_AUTH_ONLY", Value: "true"},
-		{Name: "KIE_ADMIN_USER", Value: "testUser"},
-		{Name: "KIE_ADMIN_PWD", Value: "testPwd"},
-		{Name: "KIE_SERVER_USER", Value: "testUser"},
-		{Name: "KIE_SERVER_PWD", Value: "testPwd"},
-		{Name: "KIE_SERVER_CONTROLLER_USER", Value: "testUser"},
-		{Name: "KIE_SERVER_CONTROLLER_PWD", Value: "testPwd"},
-	}
+	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "true"}
 
-	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-		}
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
+	for i := range env.Servers {
+		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 	}
 }
 
@@ -280,26 +260,11 @@ func TestExternalOnlyConfigOldVersions(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnvs := []corev1.EnvVar{
-		{Name: "KIE_ADMIN_USER", Value: "testUser"},
-		{Name: "KIE_ADMIN_PWD", Value: "testPwd"},
-		{Name: "KIE_SERVER_USER", Value: "executionUser"},
-		{Name: "KIE_SERVER_PWD", Value: "RedHat"},
-		{Name: "KIE_SERVER_CONTROLLER_USER", Value: "controllerUser"},
-		{Name: "KIE_SERVER_CONTROLLER_PWD", Value: "RedHat"},
-	}
+	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY"}
 
-	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-		}
-	}
-
-	externalAuthEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY"}
-	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, externalAuthEnv, "Console should not contain env %v", externalAuthEnv)
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 	for i := range env.Servers {
-		assert.NotContains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, externalAuthEnv, "Server %v not should contain env %v", i, externalAuthEnv)
+		assert.NotContains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 	}
 }
 

@@ -85,13 +85,13 @@ console:
                   - name: KIE_MAVEN_PWD
                     value: "[[.MavenPassword]]"
                   - name: KIE_SERVER_CONTROLLER_USER
-                    value: "[[.AdminUser]]"
+                    value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "[[.AdminPassword]]"
+                    value: "[[.ControllerPassword]]"
                   - name: KIE_SERVER_USER
-                    value: "[[.AdminUser]]"
+                    value: executionUser
                   - name: KIE_SERVER_PWD
-                    value: "[[.AdminPassword]]"
+                    value: "[[.ServerPassword]]"
                   - name: KIE_MBEANS
                     value: enabled
                   #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
@@ -420,9 +420,9 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
                   - name: KIE_SERVER_CONTROLLER_USER
-                    value: "[[.AdminUser]]"
+                    value: controllerUser
                   - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "[[.AdminPassword]]"
+                    value: "[[.ControllerPassword]]"
                   - name: KIE_SERVER_CONTROLLER_SERVICE
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -554,15 +554,15 @@ servers:
                     - name: KIE_SERVER_STARTUP_STRATEGY
                       value: "OpenShiftStartupStrategy"
                     - name: KIE_SERVER_USER
-                      value: "[[$.AdminUser]]"
+                      value: executionUser
                     - name: KIE_SERVER_PWD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.ServerPassword]]"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
                     - name: KIE_SERVER_CONTROLLER_USER
-                      value: "[[$.AdminUser]]"
+                      value: controllerUser
                     - name: KIE_SERVER_CONTROLLER_PWD
-                      value: "[[$.AdminPassword]]"
+                      value: "[[$.ControllerPassword]]"
                     - name: KIE_SERVER_CONTROLLER_SERVICE
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
