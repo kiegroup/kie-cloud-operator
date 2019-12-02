@@ -456,7 +456,6 @@ type CommonConfig struct {
 // VersionConfigs ...
 type VersionConfigs struct {
 	APIVersion       string `json:"apiVersion,omitempty"`
-	ImageTag         string `json:"imageTag,omitempty"`
 	BrokerImage      string `json:"brokerImage,omitempty"`
 	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
 	DatagridImage    string `json:"datagridImage,omitempty"`

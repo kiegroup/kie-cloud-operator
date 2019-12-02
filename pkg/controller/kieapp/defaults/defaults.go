@@ -806,7 +806,7 @@ func setDefaults(cr *api.KieApp) {
 		cr.Spec.Version = constants.CurrentVersion
 	}
 	if checkVersion(cr.Spec.Version) {
-		cr.Spec.CommonConfig.ImageTag = constants.VersionConstants[cr.Spec.Version].ImageTag
+		cr.Spec.CommonConfig.ImageTag = cr.Spec.Version
 	}
 	if len(cr.Spec.CommonConfig.ApplicationName) == 0 {
 		cr.Spec.CommonConfig.ApplicationName = cr.Name

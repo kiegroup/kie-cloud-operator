@@ -7,11 +7,11 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.6.0"
+	CurrentVersion = "7.6.1"
 	// LastMicroVersion product version supported
 	LastMicroVersion = "7.5.1"
 	// LastMinorVersion product version supported
-	LastMinorVersion = "7.5.0"
+	LastMinorVersion = "7.6.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -79,7 +79,6 @@ const (
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         CurrentVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.5",
 		DatagridImage:    "datagrid73-openshift",
@@ -87,7 +86,6 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 	LastMicroVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         LastMicroVersion,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.4",
 		DatagridImage:    "datagrid73-openshift",
@@ -95,11 +93,10 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 	LastMinorVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
-		ImageTag:         LastMinorVersion,
 		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
+		BrokerImageTag:   "7.5",
 		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.1",
+		DatagridImageTag: "1.3",
 	},
 }
 
