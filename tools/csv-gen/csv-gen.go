@@ -50,7 +50,7 @@ var (
 			Registry:     "registry.redhat.io",
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
-			Tag:          constants.VersionConstants[constants.CurrentVersion].ImageTag,
+			Tag:          constants.CurrentVersion,
 		},
 	}
 )

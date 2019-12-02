@@ -54,19 +54,15 @@ others:
             service: "[[.ApplicationName]]-datagrid"
         spec:
           podManagementPolicy: OrderedReady
-          replicas: 1
+          updateStrategy:
+            rollingUpdate:
+              partition: 0
+            type: RollingUpdate
+          replicas: 2
           selector:
             matchLabels:
               deploymentConfig: "[[.ApplicationName]]-datagrid"
           serviceName: "[[.ApplicationName]]-datagrid"
-          strategy:
-            rollingParams:
-              intervalSeconds: 20
-              maxSurge: 1
-              maxUnavailable: 1
-              timeoutSeconds: 1200
-              updatePeriodSeconds: 20
-            type: Rolling
           template:
             metadata:
               labels:
@@ -151,7 +147,6 @@ others:
                 resources:
                   requests:
                     storage: 1Gi
-
       - metadata:
           annotations:
             alpha.image.policy.openshift.io/resolve-names: "*"
@@ -161,6 +156,10 @@ others:
           name: "[[.ApplicationName]]-amq"
         spec:
           podManagementPolicy: OrderedReady
+          updateStrategy:
+            rollingUpdate:
+              partition: 0
+            type: RollingUpdate
           replicas: 2
           revisionHistoryLimit: 10
           selector:
@@ -169,6 +168,7 @@ others:
           serviceName: "[[.ApplicationName]]-amq-tcp"
           template:
             metadata:
+              creationTimestamp: null
               labels:
                 app: "[[.ApplicationName]]"
                 application: "[[.ApplicationName]]"
@@ -252,10 +252,9 @@ others:
               schedulerName: default-scheduler
               securityContext: {}
               terminationGracePeriodSeconds: 60
-          updateStrategy:
-            type: OnDelete
           volumeClaimTemplates:
             - metadata:
+                creationTimestamp: null
                 name: "[[.ApplicationName]]-amq-pvol"
               spec:
                 accessModes:
@@ -330,5 +329,5 @@ others:
           annotations:
             description: Provides a service for accessing the application over Hot Rod protocol.
             service.alpha.openshift.io/serving-cert-secret-name: datagrid-service-certs
-  ## ES/AMQ END
+## ES/AMQ END
 
