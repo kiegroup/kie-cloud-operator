@@ -142,6 +142,8 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"deployments",
+					"deployments/finalizers",
+					"replicasets",
 					"statefulsets",
 				},
 				Verbs: Verbs,
@@ -222,14 +224,6 @@ func GetRole(operatorName string) *rbacv1.Role {
 					"update",
 					"watch",
 				},
-			},
-			{
-				APIGroups: []string{
-					appsv1.SchemeGroupVersion.Group,
-				},
-				ResourceNames: []string{operatorName},
-				Resources:     []string{"deployments/finalizers"},
-				Verbs:         []string{"update"},
 			},
 		},
 	}

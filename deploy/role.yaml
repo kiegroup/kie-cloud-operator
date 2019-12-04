@@ -25,6 +25,8 @@ rules:
   - apps
   resources:
   - deployments
+  - deployments/finalizers
+  - replicasets
   - statefulsets
   verbs:
   - create
@@ -133,11 +135,3 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - apps
-  resourceNames:
-  - kie-cloud-operator
-  resources:
-  - deployments/finalizers
-  verbs:
-  - update
