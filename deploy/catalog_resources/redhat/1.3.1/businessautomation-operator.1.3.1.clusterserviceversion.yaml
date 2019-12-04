@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.6.1
-    createdAt: "2019-12-02 15:03:14"
+    createdAt: "2019-12-04 13:36:42"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM
       environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -175,6 +175,8 @@ spec:
           - apps
           resources:
           - deployments
+          - deployments/finalizers
+          - replicasets
           - statefulsets
           verbs:
           - create
@@ -283,14 +285,6 @@ spec:
           - patch
           - update
           - watch
-        - apiGroups:
-          - apps
-          resourceNames:
-          - business-automation-operator
-          resources:
-          - deployments/finalizers
-          verbs:
-          - update
         serviceAccountName: business-automation-operator
     strategy: deployment
   installModes:
