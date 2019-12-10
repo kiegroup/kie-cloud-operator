@@ -30,6 +30,11 @@ modules:
 osbs:
   configuration:
     container:
+      go:
+        modules:
+        - module: github.com/kiegroup/kie-cloud-operator
+          # Optional, only needed for source in 'rhpkg upload' lookaside cache:
+          archive: kie-cloud-operator.tar.gz
       compose:
           pulp_repos: true
       platforms:
