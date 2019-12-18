@@ -767,45 +767,14 @@ others:
         rules:
           - apiGroups:
               - ""
-            resources:
-              - configmaps
-              - serviceaccounts
-              - pods
-            verbs:
-              - create
-              - delete
-              - deletecollection
-              - get
-              - list
-              - patch
-              - update
-              - watch
-          - apiGroups:
+              - app.kiegroup.org
               - apps.openshift.io
-            resources:
-              - deploymentconfigs
-            verbs:
-              - create
-              - delete
-              - deletecollection
-              - get
-              - list
-              - patch
-              - update
-              - watch
-          - apiGroups:
+              - image.openshift.io
               - route.openshift.io
             resources:
-              - routes
+              - "*"
             verbs:
-              - create
-              - delete
-              - deletecollection
-              - get
-              - list
-              - patch
-              - update
-              - watch
+              - "*"
 
     serviceAccounts:
       - metadata:
