@@ -63,10 +63,7 @@ servers:
             service: "[[.KieName]]-postgresql"
         spec:
           strategy:
-            rollingParams:
-              maxSurge: 100%
-              maxUnavailable: 0
-            type: Rolling
+            type: Recreate
           triggers:
             - type: ImageChange
               imageChangeParams:
