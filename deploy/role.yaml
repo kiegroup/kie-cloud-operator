@@ -5,119 +5,17 @@ metadata:
 rules:
 - apiGroups:
   - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - serviceaccounts
-  - persistentvolumeclaims
-  - secrets
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - apps
-  resources:
-  - deployments
-  - deployments/finalizers
-  - replicasets
-  - statefulsets
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - apps.openshift.io
-  resources:
-  - deploymentconfigs
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  - roles
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - route.openshift.io
-  resources:
-  - routes
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - build.openshift.io
-  resources:
-  - buildconfigs
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - image.openshift.io
-  resources:
-  - imagestreams
-  - imagestreamtags
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - app.kiegroup.org
   resources:
-  - kieapps
-  - kieapps/finalizers
+  - '*'
   verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -130,8 +28,12 @@ rules:
   resources:
   - clusterserviceversions
   verbs:
-  - get
-  - list
-  - patch
+  - '*'
+- apiGroups:
+  - apps
+  resourceNames:
+  - kie-cloud-operator
+  resources:
+  - deployments/finalizers
+  verbs:
   - update
-  - watch
