@@ -133,8 +133,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var dbEnv api.Environment
 	err := getParsedTemplate("dbs/postgresql.yaml", "prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
-	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.RollingParams.MaxSurge)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
