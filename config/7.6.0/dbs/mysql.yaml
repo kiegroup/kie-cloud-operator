@@ -12,11 +12,12 @@ servers:
               initContainers:
                 - command:
                     [
-                      "sh",
+                      "/bin/bash",
                       "-c",
-                      "until nslookup [[.KieName]]-mysql && nc -vz [[.KieName]]-mysql 3306; do echo waiting for [[.KieName]]-mysql; sleep 2; done;",
+                      ">-
+                        replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-mysql; replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
-                  image: busybox
+                  image: registry.redhat.io/openshift3/ose-cli:v3.11
                   imagePullPolicy: IfNotPresent
                   name: "[[.KieName]]-mysql-init"
                   terminationMessagePolicy: FallbackToLogsOnError

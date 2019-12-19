@@ -12,11 +12,12 @@ servers:
               initContainers:
                 - command:
                     [
-                      "sh",
+                      "/bin/bash",
                       "-c",
-                      "until nslookup [[.KieName]]-postgresql && nc -vz [[.KieName]]-postgresql 5432; do echo waiting for [[.KieName]]-postgresql; sleep 2; done;",
+                      ">-
+                        replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
-                  image: busybox
+                  image: registry.redhat.io/openshift3/ose-cli:v3.11
                   imagePullPolicy: IfNotPresent
                   name: "[[.KieName]]-postgresql-init"
                   terminationMessagePolicy: FallbackToLogsOnError
