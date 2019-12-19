@@ -279,6 +279,9 @@ func (reconciler *Reconciler) verifyExternalReferences(instance *api.KieApp) err
 }
 
 func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *corev1.ObjectReference) error {
+	if ref == nil {
+		return nil
+	}
 	name := types.NamespacedName{
 		Name:      ref.Name,
 		Namespace: namespace,

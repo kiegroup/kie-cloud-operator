@@ -155,6 +155,9 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 		roleMapper *api.RoleMapperAuthConfig
 		errMsg     string
 	}{{
+		name:       "Empty reference",
+		roleMapper: &api.RoleMapperAuthConfig{},
+	}, {
 		name: "Unsupported Kind: Service",
 		roleMapper: &api.RoleMapperAuthConfig{
 			From: &corev1.ObjectReference{
@@ -259,6 +262,9 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 		gitHooks *api.GitHooksVolume
 		errMsg   string
 	}{{
+		name:     "Empty reference",
+		gitHooks: &api.GitHooksVolume{},
+	}, {
 		name: "Unsupported type",
 		gitHooks: &api.GitHooksVolume{
 			From: &corev1.ObjectReference{

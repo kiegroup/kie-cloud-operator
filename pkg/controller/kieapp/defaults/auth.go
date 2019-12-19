@@ -99,6 +99,7 @@ func configureRoleMapper(config *api.RoleMapperAuthConfig, envTemplate *api.EnvT
 			if pos != -1 {
 				envTemplate.Auth.RoleMapper.MountPath = config.RolesProperties[:pos]
 			} else {
+				envTemplate.Auth.RoleMapper.RolesProperties = constants.RoleMapperDefaultDir + "/" + envTemplate.Auth.RoleMapper.RolesProperties
 				envTemplate.Auth.RoleMapper.MountPath = constants.RoleMapperDefaultDir
 			}
 		}

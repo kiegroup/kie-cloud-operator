@@ -382,7 +382,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		},
 		expectedVolumeMount: nil,
 		expectedVolume:      nil,
-		expectedPath:        "mapping.properties",
+		expectedPath:        constants.RoleMapperDefaultDir + "/mapping.properties",
 	}, {
 		name: "RoleMapper config has ReplaceRole",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -391,7 +391,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		},
 		expectedVolumeMount: nil,
 		expectedVolume:      nil,
-		expectedPath:        "mapping.properties",
+		expectedPath:        constants.RoleMapperDefaultDir + "/mapping.properties",
 	}, {
 		name: "RoleMapper config from a ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -417,7 +417,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 				},
 			},
 		},
-		expectedPath: "mapping.properties",
+		expectedPath: constants.RoleMapperDefaultDir + "/mapping.properties",
 	}, {
 		name: "RoleMapper config from a Secret",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -440,7 +440,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 				},
 			},
 		},
-		expectedPath: "mapping.properties",
+		expectedPath: constants.RoleMapperDefaultDir + "/mapping.properties",
 	}, {
 		name: "RoleMapper config from a PersistentVolumeClaim",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -463,7 +463,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 				},
 			},
 		},
-		expectedPath: "mapping.properties",
+		expectedPath: constants.RoleMapperDefaultDir + "/mapping.properties",
 	}, {
 		name: "RoleMapper config is mounted on a different path",
 		roleMapper: &api.RoleMapperAuthConfig{
