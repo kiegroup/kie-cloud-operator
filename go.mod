@@ -59,6 +59,6 @@ replace (
 )
 
 replace (
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20191121011138-06a2ea30497b
-	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20191024171429-aada4a416142
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200107183409-f44834cf0936
+	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 )
