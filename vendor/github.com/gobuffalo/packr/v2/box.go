@@ -15,8 +15,9 @@ import (
 	"github.com/gobuffalo/packd"
 	"github.com/gobuffalo/packr/v2/file"
 	"github.com/gobuffalo/packr/v2/file/resolver"
-	"github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer"
 	"github.com/gobuffalo/packr/v2/plog"
+	"github.com/markbates/oncer"
+	"errors"
 )
 
 var _ packd.Box = &Box{}
@@ -207,7 +208,7 @@ func (b *Box) Resolve(key string) (file.File, error) {
 		if r == nil {
 			r = resolver.DefaultResolver
 			if r == nil {
-				return nil, fmt.Errorf("resolver.DefaultResolver is nil")
+				return nil, errors.New("resolver.DefaultResolver is nil")
 			}
 		}
 	}
@@ -215,12 +216,7 @@ func (b *Box) Resolve(key string) (file.File, error) {
 
 	f, err := r.Resolve(b.Name, key)
 	if err != nil {
-		z, err := resolver.ResolvePathInBase(resolver.OsPath(b.ResolutionDir), filepath.FromSlash(path.Clean("/"+resolver.OsPath(key))))
-		if err != nil {
-			plog.Debug(r, "Resolve", "box", b.Name, "key", key, "err", err)
-			return f, err
-		}
-
+		z := filepath.Join(resolver.OsPath(b.ResolutionDir), resolver.OsPath(key))
 		f, err = r.Resolve(b.Name, z)
 		if err != nil {
 			plog.Debug(r, "Resolve", "box", b.Name, "key", z, "err", err)

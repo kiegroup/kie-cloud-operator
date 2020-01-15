@@ -3,8 +3,8 @@ module github.com/kiegroup/kie-cloud-operator
 go 1.12
 
 require (
-	github.com/RHsyseng/console-cr-form v0.0.0-00010101000000-000000000000
-	github.com/RHsyseng/operator-utils v0.0.0-00010101000000-000000000000
+	github.com/RHsyseng/console-cr-form v0.0.0-20191206160958-9fcbf1d96828
+	github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/prometheus-operator v0.29.0
 	github.com/ghodss/yaml v1.0.0
@@ -16,7 +16,7 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/openshift/api v3.9.1-0.20190424152011-77b8897ec79a+incompatible
 	github.com/openshift/client-go v0.0.0-20190401163519-84c2b942258a
-	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20190128024246-5eb7ae5bdb7a
+	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20191115003340-16619cd27fa5
 	github.com/operator-framework/operator-sdk v0.0.0-00010101000000-000000000000
 	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
 	github.com/pkg/errors v0.8.1
@@ -58,7 +58,11 @@ replace (
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20190813201236-5a5508328169
 )
 
+// Pin RHsyseng library versions
 replace (
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200107183409-f44834cf0936
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20191206160958-9fcbf1d96828
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
+
 )
+
+replace github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.2.0

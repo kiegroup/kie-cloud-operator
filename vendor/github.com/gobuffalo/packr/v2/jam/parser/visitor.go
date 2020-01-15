@@ -8,11 +8,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gobuffalo/packd"
+	"github.com/gobuffalo/genny"
+	"github.com/gobuffalo/gogen"
+	"github.com/pkg/errors"
 )
 
 type Visitor struct {
-	File    packd.SimpleFile
+	File    genny.File
 	Package string
 	boxes   map[string]*Box
 	errors  []error
@@ -28,9 +30,9 @@ func NewVisitor(f *File) *Visitor {
 
 func (v *Visitor) Run() (Boxes, error) {
 	var boxes Boxes
-	pf, err := ParseFile(v.File)
+	pf, err := gogen.ParseFile(v.File)
 	if err != nil {
-		return boxes, err
+		return boxes, errors.Wrap(err, v.File.Name())
 	}
 
 	v.Package = pf.Ast.Name.Name
@@ -49,7 +51,7 @@ func (v *Visitor) Run() (Boxes, error) {
 		for i, e := range v.errors {
 			s[i] = e.Error()
 		}
-		return boxes, err
+		return boxes, errors.Wrap(errors.New(strings.Join(s, "\n")), v.File.Name())
 	}
 	return boxes, nil
 }
@@ -182,7 +184,7 @@ func (v *Visitor) evalSelector(expr *ast.CallExpr, sel *ast.SelectorExpr) error 
 		switch sel.Sel.Name {
 		case "New":
 			if len(expr.Args) != 2 {
-				return fmt.Errorf("`New` requires two arguments")
+				return errors.New("`New` requires two arguments")
 			}
 
 			zz := func(e ast.Expr) (string, error) {
@@ -204,7 +206,7 @@ func (v *Visitor) evalSelector(expr *ast.CallExpr, sel *ast.SelectorExpr) error 
 				case *ast.CallExpr:
 					return "", v.evalExpr(at)
 				}
-				return "", fmt.Errorf("can't handle %T", e)
+				return "", errors.Errorf("can't handle %T", e)
 			}
 
 			k1, err := zz(expr.Args[0])
@@ -286,7 +288,7 @@ func (v *Visitor) fromVariable(as *ast.AssignStmt) (string, error) {
 			return bs.Value, nil
 		}
 	}
-	return "", fmt.Errorf("unable to find value from variable %v", as)
+	return "", errors.Wrap(errors.New("unable to find value from variable"), fmt.Sprint(as))
 }
 
 func (v *Visitor) addVariable(bn string, as *ast.AssignStmt) error {
@@ -307,7 +309,7 @@ func (v *Visitor) fromConstant(vs *ast.ValueSpec) (string, error) {
 			return bs.Value, nil
 		}
 	}
-	return "", fmt.Errorf("unable to find value from constant %v", vs)
+	return "", errors.Wrap(errors.New("unable to find value from constant"), fmt.Sprint(vs))
 }
 
 func (v *Visitor) addConstant(bn string, vs *ast.ValueSpec) error {
