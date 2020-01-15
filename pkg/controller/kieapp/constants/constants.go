@@ -7,7 +7,7 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.6.1"
+	CurrentVersion = "7.7.0"
 	// LastMicroVersion product version supported
 	LastMicroVersion = "7.5.1"
 	// LastMinorVersion product version supported
