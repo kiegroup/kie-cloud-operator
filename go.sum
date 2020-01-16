@@ -30,8 +30,8 @@ github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tN
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/RHsyseng/console-cr-form v0.0.0-20191206160958-9fcbf1d96828 h1:2sAm33sV415tjNmlSkw7yw0YBZQO0j4l7MW1zWMzRIA=
-github.com/RHsyseng/console-cr-form v0.0.0-20191206160958-9fcbf1d96828/go.mod h1:b1BUyQinnYJTvUGO4Yf+QqXy7PrBWT1CU6T85wDUobI=
+github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6 h1:Gru7Fbd2051P6/n6gPHoi18w3Ax7gURSoSsK7GMFEvU=
+github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6/go.mod h1:b1BUyQinnYJTvUGO4Yf+QqXy7PrBWT1CU6T85wDUobI=
 github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586 h1:bHfsHIAh0nbiGzDWAvpRBJrNCjNmhqHlNUklpHds52w=
 github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586/go.mod h1:E+hCtYz+9UsXfAGnRjX2LGuaa5gSGNKHCVTmGZR79vY=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
