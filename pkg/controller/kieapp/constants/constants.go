@@ -3,6 +3,7 @@ package constants
 import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -75,7 +76,86 @@ const (
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
 	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
+
+	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
+	DmDecisionCentralVar   = "DM_DC_IMAGE_"
+	DmControllerVar        = "DM_CONTROLLER_IMAGE_"
+	PamKieImageVar         = "PAM_KIESERVER_IMAGE_"
+	PamControllerVar       = "PAM_CONTROLLER_IMAGE_"
+	PamBusinessCentralVar  = "PAM_BC_IMAGE_"
+	PamBCMonitoringVar     = "PAM_BC_MONITORING_IMAGE_"
+	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
+
+	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
+	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
+	RhelVersion = "-rhel8"
 )
+
+var Images = []ImageEnv{
+	{
+		Var:       DmKieImageVar,
+		Component: "rhdm-7-kieserver-rhel8-container",
+		Registry:  DmContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       DmControllerVar,
+		Component: "rhdm-7-controller-rhel8-container",
+		Registry:  DmContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       DmDecisionCentralVar,
+		Component: "rhdm-7-decisioncentral-rhel8-container",
+		Registry:  DmContext + "decisioncentral" + RhelVersion,
+	},
+	{
+		Var:       PamKieImageVar,
+		Component: "rhpam-7-kieserver-rhel8-container",
+		Registry:  PamContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       PamControllerVar,
+		Component: "rhpam-7-controller-rhel8-container",
+		Registry:  PamContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       PamBusinessCentralVar,
+		Component: "rhpam-7-businesscentral-rhel8-container",
+		Registry:  PamContext + "businesscentral" + RhelVersion,
+	},
+	{
+		Var:       PamBCMonitoringVar,
+		Component: "rhpam-7-businesscentral-monitoring-rhel8-container",
+		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
+	},
+	{
+		Var:       PamProcessMigrationVar,
+		Component: "rhpam-7-process-migration-rhel8-container",
+		Registry:  PamContext + "process-migration" + RhelVersion,
+	},
+	{
+		Var:       PamSmartRouterVar,
+		Component: "rhpam-7-smartrouter-rhel8-container",
+		Registry:  PamContext + "smartrouter" + RhelVersion,
+	},
+}
+
+type ImageEnv struct {
+	Var       string
+	Component string
+	Registry  string
+}
+type ImageRef struct {
+	metav1.TypeMeta `json:",inline"`
+	Spec            ImageRefSpec `json:"spec"`
+}
+type ImageRefSpec struct {
+	Tags []ImageRefTag `json:"tags"`
+}
+type ImageRefTag struct {
+	Name string                  `json:"name"`
+	From *corev1.ObjectReference `json:"from"`
+}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
@@ -102,9 +182,9 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 }
 
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},

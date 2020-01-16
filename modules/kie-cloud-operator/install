@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INSTALL_PKGS="rsync go-toolset-1.12.*"
+INSTALL_PKGS="go-toolset-1.12.*"
 OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
 UI_PATH=/usr/local/bin/console-cr-form
 
@@ -34,7 +34,6 @@ if [[ ! -f ${UI_PATH} ]] ; then
 fi
 
 mv build/bin/* /usr/local/bin/
-rsync -arLv deploy/catalog_resources/redhat/ /manifests
 /usr/local/bin/user_setup
 
 yum -y autoremove ${INSTALL_PKGS}

@@ -5,17 +5,16 @@ metadata:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
-    certified: "true"
-    containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.7.0
+    certified: "false"
+    containerImage: quay.io/kiegroup/kie-cloud-operator:1.4.0
     createdAt: "2020-02-07 10:42:24"
-    description: Business Automation Operator for deployment and management of RHPAM/RHDM
-      environments.
+    description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat, Inc.
     tectonic-visibility: ocs
   labels:
-    operator-businessautomation: "true"
-  name: businessautomation-operator.1.4.0
+    operator-kiecloud: "true"
+  name: kiecloud-operator.1.4.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -99,21 +98,20 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:org.w3:link
       version: v2
-  description: Business Automation Operator for deployment and management of RHPAM/RHDM
-    environments.
-  displayName: Business Automation
+  description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
+  displayName: Kie Cloud
   icon:
   - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2Q3MWUwMH0uY2xzLTJ7ZmlsbDojYzIxYTAwfS5jbHMtM3tmaWxsOiNmZmZ9LmNscy00e2ZpbGw6I2VhZWFlYX0uY2xzLTV7ZmlsbDojYjdiN2I3fS5jbHMtNntmaWxsOiNjZGNkY2R9PC9zdHlsZT48L2RlZnM+PHRpdGxlPkxvZ288L3RpdGxlPjxnIGlkPSJMYXllcl8xIiBkYXRhLW5hbWU9IkxheWVyIDEiPjxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIHRyYW5zZm9ybT0icm90YXRlKC00NSA1MCA1MCkiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik04NS4zNiAxNC42NGE1MCA1MCAwIDAgMS03MC43MiA3MC43MnoiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik02NS43NiAzNC4yOEwxNS42IDQzLjE1djEuMTNhLjM0LjM0IDAgMCAwIC4zLjM0YzEuNDcuMTcgNy45MyAyLjExIDggMjMuNDlhLjQ2LjQ2IDAgMCAwIC4zNS40NGwyLjU5LjU3cy0xLjIxLTI1LjU0IDguNzctMjcuMDYgMTEuMiAyNy4yNyAxMS4zMyAzMS4xYS41NC41NCAwIDAgMCAuNDMuNTFsMy41MS43OHMuMDYtMzQuNTQgMTQuOTItMzYuODJ2LTMuMzV6Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNjUuMzUgMjcuNTZMMTYuMTggMzguNDJhLjc1Ljc1IDAgMCAwLS41OS43M3Y0bDUwLjE3LTguODd2LTYuNzZhMS42OCAxLjY4IDAgMCAwLS40MS4wNHoiLz48cGF0aCBjbGFzcz0iY2xzLTUiIGQ9Ik0zNS42MSA0Mi4wNWMtNC42MS43LTYuODMgNi41NC03Ljg5IDEyLjYxbDEzLjY1LTEuMzNjMC0uMTcuMDktLjM0LjEzLS41MXMuMTQtLjUzLjIxLS44bC4yLS42OHEuMTItLjQuMjUtLjhsLjItLjYyYy4xMi0uMzYuMjUtLjcxLjM5LTEuMDZsLjEyLS4zMmMtMS42NC00LjE3LTMuOTgtNi45OS03LjI2LTYuNDl6TTgyLjIzIDMxLjE5bC0xNi0zLjYyYTEuOSAxLjkgMCAwIDAtLjQyIDB2Ni43NmwxNy4wNiAyLjgzdi01LjIzYS43Ni43NiAwIDAgMC0uNjQtLjc0ek01My40MyA1My42MmwxOC40MS0xLjEzYzIuMS02LjA1IDUuNTEtMTEuNzUgMTEtMTIuOGwtMTctMi4wOGMtNi42OCAxLjEyLTEwLjM2IDguMjktMTIuNDEgMTYuMDF6Ii8+PHBhdGggY2xhc3M9ImNscy02IiBkPSJNNDEuNzEgNTJsLjEzLS40NS0uMTMuNDZ6TTQxLjkxIDUxLjM0bC0uMDYuMjIuMDctLjIzek0yNy43MiA1NC42NmE2OC4yNiA2OC4yNiAwIDAgMC0uOTMgMTJ2Mi40MkwzOSA2Ni4xYTEuMDYgMS4wNiAwIDAgMCAuODEtMSA1OC43MiA1OC43MiAwIDAgMSAxLjY5LTEyLjI2YzAgLjE2LS4wOS4zMy0uMTMuNDl6TTY1Ljc4IDM0LjI4bC4wMSAzLjM0IDE3LjAzIDIuMDd2LTIuNThsLTE3LjA0LTIuODN6TTUwLjg3IDc0LjQ0TDY4IDY4LjY4YS45Mi45MiAwIDAgMCAuNjMtLjc5IDcyLjQ2IDcyLjQ2IDAgMCAxIDMuMTgtMTUuNGwtMTguMzggMS4xM2E5MC45MSA5MC45MSAwIDAgMC0yLjU2IDIwLjgyek01My40MyA1My42MnoiLz48L2c+PC9zdmc+
     mediatype: image/svg+xml
   install:
     spec:
       deployments:
-      - name: business-automation-operator
+      - name: kie-cloud-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: business-automation-operator
+              name: kie-cloud-operator
           strategy:
             rollingUpdate:
               maxSurge: 1
@@ -122,7 +120,7 @@ spec:
           template:
             metadata:
               labels:
-                name: business-automation-operator
+                name: kie-cloud-operator
             spec:
               containers:
               - command:
@@ -144,11 +142,29 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                image: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.7.0
+                - name: DM_KIESERVER_IMAGE_7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
+                - name: DM_CONTROLLER_IMAGE_7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.0
+                - name: DM_DC_IMAGE_7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.0
+                - name: PAM_KIESERVER_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.0
+                - name: PAM_CONTROLLER_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.0
+                - name: PAM_BC_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.0
+                - name: PAM_BC_MONITORING_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
+                - name: PAM_PROCESS_MIGRATION_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
+                - name: PAM_SMARTROUTER_IMAGE_7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
+                image: quay.io/kiegroup/kie-cloud-operator:1.4.0
                 imagePullPolicy: Always
-                name: business-automation-operator
+                name: kie-cloud-operator
                 resources: {}
-              serviceAccountName: business-automation-operator
+              serviceAccountName: kie-cloud-operator
       permissions:
       - rules:
         - apiGroups:
@@ -180,12 +196,12 @@ spec:
         - apiGroups:
           - apps
           resourceNames:
-          - business-automation-operator
+          - kie-cloud-operator
           resources:
           - deployments/finalizers
           verbs:
           - update
-        serviceAccountName: business-automation-operator
+        serviceAccountName: kie-cloud-operator
     strategy: deployment
   installModes:
   - supported: true
@@ -207,8 +223,8 @@ spec:
   - automation
   - operator
   labels:
-    alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.1.4.0
+    alm-owner-kiecloud: kiecloud-operator
+    operated-by: kiecloud-operator.1.4.0
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -220,9 +236,9 @@ spec:
   maturity: stable
   provider:
     name: Red Hat, Inc.
-  replaces: businessautomation-operator.1.3.0
+  replaces: kiecloud-operator.1.3.0
   selector:
     matchLabels:
-      alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.1.4.0
+      alm-owner-kiecloud: kiecloud-operator
+      operated-by: kiecloud-operator.1.4.0
   version: 1.4.0

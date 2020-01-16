@@ -1,11 +1,14 @@
 package components
 
 import (
+	"sort"
 	"strings"
 
 	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -109,6 +112,19 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			},
 		},
 	}
+	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
+	for _, imageVersion := range constants.SupportedVersions {
+		if defaults.GetMinorImageVersion(imageVersion) >= "77" {
+			for _, i := range constants.Images {
+				env := corev1.EnvVar{
+					Name:  i.Var + imageVersion,
+					Value: i.Registry + ":" + imageVersion,
+				}
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, env)
+			}
+		}
+	}
+
 	return deployment
 }
 
