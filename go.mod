@@ -3,7 +3,7 @@ module github.com/kiegroup/kie-cloud-operator
 go 1.12
 
 require (
-	github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6
+	github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-9fcbf1d96827
 	github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/prometheus-operator v0.29.0
@@ -60,7 +60,7 @@ replace (
 
 // Pin RHsyseng library versions
 replace (
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20191206160958-9fcbf1d96827
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 
 )
