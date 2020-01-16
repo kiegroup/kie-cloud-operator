@@ -52,6 +52,10 @@ lint:
 build:
 	./hack/go-build.sh
 
+.PHONY: meta
+meta:
+	./hack/go-build-metadata.sh
+
 .PHONY: rhel
 rhel:
 	LOCAL=true ./hack/go-build.sh rhel

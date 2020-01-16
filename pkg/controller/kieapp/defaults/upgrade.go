@@ -41,7 +41,7 @@ func checkVersion(productVersion string) bool {
 // getMinorImageVersion ...
 func getMinorImageVersion(productVersion string) string {
 	major, minor, _ := MajorMinorMicro(productVersion)
-	return strings.Join([]string{major, minor}, "")
+	return major + minor
 }
 
 // MajorMinorMicro ...

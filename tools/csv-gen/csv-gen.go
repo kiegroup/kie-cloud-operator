@@ -47,7 +47,7 @@ var (
 			DisplayName:  "Business Automation",
 			OperatorName: "business-automation-operator",
 			CsvDir:       "redhat",
-			Registry:     "registry.redhat.io",
+			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
 			Tag:          constants.CurrentVersion,
@@ -268,15 +268,52 @@ func main() {
 			},
 		}
 
+		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
+
 		if csv.OperatorName == "kie-cloud-operator" {
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
 			createFile(deployFile, deployment)
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
+		} else {
+			// create image-references file for automated ART digest find/replace
+			imageRef := constants.ImageRef{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: oimagev1.SchemeGroupVersion.String(),
+					Kind:       "ImageStream",
+				},
+				Spec: constants.ImageRefSpec{
+					Tags: []constants.ImageRefTag{
+						{
+							// Needs to match the component name for upstream and downstream.
+							Name: "rhpam-7-rhel8-operator-container",
+							From: &corev1.ObjectReference{
+								// Needs to match the image that is in your CSV that you want to replace.
+								Name: deployment.Spec.Template.Spec.Containers[0].Image,
+								Kind: "DockerImage",
+							},
+						},
+					},
+				},
+			}
+			for _, imageVersion := range constants.SupportedVersions {
+				for _, i := range constants.Images {
+					imageRefT := constants.ImageRefTag{
+						Name: i.Component,
+						From: &corev1.ObjectReference{
+							Name: i.Registry + ":" + imageVersion,
+							Kind: "DockerImage",
+						},
+					}
+					imageRef.Spec.Tags = append(imageRef.Spec.Tags, imageRefT)
+				}
+			}
+			imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
+			createFile(imageFile, imageRef)
 		}
 
-		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + version.Version + "/" + csvVersionedName + ".clusterserviceversion.yaml"
 		/*
 			copyTemplateStruct := templateStruct.DeepCopy()
 			copyTemplateStruct.Annotations["createdAt"] = ""

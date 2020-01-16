@@ -3,13 +3,13 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"testing"
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
@@ -19,13 +19,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func TestUpdateLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+version.Version)
+	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
@@ -72,7 +74,8 @@ func TestUpdateLink(t *testing.T) {
 func TestUpdateExistingLink(t *testing.T) {
 	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+version.Version)
+	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}

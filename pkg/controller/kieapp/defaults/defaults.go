@@ -230,13 +230,25 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
-	template.Image = fmt.Sprintf("%s-%s-rhel8", envConstants.App.Product, envConstants.App.ImageName)
+	template.Image = fmt.Sprintf("%s-%s%s", envConstants.App.Product, envConstants.App.ImageName, constants.RhelVersion)
 	template.ImageTag = cr.Spec.CommonConfig.ImageTag
-	if cr.Spec.Objects.Console.ImageTag != "" {
-		template.ImageTag = cr.Spec.Objects.Console.ImageTag
+	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists {
+		valSlice := strings.Split(val, ":")
+		if len(valSlice) > 0 {
+			template.ImageTag = valSlice[len(valSlice)-1]
+			valSlice = valSlice[:len(valSlice)-1]
+			val = strings.Join(valSlice, ":")
+		}
+		template.Image = val
 	}
 	if cr.Spec.Objects.Console.Image != "" {
 		template.Image = cr.Spec.Objects.Console.Image
+	}
+	if cr.Spec.Objects.Console.ImageTag != "" {
+		template.ImageTag = cr.Spec.Objects.Console.ImageTag
+	}
+	if getMinorImageVersion(cr.Spec.Version) >= "77" {
+		template.Image = template.Image + ":" + template.ImageTag
 	}
 	if cr.Spec.Objects.Console.GitHooks != nil {
 		template.GitHooks = *cr.Spec.Objects.Console.GitHooks.DeepCopy()
@@ -279,13 +291,25 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
-		template.Image = fmt.Sprintf("%s-smartrouter-rhel8", envConstants.App.Product)
+		template.Image = fmt.Sprintf("%s-smartrouter%s", constants.RhpamPrefix, constants.RhelVersion)
 		template.ImageTag = cr.Spec.CommonConfig.ImageTag
-		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
-			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Spec.Version); exists {
+			valSlice := strings.Split(val, ":")
+			if len(valSlice) > 0 {
+				template.ImageTag = valSlice[len(valSlice)-1]
+				valSlice = valSlice[:len(valSlice)-1]
+				val = strings.Join(valSlice, ":")
+			}
+			template.Image = val
 		}
 		if cr.Spec.Objects.SmartRouter.Image != "" {
 			template.Image = cr.Spec.Objects.SmartRouter.Image
+		}
+		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
+			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+		}
+		if getMinorImageVersion(cr.Spec.Version) >= "77" {
+			template.Image = template.Image + ":" + template.ImageTag
 		}
 	}
 
@@ -530,17 +554,31 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From
 	}
 
-	image := fmt.Sprintf("%s-kieserver-rhel8", product)
+	image := fmt.Sprintf("%s-kieserver%s", product, constants.RhelVersion)
 	imageTag := cr.Spec.CommonConfig.ImageTag
-	if serverSet.ImageTag != "" {
-		imageTag = serverSet.ImageTag
+	envVar := constants.PamKieImageVar + cr.Spec.Version
+	if product == constants.RhdmPrefix {
+		envVar = constants.DmKieImageVar + cr.Spec.Version
+	}
+	if val, exists := os.LookupEnv(envVar); exists {
+		valSlice := strings.Split(val, ":")
+		if len(valSlice) > 0 {
+			imageTag = valSlice[len(valSlice)-1]
+			valSlice = valSlice[:len(valSlice)-1]
+			val = strings.Join(valSlice, ":")
+		}
+		image = val
 	}
 	if serverSet.Image != "" {
 		image = serverSet.Image
 	}
+	if serverSet.ImageTag != "" {
+		imageTag = serverSet.ImageTag
+	}
+
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
-		Name:      strings.Join([]string{image, imageTag}, ":"),
+		Name:      image + ":" + imageTag,
 		Namespace: constants.ImageStreamNamespace,
 	}
 }
