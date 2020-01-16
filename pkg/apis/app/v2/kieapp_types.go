@@ -84,6 +84,7 @@ type KieAppRegistry struct {
 
 // KieApp is the Schema for the kieapps API
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:path=kieapps,scope=Namespaced
 type KieApp struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -520,11 +521,13 @@ type KieAppStatus struct {
 
 // PlatformService ...
 type PlatformService interface {
-	Create(ctx context.Context, obj runtime.Object) error
-	Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOptionFunc) error
+	Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error
+	Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) error
 	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
-	List(ctx context.Context, opts *client.ListOptions, list runtime.Object) error
-	Update(ctx context.Context, obj runtime.Object) error
+	List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error
+	Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error
+	Patch(ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) error
+	DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) error
 	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
 	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
 	GetScheme() *runtime.Scheme

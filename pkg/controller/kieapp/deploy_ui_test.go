@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"testing"
 
@@ -49,12 +50,12 @@ func TestUpdateLink(t *testing.T) {
 	assert.Nil(t, err, "Error creating the Operator")
 
 	var url string
-	service.CreateFunc = func(ctx context.Context, obj runtime.Object) error {
+	service.CreateFunc = func(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
 		if route, matched := obj.(*routev1.Route); matched {
 			url = fmt.Sprintf("%s.apps.example.com", route.Name)
 			route.Spec.Host = url
 		}
-		return service.Client.Create(ctx, obj)
+		return service.Client.Create(ctx, obj, opts...)
 	}
 	deployConsole(&Reconciler{Service: service}, operator)
 
@@ -98,12 +99,12 @@ func TestUpdateExistingLink(t *testing.T) {
 	assert.Nil(t, err, "Error creating the Operator")
 
 	var url string
-	service.CreateFunc = func(ctx context.Context, obj runtime.Object) error {
+	service.CreateFunc = func(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
 		if route, matched := obj.(*routev1.Route); matched {
 			url = fmt.Sprintf("%s.apps.example.com", route.Name)
 			route.Spec.Host = url
 		}
-		return service.Client.Create(ctx, obj)
+		return service.Client.Create(ctx, obj, opts...)
 	}
 	deployConsole(&Reconciler{Service: service}, operator)
 

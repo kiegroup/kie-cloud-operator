@@ -44,3 +44,17 @@ func (mock *MockImageStreamTag) Get(name string, options meta_v1.GetOptions) (*i
 	}
 	return mock.Tags[name], nil
 }
+
+func (mock *MockImageStreamTag) List(opts meta_v1.ListOptions) (*imagev1.ImageStreamTagList, error) {
+	if mock.Tags == nil {
+		return nil, nil
+	}
+	items := make([]imagev1.ImageStreamTag, 0, len(mock.Tags))
+	for _, val := range mock.Tags {
+		items = append(items, *val)
+	}
+	list := &imagev1.ImageStreamTagList{
+		Items: items,
+	}
+	return list, nil
+}
