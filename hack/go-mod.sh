@@ -6,5 +6,10 @@ echo Reset vendor diectory
 
 setGoModEnv
 
-go mod tidy
+if [[ -z ${CI} ]]; then
+    go mod tidy
+else
+    go mod tidy -v
+fi
+
 go mod vendor
