@@ -52,6 +52,7 @@ func configureAuth(cr *api.KieApp, envTemplate *api.EnvTemplate) (err error) {
 	if cr.Spec.Auth.RoleMapper != nil {
 		configureRoleMapper(cr.Spec.Auth.RoleMapper, envTemplate)
 	}
+	envTemplate.Auth.ExternalOnly = cr.Spec.Auth.ExternalOnly
 	return
 }
 

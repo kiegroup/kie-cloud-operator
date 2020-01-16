@@ -114,6 +114,12 @@
           ],
           "fields": [
             {
+              "label": "External authentication only",
+              "type": "boolean",
+              "jsonPath": "$.spec.auth.externalOnly",
+              "description": "Authenticate only users defined in the external IdP"
+            },
+            {
               "label": "SSO",
               "type": "fieldGroup",
               "required": true,
@@ -175,12 +181,12 @@
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
                 },
-		{
+                {
                   "label": "Roles properties file",
                   "type": "text",
                   "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
                   "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-		},
+                },
                 {
                   "label": "Replace roles",
                   "type": "checkbox",
@@ -354,12 +360,12 @@
                   "jsonPath": "$.spec.commonConfig.serverPassword",
                   "description": "The password to use for 'executionUser' in external provider"
                 },
-		{
+                {
                   "label": "Roles properties file",
                   "type": "text",
                   "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
                   "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
-		},
+                },
                 {
                   "label": "Replace roles",
                   "type": "checkbox",
@@ -367,7 +373,6 @@
                   "default": "false",
                   "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
                 }
-
               ]
             },
             {
@@ -623,7 +628,10 @@
                       "description": "Specify whether containers are to be created from an image stream, or a container image.",
                       "default": "ImageStreamTag",
                       "options": [
-                        { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                        {
+                          "value": "ImageStreamTag",
+                          "label": "ImageStreamTag"
+                        },
                         { "value": "DockerImage", "label": "DockerImage" }
                       ]
                     },
@@ -687,7 +695,10 @@
                           "description": "Specify whether build config is created from an image stream, or a container image.",
                           "default": "ImageStreamTag",
                           "options": [
-                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
+                            {
+                              "value": "ImageStreamTag",
+                              "label": "ImageStreamTag"
+                            },
                             { "value": "DockerImage", "label": "DockerImage" }
                           ]
                         },
@@ -928,7 +939,7 @@
                           "originalJsonPath": "$.spec.objects.servers[*].jms.queueSignal"
                         },
 
-                         {
+                        {
                           "label": "Enable audit",
                           "type": "checkbox",
                           "required": false,
