@@ -191,7 +191,7 @@ func TestExternalOnlyDefaultConfig(t *testing.T) {
 					Realm: "rhpam-test",
 				},
 			},
-			Version: "7.6.0",
+			Version: "7.7.0",
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -223,7 +223,7 @@ func TestExternalOnlyConfig(t *testing.T) {
 					Realm: "rhpam-test",
 				},
 			},
-			Version: "7.6.0",
+			Version: "7.7.0",
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
@@ -254,13 +254,13 @@ func TestExternalOnlyConfigOldVersions(t *testing.T) {
 					Realm: "rhpam-test",
 				},
 			},
-			Version: "7.5.1",
+			Version: "7.6.0",
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY"}
+	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "false"}
 
 	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 	for i := range env.Servers {

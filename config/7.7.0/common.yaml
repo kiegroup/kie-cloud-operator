@@ -125,6 +125,8 @@ console:
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
                   # Auth config BEGIN
+                  - name: EXTERNAL_AUTH_ONLY
+                    value: "[[.Auth.ExternalOnly]]"
                   ## SSO config BEGIN
                   #[[if .Auth.SSO.URL]]
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
@@ -606,6 +608,8 @@ servers:
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
+                    - name: EXTERNAL_AUTH_ONLY
+                      value: "[[$.Auth.ExternalOnly]]"
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
