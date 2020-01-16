@@ -3,8 +3,7 @@ GO_BIN ?= go
 
 install:
 	packr2
-	$(GO_BIN) install -tags ${TAGS} -v ./genny/cmd
-	make tidy
+	$(GO_BIN) install -v ./genny
 
 tidy:
 ifeq ($(GO111MODULE),on)
@@ -26,20 +25,18 @@ build:
 
 test:
 	packr2
-	$(GO_BIN) test -cover -tags ${TAGS} ./...
+	$(GO_BIN) test -tags ${TAGS} ./...
 	make tidy
-
-ci-deps:
-	$(GO_BIN) get -tags ${TAGS} -t ./...
 
 ci-test:
 	$(GO_BIN) test -tags ${TAGS} -race ./...
+	make tidy
 
 lint:
 	gometalinter --vendor ./... --deadline=1m --skip=internal
-	make tidy
 
 update:
+	packr2 clean
 	$(GO_BIN) get -u -tags ${TAGS}
 	make tidy
 	packr2
@@ -49,7 +46,6 @@ update:
 
 release-test:
 	$(GO_BIN) test -tags ${TAGS} -race ./...
-	make tidy
 
 release:
 	make tidy

@@ -10,7 +10,8 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	logzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 type Logger struct {
@@ -38,7 +39,9 @@ func GetLogger(name string) *zap.SugaredLogger {
 
 func createLogger(development bool) (logger Logger) {
 	log := Logger{
-		Logger:        logf.ZapLogger(development),
+		Logger: logzap.New(func(o *logzap.Options) {
+			o.Development = development
+		}),
 		SugaredLogger: zapSugaredLogger(development),
 	}
 	defer log.SugaredLogger.Sync()
@@ -81,7 +84,7 @@ func zapSugaredLoggerTo(destWriter io.Writer, development bool) *zap.SugaredLogg
 		}))
 	}
 	opts = append(opts, zap.AddCallerSkip(1), zap.ErrorOutput(sink))
-	log := zap.New(zapcore.NewCore(&logf.KubeAwareEncoder{Encoder: enc, Verbose: development}, sink, lvl))
+	log := zap.New(zapcore.NewCore(&logzap.KubeAwareEncoder{Encoder: enc, Verbose: development}, sink, lvl))
 	log = log.WithOptions(opts...)
 
 	return log.Sugar()

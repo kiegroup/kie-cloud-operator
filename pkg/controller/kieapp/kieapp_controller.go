@@ -279,6 +279,9 @@ func (reconciler *Reconciler) verifyExternalReferences(instance *api.KieApp) err
 }
 
 func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *corev1.ObjectReference) error {
+	if ref == nil {
+		return nil
+	}
 	name := types.NamespacedName{
 		Name:      ref.Name,
 		Namespace: namespace,
@@ -782,9 +785,11 @@ func (reconciler *Reconciler) createConfigMap(obj api.OpenShiftObject) (*corev1.
 
 // checkKieServerConfigMap checks ConfigMaps owned by Kie Servers
 func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env api.Environment) {
-	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	listOpts := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
 	cmList := &corev1.ConfigMapList{}
-	if err := reconciler.Service.List(context.TODO(), listOps, cmList); err != nil {
+	if err := reconciler.Service.List(context.TODO(), cmList, listOpts...); err != nil {
 		log.Warn("Failed to list ConfigMaps. ", err)
 	} else {
 		serverDcList := make(map[string]int32)

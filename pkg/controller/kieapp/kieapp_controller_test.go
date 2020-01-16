@@ -155,6 +155,9 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 		roleMapper *api.RoleMapperAuthConfig
 		errMsg     string
 	}{{
+		name:       "Empty reference",
+		roleMapper: &api.RoleMapperAuthConfig{},
+	}, {
 		name: "Unsupported Kind: Service",
 		roleMapper: &api.RoleMapperAuthConfig{
 			From: &corev1.ObjectReference{
@@ -259,6 +262,9 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 		gitHooks *api.GitHooksVolume
 		errMsg   string
 	}{{
+		name:     "Empty reference",
+		gitHooks: &api.GitHooksVolume{},
+	}, {
 		name: "Unsupported type",
 		gitHooks: &api.GitHooksVolume{
 			From: &corev1.ObjectReference{
@@ -493,8 +499,8 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
 
 	//Let's now assume console pod is starting
-	service.ListFunc = func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
-		err := service.Client.List(ctx, opts, list)
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
 				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
@@ -516,8 +522,8 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
 
 	//Let's now assume both pods have started
-	service.ListFunc = func(ctx context.Context, opts *clientv1.ListOptions, list runtime.Object) error {
-		err := service.Client.List(ctx, opts, list)
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
 				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]

@@ -1865,7 +1865,7 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
-	assert.Equal(t, constants.VersionConstants[constants.CurrentVersion].ImageTag, cr.Spec.CommonConfig.ImageTag)
+	assert.Equal(t, constants.CurrentVersion, cr.Spec.CommonConfig.ImageTag)
 	assert.True(t, checkVersion(cr.Spec.Version))
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8", env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
