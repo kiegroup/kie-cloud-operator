@@ -435,12 +435,6 @@
               "description": "Password for AMQ Cluster. Generated if empty"
             },
             {
-              "label": "Maven password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.mavenPassword",
-              "description": "The password to use for 'mavenUser'. Generated if empty"
-            },
-            {
               "label": "Keystore password",
               "type": "password",
               "jsonPath": "$.spec.commonConfig.keyStorePassword",

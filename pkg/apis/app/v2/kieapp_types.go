@@ -450,9 +450,12 @@ type CommonConfig struct {
 	DBPassword         string `json:"dbPassword,omitempty"`
 	AMQPassword        string `json:"amqPassword,omitempty"`
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	// Deprecated - Remove after 7.6.1 is also removed
 	ControllerPassword string `json:"controllerPassword,omitempty"`
-	ServerPassword     string `json:"serverPassword,omitempty"`
-	MavenPassword      string `json:"mavenPassword,omitempty"`
+	// Deprecated - Remove after 7.6.1 is also removed
+	ServerPassword string `json:"serverPassword,omitempty"`
+	// Deprecated - Remove after 7.6.1 is also removed
+	MavenPassword string `json:"mavenPassword,omitempty"`
 }
 
 // VersionConfigs ...

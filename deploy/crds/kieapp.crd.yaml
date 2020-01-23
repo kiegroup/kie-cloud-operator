@@ -770,15 +770,6 @@ spec:
                     amqClusterPassword:
                       type: string
                       description: The password to use for amq cluster user.
-                    controllerPassword:
-                      type: string
-                      description: The password to use for the controllerUser.
-                    serverPassword:
-                      type: string
-                      description: The password to use for the executionUser.
-                    mavenPassword:
-                      type: string
-                      description: The password to use for the mavenUser.
                 objects:
                   type: object
                   description: Configuration of the RHPAM components

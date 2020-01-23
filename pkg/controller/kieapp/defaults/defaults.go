@@ -636,10 +636,7 @@ func setPasswords(cr *api.KieApp, isTrialEnv bool) {
 		&cr.Spec.CommonConfig.AdminPassword,
 		&cr.Spec.CommonConfig.DBPassword,
 		&cr.Spec.CommonConfig.AMQPassword,
-		&cr.Spec.CommonConfig.AMQClusterPassword,
-		&cr.Spec.CommonConfig.ControllerPassword,
-		&cr.Spec.CommonConfig.MavenPassword,
-		&cr.Spec.CommonConfig.ServerPassword}
+		&cr.Spec.CommonConfig.AMQClusterPassword}
 
 	for i := range passwords {
 		if len(*passwords[i]) != 0 {
