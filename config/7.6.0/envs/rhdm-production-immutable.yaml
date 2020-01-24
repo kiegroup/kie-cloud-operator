@@ -21,7 +21,7 @@ servers:
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "[[.Build.KieServerContainerDeployment]]"
-                    - name: KIE_SERVER_MGMT_DISABLED
+                    - name: KIE_SERVER_MGMT_DISABLE
                       value: "true"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: ""

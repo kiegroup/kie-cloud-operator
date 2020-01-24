@@ -24,7 +24,7 @@ console:
                     value: ""
                   - name: OPENSHIFT_DNS_PING_SERVICE_NAME
                     value: ""
-                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+                  - name: OPENSHIFT_DNS_PING_SERVICE_POR
                     value: ""
   persistentVolumeClaims:
     - metadata:
