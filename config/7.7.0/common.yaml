@@ -92,7 +92,7 @@ console:
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
-                    value: "60000"
+                    value: "5000"
                   - name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
                     value: "true"
                   ## OpenShift Enhancement END
