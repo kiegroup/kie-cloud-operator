@@ -658,6 +658,104 @@ func TestInvalidBuildConfiguration(t *testing.T) {
 	assert.NotNil(t, err, "Expected error trying to deploy multiple builds of same type")
 }
 
+func TestExtensionImageBuildConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseExternal,
+							ExternalConfig: &api.ExternalDatabaseObject{
+								Dialect:              "org.hibernate.dialect.SQLServerDialect",
+								Driver:               "mssql",
+								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+								BackgroundValidation: "true",
+								MinPoolSize:          "10",
+								MaxPoolSize:          "10",
+								Username:             "sqlserverUser",
+								Password:             "sqlserverPwd",
+								JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+							},
+						},
+						Build: &api.KieAppBuildObject{
+							ExtensionImageStreamTag: "test-sqlserver:1.0",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting trial environment")
+
+	assert.Equal(t, 1, len(env.Servers))
+	assert.Equal(t, "openshift", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Namespace)
+	assert.Equal(t, "test-sqlserver:1.0", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Name)
+	assert.Equal(t, "./extensions/extras", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].Paths[0].DestinationDir)
+	assert.Equal(t, "/extensions/.", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].Paths[0].SourcePath)
+	server := env.Servers[0]
+	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
+	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Database: &api.DatabaseObject{
+							Type: api.DatabaseExternal,
+							ExternalConfig: &api.ExternalDatabaseObject{
+								Dialect:              "org.hibernate.dialect.SQLServerDialect",
+								Driver:               "mssql",
+								ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+								ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+								BackgroundValidation: "true",
+								MinPoolSize:          "10",
+								MaxPoolSize:          "10",
+								Username:             "sqlserverUser",
+								Password:             "sqlserverPwd",
+								JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+							},
+						},
+						Build: &api.KieAppBuildObject{
+							ExtensionImageStreamTag:          "test-sqlserver:1.0",
+							ExtensionImageStreamTagNamespace: "hello-world-namespace",
+							ExtensionImageInstallDir:         "/tmp/test/tested",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+
+	assert.Nil(t, err, "Error getting trial environment")
+
+	assert.Equal(t, 1, len(env.Servers))
+	assert.Equal(t, "hello-world-namespace", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Namespace)
+	assert.Equal(t, "test-sqlserver:1.0", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Name)
+	assert.Equal(t, "./extensions/extras", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].Paths[0].DestinationDir)
+	assert.Equal(t, "/tmp/test/tested/.", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].Paths[0].SourcePath)
+	server := env.Servers[0]
+	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
+	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
 func TestBuildConfiguration(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{

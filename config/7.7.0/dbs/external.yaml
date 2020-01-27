@@ -55,6 +55,61 @@ servers:
                       value: "10000"
                     ## ExternalDB settings END
       ## KIE server deployment config END
+    ## KIE server build config BEGIN
+    #[[if .Build.ExtensionImageStreamTag]]
+    imageStreams:
+      - metadata:
+          name: "[[.KieName]]"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]"
+    buildConfigs:
+      - metadata:
+          name: "[[.KieName]]"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]"
+          annotations:
+            template.alpha.openshift.io/wait-for-ready: "true"
+        spec:
+          source:
+            images:
+              - from:
+                  kind: ImageStreamTag
+                  namespace: "[[.Build.ExtensionImageStreamTagNamespace]]"
+                  name: "[[.Build.ExtensionImageStreamTag]]"
+                paths:
+                  - destinationDir: "./extensions/extras"
+                    sourcePath: "[[.Build.ExtensionImageInstallDir]]/."
+          strategy:
+            type: Source
+            sourceStrategy:
+              env:
+                - name: CUSTOM_INSTALL_DIRECTORIES
+                  value: "extensions/*"
+              forcePull: true
+              from:
+                kind: "[[.Build.From.Kind]]"
+                namespace: "[[.Build.From.Namespace]]"
+                name: "[[.Build.From.Name]]"
+          output:
+            to:
+              kind: ImageStreamTag
+              name: "[[.KieName]]:latest"
+          triggers:
+            - type: ImageChange
+              imageChange: {}
+            - type: ImageChange
+              imageChange:
+                from:
+                  kind: ImageStreamTag
+                  namespace: "[[.Build.ExtensionImageStreamTagNamespace]]"
+                  name: "[[.Build.ExtensionImageStreamTag]]"
+            - type: ConfigChange
+    #[[end]]
+    ## KIE server build config END
   #[[end]]
   ## RANGE ends
   ## KIE Servers END

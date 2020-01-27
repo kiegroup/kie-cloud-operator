@@ -202,12 +202,15 @@ type CustomObject struct {
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
-	KieServerContainerDeployment string                  `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                    GitSource               `json:"gitSource,omitempty"`
-	MavenMirrorURL               string                  `json:"mavenMirrorURL,omitempty"`
-	ArtifactDir                  string                  `json:"artifactDir,omitempty"`
-	Webhooks                     []WebhookSecret         `json:"webhooks,omitempty"`
-	From                         *corev1.ObjectReference `json:"from,omitempty"`
+	KieServerContainerDeployment     string                  `json:"kieServerContainerDeployment,omitempty"`
+	GitSource                        GitSource               `json:"gitSource,omitempty"`
+	MavenMirrorURL                   string                  `json:"mavenMirrorURL,omitempty"`
+	ArtifactDir                      string                  `json:"artifactDir,omitempty"`
+	Webhooks                         []WebhookSecret         `json:"webhooks,omitempty"`
+	From                             *corev1.ObjectReference `json:"from,omitempty"`
+	ExtensionImageStreamTag          string                  `json:"extensionImageStreamTag,omitempty"`
+	ExtensionImageStreamTagNamespace string                  `json:"extensionImageStreamTagNamespace,omitempty"`
+	ExtensionImageInstallDir         string                  `json:"extensionImageInstallDir,omitempty"`
 }
 
 // GitSource Git coordinates to locate the source code to build
@@ -438,6 +441,11 @@ type BuildTemplate struct {
 	KieServerContainerDeployment string                 `json:"kieServerContainerDeployment,omitempty"`
 	MavenMirrorURL               string                 `json:"mavenMirrorURL,omitempty"`
 	ArtifactDir                  string                 `json:"artifactDir,omitempty"`
+	// Extension image configuration which provides custom jdbc drivers to be used
+	// by KieServer.
+	ExtensionImageStreamTag          string `json:"extensionImageStreamTag,omitempty"`
+	ExtensionImageStreamTagNamespace string `json:"extensionImageStreamTagNamespace,omitempty"`
+	ExtensionImageInstallDir         string `json:"extensionImageInstallDir,omitempty"`
 }
 
 // CommonConfig variables used in the templates
