@@ -510,18 +510,42 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	if serverSet.Build == nil {
 		return api.BuildTemplate{}
 	}
-	buildTemplate := api.BuildTemplate{
-		GitSource:                    serverSet.Build.GitSource,
-		GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, serverSet.Build.Webhooks),
-		GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, serverSet.Build.Webhooks),
-		KieServerContainerDeployment: serverSet.Build.KieServerContainerDeployment,
-		MavenMirrorURL:               serverSet.Build.MavenMirrorURL,
-		ArtifactDir:                  serverSet.Build.ArtifactDir,
+	buildTemplate := api.BuildTemplate{}
+
+	if serverSet.Build.ExtensionImageStreamTag != "" {
+		if serverSet.Build.ExtensionImageStreamTagNamespace == "" {
+			serverSet.Build.ExtensionImageStreamTagNamespace = constants.ImageStreamNamespace
+			log.Debugf("Extension Image Stream Tag set but no namespace set, defaulting to %s", serverSet.Build.ExtensionImageStreamTagNamespace)
+		}
+		if serverSet.Build.ExtensionImageInstallDir == "" {
+			serverSet.Build.ExtensionImageInstallDir = constants.DefaultExtensionImageInstallDir
+		} else {
+			log.Debugf("Extension Image Install Dir set to %s, be cautions when updating this parameter.", serverSet.Build.ExtensionImageInstallDir)
+		}
+		// JDBC extension image build template
+		buildTemplate = api.BuildTemplate{
+			ExtensionImageStreamTag:          serverSet.Build.ExtensionImageStreamTag,
+			ExtensionImageStreamTagNamespace: serverSet.Build.ExtensionImageStreamTagNamespace,
+			ExtensionImageInstallDir:         serverSet.Build.ExtensionImageInstallDir,
+		}
+
+	} else {
+		// build app from source template
+		buildTemplate = api.BuildTemplate{
+			GitSource:                    serverSet.Build.GitSource,
+			GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, serverSet.Build.Webhooks),
+			GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, serverSet.Build.Webhooks),
+			KieServerContainerDeployment: serverSet.Build.KieServerContainerDeployment,
+			MavenMirrorURL:               serverSet.Build.MavenMirrorURL,
+			ArtifactDir:                  serverSet.Build.ArtifactDir,
+		}
 	}
+
 	buildTemplate.From = getDefaultKieServerImage(product, cr, serverSet)
 	if serverSet.Build.From != nil {
 		buildTemplate.From = *serverSet.Build.From
 	}
+
 	return buildTemplate
 }
 
@@ -558,6 +582,7 @@ func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseOb
 	if database.Type == api.DatabaseExternal && database.ExternalConfig == nil {
 		return nil, fmt.Errorf("external database configuration is mandatory for external database type")
 	}
+
 	if database.Size == "" && defaultDB != nil {
 		resultDB := *database.DeepCopy()
 		resultDB.Size = defaultDB.Size

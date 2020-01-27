@@ -59,6 +59,8 @@ const (
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
+	// DefaultExtensionImageInstallDir Default Extension Install Dir for JDBC drivers
+	DefaultExtensionImageInstallDir = "/extensions"
 	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace

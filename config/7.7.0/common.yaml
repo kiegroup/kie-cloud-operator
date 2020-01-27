@@ -80,18 +80,6 @@ console:
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
-                  - name: KIE_MAVEN_USER
-                    value: mavenUser
-                  - name: KIE_MAVEN_PWD
-                    value: "[[.MavenPassword]]"
-                  - name: KIE_SERVER_CONTROLLER_USER
-                    value: controllerUser
-                  - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "[[.ControllerPassword]]"
-                  - name: KIE_SERVER_USER
-                    value: executionUser
-                  - name: KIE_SERVER_PWD
-                    value: "[[.ServerPassword]]"
                   - name: KIE_MBEANS
                     value: enabled
                   #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
@@ -104,7 +92,7 @@ console:
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
-                    value: "60000"
+                    value: "5000"
                   - name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
                     value: "true"
                   ## OpenShift Enhancement END
@@ -419,10 +407,10 @@ smartRouter:
                     value: "[[.KeyStorePassword]]"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
-                  - name: KIE_SERVER_CONTROLLER_USER
-                    value: controllerUser
-                  - name: KIE_SERVER_CONTROLLER_PWD
-                    value: "[[.ControllerPassword]]"
+                  - name: KIE_ADMIN_USER
+                    value: "[[.AdminUser]]"
+                  - name: KIE_ADMIN_PWD
+                    value: "[[.AdminPassword]]"
                   - name: KIE_SERVER_CONTROLLER_SERVICE
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -553,16 +541,8 @@ servers:
                       value: "[[$.AdminPassword]]"
                     - name: KIE_SERVER_STARTUP_STRATEGY
                       value: "OpenShiftStartupStrategy"
-                    - name: KIE_SERVER_USER
-                      value: executionUser
-                    - name: KIE_SERVER_PWD
-                      value: "[[$.ServerPassword]]"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
-                    - name: KIE_SERVER_CONTROLLER_USER
-                      value: controllerUser
-                    - name: KIE_SERVER_CONTROLLER_PWD
-                      value: "[[$.ControllerPassword]]"
                     - name: KIE_SERVER_CONTROLLER_SERVICE
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -582,9 +562,9 @@ servers:
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "[[.KieName]]"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
-                      value: mavenUser
+                      value: "[[$.AdminUser]]"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
-                      value: "[[$.MavenPassword]]"
+                      value: "[[$.AdminPassword]]"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_SERVICE"
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: MAVEN_REPOS

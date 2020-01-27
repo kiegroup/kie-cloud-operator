@@ -235,10 +235,22 @@ spec:
                           build:
                             type: object
                             description: Configuration of build configs for immutable KIE servers
-                            required:
-                              - kieServerContainerDeployment
-                              - gitSource
+                            oneOf:
+                              - required:
+                                  - extensionImageStreamTag
+                              - required:
+                                  - kieServerContainerDeployment
+                                  - gitSource
                             properties:
+                              extensionImageStreamTag:
+                                type: string
+                                description: ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0.
+                              extensionImageStreamTagNamespace:
+                                type: string
+                                description: Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
+                              extensionImageInstallDir:
+                                type: string
+                                description: Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc. Do not change this field unless you have sure about the changes that you is doing).
                               kieServerContainerDeployment:
                                 type: string
                                 description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
@@ -770,15 +782,6 @@ spec:
                     amqClusterPassword:
                       type: string
                       description: The password to use for amq cluster user.
-                    controllerPassword:
-                      type: string
-                      description: The password to use for the controllerUser.
-                    serverPassword:
-                      type: string
-                      description: The password to use for the executionUser.
-                    mavenPassword:
-                      type: string
-                      description: The password to use for the mavenUser.
                 objects:
                   type: object
                   description: Configuration of the RHPAM components
