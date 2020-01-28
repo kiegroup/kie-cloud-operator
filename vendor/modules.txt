@@ -13,7 +13,7 @@ github.com/Azure/go-autorest/autorest/date
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6 => github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6
+# github.com/RHsyseng/console-cr-form v0.0.0-20200128170441-c487bc6a3abd => github.com/RHsyseng/console-cr-form v0.0.0-20200128170441-c487bc6a3abd
 github.com/RHsyseng/console-cr-form/pkg/web
 github.com/RHsyseng/console-cr-form/pkg/web/packrd
 # github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586 => github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
@@ -103,8 +103,8 @@ github.com/gobuffalo/packd
 github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 # github.com/gobuffalo/packr/v2 v2.7.1 => github.com/gobuffalo/packr/v2 v2.2.0
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file
 github.com/gobuffalo/packr/v2/file/resolver
+github.com/gobuffalo/packr/v2/file
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
 github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
