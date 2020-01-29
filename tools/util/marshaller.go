@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 
@@ -102,6 +103,6 @@ func MarshallObject(obj interface{}, writer io.Writer) error {
 
 func RawMessagePointer(str string) *json.RawMessage {
 	message := json.RawMessage{}
-	message = []byte(str)
+	message = []byte(fmt.Sprintf("[%s]", str))
 	return &message
 }

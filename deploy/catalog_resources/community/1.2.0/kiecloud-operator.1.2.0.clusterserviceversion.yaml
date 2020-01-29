@@ -94,13 +94,11 @@ spec:
         specDescriptors:
           - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
             displayName: Enable Upgrades
-            value: false
             path: upgrades.enabled
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
           - description: Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
             displayName: Include minor version upgrades
-            value: false
             path: upgrades.minor
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
