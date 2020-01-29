@@ -1122,15 +1122,15 @@
                           "displayWhen": "external",
                           "visible": false,
                           "fields": [
-                             {
+                            {
                               "label": "Enable Extension image stream",
                               "type": "checkbox",
                               "required": false,
                               "description": "When set to true will configure the KIE Server with Extension Image Stream.",
-                              "jsonPath": "$.spec.objects.servers[*].build",
-                              "originalJsonPath": "$.spec.objects.servers[*].build",
+                              "jsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
+                              "originalJsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
                               "fields": [
-                                  {
+                                {
                                   "label": "Enable Extension image stream",
                                   "type": "fieldGroup",
                                   "jsonPath": "$.spec.objects.servers[*].build",
@@ -1146,18 +1146,18 @@
                                       "description": "ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0."
                                     },
                                     {
-                                      "label": "Extension image stream tag namespace",
+                                      "label": "Extension image stream namespace",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageStreamTagNamespace",
                                       "description": "Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace."
                                     },
                                     {
-                                      "label": "Extension image install Dir",
+                                      "label": "Extension image install directory",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageInstallDir",
-                                      "description": "scription: Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc. Do not change this field unless you have sure about the changes that you is doing)."
+                                      "description": "Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.)."
                                     }
                                   ]
                                 }
