@@ -64,14 +64,16 @@ spec:
           it is disabled by default.
         displayName: Enable Upgrades
         path: upgrades.enabled
-        value: [false]
+        value:
+          - false
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Set true to enable automatic minor product version upgrades,
           it is disabled by default. Requires spec.upgrades.enabled to be true.
         displayName: Include minor version upgrades
         path: upgrades.minor
-        value: [false]
+        value:
+          - false
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Environment deployed.

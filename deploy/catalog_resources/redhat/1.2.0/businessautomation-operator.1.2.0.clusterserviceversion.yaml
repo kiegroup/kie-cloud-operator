@@ -8,7 +8,7 @@ metadata:
     capabilities: "Basic Install"
     certified: "true"
     description: Business Automation Operator for deployment and management of RHPAM/RHDM environments.
-    repository: https://github.com/kiegroup/kie-cloud-operator    
+    repository: https://github.com/kiegroup/kie-cloud-operator
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.5.0
     createdAt: 2019-08-21
     support: Red Hat, Inc.
@@ -94,13 +94,15 @@ spec:
         specDescriptors:
           - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
             displayName: Enable Upgrades
-            value: [false]
+            value:
+              - false
             path: upgrades.enabled
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
           - description: Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
             displayName: Include minor version upgrades
-            value: [false]
+            value:
+              - false
             path: upgrades.minor
             x-descriptors:
               - "urn:alm:descriptor:com.tectonic.ui:booleanSwitch"

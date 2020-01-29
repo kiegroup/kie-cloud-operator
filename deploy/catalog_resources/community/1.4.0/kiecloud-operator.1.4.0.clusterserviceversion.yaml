@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.4.0
-    createdAt: "2020-01-15 14:34:03"
+    createdAt: "2020-01-29 18:30:54"
     description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat, Inc.
@@ -63,14 +63,16 @@ spec:
           it is disabled by default.
         displayName: Enable Upgrades
         path: upgrades.enabled
-        value: false
+        value:
+        - false
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Set true to enable automatic minor product version upgrades,
           it is disabled by default. Requires spec.upgrades.enabled to be true.
         displayName: Include minor version upgrades
         path: upgrades.minor
-        value: false
+        value:
+        - false
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Environment deployed.
