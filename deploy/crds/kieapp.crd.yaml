@@ -250,7 +250,7 @@ spec:
                                 description: Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
                               extensionImageInstallDir:
                                 type: string
-                                description: Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc. Do not change this field unless you have sure about the changes that you is doing).
+                                description: Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).
                               kieServerContainerDeployment:
                                 type: string
                                 description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
