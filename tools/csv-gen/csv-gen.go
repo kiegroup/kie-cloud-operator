@@ -221,12 +221,14 @@ func main() {
 					{
 						Description:  "Set true to enable automatic micro version product upgrades, it is disabled by default.",
 						DisplayName:  "Enable Upgrades",
+						Value:        util.RawMessagePointer("false"),
 						Path:         "upgrades.enabled",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"},
 					},
 					{
 						Description:  "Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.",
 						DisplayName:  "Include minor version upgrades",
+						Value:        util.RawMessagePointer("false"),
 						Path:         "upgrades.minor",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"},
 					},
