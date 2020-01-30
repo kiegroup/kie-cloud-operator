@@ -182,6 +182,66 @@ spec:
                                 name:
                                   type: string
                                   description: Reference object Name for the GitHooks
+                        jvm:
+                          type: object
+                          description: JVM configuration
+                          properties:
+                            javaOptsAppend:
+                              type: string
+                              description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                            javaMaxMemRatio:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.
+                            javaInitialMemRatio:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'
+                            javaMaxInitialMem:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'
+                            javaDiagnostics:
+                              type: boolean
+                              description: Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'
+                            javaDebug:
+                              type: boolean
+                              description: If set remote debugging will be switched on. Disabled by default. e.g. 'true'
+                            javaDebugPort:
+                              type: integer
+                              format: int32
+                              description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
+                            containerCoreLimit:
+                              type: integer
+                              format: int32
+                              description: A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'
+                            containerMaxMemory:
+                              type: integer
+                              format: int32
+                              description: Memory limit given to the container. e.g. '1024'
+                            gcMinHeapFreeRatio:
+                              type: integer
+                              format: int32
+                              description: Minimum percentage of heap free after GC to avoid expansion. e.g. '20'
+                            gcMaxHeapFreeRatio:
+                              type: integer
+                              format: int32
+                              description: Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'
+                            gcTimeRatio:
+                              type: integer
+                              format: int32
+                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                            gcAdaptiveSizePolicyWeight:
+                              type: integer
+                              format: int32
+                              description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                            gcMaxMetaspaceSize:
+                              type: integer
+                              format: int32
+                              description: The maximum metaspace size. e.g. '100'
+                            gcContainerOptions:
+                              type: string
+                              description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
                     servers:
                       type: array
                       description: Configuration of the each individual KIE server
@@ -500,6 +560,66 @@ spec:
                               amqEnableSSL:
                                 type: boolean
                                 description: Not intended to be set by the user, if will be set to true if all required SSL parameters are set.
+                          jvm:
+                            type: object
+                            description: JVM configuration
+                            properties:
+                              javaOptsAppend:
+                                type: string
+                                description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                              javaMaxMemRatio:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.
+                              javaInitialMemRatio:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'
+                              javaMaxInitialMem:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'
+                              javaDiagnostics:
+                                type: boolean
+                                description: Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'
+                              javaDebug:
+                                type: boolean
+                                description: If set remote debugging will be switched on. Disabled by default. e.g. 'true'
+                              javaDebugPort:
+                                type: integer
+                                format: int32
+                                description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
+                              containerCoreLimit:
+                                type: integer
+                                format: int32
+                                description: A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'
+                              containerMaxMemory:
+                                type: integer
+                                format: int32
+                                description: Memory limit given to the container. e.g. '1024'
+                              gcMinHeapFreeRatio:
+                                type: integer
+                                format: int32
+                                description: Minimum percentage of heap free after GC to avoid expansion. e.g. '20'
+                              gcMaxHeapFreeRatio:
+                                type: integer
+                                format: int32
+                                description: Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'
+                              gcTimeRatio:
+                                type: integer
+                                format: int32
+                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                              gcAdaptiveSizePolicyWeight:
+                                type: integer
+                                format: int32
+                                description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                              gcMaxMetaspaceSize:
+                                type: integer
+                                format: int32
+                                description: The maximum metaspace size. e.g. '100'
+                              gcContainerOptions:
+                                type: string
+                                description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
                     smartRouter:
                       type: object
                       description: Configuration of the RHPAM smart router
