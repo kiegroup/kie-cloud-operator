@@ -83,7 +83,7 @@ others:
                       value: "[[.ApplicationName]]-datagrid-ping"
                     - name: INFINISPAN_CONNECTORS
                       value: "hotrod"
-                  image: "registry.redhat.io/jboss-datagrid-7/[[$.Constants.DatagridImage]]:[[$.Constants.DatagridImageTag]]"
+                  image: "[[$.Constants.DatagridImageURL]]"
                   imagePullPolicy: IfNotPresent
                   name: "[[.ApplicationName]]-datagrid"
                   ports:
@@ -212,7 +212,7 @@ others:
                         fieldRef:
                           apiVersion: v1
                           fieldPath: metadata.namespace
-                  image: "registry.redhat.io/amq7/[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
+                  image: "[[$.Constants.BrokerImageURL]]"
                   imagePullPolicy: IfNotPresent
                   name: broker-amq
                   ports:

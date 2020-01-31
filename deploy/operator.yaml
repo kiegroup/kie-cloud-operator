@@ -55,6 +55,18 @@ spec:
           value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
         - name: PAM_SMARTROUTER_IMAGE_7.7.0
           value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
+        - name: OSE_CLI_IMAGE_7.7.0
+          value: registry.redhat.io/openshift3/ose-cli:v3.11
+        - name: MYSQL_PROXY_IMAGE_7.7.0
+          value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+        - name: POSTGRESQL_PROXY_IMAGE_7.7.0
+          value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+        - name: DATAGRID_IMAGE_7.7.0
+          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+        - name: BROKER_IMAGE_7.7.0
+          value: registry.redhat.io/amq7/amq-broker:7.5
+        - name: OAUTH_PROXY_IMAGE
+          value: registry.redhat.io/openshift3/oauth-proxy:v3.11
         image: quay.io/kiegroup/kie-cloud-operator:1.4.0
         imagePullPolicy: Always
         name: kie-cloud-operator

@@ -182,7 +182,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
-		Constants:    *getTemplateConstants(cr.Spec.Environment, cr.Spec.Version),
+		Constants:    *getTemplateConstants(cr),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -192,18 +192,39 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 	return envTemplate, nil
 }
 
-func getTemplateConstants(env api.EnvironmentType, productVersion string) *api.TemplateConstants {
+func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Micro = MajorMinorMicro(productVersion)
-	if envConstants, found := constants.EnvironmentConstants[env]; found {
+	c.Major, c.Minor, c.Micro = MajorMinorMicro(cr.Spec.Version)
+	if envConstants, found := constants.EnvironmentConstants[cr.Spec.Environment]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
 	}
-	if versionConstants, found := constants.VersionConstants[productVersion]; found {
+	if versionConstants, found := constants.VersionConstants[cr.Spec.Version]; found {
 		c.BrokerImage = versionConstants.BrokerImage
 		c.BrokerImageTag = versionConstants.BrokerImageTag
 		c.DatagridImage = versionConstants.DatagridImage
 		c.DatagridImageTag = versionConstants.DatagridImageTag
+
+		c.OseCliImageURL = versionConstants.OseCliImageURL
+		c.MySQLImageURL = versionConstants.MySQLImageURL
+		c.PostgreSQLImageURL = versionConstants.PostgreSQLImageURL
+		c.DatagridImageURL = versionConstants.DatagridImageURL
+		c.BrokerImageURL = versionConstants.BrokerImageURL
+	}
+	if val, exists := os.LookupEnv(constants.OseCliVar + cr.Spec.Version); exists {
+		c.OseCliImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.MySQLVar + cr.Spec.Version); exists {
+		c.MySQLImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.PostgreSQLVar + cr.Spec.Version); exists {
+		c.PostgreSQLImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.DatagridVar + cr.Spec.Version); exists {
+		c.DatagridImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.BrokerVar + cr.Spec.Version); exists {
+		c.BrokerImageURL = val
 	}
 	return c
 }
@@ -230,14 +251,14 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
-	template.Image = fmt.Sprintf("%s-%s%s", envConstants.App.Product, envConstants.App.ImageName, constants.RhelVersion)
-	template.ImageTag = cr.Spec.CommonConfig.ImageTag
-	template.ImageURL = template.Image + ":" + template.ImageTag
+	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+
 	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists {
 		template.ImageURL = val
-		template.Image, template.ImageTag = getImage(template.ImageURL)
 		template.OmitImageStream = true
 	}
+	template.Image, template.ImageTag = GetImage(template.ImageURL)
+
 	if cr.Spec.Objects.Console.Image != "" {
 		template.Image = cr.Spec.Objects.Console.Image
 		template.ImageURL = template.Image + ":" + template.ImageTag
@@ -294,14 +315,13 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
-		template.Image = fmt.Sprintf("%s-smartrouter%s", constants.RhpamPrefix, constants.RhelVersion)
-		template.ImageTag = cr.Spec.CommonConfig.ImageTag
-		template.ImageURL = template.Image + ":" + template.ImageTag
+		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
 		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Spec.Version); exists {
 			template.ImageURL = val
-			template.Image, template.ImageTag = getImage(template.ImageURL)
 			template.OmitImageStream = true
 		}
+		template.Image, template.ImageTag = GetImage(template.ImageURL)
+
 		if cr.Spec.Objects.SmartRouter.Image != "" {
 			template.Image = cr.Spec.Objects.SmartRouter.Image
 			template.ImageURL = template.Image + ":" + template.ImageTag
@@ -316,7 +336,8 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 	return template
 }
 
-func getImage(imageURL string) (image, imageTag string) {
+// GetImage ...
+func GetImage(imageURL string) (image, imageTag string) {
 	urlParts := strings.Split(imageURL, "/")
 	imageAndTag := urlParts[len(urlParts)-1]
 	imageParts := strings.Split(imageAndTag, ":")
@@ -593,18 +614,18 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 
-	image := fmt.Sprintf("%s-kieserver%s", product, constants.RhelVersion)
-	imageTag := cr.Spec.CommonConfig.ImageTag
 	envVar := constants.PamKieImageVar + cr.Spec.Version
 	if product == constants.RhdmPrefix {
 		envVar = constants.DmKieImageVar + cr.Spec.Version
 	}
-	imageURL = image + ":" + imageTag
+
+	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
 	if val, exists := os.LookupEnv(envVar); exists {
 		imageURL = val
-		image, imageTag = getImage(imageURL)
 		omitImageTrigger = true
 	}
+	image, imageTag := GetImage(imageURL)
+
 	if serverSet.Image != "" {
 		image = serverSet.Image
 		imageURL = image + ":" + imageTag

@@ -87,6 +87,34 @@ const (
 	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
 	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
 
+	OauthVar       = "OAUTH_PROXY_IMAGE"
+	OauthImageURL  = ImageRegistry + "/openshift3/oauth-proxy:v3.11"
+	OauthComponent = "golang-github-openshift-oauth-proxy-container"
+
+	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
+	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
+	PostgreSQL10Component = "rh-postgresql10-container"
+
+	MySQLVar         = "MYSQL_PROXY_IMAGE_"
+	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
+	MySQL57Component = "rh-mysql57-container"
+
+	OseCliVar          = "OSE_CLI_IMAGE_"
+	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
+	OseCli311Component = "openshift-enterprise-cli-container"
+
+	BrokerVar         = "BROKER_IMAGE_"
+	Broker75Image     = "amq-broker"
+	Broker75ImageTag  = "7.5"
+	Broker75ImageURL  = ImageRegistry + "/amq7/" + Broker75Image + ":" + Broker75ImageTag
+	Broker75Component = "amq-broker-openshift-container"
+
+	DatagridVar         = "DATAGRID_IMAGE_"
+	Datagrid73Image     = "datagrid73-openshift"
+	Datagrid73ImageTag  = "1.3"
+	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
+	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
+
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
@@ -160,11 +188,20 @@ type ImageRefTag struct {
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         Broker75Image,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag,
+		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
 	LastMicroVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,

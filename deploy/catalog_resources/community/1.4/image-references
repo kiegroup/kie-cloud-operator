@@ -4,7 +4,7 @@ spec:
   tags:
   - from:
       kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.7.0
+      name: quay.io/kiegroup/kie-cloud-operator:1.4.0
     name: rhpam-7-rhel8-operator-container
   - from:
       kind: DockerImage

@@ -141,6 +141,7 @@ type ConsoleObject struct {
 	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
+// SmartRouterObject deployment object
 type SmartRouterObject struct {
 	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
@@ -397,10 +398,15 @@ type TemplateConstants struct {
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
+	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
 	BrokerImage          string `json:"brokerImage"`
 	BrokerImageTag       string `json:"brokerImageTag"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
+	MySQLImageURL        string `json:"mySQLImageURL"`
+	PostgreSQLImageURL   string `json:"postgreSQLImageURL"`
+	BrokerImageURL       string `json:"brokerImageURL,omitempty"`
+	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
 	RoleMapperVolume     string `json:"roleMapperVolume"`
 	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
 }
@@ -497,11 +503,21 @@ type CommonConfig struct {
 
 // VersionConfigs ...
 type VersionConfigs struct {
-	APIVersion       string `json:"apiVersion,omitempty"`
-	BrokerImage      string `json:"brokerImage,omitempty"`
-	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
-	DatagridImage    string `json:"datagridImage,omitempty"`
-	DatagridImageTag string `json:"datagridImageTag,omitempty"`
+	APIVersion          string `json:"apiVersion,omitempty"`
+	OseCliImageURL      string `json:"oseCliImageURL,omitempty"`
+	OseCliComponent     string `json:"oseCliComponent,omitempty"`
+	BrokerImage         string `json:"brokerImage,omitempty"`
+	BrokerImageTag      string `json:"brokerImageTag,omitempty"`
+	BrokerImageURL      string `json:"brokerImageURL,omitempty"`
+	BrokerComponent     string `json:"brokerComponent,omitempty"`
+	DatagridImage       string `json:"datagridImage,omitempty"`
+	DatagridImageTag    string `json:"datagridImageTag,omitempty"`
+	DatagridImageURL    string `json:"datagridImageURL,omitempty"`
+	DatagridComponent   string `json:"datagridComponent,omitempty"`
+	MySQLImageURL       string `json:"mySQLImageURL,omitempty"`
+	MySQLComponent      string `json:"mySQLComponent,omitempty"`
+	PostgreSQLImageURL  string `json:"postgreSQLImageURL,omitempty"`
+	PostgreSQLComponent string `json:"postgreSQLComponent,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

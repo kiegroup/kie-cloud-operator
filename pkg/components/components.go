@@ -8,7 +8,6 @@ import (
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -114,7 +113,7 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 	for _, imageVersion := range constants.SupportedVersions {
-		if defaults.GetMinorImageVersion(imageVersion) >= "77" {
+		if imageVersion >= "7.7.0" {
 			for _, i := range constants.Images {
 				env := corev1.EnvVar{
 					Name:  i.Var + imageVersion,
@@ -122,8 +121,36 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 				}
 				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, env)
 			}
+			if versionConstants, found := constants.VersionConstants[imageVersion]; found {
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  constants.OseCliVar + imageVersion,
+					Value: versionConstants.OseCliImageURL,
+				})
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  constants.MySQLVar + imageVersion,
+					Value: versionConstants.MySQLImageURL,
+				})
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  constants.PostgreSQLVar + imageVersion,
+					Value: versionConstants.PostgreSQLImageURL,
+				})
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  constants.DatagridVar + imageVersion,
+					Value: versionConstants.DatagridImageURL,
+				})
+				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  constants.BrokerVar + imageVersion,
+					Value: versionConstants.BrokerImageURL,
+				})
+			}
 		}
 	}
+	// add oauth-proxy image reference
+	deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  constants.OauthVar,
+		Value: constants.OauthImageURL,
+	})
+	//
 
 	return deployment
 }
@@ -174,6 +201,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 				Resources:     []string{"deployments/finalizers"},
 				Verbs:         []string{"update"},
 			},
+			// swap out once 7.5.1 roles off, gets rid of wildcard perms
 			/*
 				{
 					APIGroups: []string{
