@@ -235,18 +235,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	template.ImageURL = template.Image + ":" + template.ImageTag
 	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists {
 		template.ImageURL = val
-		valSlice := strings.Split(val, "/")
-		val = valSlice[len(valSlice)-1]
-		valSlice = strings.Split(val, ":")
-		val = valSlice[0]
-		if len(valSlice) > 1 {
-			template.ImageTag = valSlice[len(valSlice)-1]
-			valSlice := valSlice[:len(valSlice)-1]
-			if len(valSlice) > 0 {
-				val = strings.Join(valSlice, ":")
-			}
-		}
-		template.Image = val
+		template.Image, template.ImageTag = getImage(template.ImageURL)
 		template.OmitImageStream = true
 	}
 	if cr.Spec.Objects.Console.Image != "" {
@@ -310,18 +299,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		template.ImageURL = template.Image + ":" + template.ImageTag
 		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Spec.Version); exists {
 			template.ImageURL = val
-			valSlice := strings.Split(val, "/")
-			val = valSlice[len(valSlice)-1]
-			valSlice = strings.Split(val, ":")
-			val = valSlice[0]
-			if len(valSlice) > 1 {
-				template.ImageTag = valSlice[len(valSlice)-1]
-				valSlice := valSlice[:len(valSlice)-1]
-				if len(valSlice) > 0 {
-					val = strings.Join(valSlice, ":")
-				}
-			}
-			template.Image = val
+			template.Image, template.ImageTag = getImage(template.ImageURL)
 			template.OmitImageStream = true
 		}
 		if cr.Spec.Objects.SmartRouter.Image != "" {
@@ -335,10 +313,19 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.OmitImageStream = false
 		}
 	}
-
 	return template
 }
 
+func getImage(imageURL string) (image, imageTag string) {
+	urlParts := strings.Split(imageURL, "/")
+	imageAndTag := urlParts[len(urlParts)-1]
+	imageParts := strings.Split(imageAndTag, ":")
+	image = imageParts[0]
+	if len(imageParts) > 1 {
+		imageTag = imageParts[len(imageParts)-1]
+	}
+	return image, imageTag
+}
 func setReplicas(object api.KieAppObject, replicaConstant api.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
 	if object.Replicas != nil {
 		if hasEnv && replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
@@ -615,18 +602,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 	imageURL = image + ":" + imageTag
 	if val, exists := os.LookupEnv(envVar); exists {
 		imageURL = val
-		valSlice := strings.Split(val, "/")
-		val = valSlice[len(valSlice)-1]
-		valSlice = strings.Split(val, ":")
-		val = valSlice[0]
-		if len(valSlice) > 1 {
-			imageTag = valSlice[len(valSlice)-1]
-			valSlice := valSlice[:len(valSlice)-1]
-			if len(valSlice) > 0 {
-				image = valSlice[len(valSlice)-1]
-			}
-		}
-		image = val
+		image, imageTag = getImage(imageURL)
 		omitImageTrigger = true
 	}
 	if serverSet.Image != "" {
