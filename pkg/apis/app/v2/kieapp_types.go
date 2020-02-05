@@ -265,10 +265,9 @@ type GitHooksVolume struct {
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
-	ExternalOnly bool                  `json:"externalOnly,omitempty"`
-	SSO          *SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP         *LDAPAuthConfig       `json:"ldap,omitempty"`
-	RoleMapper   *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 // SSOAuthConfig Authentication configuration for SSO
@@ -500,10 +499,9 @@ type VersionConfigs struct {
 
 // AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
-	ExternalOnly bool               `json:"externalOnly,omitempty"`
-	SSO          SSOAuthConfig      `json:"sso,omitempty"`
-	LDAP         LDAPAuthConfig     `json:"ldap,omitempty"`
-	RoleMapper   RoleMapperTemplate `json:"roleMapper,omitempty"`
+	SSO        SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
 }
 
 // RoleMapperTemplate RoleMapper definition used in the template

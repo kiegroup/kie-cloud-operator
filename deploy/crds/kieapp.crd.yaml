@@ -688,9 +688,6 @@ spec:
                   type: object
                   description: Authentication integration configuration
                   properties:
-                    externalOnly:
-                      type: boolean
-                      description: When true, only users defined in SSO/LDAP will be allowed. The default behaviour is to allow also application internal credentials.
                     sso:
                       type: object
                       description: RH-SSO integration configuration
