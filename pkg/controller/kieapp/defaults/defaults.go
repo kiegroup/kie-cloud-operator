@@ -6,9 +6,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
@@ -245,6 +245,11 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		}
 	}
 
+	// JVM configuration
+	if cr.Spec.Objects.Console.Jvm != nil {
+		template.Jvm = *cr.Spec.Objects.Console.Jvm.DeepCopy()
+	}
+
 	return template
 }
 
@@ -425,6 +430,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			if instanceTemplate.KeystoreSecret == "" {
 				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
 			}
+
+			// JVM configuration
+			if serverSet.Jvm != nil {
+				instanceTemplate.Jvm = *serverSet.Jvm.DeepCopy()
+			}
+
 			servers = append(servers, *instanceTemplate)
 		}
 	}
@@ -701,7 +712,7 @@ func loadYaml(service api.PlatformService, filename, productVersion, namespace s
 			if err != nil {
 				return nil, err
 			}
-			return parseTemplate(env, yamlString), nil
+			return parseTemplate(env, yamlString)
 		}
 		return nil, fmt.Errorf("%s does not exist, '%s' KieApp not deployed", filename, env.ApplicationName)
 	}
@@ -713,24 +724,26 @@ func loadYaml(service api.PlatformService, filename, productVersion, namespace s
 		return nil, fmt.Errorf("%s/%s ConfigMap not yet accessible, '%s' KieApp not deployed. Retrying... ", namespace, cmName, env.ApplicationName)
 	}
 	log.Debugf("Reconciling '%s' KieApp with %s from ConfigMap '%s'", env.ApplicationName, file, cmName)
-	return parseTemplate(env, configMap.Data[file]), nil
+	return parseTemplate(env, configMap.Data[file])
 }
 
-func parseTemplate(env api.EnvTemplate, objYaml string) []byte {
+func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	var b bytes.Buffer
 
 	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Parse(objYaml)
 	if err != nil {
-		log.Error("Error creating new Go template. ", err)
+		log.Error("Error creating new Go template.")
+		return []byte{}, err
 	}
 
 	// template replacement
 	err = tmpl.Execute(&b, env)
 	if err != nil {
-		log.Error("Error applying Go template. ", err)
+		log.Error("Error applying Go template.")
+		return []byte{}, err
 	}
 
-	return b.Bytes()
+	return b.Bytes(), nil
 }
 
 // convertToConfigMapName ...
@@ -809,6 +822,11 @@ func Pint(i int) *int {
 // Pint32 returns a pointer to an integer
 func Pint32(i int32) *int32 {
 	return &i
+}
+
+// Pbool returns a pointer to a boolean
+func Pbool(b bool) *bool {
+	return &b
 }
 
 // GetProduct ...

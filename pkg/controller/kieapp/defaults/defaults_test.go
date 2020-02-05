@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -354,7 +355,6 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
-	f := false
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -369,7 +369,7 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 							ExecutorTransacted: true,
 							Username:           "adminUser",
 							Password:           "adminPassword",
-							AuditTransacted:    &f,
+							AuditTransacted:    Pbool(false),
 							EnableAudit:        true,
 							QueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
 							EnableSignal:       true,
@@ -411,7 +411,6 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 }
 
 func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
-	f := false
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -426,7 +425,7 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 							ExecutorTransacted: true,
 							Username:           "adminUser",
 							Password:           "adminPassword",
-							AuditTransacted:    &f,
+							AuditTransacted:    Pbool(false),
 							EnableAudit:        true,
 							QueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
 							EnableSignal:       true,
@@ -452,7 +451,6 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 }
 
 func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
-	f := false
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -467,7 +465,7 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 							ExecutorTransacted:    true,
 							Username:              "adminUser",
 							Password:              "adminPassword",
-							AuditTransacted:       &f,
+							AuditTransacted:       Pbool(false),
 							EnableAudit:           true,
 							QueueAudit:            "queue/CUSTOM.KIE.SERVER.AUDIT",
 							EnableSignal:          true,
@@ -501,7 +499,6 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 }
 
 func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
-	f := false
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-jms",
@@ -513,7 +510,7 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 					{
 						Jms: &api.KieAppJmsObject{
 							EnableIntegration:  true,
-							Executor:           &f,
+							Executor:           Pbool(false),
 							ExecutorTransacted: true,
 							EnableAudit:        true,
 							QueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
@@ -619,6 +616,78 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 
 		case "AMQ_QUEUES":
 			assert.Equal(t, "queue/KIE.SERVER.EXECUTOR, queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", env.Value)
+		}
+	}
+}
+
+func createJvmTestObject() *api.JvmObject {
+	jvmObject := api.JvmObject{
+		JavaOptsAppend:             "-Dsome.property=foo",
+		JavaMaxMemRatio:            Pint32(50),
+		JavaInitialMemRatio:        Pint32(25),
+		JavaMaxInitialMem:          Pint32(4096),
+		JavaDiagnostics:            Pbool(true),
+		JavaDebug:                  Pbool(true),
+		JavaDebugPort:              Pint32(8787),
+		ContainerCoreLimit:         Pint32(2),
+		ContainerMaxMemory:         Pint32(1024),
+		GcMinHeapFreeRatio:         Pint32(20),
+		GcMaxHeapFreeRatio:         Pint32(40),
+		GcTimeRatio:                Pint32(4),
+		GcAdaptiveSizePolicyWeight: Pint32(90),
+		GcMaxMetaspaceSize:         Pint32(100),
+		GcContainerOptions:         "-XX:+UseG1GC",
+	}
+	return &jvmObject
+}
+
+func testJvmEnv(t *testing.T, envs []corev1.EnvVar) {
+	for _, env := range envs {
+		switch e := env.Name; e {
+		case "JAVA_OPTS_APPEND":
+			assert.Equal(t, "-Dsome.property=foo", env.Value)
+
+		case "JAVA_MAX_MEM_RATIO":
+			assert.Equal(t, "50", env.Value)
+
+		case "JAVA_INITIAL_MEM_RATIO":
+			assert.Equal(t, "25", env.Value)
+
+		case "JAVA_MAX_INITIAL_MEM":
+			assert.Equal(t, "4096", env.Value)
+
+		case "JAVA_DIAGNOSTICS":
+			assert.Equal(t, "true", env.Value)
+
+		case "JAVA_DEBUG":
+			assert.Equal(t, "true", env.Value)
+
+		case "JAVA_DEBUG_PORT":
+			assert.Equal(t, "8787", env.Value)
+
+		case "CONTAINER_CORE_LIMIT":
+			assert.Equal(t, "2", env.Value)
+
+		case "CONTAINER_MAX_MEMORY":
+			assert.Equal(t, "1024", env.Value)
+
+		case "GC_MIN_HEAP_FREE_RATIO":
+			assert.Equal(t, "20", env.Value)
+
+		case "GC_MAX_HEAP_FREE_RATIO":
+			assert.Equal(t, "40", env.Value)
+
+		case "GC_TIME_RATIO":
+			assert.Equal(t, "4", env.Value)
+
+		case "GC_ADAPTIVE_SIZE_POLICY_WEIGHT":
+			assert.Equal(t, "90", env.Value)
+
+		case "GC_MAX_METASPACE_SIZE":
+			assert.Equal(t, "100", env.Value)
+
+		case "GC_CONTAINER_OPTIONS":
+			assert.Equal(t, "-XX:+UseG1GC", env.Value)
 		}
 	}
 }
@@ -1048,6 +1117,13 @@ func TestTrialServerEnv(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					Jvm: &api.JvmObject{
+						JavaOptsAppend:     "",
+						GcContainerOptions: "",
+						JavaDebug:          Pbool(false),
+					},
+				},
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(deployments),
@@ -1057,6 +1133,7 @@ func TestTrialServerEnv(t *testing.T) {
 								envAddition,
 							},
 						},
+						Jvm: createJvmTestObject(),
 					},
 				},
 			},
@@ -1079,6 +1156,10 @@ func TestTrialServerEnv(t *testing.T) {
 		Value: "replaced",
 	})
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, commonAddition, "Environment additions not functional")
+	testJvmEnv(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "JAVA_DEBUG", Value: strconv.FormatBool(*cr.Spec.Objects.Console.Jvm.JavaDebug)})
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "JAVA_OPTS_APPEND", Value: cr.Spec.Objects.Console.Jvm.JavaOptsAppend})
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "GC_CONTAINER_OPTIONS", Value: cr.Spec.Objects.Console.Jvm.GcContainerOptions})
 }
 
 func TestTrialServersEnv(t *testing.T) {
@@ -1178,6 +1259,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 							envAddition,
 						},
 					},
+					Jvm: createJvmTestObject(),
 				},
 			},
 		},
@@ -1199,6 +1281,8 @@ func TestTrialConsoleEnv(t *testing.T) {
 		Name:  "KIE_ADMIN_PWD",
 		Value: "RedHat",
 	})
+
+	testJvmEnv(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestKieAppDefaults(t *testing.T) {

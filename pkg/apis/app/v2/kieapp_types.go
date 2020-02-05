@@ -129,6 +129,7 @@ type KieServerSet struct {
 	KieAppObject `json:",inline"`
 	Database     *DatabaseObject  `json:"database,omitempty"`
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm          *JvmObject       `json:"jvm,omitempty"`
 }
 
 // ConsoleObject Console deployment object
@@ -136,6 +137,7 @@ type ConsoleObject struct {
 	KieAppObject `json:",inline"`
 	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
 	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
 type SmartRouterObject struct {
@@ -166,6 +168,25 @@ type KieAppJmsObject struct {
 	AMQKeystoreName       string `json:"amqKeystoreName,omitempty"`
 	AMQKeystorePassword   string `json:"amqKeystorePassword,omitempty"`
 	AMQEnableSSL          bool   `json:"amqEnableSSL,omitempty"` // flag will be set to true if all AMQ SSL parameters are correctly set.
+}
+
+// JvmObject JVM specification to be used by the KieApp
+type JvmObject struct {
+	JavaOptsAppend             string `json:"javaOptsAppend,omitempty"`
+	JavaMaxMemRatio            *int32 `json:"javaMaxMemRatio,omitempty"`
+	JavaInitialMemRatio        *int32 `json:"javaInitialMemRatio,omitempty"`
+	JavaMaxInitialMem          *int32 `json:"javaMaxInitialMem,omitempty"`
+	JavaDiagnostics            *bool  `json:"javaDiagnostics,omitempty"`
+	JavaDebug                  *bool  `json:"javaDebug,omitempty"`
+	JavaDebugPort              *int32 `json:"javaDebugPort,omitempty"`
+	ContainerCoreLimit         *int32 `json:"containerCoreLimit,omitempty"`
+	ContainerMaxMemory         *int32 `json:"containerMaxMemory,omitempty"`
+	GcMinHeapFreeRatio         *int32 `json:"gcMinHeapFreeRatio,omitempty"`
+	GcMaxHeapFreeRatio         *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
+	GcTimeRatio                *int32 `json:"gcTimeRatio,omitempty"`
+	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
+	GcMaxMetaspaceSize         *int32 `json:"gcMaxMetaspaceSize,omitempty"`
+	GcContainerOptions         string `json:"gcContainerOptions,omitempty"`
 }
 
 // KieAppObject Generic object definition
@@ -393,6 +414,7 @@ type ConsoleTemplate struct {
 	ImageTag       string         `json:"imageTag,omitempty"`
 	KeystoreSecret string         `json:"keystoreSecret,omitempty"`
 	GitHooks       GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm            JvmObject      `json:"jvm,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -407,6 +429,7 @@ type ServerTemplate struct {
 	Database       DatabaseObject         `json:"database,omitempty"`
 	Jms            KieAppJmsObject        `json:"jms,omitempty"`
 	SmartRouter    SmartRouterObject      `json:"smartRouter,omitempty"`
+	Jvm            JvmObject              `json:"jvm,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
