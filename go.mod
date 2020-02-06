@@ -25,7 +25,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.10.0
 	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
-	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
 	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	sigs.k8s.io/controller-runtime v0.2.0

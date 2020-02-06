@@ -14,7 +14,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -268,46 +268,46 @@ func GetRole(operatorName string) *rbacv1.Role {
 	return role
 }
 
-func GetCrd() *extv1beta1.CustomResourceDefinition {
+func GetCrd() *extv1.CustomResourceDefinition {
 	plural := "kieapps"
-	crd := &extv1beta1.CustomResourceDefinition{
+	crd := &extv1.CustomResourceDefinition{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: extv1beta1.SchemeGroupVersion.String(),
+			APIVersion: extv1.SchemeGroupVersion.String(),
 			Kind:       "CustomResourceDefinition",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: plural + "." + api.SchemeGroupVersion.Group,
 		},
-		Spec: extv1beta1.CustomResourceDefinitionSpec{
+		Spec: extv1.CustomResourceDefinitionSpec{
 			Scope:   "Namespaced",
 			Group:   api.SchemeGroupVersion.Group,
 			Version: api.SchemeGroupVersion.Version,
-			Versions: []extv1beta1.CustomResourceDefinitionVersion{
+			Versions: []extv1.CustomResourceDefinitionVersion{
 				{
 					Name:    api.SchemeGroupVersion.Version,
 					Served:  true,
 					Storage: true,
-					Schema:  &extv1beta1.CustomResourceValidation{OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{}},
+					Schema:  &extv1.CustomResourceValidation{OpenAPIV3Schema: &extv1.JSONSchemaProps{}},
 				},
 				{
 					Name:    v1.SchemeGroupVersion.Version,
 					Served:  true,
 					Storage: false,
-					Schema:  &extv1beta1.CustomResourceValidation{OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{}},
+					Schema:  &extv1.CustomResourceValidation{OpenAPIV3Schema: &extv1.JSONSchemaProps{}},
 				},
 			},
-			Names: extv1beta1.CustomResourceDefinitionNames{
+			Names: extv1.CustomResourceDefinitionNames{
 				Plural:   "kieapps",
 				ListKind: "KieAppList",
 				Singular: "kieapp",
 				Kind:     "KieApp",
 			},
-			AdditionalPrinterColumns: []extv1beta1.CustomResourceColumnDefinition{
+			AdditionalPrinterColumns: []extv1.CustomResourceColumnDefinition{
 				{Name: "Age", Type: "date", JSONPath: ".metadata.creationTimestamp"},
 				{Name: "Phase", Type: "string", JSONPath: ".status.phase"},
 			},
-			Subresources: &extv1beta1.CustomResourceSubresources{
-				Status: &extv1beta1.CustomResourceSubresourceStatus{},
+			Subresources: &extv1.CustomResourceSubresources{
+				Status: &extv1.CustomResourceSubresourceStatus{},
 			},
 		},
 	}
