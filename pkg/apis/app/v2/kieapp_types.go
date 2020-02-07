@@ -172,6 +172,7 @@ type KieAppJmsObject struct {
 
 // JvmObject JVM specification to be used by the KieApp
 type JvmObject struct {
+	EnableConfiguration        *bool  `json:"enableConfiguration,omitempty"`
 	JavaOptsAppend             string `json:"javaOptsAppend,omitempty"`
 	JavaMaxMemRatio            *int32 `json:"javaMaxMemRatio,omitempty"`
 	JavaInitialMemRatio        *int32 `json:"javaInitialMemRatio,omitempty"`

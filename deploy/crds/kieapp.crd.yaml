@@ -186,6 +186,9 @@ spec:
                           type: object
                           description: JVM configuration
                           properties:
+                            enableConfiguration:
+                              type: boolean
+                              description: Flag used only by the UI to toggle the JVM configuration section.
                             javaOptsAppend:
                               type: string
                               description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
@@ -564,6 +567,9 @@ spec:
                             type: object
                             description: JVM configuration
                             properties:
+                              enableConfiguration:
+                                type: boolean
+                                description: Flag used only by the UI to toggle the JVM configuration section.
                               javaOptsAppend:
                                 type: string
                                 description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
