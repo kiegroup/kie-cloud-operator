@@ -13,7 +13,9 @@ require (
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/google/go-cmp v0.3.1
 	github.com/gophercloud/gophercloud v0.6.0 // indirect
+	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.7
+	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/openshift/api v3.9.1-0.20190424152011-77b8897ec79a+incompatible
 	github.com/openshift/client-go v0.0.0-20190401163519-84c2b942258a
 	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20191115003340-16619cd27fa5

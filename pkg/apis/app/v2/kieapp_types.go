@@ -32,6 +32,7 @@ type KieAppSpec struct {
 	Auth          KieAppAuthObject `json:"auth,omitempty"`
 	Upgrades      KieAppUpgrades   `json:"upgrades,omitempty"`
 	Version       string           `json:"version,omitempty"`
+	UseImageTags  bool             `json:"useImageTags"`
 }
 
 // EnvironmentType describes a possible application environment

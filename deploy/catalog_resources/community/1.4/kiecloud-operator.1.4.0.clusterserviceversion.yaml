@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.4.0
-    createdAt: "2020-02-08 13:56:11"
+    createdAt: "2020-02-12 17:08:35"
     description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat, Inc.
@@ -69,6 +69,12 @@ spec:
           it is disabled by default. Requires spec.upgrades.enabled to be true.
         displayName: Include minor version upgrades
         path: upgrades.minor
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Set true to enable image tags, disabled by default. This will
+          leverage image tags instead of the image digests.
+        displayName: Use Image Tags
+        path: useImageTags
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Environment deployed.
@@ -161,17 +167,17 @@ spec:
                 - name: PAM_SMARTROUTER_IMAGE_7.7.0
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
                 - name: OSE_CLI_IMAGE_7.7.0
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
+                  value: registry.redhat.io/openshift3/ose-cli@sha256:7e356132f56fc4e3cf691ba5b0b5f063dc974c4cfe2f198c8c1b5f68cb9ccbdd
                 - name: MYSQL_PROXY_IMAGE_7.7.0
-                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+                  value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:de3ab628b403dc5eed986a7f392c34687bddafee7bdfccfd65cecf137ade3dfd
                 - name: DATAGRID_IMAGE_7.7.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
                 - name: BROKER_IMAGE_7.7.0
-                  value: registry.redhat.io/amq7/amq-broker:7.5
+                  value: registry.redhat.io/amq7/amq-broker@sha256:49adf926658cee75dafbb463cfc7b4f9a533d5f34c0e1622709263a5f64f8b1b
                 - name: OAUTH_PROXY_IMAGE
-                  value: registry.redhat.io/openshift3/oauth-proxy:v3.11
+                  value: registry.redhat.io/openshift3/oauth-proxy@sha256:cd284eeb883b549c4578a1a07b1ee58ccbd0c8b62c0678a981b5ed65a6cf1c16
                 image: quay.io/kiegroup/kie-cloud-operator:1.4.0
                 imagePullPolicy: Always
                 name: kie-cloud-operator
@@ -269,17 +275,17 @@ spec:
     name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
     name: rhpam-smartrouter-rhel8
-  - image: registry.redhat.io/openshift3/oauth-proxy:v3.11
+  - image: registry.redhat.io/openshift3/oauth-proxy@sha256:cd284eeb883b549c4578a1a07b1ee58ccbd0c8b62c0678a981b5ed65a6cf1c16
     name: oauth-proxy
-  - image: registry.redhat.io/openshift3/ose-cli:v3.11
+  - image: registry.redhat.io/openshift3/ose-cli@sha256:7e356132f56fc4e3cf691ba5b0b5f063dc974c4cfe2f198c8c1b5f68cb9ccbdd
     name: ose-cli
-  - image: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+  - image: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
     name: mysql-57-rhel7
-  - image: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+  - image: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:de3ab628b403dc5eed986a7f392c34687bddafee7bdfccfd65cecf137ade3dfd
     name: postgresql-10-rhel7
-  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
     name: datagrid73-openshift
-  - image: registry.redhat.io/amq7/amq-broker:7.5
+  - image: registry.redhat.io/amq7/amq-broker@sha256:49adf926658cee75dafbb463cfc7b4f9a533d5f34c0e1622709263a5f64f8b1b
     name: amq-broker
   replaces: kiecloud-operator.1.3.0
   selector:

@@ -48,6 +48,14 @@
           ]
         },
         {
+          "label": "Use Image Tags",
+          "type": "checkbox",
+          "required": false,
+          "description": "Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.",
+          "jsonPath": "$.spec.useImageTags",
+          "originalJsonPath": "$.spec.useImageTags"
+        },
+        {
           "label": "Custom registry",
           "type": "fieldGroup",
           "required": false,

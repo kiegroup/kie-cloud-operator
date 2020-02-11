@@ -197,9 +197,10 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 			Volumes:            []corev1.Volume{volume},
 			Containers: []corev1.Container{
 				{
-					Name:  "oauth-proxy",
-					Image: oauthImage,
-					Ports: []corev1.ContainerPort{{Name: "public", ContainerPort: httpsPort}},
+					Name:            "oauth-proxy",
+					Image:           oauthImage,
+					ImagePullPolicy: operator.Spec.Template.Spec.Containers[0].ImagePullPolicy,
+					Ports:           []corev1.ContainerPort{{Name: "public", ContainerPort: httpsPort}},
 					Args: []string{
 						"--http-address=",
 						fmt.Sprintf("--https-address=:%d", httpsPort),

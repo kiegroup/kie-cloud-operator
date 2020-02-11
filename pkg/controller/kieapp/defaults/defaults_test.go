@@ -2503,8 +2503,6 @@ func TestEnvCustomImageTag(t *testing.T) {
 	os.Setenv(constants.PamKieImageVar+constants.CurrentVersion, imageURL)
 	os.Setenv(constants.PamSmartRouterVar+constants.CurrentVersion, imageURL)
 	checkImageNames(cr, imageName, imageURL, t)
-	os.Unsetenv(envConstants.App.ImageVar + cr.Spec.Version)
-	os.Unsetenv(constants.PamKieImageVar + cr.Spec.Version)
 
 	// test setting image with env vars, DM product, and different image url
 	cr.Spec.Environment = api.RhdmAuthoring
@@ -2528,7 +2526,13 @@ func TestEnvCustomImageTag(t *testing.T) {
 	os.Setenv(constants.PamSmartRouterVar+cr.Spec.Version, imageURL)
 	checkImageNames(cr, imageName, imageURL, t)
 
+	// test useImageTags = true
+	cr.Spec.UseImageTags = true
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Equal(t, constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Spec.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 	// test that env var works with older version
+	cr.Spec.UseImageTags = false
 	cr.Spec.Version = constants.LastMinorVersion
 	imageTag = cr.Spec.Version
 	imageName = image + ":" + imageTag
@@ -2536,7 +2540,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 	os.Setenv(envConstants.App.ImageVar+cr.Spec.Version, imageURL)
 	os.Setenv(constants.DmKieImageVar+cr.Spec.Version, imageURL)
 	os.Setenv(constants.PamSmartRouterVar+cr.Spec.Version, imageURL)
-	env, err := GetEnvironment(cr, test.MockService())
+	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
 	if isTagImage := getImageChangeName(env.Console.DeploymentConfigs[0]); isTagImage != "" {

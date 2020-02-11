@@ -55,6 +55,9 @@ spec:
                 version:
                   type: string
                   description: The version of the application deployment.
+                useImageTags:
+                  type: boolean
+                  description: Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
                 commonConfig:
                   type: object
                   description: Configuration of the RHPAM components
