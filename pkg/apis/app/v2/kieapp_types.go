@@ -71,6 +71,7 @@ type AppConstants struct {
 	Product   string `json:"name,omitempty"`
 	Prefix    string `json:"prefix,omitempty"`
 	ImageName string `json:"imageName,omitempty"`
+	ImageVar  string `json:"imageVar,omitempty"`
 	MavenRepo string `json:"mavenRepo,omitempty"`
 }
 
@@ -129,6 +130,7 @@ type KieServerSet struct {
 	KieAppObject `json:",inline"`
 	Database     *DatabaseObject  `json:"database,omitempty"`
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm          *JvmObject       `json:"jvm,omitempty"`
 }
 
 // ConsoleObject Console deployment object
@@ -136,8 +138,10 @@ type ConsoleObject struct {
 	KieAppObject `json:",inline"`
 	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
 	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
+// SmartRouterObject deployment object
 type SmartRouterObject struct {
 	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
@@ -166,6 +170,25 @@ type KieAppJmsObject struct {
 	AMQKeystoreName       string `json:"amqKeystoreName,omitempty"`
 	AMQKeystorePassword   string `json:"amqKeystorePassword,omitempty"`
 	AMQEnableSSL          bool   `json:"amqEnableSSL,omitempty"` // flag will be set to true if all AMQ SSL parameters are correctly set.
+}
+
+// JvmObject JVM specification to be used by the KieApp
+type JvmObject struct {
+	JavaOptsAppend             string `json:"javaOptsAppend,omitempty"`
+	JavaMaxMemRatio            *int32 `json:"javaMaxMemRatio,omitempty"`
+	JavaInitialMemRatio        *int32 `json:"javaInitialMemRatio,omitempty"`
+	JavaMaxInitialMem          *int32 `json:"javaMaxInitialMem,omitempty"`
+	JavaDiagnostics            *bool  `json:"javaDiagnostics,omitempty"`
+	JavaDebug                  *bool  `json:"javaDebug,omitempty"`
+	JavaDebugPort              *int32 `json:"javaDebugPort,omitempty"`
+	ContainerCoreLimit         *int32 `json:"containerCoreLimit,omitempty"`
+	ContainerMaxMemory         *int32 `json:"containerMaxMemory,omitempty"`
+	GcMinHeapFreeRatio         *int32 `json:"gcMinHeapFreeRatio,omitempty"`
+	GcMaxHeapFreeRatio         *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
+	GcTimeRatio                *int32 `json:"gcTimeRatio,omitempty"`
+	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
+	GcMaxMetaspaceSize         *int32 `json:"gcMaxMetaspaceSize,omitempty"`
+	GcContainerOptions         string `json:"gcContainerOptions,omitempty"`
 }
 
 // KieAppObject Generic object definition
@@ -244,10 +267,9 @@ type GitHooksVolume struct {
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
-	ExternalOnly bool                  `json:"externalOnly,omitempty"`
-	SSO          *SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP         *LDAPAuthConfig       `json:"ldap,omitempty"`
-	RoleMapper   *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 // SSOAuthConfig Authentication configuration for SSO
@@ -376,47 +398,60 @@ type TemplateConstants struct {
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
+	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
 	BrokerImage          string `json:"brokerImage"`
 	BrokerImageTag       string `json:"brokerImageTag"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
+	MySQLImageURL        string `json:"mySQLImageURL"`
+	PostgreSQLImageURL   string `json:"postgreSQLImageURL"`
+	BrokerImageURL       string `json:"brokerImageURL,omitempty"`
+	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
 	RoleMapperVolume     string `json:"roleMapperVolume"`
 	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	SSOAuthClient  SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name           string         `json:"name,omitempty"`
-	Replicas       int32          `json:"replicas,omitempty"`
-	Image          string         `json:"image,omitempty"`
-	ImageTag       string         `json:"imageTag,omitempty"`
-	KeystoreSecret string         `json:"keystoreSecret,omitempty"`
-	GitHooks       GitHooksVolume `json:"gitHooks,omitempty"`
+	OmitImageStream bool           `json:"omitImageStream"`
+	SSOAuthClient   SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name            string         `json:"name,omitempty"`
+	Replicas        int32          `json:"replicas,omitempty"`
+	Image           string         `json:"image,omitempty"`
+	ImageTag        string         `json:"imageTag,omitempty"`
+	ImageURL        string         `json:"imageURL,omitempty"`
+	KeystoreSecret  string         `json:"keystoreSecret,omitempty"`
+	GitHooks        GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm             JvmObject      `json:"jvm,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	KieName        string                 `json:"kieName,omitempty"`
-	KieServerID    string                 `json:"kieServerID,omitempty"`
-	Replicas       int32                  `json:"replicas,omitempty"`
-	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From           corev1.ObjectReference `json:"from,omitempty"`
-	Build          BuildTemplate          `json:"build,omitempty"`
-	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
-	Database       DatabaseObject         `json:"database,omitempty"`
-	Jms            KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter    SmartRouterObject      `json:"smartRouter,omitempty"`
+	OmitImageStream bool                   `json:"omitImageStream"`
+	KieName         string                 `json:"kieName,omitempty"`
+	KieServerID     string                 `json:"kieServerID,omitempty"`
+	Replicas        int32                  `json:"replicas,omitempty"`
+	SSOAuthClient   SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From            corev1.ObjectReference `json:"from,omitempty"`
+	ImageURL        string                 `json:"imageURL,omitempty"`
+	Build           BuildTemplate          `json:"build,omitempty"`
+	KeystoreSecret  string                 `json:"keystoreSecret,omitempty"`
+	Database        DatabaseObject         `json:"database,omitempty"`
+	Jms             KieAppJmsObject        `json:"jms,omitempty"`
+	SmartRouter     SmartRouterObject      `json:"smartRouter,omitempty"`
+	Jvm             JvmObject              `json:"jvm,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
+	OmitImageStream  bool   `json:"omitImageStream"`
 	Replicas         int32  `json:"replicas,omitempty"`
 	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 	Image            string `json:"image,omitempty"`
 	ImageTag         string `json:"imageTag,omitempty"`
+	ImageURL         string `json:"imageURL,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -468,19 +503,28 @@ type CommonConfig struct {
 
 // VersionConfigs ...
 type VersionConfigs struct {
-	APIVersion       string `json:"apiVersion,omitempty"`
-	BrokerImage      string `json:"brokerImage,omitempty"`
-	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
-	DatagridImage    string `json:"datagridImage,omitempty"`
-	DatagridImageTag string `json:"datagridImageTag,omitempty"`
+	APIVersion          string `json:"apiVersion,omitempty"`
+	OseCliImageURL      string `json:"oseCliImageURL,omitempty"`
+	OseCliComponent     string `json:"oseCliComponent,omitempty"`
+	BrokerImage         string `json:"brokerImage,omitempty"`
+	BrokerImageTag      string `json:"brokerImageTag,omitempty"`
+	BrokerImageURL      string `json:"brokerImageURL,omitempty"`
+	BrokerComponent     string `json:"brokerComponent,omitempty"`
+	DatagridImage       string `json:"datagridImage,omitempty"`
+	DatagridImageTag    string `json:"datagridImageTag,omitempty"`
+	DatagridImageURL    string `json:"datagridImageURL,omitempty"`
+	DatagridComponent   string `json:"datagridComponent,omitempty"`
+	MySQLImageURL       string `json:"mySQLImageURL,omitempty"`
+	MySQLComponent      string `json:"mySQLComponent,omitempty"`
+	PostgreSQLImageURL  string `json:"postgreSQLImageURL,omitempty"`
+	PostgreSQLComponent string `json:"postgreSQLComponent,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
-	ExternalOnly bool               `json:"externalOnly,omitempty"`
-	SSO          SSOAuthConfig      `json:"sso,omitempty"`
-	LDAP         LDAPAuthConfig     `json:"ldap,omitempty"`
-	RoleMapper   RoleMapperTemplate `json:"roleMapper,omitempty"`
+	SSO        SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
 }
 
 // RoleMapperTemplate RoleMapper definition used in the template

@@ -114,12 +114,6 @@
           ],
           "fields": [
             {
-              "label": "External authentication only",
-              "type": "boolean",
-              "jsonPath": "$.spec.auth.externalOnly",
-              "description": "Authenticate only users defined in the external IdP"
-            },
-            {
               "label": "SSO",
               "type": "fieldGroup",
               "required": true,
@@ -580,6 +574,146 @@
                   "jsonPath": "$.spec.objects.console.resources.limits.cpu",
                   "description": "Maximum processing power granted to the container",
                   "default": "500m"
+                }
+              ]
+            },
+            {
+              "label": "Enable JVM configuration",
+              "type": "checkbox",
+              "required": false,
+              "description": "When set to true will configure the RHPAM Workbench with JVM configuration, if no configuration is added, the defaults will be used.",
+              "jsonPath": "$.spec.objects.console.jvm.enableConfiguration",
+              "originalJsonPath": "$.spec.objects.console.jvm.enableConfiguration",
+              "fields": [
+                {
+                  "label": "Enable JVM configuration",
+                  "type": "fieldGroup",
+                  "jsonPath": "$.spec.objects.console.jvm",
+                  "originalJsonPath": "$.spec.objects.console.jvm",
+                  "displayWhen": "true",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "Java Opts append",
+                      "type": "text",
+                      "required": false,
+                      "description": "User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaOptsAppend",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaOptsAppend"
+                    },
+                    {
+                      "label": "Java max memory ratio",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaMaxMemRatio",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaMaxMemRatio"
+                    },
+                    {
+                      "label": "Java initial memory ratio",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaInitialMemRatio",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaInitialMemRatio"
+                    },
+                    {
+                      "label": "Java max initial memory",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaMaxInitialMem",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaMaxInitialMem"
+                    },
+                    {
+                      "label": "Java diagnostics",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaDiagnostics",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaDiagnostics"
+                    },
+                    {
+                      "label": "Java debug",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "If set remote debugging will be switched on. Disabled by default. e.g. 'true'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaDebug",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaDebug"
+                    },
+                    {
+                      "label": "Java debug port",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Port used for remote debugging. Defaults to 5005. e.g. '8787'.",
+                      "jsonPath": "$.spec.objects.console.jvm.javaDebugPort",
+                      "originalJsonPath": "$.spec.objects.console.jvm.javaDebugPort"
+                    },
+                    {
+                      "label": "Container core limit",
+                      "type": "integer",
+                      "required": false,
+                      "description": "A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'.",
+                      "jsonPath": "$.spec.objects.console.jvm.containerCoreLimit",
+                      "originalJsonPath": "$.spec.objects.console.jvm.containerCoreLimit"
+                    },
+                    {
+                      "label": "Container max memory",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Memory limit given to the container. e.g. '1024'.",
+                      "jsonPath": "$.spec.objects.console.jvm.containerMaxMemory",
+                      "originalJsonPath": "$.spec.objects.console.jvm.containerMaxMemory"
+                    },
+                    {
+                      "label": "GC min heap free ratio",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Minimum percentage of heap free after GC to avoid expansion. e.g. '20'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcMinHeapFreeRatio",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcMinHeapFreeRatio"
+                    },
+                    {
+                      "label": "GC max heap free ratio",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcMaxHeapFreeRatio",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcMaxHeapFreeRatio"
+                    },
+                    {
+                      "label": "GC time ratio",
+                      "type": "integer",
+                      "required": false,
+                      "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcTimeRatio",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcTimeRatio"
+                    },
+                    {
+                      "label": "GC adaptive size policy weight",
+                      "type": "integer",
+                      "required": false,
+                      "description": "The weighting given to the current GC time versus previous GC times. e.g. '90'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcAdaptiveSizePolicyWeight",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcAdaptiveSizePolicyWeight"
+                    },
+                    {
+                      "label": "GC max metaspace size",
+                      "type": "integer",
+                      "required": false,
+                      "description": "The maximum metaspace size. e.g. '100'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize"
+                    },
+                    {
+                      "label": "GC gcContainerOptions",
+                      "type": "text",
+                      "required": false,
+                      "description": "Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'.",
+                      "jsonPath": "$.spec.objects.console.jvm.gcContainerOptions",
+                      "originalJsonPath": "$.spec.objects.console.jvm.gcContainerOptions"
+                    }
+                  ]
                 }
               ]
             },
@@ -1089,6 +1223,146 @@
                               ]
                             }
                           ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Enable JVM configuration",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "When set to true will configure the KIE Server with JVM configuration, if no configuration is added, the defaults will be used.",
+                  "jsonPath": "$.spec.objects.servers[*].jvm.enableConfiguration",
+                  "originalJsonPath": "$.spec.objects.servers[*].jvm.enableConfiguration",
+                  "fields": [
+                    {
+                      "label": "Enable JVM configuration",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*].jvm",
+                      "originalJsonPath": "$.spec.objects.servers[*].jvm",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Java Opts append",
+                          "type": "text",
+                          "required": false,
+                          "description": "User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaOptsAppend",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaOptsAppend"
+                        },
+                        {
+                          "label": "Java max memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaMaxMemRatio",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaMaxMemRatio"
+                        },
+                        {
+                          "label": "Java initial memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaInitialMemRatio",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaInitialMemRatio"
+                        },
+                        {
+                          "label": "Java max initial memory",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaMaxInitialMem",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaMaxInitialMem"
+                        },
+                        {
+                          "label": "Java diagnostics",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaDiagnostics",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaDiagnostics"
+                        },
+                        {
+                          "label": "Java debug",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "If set remote debugging will be switched on. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaDebug",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaDebug"
+                        },
+                        {
+                          "label": "Java debug port",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Port used for remote debugging. Defaults to 5005. e.g. '8787'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.javaDebugPort",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.javaDebugPort"
+                        },
+                        {
+                          "label": "Container core limit",
+                          "type": "integer",
+                          "required": false,
+                          "description": "A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.containerCoreLimit",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.containerCoreLimit"
+                        },
+                        {
+                          "label": "Container max memory",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Memory limit given to the container. e.g. '1024'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.containerMaxMemory",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.containerMaxMemory"
+                        },
+                        {
+                          "label": "GC min heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Minimum percentage of heap free after GC to avoid expansion. e.g. '20'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcMinHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMinHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC max heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMaxHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC time ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcTimeRatio",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcTimeRatio"
+                        },
+                        {
+                          "label": "GC adaptive size policy weight",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The weighting given to the current GC time versus previous GC times. e.g. '90'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcAdaptiveSizePolicyWeight",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcAdaptiveSizePolicyWeight"
+                        },
+                        {
+                          "label": "GC max metaspace size",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The maximum metaspace size. e.g. '100'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize"
+                        },
+                        {
+                          "label": "GC gcContainerOptions",
+                          "type": "text",
+                          "required": false,
+                          "description": "Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'.",
+                          "jsonPath": "$.spec.objects.servers[*].jvm.gcContainerOptions",
+                          "originalJsonPath": "$.spec.objects.servers[*].jvm.gcContainerOptions"
                         }
                       ]
                     }

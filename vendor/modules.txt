@@ -103,8 +103,8 @@ github.com/gobuffalo/packd
 github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 # github.com/gobuffalo/packr/v2 v2.7.1 => github.com/gobuffalo/packr/v2 v2.2.0
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/file
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
 github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
@@ -235,6 +235,14 @@ github.com/sirupsen/logrus
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
+# github.com/tidwall/gjson v1.4.0
+github.com/tidwall/gjson
+# github.com/tidwall/match v1.0.1
+github.com/tidwall/match
+# github.com/tidwall/pretty v1.0.0
+github.com/tidwall/pretty
+# github.com/tidwall/sjson v1.0.4
+github.com/tidwall/sjson
 # go.opencensus.io v0.20.2
 go.opencensus.io/plugin/ochttp
 go.opencensus.io/plugin/ochttp/propagation/tracecontext

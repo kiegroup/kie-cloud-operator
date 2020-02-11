@@ -10,6 +10,7 @@ console:
         strategy:
           type: Recreate
         triggers:
+          #[[if not .Console.OmitImageStream]]
           - type: ImageChange
             imageChangeParams:
               automatic: true
@@ -19,6 +20,7 @@ console:
                 kind: ImageStreamTag
                 namespace: openshift
                 name: "[[.Console.Image]]:[[.Console.ImageTag]]"
+          #[[end]]
           - type: ConfigChange
         replicas: [[.Console.Replicas]]
         selector:
@@ -36,7 +38,7 @@ console:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
-                image: "[[.Console.Image]]"
+                image: "[[.Console.ImageURL]]"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -87,14 +89,14 @@ console:
                     value: "[[.Console.GitHooks.MountPath]]"
                   #[[end]]
                   ## OpenShift Enhancement BEGIN
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
+                    value: "true"
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
                     value: "5000"
-                  - name: KIE_WORKBENCH_CONTROLLER_OPENSHIFT_ENABLED
-                    value: "true"
                   ## OpenShift Enhancement END
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
@@ -113,8 +115,6 @@ console:
                   - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                     value: "8888"
                   # Auth config BEGIN
-                  - name: EXTERNAL_AUTH_ONLY
-                    value: "[[.Auth.ExternalOnly]]"
                   ## SSO config BEGIN
                   #[[if .Auth.SSO.URL]]
                   - name: SSO_OPENIDCONNECT_DEPLOYMENTS
@@ -196,6 +196,68 @@ console:
                   #[[end]]
                   ## RoleMapping config END
                   # Auth config END
+                  ## Jvm config BEGIN
+                  #[[if .Console.Jvm.JavaOptsAppend]]
+                  - name: JAVA_OPTS_APPEND
+                    value: "[[.Console.Jvm.JavaOptsAppend]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaMaxMemRatio]]
+                  - name: JAVA_MAX_MEM_RATIO
+                    value: "[[.Console.Jvm.JavaMaxMemRatio]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaInitialMemRatio]]
+                  - name: JAVA_INITIAL_MEM_RATIO
+                    value: "[[.Console.Jvm.JavaInitialMemRatio]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaMaxInitialMem]]
+                  - name: JAVA_MAX_INITIAL_MEM
+                    value: "[[.Console.Jvm.JavaMaxInitialMem]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaDiagnostics]]
+                  - name: JAVA_DIAGNOSTICS
+                    value: "[[.Console.Jvm.JavaDiagnostics]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaDebug]]
+                  - name: JAVA_DEBUG
+                    value: "[[.Console.Jvm.JavaDebug]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.JavaDebugPort]]
+                  - name: JAVA_DEBUG_PORT
+                    value: "[[.Console.Jvm.JavaDebugPort]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.ContainerCoreLimit]]
+                  - name: CONTAINER_CORE_LIMIT
+                    value: "[[.Console.Jvm.ContainerCoreLimit]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.ContainerMaxMemory]]
+                  - name: CONTAINER_MAX_MEMORY
+                    value: "[[.Console.Jvm.ContainerMaxMemory]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcMinHeapFreeRatio]]
+                  - name: GC_MIN_HEAP_FREE_RATIO
+                    value: "[[.Console.Jvm.GcMinHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcMaxHeapFreeRatio]]
+                  - name: GC_MAX_HEAP_FREE_RATIO
+                    value: "[[.Console.Jvm.GcMaxHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcTimeRatio]]
+                  - name: GC_TIME_RATIO
+                    value: "[[.Console.Jvm.GcTimeRatio]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcAdaptiveSizePolicyWeight]]
+                  - name: GC_ADAPTIVE_SIZE_POLICY_WEIGHT
+                    value: "[[.Console.Jvm.GcAdaptiveSizePolicyWeight]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcMaxMetaspaceSize]]
+                  - name: GC_MAX_METASPACE_SIZE
+                    value: "[[.Console.Jvm.GcMaxMetaspaceSize]]"
+                  #[[end]]
+                  #[[if .Console.Jvm.GcContainerOptions]]
+                  - name: GC_CONTAINER_OPTIONS
+                    value: "[[.Console.Jvm.GcContainerOptions]]"
+                  #[[end]]
+                  ## Jvm config END
                 volumeMounts:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
@@ -345,6 +407,7 @@ smartRouter:
             maxUnavailable: 0
           type: Rolling
         triggers:
+          #[[if not .SmartRouter.OmitImageStream]]
           - type: ImageChange
             imageChangeParams:
               automatic: true
@@ -354,6 +417,7 @@ smartRouter:
                 kind: ImageStreamTag
                 namespace: "openshift"
                 name: "[[.SmartRouter.Image]]:[[.SmartRouter.ImageTag]]"
+          #[[end]]
           - type: ConfigChange
         replicas: [[.SmartRouter.Replicas]]
         selector:
@@ -371,7 +435,7 @@ smartRouter:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-smartrouter"
-                image: "[[.SmartRouter.Image]]"
+                image: "[[.SmartRouter.ImageURL]]"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -492,6 +556,7 @@ servers:
               maxUnavailable: 0
             type: Rolling
           triggers:
+            #[[if not .OmitImageStream]]
             - type: ImageChange
               imageChangeParams:
                 automatic: true
@@ -501,6 +566,7 @@ servers:
                   kind: "[[.From.Kind]]"
                   namespace: "[[.From.Namespace]]"
                   name: "[[.From.Name]]"
+            #[[end]]
             - type: ConfigChange
           replicas: [[.Replicas]]
           selector:
@@ -519,7 +585,7 @@ servers:
               terminationGracePeriodSeconds: 90
               containers:
                 - name: "[[.KieName]]"
-                  image: "[[.From.Name]]"
+                  image: "[[.ImageURL]]"
                   imagePullPolicy: Always
                   lifecycle:
                     postStart:
@@ -588,8 +654,6 @@ servers:
                     - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                       value: "8888"
                     # Auth config BEGIN
-                    - name: EXTERNAL_AUTH_ONLY
-                      value: "[[$.Auth.ExternalOnly]]"
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
                     - name: SSO_OPENIDCONNECT_DEPLOYMENTS
@@ -682,6 +746,68 @@ servers:
                       #[[ end ]]
                     - name: KIE_SERVER_ROUTER_PROTOCOL
                       value: "[[.SmartRouter.Protocol]]"
+                    ## Jvm config BEGIN
+                    #[[if .Jvm.JavaOptsAppend]]
+                    - name: JAVA_OPTS_APPEND
+                      value: "[[.Jvm.JavaOptsAppend]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaMaxMemRatio]]
+                    - name: JAVA_MAX_MEM_RATIO
+                      value: "[[.Jvm.JavaMaxMemRatio]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaInitialMemRatio]]
+                    - name: JAVA_INITIAL_MEM_RATIO
+                      value: "[[.Jvm.JavaInitialMemRatio]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaMaxInitialMem]]
+                    - name: JAVA_MAX_INITIAL_MEM
+                      value: "[[.Jvm.JavaMaxInitialMem]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaDiagnostics]]
+                    - name: JAVA_DIAGNOSTICS
+                      value: "[[.Jvm.JavaDiagnostics]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaDebug]]
+                    - name: JAVA_DEBUG
+                      value: "[[.Jvm.JavaDebug]]"
+                    #[[end]]
+                    #[[if .Jvm.JavaDebugPort]]
+                    - name: JAVA_DEBUG_PORT
+                      value: "[[.Jvm.JavaDebugPort]]"
+                    #[[end]]
+                    #[[if .Jvm.ContainerCoreLimit]]
+                    - name: CONTAINER_CORE_LIMIT
+                      value: "[[.Jvm.ContainerCoreLimit]]"
+                    #[[end]]
+                    #[[if .Jvm.ContainerMaxMemory]]
+                    - name: CONTAINER_MAX_MEMORY
+                      value: "[[.Jvm.ContainerMaxMemory]]"
+                    #[[end]]
+                    #[[if .Jvm.GcMinHeapFreeRatio]]
+                    - name: GC_MIN_HEAP_FREE_RATIO
+                      value: "[[.Jvm.GcMinHeapFreeRatio]]"
+                    #[[end]]
+                    #[[if .Jvm.GcMaxHeapFreeRatio]]
+                    - name: GC_MAX_HEAP_FREE_RATIO
+                      value: "[[.Jvm.GcMaxHeapFreeRatio]]"
+                    #[[end]]
+                    #[[if .Jvm.GcTimeRatio]]
+                    - name: GC_TIME_RATIO
+                      value: "[[.Jvm.GcTimeRatio]]"
+                    #[[end]]
+                    #[[if .Jvm.GcAdaptiveSizePolicyWeight]]
+                    - name: GC_ADAPTIVE_SIZE_POLICY_WEIGHT
+                      value: "[[.Jvm.GcAdaptiveSizePolicyWeight]]"
+                    #[[end]]
+                    #[[if .Jvm.GcMaxMetaspaceSize]]
+                    - name: GC_MAX_METASPACE_SIZE
+                      value: "[[.Jvm.GcMaxMetaspaceSize]]"
+                    #[[end]]
+                    #[[if .Jvm.GcContainerOptions]]
+                    - name: GC_CONTAINER_OPTIONS
+                      value: "[[.Jvm.GcContainerOptions]]"
+                    #[[end]]
+                    ## Jvm config END
                   resources:
                     limits:
                       memory: 1Gi

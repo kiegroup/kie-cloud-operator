@@ -1,0 +1,5 @@
+schema_version: 1
+
+name: catalog_resources
+execute:
+  - script: install
