@@ -2,7 +2,7 @@
 
 . ./hack/go-mod-env.sh
 
-echo Reset vendor diectory
+echo Reset vendor directory
 
 setGoModEnv
 

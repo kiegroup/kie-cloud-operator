@@ -23,6 +23,8 @@ require (
 	github.com/prometheus/common v0.4.1
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
+	github.com/tidwall/gjson v1.4.0 // indirect
+	github.com/tidwall/sjson v1.0.4
 	go.uber.org/zap v1.10.0
 	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783

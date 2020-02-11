@@ -10,6 +10,7 @@ console:
         strategy:
           type: Recreate
         triggers:
+          #[[if not .Console.OmitImageStream]]
           - type: ImageChange
             imageChangeParams:
               automatic: true
@@ -19,6 +20,7 @@ console:
                 kind: ImageStreamTag
                 namespace: openshift
                 name: "[[.Console.Image]]:[[.Console.ImageTag]]"
+          #[[end]]
           - type: ConfigChange
         replicas: [[.Console.Replicas]]
         selector:
@@ -36,7 +38,7 @@ console:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
-                image: "[[.Console.Image]]"
+                image: "[[.Console.ImageURL]]"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -405,6 +407,7 @@ smartRouter:
             maxUnavailable: 0
           type: Rolling
         triggers:
+          #[[if not .SmartRouter.OmitImageStream]]
           - type: ImageChange
             imageChangeParams:
               automatic: true
@@ -414,6 +417,7 @@ smartRouter:
                 kind: ImageStreamTag
                 namespace: "openshift"
                 name: "[[.SmartRouter.Image]]:[[.SmartRouter.ImageTag]]"
+          #[[end]]
           - type: ConfigChange
         replicas: [[.SmartRouter.Replicas]]
         selector:
@@ -431,7 +435,7 @@ smartRouter:
             terminationGracePeriodSeconds: 60
             containers:
               - name: "[[.ApplicationName]]-smartrouter"
-                image: "[[.SmartRouter.Image]]"
+                image: "[[.SmartRouter.ImageURL]]"
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -552,6 +556,7 @@ servers:
               maxUnavailable: 0
             type: Rolling
           triggers:
+            #[[if not .OmitImageStream]]
             - type: ImageChange
               imageChangeParams:
                 automatic: true
@@ -561,6 +566,7 @@ servers:
                   kind: "[[.From.Kind]]"
                   namespace: "[[.From.Namespace]]"
                   name: "[[.From.Name]]"
+            #[[end]]
             - type: ConfigChange
           replicas: [[.Replicas]]
           selector:
@@ -579,7 +585,7 @@ servers:
               terminationGracePeriodSeconds: 90
               containers:
                 - name: "[[.KieName]]"
-                  image: "[[.From.Name]]"
+                  image: "[[.ImageURL]]"
                   imagePullPolicy: Always
                   lifecycle:
                     postStart:

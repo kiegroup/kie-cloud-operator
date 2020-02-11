@@ -1,0 +1,35 @@
+schema_version: 1
+
+name: "rhpam-7/rhpam-rhel8-prod-operator-metadata"
+description: "Red Hat Business Automation Operator Metadata"
+version: "7.7.0"
+from: "ubi8-minimal:8-released"
+labels:
+  - name: "maintainer"
+    value: "bsig-cloud@redhat.com"
+  - name: "com.redhat.component"
+    value: "rhpam-7-rhel8-prod-operator-metadata-container"
+  - name: "io.k8s.description"
+    value: "Operator Metadata for deploying RHPAM & RHDM"
+  - name: "io.k8s.display-name"
+    value: "Red Hat Business Automation Operator Metadata"
+  - name: "io.openshift.tags"
+    value: "rhpam,rhdm,operator"
+  - name: "com.redhat.delivery.appregistry"
+    value: "true"
+modules:
+  repositories:
+    - path: deploy/catalog_resources
+  install:
+    - name: catalog_resources
+osbs:
+  configuration:
+    container:
+      platforms:
+        only:
+          - x86_64
+  repository:
+    name: containers/rhpam-7-prod-operator-metadata
+    branch: rhba-7-rhel-8
+run:
+  user: "1001"

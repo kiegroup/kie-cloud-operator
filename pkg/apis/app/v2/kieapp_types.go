@@ -71,6 +71,7 @@ type AppConstants struct {
 	Product   string `json:"name,omitempty"`
 	Prefix    string `json:"prefix,omitempty"`
 	ImageName string `json:"imageName,omitempty"`
+	ImageVar  string `json:"imageVar,omitempty"`
 	MavenRepo string `json:"mavenRepo,omitempty"`
 }
 
@@ -140,6 +141,7 @@ type ConsoleObject struct {
 	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
+// SmartRouterObject deployment object
 type SmartRouterObject struct {
 	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
@@ -396,49 +398,60 @@ type TemplateConstants struct {
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
+	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
 	BrokerImage          string `json:"brokerImage"`
 	BrokerImageTag       string `json:"brokerImageTag"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
+	MySQLImageURL        string `json:"mySQLImageURL"`
+	PostgreSQLImageURL   string `json:"postgreSQLImageURL"`
+	BrokerImageURL       string `json:"brokerImageURL,omitempty"`
+	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
 	RoleMapperVolume     string `json:"roleMapperVolume"`
 	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	SSOAuthClient  SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name           string         `json:"name,omitempty"`
-	Replicas       int32          `json:"replicas,omitempty"`
-	Image          string         `json:"image,omitempty"`
-	ImageTag       string         `json:"imageTag,omitempty"`
-	KeystoreSecret string         `json:"keystoreSecret,omitempty"`
-	GitHooks       GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm            JvmObject      `json:"jvm,omitempty"`
+	OmitImageStream bool           `json:"omitImageStream"`
+	SSOAuthClient   SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name            string         `json:"name,omitempty"`
+	Replicas        int32          `json:"replicas,omitempty"`
+	Image           string         `json:"image,omitempty"`
+	ImageTag        string         `json:"imageTag,omitempty"`
+	ImageURL        string         `json:"imageURL,omitempty"`
+	KeystoreSecret  string         `json:"keystoreSecret,omitempty"`
+	GitHooks        GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm             JvmObject      `json:"jvm,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	KieName        string                 `json:"kieName,omitempty"`
-	KieServerID    string                 `json:"kieServerID,omitempty"`
-	Replicas       int32                  `json:"replicas,omitempty"`
-	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From           corev1.ObjectReference `json:"from,omitempty"`
-	Build          BuildTemplate          `json:"build,omitempty"`
-	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
-	Database       DatabaseObject         `json:"database,omitempty"`
-	Jms            KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter    SmartRouterObject      `json:"smartRouter,omitempty"`
-	Jvm            JvmObject              `json:"jvm,omitempty"`
+	OmitImageStream bool                   `json:"omitImageStream"`
+	KieName         string                 `json:"kieName,omitempty"`
+	KieServerID     string                 `json:"kieServerID,omitempty"`
+	Replicas        int32                  `json:"replicas,omitempty"`
+	SSOAuthClient   SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From            corev1.ObjectReference `json:"from,omitempty"`
+	ImageURL        string                 `json:"imageURL,omitempty"`
+	Build           BuildTemplate          `json:"build,omitempty"`
+	KeystoreSecret  string                 `json:"keystoreSecret,omitempty"`
+	Database        DatabaseObject         `json:"database,omitempty"`
+	Jms             KieAppJmsObject        `json:"jms,omitempty"`
+	SmartRouter     SmartRouterObject      `json:"smartRouter,omitempty"`
+	Jvm             JvmObject              `json:"jvm,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
+	OmitImageStream  bool   `json:"omitImageStream"`
 	Replicas         int32  `json:"replicas,omitempty"`
 	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 	Image            string `json:"image,omitempty"`
 	ImageTag         string `json:"imageTag,omitempty"`
+	ImageURL         string `json:"imageURL,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -490,11 +503,21 @@ type CommonConfig struct {
 
 // VersionConfigs ...
 type VersionConfigs struct {
-	APIVersion       string `json:"apiVersion,omitempty"`
-	BrokerImage      string `json:"brokerImage,omitempty"`
-	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
-	DatagridImage    string `json:"datagridImage,omitempty"`
-	DatagridImageTag string `json:"datagridImageTag,omitempty"`
+	APIVersion          string `json:"apiVersion,omitempty"`
+	OseCliImageURL      string `json:"oseCliImageURL,omitempty"`
+	OseCliComponent     string `json:"oseCliComponent,omitempty"`
+	BrokerImage         string `json:"brokerImage,omitempty"`
+	BrokerImageTag      string `json:"brokerImageTag,omitempty"`
+	BrokerImageURL      string `json:"brokerImageURL,omitempty"`
+	BrokerComponent     string `json:"brokerComponent,omitempty"`
+	DatagridImage       string `json:"datagridImage,omitempty"`
+	DatagridImageTag    string `json:"datagridImageTag,omitempty"`
+	DatagridImageURL    string `json:"datagridImageURL,omitempty"`
+	DatagridComponent   string `json:"datagridComponent,omitempty"`
+	MySQLImageURL       string `json:"mySQLImageURL,omitempty"`
+	MySQLComponent      string `json:"mySQLComponent,omitempty"`
+	PostgreSQLImageURL  string `json:"postgreSQLImageURL,omitempty"`
+	PostgreSQLComponent string `json:"postgreSQLComponent,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template

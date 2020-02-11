@@ -37,8 +37,8 @@ func GetEnvironment(cr *api.KieApp, service api.PlatformService) (api.Environmen
 	// handle upgrade logic from here
 	cMajor, _, _ := MajorMinorMicro(cr.Spec.Version)
 	lMajor, _, _ := MajorMinorMicro(constants.CurrentVersion)
-	minorVersion := getMinorImageVersion(cr.Spec.Version)
-	latestMinorVersion := getMinorImageVersion(constants.CurrentVersion)
+	minorVersion := GetMinorImageVersion(cr.Spec.Version)
+	latestMinorVersion := GetMinorImageVersion(constants.CurrentVersion)
 	if (micro && minorVersion == latestMinorVersion) ||
 		(minor && minorVersion != latestMinorVersion && cMajor == lMajor) {
 		if err := getConfigVersionDiffs(cr.Spec.Version, constants.CurrentVersion, service); err != nil {
@@ -182,7 +182,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		Console:      getConsoleTemplate(cr),
 		Servers:      serversConfig,
 		SmartRouter:  getSmartRouterTemplate(cr),
-		Constants:    *getTemplateConstants(cr.Spec.Environment, cr.Spec.Version),
+		Constants:    *getTemplateConstants(cr),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -192,18 +192,39 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 	return envTemplate, nil
 }
 
-func getTemplateConstants(env api.EnvironmentType, productVersion string) *api.TemplateConstants {
+func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Micro = MajorMinorMicro(productVersion)
-	if envConstants, found := constants.EnvironmentConstants[env]; found {
+	c.Major, c.Minor, c.Micro = MajorMinorMicro(cr.Spec.Version)
+	if envConstants, found := constants.EnvironmentConstants[cr.Spec.Environment]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
 	}
-	if versionConstants, found := constants.VersionConstants[productVersion]; found {
+	if versionConstants, found := constants.VersionConstants[cr.Spec.Version]; found {
 		c.BrokerImage = versionConstants.BrokerImage
 		c.BrokerImageTag = versionConstants.BrokerImageTag
 		c.DatagridImage = versionConstants.DatagridImage
 		c.DatagridImageTag = versionConstants.DatagridImageTag
+
+		c.OseCliImageURL = versionConstants.OseCliImageURL
+		c.MySQLImageURL = versionConstants.MySQLImageURL
+		c.PostgreSQLImageURL = versionConstants.PostgreSQLImageURL
+		c.DatagridImageURL = versionConstants.DatagridImageURL
+		c.BrokerImageURL = versionConstants.BrokerImageURL
+	}
+	if val, exists := os.LookupEnv(constants.OseCliVar + cr.Spec.Version); exists {
+		c.OseCliImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.MySQLVar + cr.Spec.Version); exists {
+		c.MySQLImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.PostgreSQLVar + cr.Spec.Version); exists {
+		c.PostgreSQLImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.DatagridVar + cr.Spec.Version); exists {
+		c.DatagridImageURL = val
+	}
+	if val, exists := os.LookupEnv(constants.BrokerVar + cr.Spec.Version); exists {
+		c.BrokerImageURL = val
 	}
 	return c
 }
@@ -230,13 +251,23 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
-	template.Image = fmt.Sprintf("%s-%s-rhel8", envConstants.App.Product, envConstants.App.ImageName)
-	template.ImageTag = cr.Spec.CommonConfig.ImageTag
-	if cr.Spec.Objects.Console.ImageTag != "" {
-		template.ImageTag = cr.Spec.Objects.Console.ImageTag
+	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+
+	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists {
+		template.ImageURL = val
+		template.OmitImageStream = true
 	}
+	template.Image, template.ImageTag = GetImage(template.ImageURL)
+
 	if cr.Spec.Objects.Console.Image != "" {
 		template.Image = cr.Spec.Objects.Console.Image
+		template.ImageURL = template.Image + ":" + template.ImageTag
+		template.OmitImageStream = false
+	}
+	if cr.Spec.Objects.Console.ImageTag != "" {
+		template.ImageTag = cr.Spec.Objects.Console.ImageTag
+		template.ImageURL = template.Image + ":" + template.ImageTag
+		template.OmitImageStream = false
 	}
 	if cr.Spec.Objects.Console.GitHooks != nil {
 		template.GitHooks = *cr.Spec.Objects.Console.GitHooks.DeepCopy()
@@ -284,19 +315,38 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
-		template.Image = fmt.Sprintf("%s-smartrouter-rhel8", envConstants.App.Product)
-		template.ImageTag = cr.Spec.CommonConfig.ImageTag
-		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
-			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Spec.Version); exists {
+			template.ImageURL = val
+			template.OmitImageStream = true
 		}
+		template.Image, template.ImageTag = GetImage(template.ImageURL)
+
 		if cr.Spec.Objects.SmartRouter.Image != "" {
 			template.Image = cr.Spec.Objects.SmartRouter.Image
+			template.ImageURL = template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
+		}
+		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
+			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+			template.ImageURL = template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
 		}
 	}
-
 	return template
 }
 
+// GetImage ...
+func GetImage(imageURL string) (image, imageTag string) {
+	urlParts := strings.Split(imageURL, "/")
+	imageAndTag := urlParts[len(urlParts)-1]
+	imageParts := strings.Split(imageAndTag, ":")
+	image = imageParts[0]
+	if len(imageParts) > 1 {
+		imageTag = imageParts[len(imageParts)-1]
+	}
+	return image, imageTag
+}
 func setReplicas(object api.KieAppObject, replicaConstant api.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
 	if object.Replicas != nil {
 		if hasEnv && replicaConstant.DenyScale && *object.Replicas != replicaConstant.Replicas {
@@ -385,7 +435,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 					Namespace: "",
 				}
 			} else {
-				template.From = getDefaultKieServerImage(product, cr, serverSet)
+				template.From, template.OmitImageStream, template.ImageURL = getDefaultKieServerImage(product, cr, serverSet)
 			}
 
 			// Set replicas
@@ -551,8 +601,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 			ArtifactDir:                  serverSet.Build.ArtifactDir,
 		}
 	}
-
-	buildTemplate.From = getDefaultKieServerImage(product, cr, serverSet)
+	buildTemplate.From, _, _ = getDefaultKieServerImage(product, cr, serverSet)
 	if serverSet.Build.From != nil {
 		buildTemplate.From = *serverSet.Build.From
 	}
@@ -560,24 +609,39 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet) corev1.ObjectReference {
+func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet) (from corev1.ObjectReference, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
-		return *serverSet.From
+		return *serverSet.From, omitImageTrigger, imageURL
 	}
 
-	image := fmt.Sprintf("%s-kieserver-rhel8", product)
-	imageTag := cr.Spec.CommonConfig.ImageTag
-	if serverSet.ImageTag != "" {
-		imageTag = serverSet.ImageTag
+	envVar := constants.PamKieImageVar + cr.Spec.Version
+	if product == constants.RhdmPrefix {
+		envVar = constants.DmKieImageVar + cr.Spec.Version
 	}
+
+	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+	if val, exists := os.LookupEnv(envVar); exists {
+		imageURL = val
+		omitImageTrigger = true
+	}
+	image, imageTag := GetImage(imageURL)
+
 	if serverSet.Image != "" {
 		image = serverSet.Image
+		imageURL = image + ":" + imageTag
+		omitImageTrigger = false
 	}
+	if serverSet.ImageTag != "" {
+		imageTag = serverSet.ImageTag
+		imageURL = image + ":" + imageTag
+		omitImageTrigger = false
+	}
+
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
-		Name:      strings.Join([]string{image, imageTag}, ":"),
+		Name:      image + ":" + imageTag,
 		Namespace: constants.ImageStreamNamespace,
-	}
+	}, omitImageTrigger, imageURL
 }
 
 func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseObject) (*api.DatabaseObject, error) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -21,11 +23,14 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	olmversion "github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version"
+	"github.com/tidwall/sjson"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var log = logs.GetLogger("csv.generator")
 
 var (
 	rh              = "Red Hat, Inc."
@@ -47,7 +52,7 @@ var (
 			DisplayName:  "Business Automation",
 			OperatorName: "business-automation-operator",
 			CsvDir:       "redhat",
-			Registry:     "registry.redhat.io",
+			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
 			Tag:          constants.CurrentVersion,
@@ -84,6 +89,10 @@ type channel struct {
 type packageStruct struct {
 	PackageName string    `json:"packageName"`
 	Channels    []channel `json:"channels"`
+}
+type image struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
 }
 
 func main() {
@@ -266,6 +275,12 @@ func main() {
 			},
 		}
 
+		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
+
+		imageName, _ := defaults.GetImage(deployment.Spec.Template.Spec.Containers[0].Image)
+		relatedImages := []image{}
+
 		if csv.OperatorName == "kie-cloud-operator" {
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
@@ -273,31 +288,116 @@ func main() {
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
+		relatedImages = append(relatedImages, image{Name: imageName, Image: deployment.Spec.Template.Spec.Containers[0].Image})
 
-		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + version.Version + "/" + csvVersionedName + ".clusterserviceversion.yaml"
-		/*
-			copyTemplateStruct := templateStruct.DeepCopy()
-			copyTemplateStruct.Annotations["createdAt"] = ""
-			data := &csvv1.ClusterServiceVersion{}
-			if fileExists(csvFile) {
-				yamlFile, err := ioutil.ReadFile(csvFile)
-				if err != nil {
-					log.Printf("yamlFile.Get err   #%v ", err)
+		// create image-references file for automated ART digest find/replace
+		imageRef := constants.ImageRef{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: oimagev1.SchemeGroupVersion.String(),
+				Kind:       "ImageStream",
+			},
+			Spec: constants.ImageRefSpec{
+				Tags: []constants.ImageRefTag{
+					{
+						// Needs to match the component name for upstream and downstream.
+						Name: "rhpam-7-rhel8-operator-container",
+						From: &corev1.ObjectReference{
+							// Needs to match the image that is in your CSV that you want to replace.
+							Name: deployment.Spec.Template.Spec.Containers[0].Image,
+							Kind: "DockerImage",
+						},
+					},
+				},
+			},
+		}
+		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
+		for _, imageVersion := range constants.SupportedVersions {
+			for _, i := range constants.Images {
+				imageURL := i.Registry + ":" + imageVersion
+				imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+					Name: i.Component,
+					From: &corev1.ObjectReference{
+						Name: imageURL,
+						Kind: "DockerImage",
+					},
+				})
+				if imageVersion >= "7.7.0" {
+					relatedImages = append(relatedImages, getRelatedImage(imageURL))
 				}
-				err = yaml.Unmarshal(yamlFile, data)
-				if err != nil {
-					log.Fatalf("Unmarshal: %v", err)
-				}
-				data.Annotations["createdAt"] = ""
 			}
-			if !reflect.DeepEqual(copyTemplateStruct.Spec, data.Spec) ||
-				!reflect.DeepEqual(copyTemplateStruct.Annotations, data.Annotations) ||
-				!reflect.DeepEqual(copyTemplateStruct.Labels, data.Labels) {
+		}
+		// add ancillary images to image-references file
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.OauthComponent,
+			From: &corev1.ObjectReference{
+				Name: constants.OauthImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.OseCli311Component,
+			From: &corev1.ObjectReference{
+				Name: constants.OseCli311ImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.MySQL57Component,
+			From: &corev1.ObjectReference{
+				Name: constants.MySQL57ImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.PostgreSQL10Component,
+			From: &corev1.ObjectReference{
+				Name: constants.PostgreSQL10ImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.Datagrid73Component,
+			From: &corev1.ObjectReference{
+				Name: constants.Datagrid73ImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.Broker75Component,
+			From: &corev1.ObjectReference{
+				Name: constants.Broker75ImageURL,
+				Kind: "DockerImage",
+			},
+		})
 
-				createFile(csvFile, templateStruct)
+		// add ancillary images to relatedImages
+		relatedImages = append(relatedImages, getRelatedImage(constants.OauthImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.OseCli311ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.MySQL57ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.PostgreSQL10ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.Broker75ImageURL))
+
+		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
+		createFile(imageFile, imageRef)
+
+		var templateInterface interface{}
+		if len(relatedImages) > 0 {
+			templateJSON, err := json.Marshal(templateStruct)
+			if err != nil {
+				log.Error(err)
 			}
-		*/
-		createFile(csvFile, templateStruct)
+			result, err := sjson.SetBytes(templateJSON, "spec.relatedImages", relatedImages)
+			if err != nil {
+				log.Error(err)
+			}
+			if err = json.Unmarshal(result, &templateInterface); err != nil {
+				log.Error(err)
+			}
+		} else {
+			templateInterface = templateStruct
+		}
+		createFile(csvFile, &templateInterface)
 
 		packageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + csv.Name + ".package.yaml"
 		p, err := os.Create(packageFile)
@@ -319,6 +419,14 @@ func main() {
 		}
 		util.MarshallObject(packagedata, pwr)
 		pwr.Flush()
+	}
+}
+
+func getRelatedImage(imageURL string) image {
+	imageName, _ := defaults.GetImage(imageURL)
+	return image{
+		Name:  imageName,
+		Image: imageURL,
 	}
 }
 
