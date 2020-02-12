@@ -88,7 +88,7 @@ const (
 	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
 
 	OauthVar       = "OAUTH_PROXY_IMAGE"
-	OauthImageURL  = ImageRegistry + "/openshift3/oauth-proxy:v3.11"
+	OauthImageURL  = ImageRegistry + "/openshift4/ose-oauth-proxy:v4.3"
 	OauthComponent = "golang-github-openshift-oauth-proxy-container"
 
 	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"

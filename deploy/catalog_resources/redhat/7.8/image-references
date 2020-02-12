@@ -104,7 +104,7 @@ spec:
     name: rhpam-7-smartrouter-rhel8-container
   - from:
       kind: DockerImage
-      name: registry.redhat.io/openshift3/oauth-proxy:v3.11
+      name: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
     name: golang-github-openshift-oauth-proxy-container
   - from:
       kind: DockerImage
