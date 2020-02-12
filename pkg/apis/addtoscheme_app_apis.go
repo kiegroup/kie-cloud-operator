@@ -16,11 +16,11 @@ func init() {
 	AddToSchemes = append(AddToSchemes,
 		api.SchemeBuilder.AddToScheme,
 		v1.SchemeBuilder.AddToScheme,
-		rbacv1.SchemeBuilder.AddToScheme,
+		rbacv1.AddToScheme,
 		oappsv1.Install,
 		routev1.Install,
 		oimagev1.Install,
 		buildv1.Install,
-		operatorsv1alpha1.SchemeBuilder.AddToScheme,
+		operatorsv1alpha1.AddToScheme,
 	)
 }

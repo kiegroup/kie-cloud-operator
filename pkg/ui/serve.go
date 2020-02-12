@@ -51,7 +51,7 @@ func apply(cr string) error {
 	}
 	config.ContentConfig.GroupVersion = &api.SchemeGroupVersion
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
+	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
 	restClient, err := rest.UnversionedRESTClientFor(config)
 	if err != nil {

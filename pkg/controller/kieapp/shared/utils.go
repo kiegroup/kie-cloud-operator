@@ -7,15 +7,14 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"github.com/pavel-v-chernykh/keystore-go"
+	"github.com/prometheus/common/log"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"math/big"
 	"math/rand"
 	"time"
-
-	"github.com/pavel-v-chernykh/keystore-go"
-	"github.com/prometheus/common/log"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
