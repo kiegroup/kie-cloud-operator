@@ -32,6 +32,7 @@ type KieAppSpec struct {
 	Auth          KieAppAuthObject `json:"auth,omitempty"`
 	Upgrades      KieAppUpgrades   `json:"upgrades,omitempty"`
 	Version       string           `json:"version,omitempty"`
+	UseImageTags  bool             `json:"useImageTags"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -486,7 +487,6 @@ type BuildTemplate struct {
 // CommonConfig variables used in the templates
 type CommonConfig struct {
 	ApplicationName    string `json:"applicationName,omitempty"`
-	ImageTag           string `json:"imageTag,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
 	AdminUser          string `json:"adminUser,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
