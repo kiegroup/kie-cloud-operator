@@ -449,21 +449,6 @@
               "description": "The password to use for databases. Generated if empty"
             }
           ]
-        },
-        {
-          "label": "Common configuration",
-          "type": "fieldGroup",
-          "jsonPath": "$.spec",
-          "visible": true,
-          "fields": [
-            {
-              "label": "Image tag",
-              "type": "text",
-              "default": "1.0",
-              "jsonPath": "$.spec.commonConfig.imageTag",
-              "description": "The tag to use for the application images."
-            }
-          ]
         }
       ]
     },

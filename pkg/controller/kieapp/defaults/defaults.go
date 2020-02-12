@@ -251,7 +251,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
-	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Spec.Version
 
 	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists && !cr.Spec.UseImageTags {
 		template.ImageURL = val
@@ -315,7 +315,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Spec.Objects.SmartRouter.Replicas = Pint32(replicas)
 		}
 		template.Replicas = replicas
-		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Spec.Version
 		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Spec.Version); exists && !cr.Spec.UseImageTags {
 			template.ImageURL = val
 			template.OmitImageStream = true
@@ -623,7 +623,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		envVar = constants.DmKieImageVar + cr.Spec.Version
 	}
 
-	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Spec.CommonConfig.ImageTag
+	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Spec.Version
 	if val, exists := os.LookupEnv(envVar); exists && !cr.Spec.UseImageTags {
 		imageURL = val
 		omitImageTrigger = true
@@ -915,9 +915,6 @@ func setDefaults(cr *api.KieApp) {
 	}
 	if len(cr.Spec.Version) == 0 {
 		cr.Spec.Version = constants.CurrentVersion
-	}
-	if checkVersion(cr.Spec.Version) {
-		cr.Spec.CommonConfig.ImageTag = cr.Spec.Version
 	}
 	if len(cr.Spec.CommonConfig.ApplicationName) == 0 {
 		cr.Spec.CommonConfig.ApplicationName = cr.Name

@@ -971,7 +971,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 	assert.Equal(t, fmt.Sprintf("%s-rhpamcentr", name), env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.Console.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.Version), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -987,7 +987,7 @@ func TestConstructSmartRouterObject(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%s-smartrouter", name), env.SmartRouter.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.SmartRouter.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("rhpam-smartrouter-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-smartrouter-rhel8:%s", cr.Spec.Version), env.SmartRouter.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	for i := range sampleEnv {
 		assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
@@ -1003,7 +1003,7 @@ func TestConstructServerObject(t *testing.T) {
 		env = ConsolidateObjects(env, cr)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
 		assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
-		assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.Version), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		for i := range sampleEnv {
 			assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 		}
@@ -1020,7 +1020,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -1049,7 +1049,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -1148,7 +1148,7 @@ func TestTrialServerEnv(t *testing.T) {
 
 	assert.Equal(t, deployments, len(env.Servers))
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Spec.CommonConfig.ApplicationName, deployments), env.Servers[deployments-1].DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhpam-businesscentral-rhel8:%s", cr.Spec.Version), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Servers[deployments-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -1214,7 +1214,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.CommonConfig.ImageTag), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Spec.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -1272,7 +1272,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 
 	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
-	assert.Equal(t, fmt.Sprintf("rhdm-decisioncentral-rhel8:%s", cr.Spec.CommonConfig.ImageTag), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm-decisioncentral-rhel8:%s", cr.Spec.Version), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	adminUser := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
 	assert.Equal(t, constants.DefaultAdminUser, adminUser, "AdminUser default not being set correctly")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
@@ -1851,7 +1851,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 
 	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%v", cr.Spec.CommonConfig.ImageTag), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%v", cr.Spec.Version), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 }
 
@@ -2047,7 +2047,7 @@ func TestDefaultVersioning(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
-	assert.Equal(t, constants.CurrentVersion, cr.Spec.CommonConfig.ImageTag)
+	assert.Equal(t, constants.CurrentVersion, cr.Spec.Version)
 	assert.True(t, checkVersion(cr.Spec.Version))
 	assert.Equal(t, "rhpam-businesscentral-monitoring-rhel8"+":"+cr.Spec.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
