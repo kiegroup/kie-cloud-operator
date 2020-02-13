@@ -171,3 +171,13 @@ make rhel-scratch
 # release candidate
 make rhel-release
 ```
+
+CSV Generation
+
+```bash
+make csv
+
+# OR
+# w/ sha lookup/replacement against registry.redhat.io
+USER_TOKEN="<username>:<password>" make csv
+```

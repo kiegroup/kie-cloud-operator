@@ -2,14 +2,17 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/blang/semver"
+	"github.com/heroku/docker-registry-client/registry"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -96,6 +99,7 @@ type image struct {
 }
 
 func main() {
+	imageShaMap := map[string]string{}
 	for _, csv := range csvs {
 		operatorName := csv.Name + "-operator"
 		templateStruct := &csvv1.ClusterServiceVersion{}
@@ -240,6 +244,12 @@ func main() {
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"},
 					},
 					{
+						Description:  "Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.",
+						DisplayName:  "Use Image Tags",
+						Path:         "useImageTags",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"},
+					},
+					{
 						Description:  "Environment deployed.",
 						DisplayName:  "Environment",
 						Path:         "environment",
@@ -278,7 +288,7 @@ func main() {
 		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
 		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
 
-		imageName, _ := defaults.GetImage(deployment.Spec.Template.Spec.Containers[0].Image)
+		imageName, _, _ := defaults.GetImage(deployment.Spec.Template.Spec.Containers[0].Image)
 		relatedImages := []image{}
 
 		if csv.OperatorName == "kie-cloud-operator" {
@@ -326,6 +336,7 @@ func main() {
 				}
 			}
 		}
+
 		// add ancillary images to image-references file
 		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
 			Name: constants.OauthComponent,
@@ -378,6 +389,60 @@ func main() {
 		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL))
 		relatedImages = append(relatedImages, getRelatedImage(constants.Broker75ImageURL))
 
+		url := "https://" + constants.ImageRegistry
+		username := "" // anonymous
+		password := "" // anonymous
+		if userToken := strings.Split(os.Getenv("USER_TOKEN"), ":"); len(userToken) > 1 {
+			username = userToken[0]
+			password = userToken[1]
+		}
+		hub, err := registry.New(url, username, password)
+		if err != nil {
+			log.Error(err)
+		}
+		defaultCheckRedirect := hub.Client.CheckRedirect
+		for _, tagRef := range imageRef.Spec.Tags {
+			hub.Client.CheckRedirect = defaultCheckRedirect
+			if _, ok := imageShaMap[tagRef.From.Name]; !ok {
+				imageShaMap[tagRef.From.Name] = ""
+				imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
+				repo := imageContext + "/" + imageName
+				tags, err := hub.Tags(repo)
+				if err != nil {
+					log.Error(err)
+				}
+				// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
+				hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				if _, exists := find(tags, imageTag); exists {
+					req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
+					if err != nil {
+						log.Error(err)
+					}
+					req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+					resp, err := hub.Client.Do(req)
+					if err != nil {
+						log.Error(err)
+					}
+					if resp != nil {
+						defer resp.Body.Close()
+					}
+					if resp.StatusCode == 302 || resp.StatusCode == 301 {
+						digestURL, err := resp.Location()
+						if err != nil {
+							log.Error(err)
+						}
+						if digestURL != nil {
+							if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
+								imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
+							}
+						}
+					}
+				}
+			}
+		}
+
 		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
 		createFile(imageFile, imageRef)
 
@@ -396,6 +461,20 @@ func main() {
 			}
 		} else {
 			templateInterface = templateStruct
+		}
+
+		// find and replace images with SHAs where necessary
+		templateByte, err := json.Marshal(templateInterface)
+		if err != nil {
+			log.Error(err)
+		}
+		for from, to := range imageShaMap {
+			if to != "" {
+				templateByte = bytes.ReplaceAll(templateByte, []byte(from), []byte(to))
+			}
+		}
+		if err = json.Unmarshal(templateByte, &templateInterface); err != nil {
+			log.Error(err)
 		}
 		createFile(csvFile, &templateInterface)
 
@@ -423,7 +502,7 @@ func main() {
 }
 
 func getRelatedImage(imageURL string) image {
-	imageName, _ := defaults.GetImage(imageURL)
+	imageName, _, _ := defaults.GetImage(imageURL)
 	return image{
 		Name:  imageName,
 		Image: imageURL,
@@ -450,4 +529,13 @@ func createFile(filepath string, obj interface{}) {
 	writer := bufio.NewWriter(f)
 	util.MarshallObject(obj, writer)
 	writer.Flush()
+}
+
+func find(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
 }
