@@ -183,6 +183,18 @@ spec:
                 name: kie-cloud-operator
                 resources: {}
               serviceAccountName: kie-cloud-operator
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consolelinks
+          verbs:
+          - get
+          - create
+          - update
+          - delete
+        serviceAccountName: kie-cloud-operator
       permissions:
       - rules:
         - apiGroups:
@@ -219,15 +231,6 @@ spec:
           - deployments/finalizers
           verbs:
           - update
-        - apiGroups:
-          - console.openshift.io
-          resources:
-          - consolelinks
-          verbs:
-          - get
-          - create
-          - update
-          - delete
         serviceAccountName: kie-cloud-operator
     strategy: deployment
   installModes:

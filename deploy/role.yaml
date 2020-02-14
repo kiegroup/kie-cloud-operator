@@ -37,12 +37,3 @@ rules:
   - deployments/finalizers
   verbs:
   - update
-- apiGroups:
-  - console.openshift.io
-  resources:
-  - consolelinks
-  verbs:
-  - get
-  - create
-  - update
-  - delete

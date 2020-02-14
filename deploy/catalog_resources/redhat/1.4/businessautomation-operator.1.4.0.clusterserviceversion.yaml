@@ -185,6 +185,18 @@ spec:
                 name: business-automation-operator
                 resources: {}
               serviceAccountName: business-automation-operator
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consolelinks
+          verbs:
+          - get
+          - create
+          - update
+          - delete
+        serviceAccountName: business-automation-operator
       permissions:
       - rules:
         - apiGroups:
@@ -221,15 +233,6 @@ spec:
           - deployments/finalizers
           verbs:
           - update
-        - apiGroups:
-          - console.openshift.io
-          resources:
-          - consolelinks
-          verbs:
-          - get
-          - create
-          - update
-          - delete
         serviceAccountName: business-automation-operator
     strategy: deployment
   installModes:
