@@ -3,20 +3,20 @@ package test
 import (
 	"context"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var log = logs.GetLogger("kieapp.test")
@@ -75,6 +75,10 @@ var knownTypes = map[schema.GroupVersion][]runtime.Object{
 	buildv1.GroupVersion: {
 		&buildv1.BuildConfig{},
 		&buildv1.BuildConfigList{},
+	},
+	consolev1.GroupVersion: {
+		&consolev1.ConsoleLink{},
+		&consolev1.ConsoleLinkList{},
 	},
 }
 

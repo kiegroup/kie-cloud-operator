@@ -18,7 +18,7 @@ github.com/PuerkitoBio/urlesc
 # github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
 github.com/RHsyseng/console-cr-form/pkg/web
 github.com/RHsyseng/console-cr-form/pkg/web/packrd
-# github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458 => github.com/RHsyseng/operator-utils v0.0.0-20200213171152-3b5840774638
+# github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458 => github.com/RHsyseng/operator-utils v0.0.0-20200213133748-8821ad0bd623
 github.com/RHsyseng/operator-utils/pkg/olm
 github.com/RHsyseng/operator-utils/pkg/resource
 github.com/RHsyseng/operator-utils/pkg/resource/compare
@@ -178,6 +178,7 @@ github.com/opencontainers/image-spec/specs-go
 # github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible => github.com/openshift/api v3.9.1-0.20200205145930-e9d93e317dd1+incompatible
 github.com/openshift/api/apps/v1
 github.com/openshift/api/build/v1
+github.com/openshift/api/console/v1
 github.com/openshift/api/image/v1
 github.com/openshift/api/route/v1
 github.com/openshift/api/image/docker10

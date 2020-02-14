@@ -3,6 +3,8 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	consolev1 "github.com/openshift/api/console/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -24,7 +26,8 @@ import (
 func TestGenerateSecret(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
@@ -129,7 +132,8 @@ func TestSpecifySecret(t *testing.T) {
 func TestConsoleHost(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
@@ -543,6 +547,93 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
 	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
+}
+
+func TestConsoleLinkCreation(t *testing.T) {
+	crNamespacedName := getNamespacedName("testns", "cr")
+	cr := getInstance(crNamespacedName)
+	cr.Spec = api.KieAppSpec{
+		Environment: api.RhpamAuthoring,
+	}
+	service := test.MockService()
+	err := service.Create(context.TODO(), cr)
+	assert.Nil(t, err)
+	reconciler := Reconciler{Service: service}
+	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
+
+	// Simulate server setting the host
+	bcRoute := &routev1.Route{}
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), bcRoute)
+	bcRoute.Spec.Host = "example"
+	reconciler.Service.Update(context.TODO(), bcRoute)
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
+
+	//Let's now assume console pod is starting
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				if dc.Name == "cr-rhpamcentr" {
+					dc.Status.Replicas = 1
+				}
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
+
+	//Let's now assume both pods have started
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				dc.Status.Replicas = 1
+				dc.Status.ReadyReplicas = 1
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
+	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
+
+	assert.Len(t, cr.GetFinalizers(), 1)
+	assert.Equal(t, constants.ConsoleLinkFinalizer, cr.GetFinalizers()[0])
+	consoleLink := &consolev1.ConsoleLink{}
+	reconciler.Service.Get(context.TODO(), getNamespacedName("", ""), consoleLink)
+	assert.Equal(t, "Business Central", consoleLink.Spec.Text)
+	assert.Equal(t, "https://example", consoleLink.Spec.Href)
+	assert.Equal(t, "testns-cr-", consoleLink.GenerateName)
+	assert.Len(t, consoleLink.Spec.NamespaceDashboard.Namespaces, 1)
+	assert.Contains(t, consoleLink.Spec.NamespaceDashboard.Namespaces, "testns")
 }
 
 func getNamespacedName(namespace string, name string) types.NamespacedName {

@@ -21,6 +21,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
@@ -76,6 +77,10 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
+	}
+
+	if instance.DeletionTimestamp != nil {
+		return reconcile.Result{}, reconciler.preDelete(instance)
 	}
 
 	//Obtain in-memory representation of basic environment being requested:
@@ -416,7 +421,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 			},
 		},
 	}
-	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
+	isnew.SetGroupVersionKind(oimagev1.GroupVersion.WithKind("ImageStreamTag"))
 	if registry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
@@ -451,19 +456,7 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) api.Environment {
 	// console keystore generation
 	if !env.Console.Omit {
-		consoleCN := ""
-		for _, rt := range env.Console.Routes {
-			if checkTLS(rt.Spec.TLS) {
-				// use host of first tls route in env template
-				consoleCN = reconciler.GetRouteHost(rt, routes)
-				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
-				break
-			}
-		}
-		if consoleCN == "" {
-			consoleCN = cr.Spec.CommonConfig.ApplicationName
-			cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
-		}
+		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		if cr.Spec.Objects.Console.KeystoreSecret == "" {
@@ -527,6 +520,112 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		}
 	}
 	return defaults.ConsolidateObjects(env, cr)
+}
+
+func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (consoleCN string) {
+	var consoleLink *consolev1.ConsoleLink
+	for _, rt := range env.Console.Routes {
+		if checkTLS(rt.Spec.TLS) {
+			// use host of first tls route in env template
+			consoleCN = reconciler.GetRouteHost(rt, routes)
+			cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
+			log.Debug("Set console host to: ", cr.Status.ConsoleHost)
+			consoleLink = &consolev1.ConsoleLink{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: fmt.Sprintf("%s-%s-", cr.Namespace, cr.Name),
+					Labels: map[string]string{
+						"rhpam-namespace": cr.Namespace,
+						"rhpam-app":       cr.Name,
+					},
+				},
+				Spec: consolev1.ConsoleLinkSpec{
+					Link: consolev1.Link{
+						Href: cr.Status.ConsoleHost,
+						Text: constants.EnvironmentConstants[cr.Spec.Environment].App.FriendlyName,
+					},
+					Location: consolev1.NamespaceDashboard,
+					NamespaceDashboard: &consolev1.NamespaceDashboardSpec{
+						Namespaces: []string{cr.Namespace},
+					},
+				},
+			}
+			break
+		}
+	}
+
+	if consoleCN == "" {
+		consoleCN = cr.Spec.CommonConfig.ApplicationName
+		cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
+	}
+	reconciler.reconcileConsoleLink(cr, consoleLink)
+	return consoleCN
+}
+
+func (reconciler *Reconciler) reconcileConsoleLink(cr *api.KieApp, expected *consolev1.ConsoleLink) {
+	current := &consolev1.ConsoleLink{}
+	if cr.Status.ConsoleLink != "" {
+		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: cr.Status.ConsoleLink}, current)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				cr.Status.ConsoleLink = ""
+			} else {
+				log.Warn("Unable to retrieve existing ConsoleLink: ", cr.Status.ConsoleLink, err)
+			}
+			return
+		}
+	}
+	var err error
+	if expected == nil {
+		if cr.Status.ConsoleLink != "" {
+			log.Debug("Delete consoleLink")
+			err = reconciler.Service.Delete(context.TODO(), current)
+			if err == nil {
+				cr.Status.ConsoleLink = ""
+
+			}
+		}
+	} else {
+		if cr.Status.ConsoleLink == "" {
+			log.Debug("Create consoleLink for ", cr.Name)
+			err = reconciler.Service.Create(context.TODO(), expected)
+			if err == nil {
+				cr.Status.ConsoleLink = expected.Name
+				if cr.DeletionTimestamp == nil {
+					addFinalizer(cr, constants.ConsoleLinkFinalizer)
+				}
+				_, err = reconciler.UpdateObj(cr)
+			}
+		} else if current.Spec.Href != expected.Spec.Href {
+			log.Debug("Update consoleLink with: ", expected.Spec.Href)
+			current.Spec.Href = expected.Spec.Href
+			_, err = reconciler.UpdateObj(current)
+		}
+	}
+	if err != nil {
+		log.Warn("Unable to reconcile ConsoleLink. ", err)
+	}
+}
+
+func (reconciler *Reconciler) preDelete(cr *api.KieApp) (err error) {
+	if len(cr.GetFinalizers()) == 0 {
+		return err
+	}
+	if cr.Status.ConsoleLink != "" {
+		link := &consolev1.ConsoleLink{}
+		if cr.Status.ConsoleLink != "" {
+			err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: cr.Status.ConsoleLink}, link)
+			if err == nil {
+				err = reconciler.Service.Delete(context.TODO(), link)
+			} else if errors.IsNotFound(err) {
+				err = nil
+			}
+		}
+		if err == nil {
+			deleteFinalizer(cr, constants.ConsoleLinkFinalizer)
+			_, err = reconciler.UpdateObj(cr)
+		}
+	}
+	return err
 }
 
 func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Environment) []resource.KubernetesResource {
@@ -839,6 +938,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 		&routev1.RouteList{},
 		&oimagev1.ImageStreamList{},
 		&buildv1.BuildConfigList{},
+		&consolev1.ConsoleLinkList{},
 	)
 	if err != nil {
 		log.Warn("Failed to list deployed objects. ", err)
@@ -892,4 +992,27 @@ func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1al
 		}
 	}
 	return csv
+}
+
+func addFinalizer(cr *api.KieApp, finalizer string) {
+	_, found := findFinalizer(cr, finalizer)
+	if !found {
+		cr.SetFinalizers(append(cr.GetFinalizers(), finalizer))
+	}
+}
+
+func deleteFinalizer(cr *api.KieApp, finalizer string) {
+	pos, found := findFinalizer(cr, finalizer)
+	if found {
+		cr.SetFinalizers(append(cr.GetFinalizers()[0:pos], cr.GetFinalizers()[pos+1:]...))
+	}
+}
+
+func findFinalizer(cr *api.KieApp, finalizer string) (int, bool) {
+	for i, v := range cr.GetFinalizers() {
+		if v == finalizer {
+			return i, true
+		}
+	}
+	return -1, false
 }
