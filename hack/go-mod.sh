@@ -6,8 +6,6 @@ echo Reset vendor directory
 
 if [[ -z ${CI} ]]; then
     go mod tidy
-else
-    go mod tidy -v
 fi
 
-go mod vendor
+go mod vendor -v
