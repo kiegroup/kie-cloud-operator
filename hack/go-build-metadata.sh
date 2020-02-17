@@ -1,9 +1,9 @@
 #!/bin/sh
 
+source ./hack/go-mod-env.sh
 CFLAGS="docker"
 
-./hack/go-test.sh
-go run ./tools/csv-gen/csv-gen.go
+./hack/go-csv.sh
 
 echo
 echo Building operator metadata image:

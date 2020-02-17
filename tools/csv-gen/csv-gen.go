@@ -399,50 +399,50 @@ func main() {
 		hub, err := registry.New(url, username, password)
 		if err != nil {
 			log.Error(err)
-		}
-		defaultCheckRedirect := hub.Client.CheckRedirect
-		for _, tagRef := range imageRef.Spec.Tags {
-			hub.Client.CheckRedirect = defaultCheckRedirect
-			if _, ok := imageShaMap[tagRef.From.Name]; !ok {
-				imageShaMap[tagRef.From.Name] = ""
-				imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
-				repo := imageContext + "/" + imageName
-				tags, err := hub.Tags(repo)
-				if err != nil {
-					log.Error(err)
-				}
-				// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
-				hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-					return http.ErrUseLastResponse
-				}
-				if _, exists := find(tags, imageTag); exists {
-					req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
+		} else {
+			defaultCheckRedirect := hub.Client.CheckRedirect
+			for _, tagRef := range imageRef.Spec.Tags {
+				hub.Client.CheckRedirect = defaultCheckRedirect
+				if _, ok := imageShaMap[tagRef.From.Name]; !ok {
+					imageShaMap[tagRef.From.Name] = ""
+					imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
+					repo := imageContext + "/" + imageName
+					tags, err := hub.Tags(repo)
 					if err != nil {
 						log.Error(err)
 					}
-					req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
-					resp, err := hub.Client.Do(req)
-					if err != nil {
-						log.Error(err)
+					// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
+					hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+						return http.ErrUseLastResponse
 					}
-					if resp != nil {
-						defer resp.Body.Close()
-					}
-					if resp.StatusCode == 302 || resp.StatusCode == 301 {
-						digestURL, err := resp.Location()
+					if _, exists := find(tags, imageTag); exists {
+						req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
 						if err != nil {
 							log.Error(err)
 						}
-						if digestURL != nil {
-							if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
-								imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
+						req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+						resp, err := hub.Client.Do(req)
+						if err != nil {
+							log.Error(err)
+						}
+						if resp != nil {
+							defer resp.Body.Close()
+						}
+						if resp.StatusCode == 302 || resp.StatusCode == 301 {
+							digestURL, err := resp.Location()
+							if err != nil {
+								log.Error(err)
+							}
+							if digestURL != nil {
+								if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
+									imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-
 		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
 		createFile(imageFile, imageRef)
 
