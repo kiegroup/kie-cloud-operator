@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ./hack/go-mod-env.sh
+source ./hack/go-mod-env.sh
 
 if [[ -z ${CI} ]]; then
     ./hack/go-vet.sh
@@ -25,6 +25,4 @@ else
     fi
 fi
 
-setGoModEnv
-
-go test -mod=vendor -count=1 ./...
+go test -count=1 ./...

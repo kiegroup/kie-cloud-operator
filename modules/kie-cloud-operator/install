@@ -17,17 +17,17 @@ mkdir -p ${GOPATH}/src/${GHFULL}
 tar xfz /tmp/artifacts/kie-cloud-operator.tar.gz --strip-components=1 -C ${GOPATH}/src/${GHFULL}
 cd ${GOPATH}/src/${GHFULL} && pwd
 
+export GOFLAGS=-mod=vendor
 export GO111MODULE=on
-
 go generate ./...
 go vet ./...
-go test -mod=vendor ./...
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -v -a -o ${OPERATOR_PATH} github.com/kiegroup/kie-cloud-operator/cmd/manager
+go test ./...
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o ${OPERATOR_PATH} ./cmd/manager
 if [[ ! -f ${OPERATOR_PATH} ]] ; then
     echo "${OPERATOR_PATH} does not exist, aborting."
     exit 1
 fi
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -v -a -o ${UI_PATH} github.com/kiegroup/kie-cloud-operator/cmd/ui
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o ${UI_PATH} ./cmd/ui
 if [[ ! -f ${UI_PATH} ]] ; then
     echo "${UI_PATH} does not exist, aborting."
     exit 1

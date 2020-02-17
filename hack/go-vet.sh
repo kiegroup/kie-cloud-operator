@@ -1,7 +1,9 @@
 #!/bin/sh
 
+source ./hack/go-mod-env.sh
+
 if [[ -z ${CI} ]]; then
     ./hack/go-mod.sh
-    operator-sdk generate k8s
+    ./hack/go-sdk-gen.sh
 fi
 go vet ./...

@@ -69,4 +69,4 @@ replace (
 
 )
 
-replace github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.2.0
+replace github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1

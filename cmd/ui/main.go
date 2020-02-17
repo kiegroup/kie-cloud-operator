@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"runtime"
+
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/ui"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/spf13/pflag"
-	"runtime"
 )
 
 var log = logs.GetLogger("cmd")
