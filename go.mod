@@ -75,4 +75,14 @@ replace (
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20191016115753-cf0698c3a16b
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
+
+	// others
+	modernc.org/cc => gitlab.com/cznic/cc v1.0.0
+	modernc.org/golex => gitlab.com/cznic/golex v1.0.0
+	modernc.org/mathutil => gitlab.com/cznic/mathutil v1.0.0
+	modernc.org/strutil => gitlab.com/cznic/strutil v1.0.0
+	modernc.org/xc => gitlab.com/cznic/xc v1.0.0
+	mvdan.cc/interfacer => github.com/mvdan/interfacer v0.0.0-20180901003855-c20040233aed
+	mvdan.cc/lint => github.com/mvdan/lint v0.0.0-20170908181259-adc824a0674b
+	mvdan.cc/unparam => github.com/mvdan/unparam v0.0.0-20190209190245-fbb59629db34
 )
