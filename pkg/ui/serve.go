@@ -1,6 +1,6 @@
 package ui
 
-//go:generate go run ../controller/kieapp/defaults/.packr/packr.go
+//go:generate go run -mod=vendor ../controller/kieapp/defaults/.packr/packr.go
 
 import (
 	"encoding/json"

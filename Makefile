@@ -28,11 +28,11 @@ format:
 
 .PHONY: go-generate
 go-generate: mod
-	$(Q)go generate ./...
+	./hack/go-gen.sh
 
 .PHONY: sdk-generate
 sdk-generate: mod
-	operator-sdk generate k8s
+	./hack/go-sdk-gen.sh
 
 .PHONY: vet
 vet:
@@ -70,7 +70,7 @@ rhel-release:
 
 .PHONY: csv
 csv:
-	go run ./tools/csv-gen/csv-gen.go
+	./hack/go-csv.sh
 
 .PHONY: clean
 clean:

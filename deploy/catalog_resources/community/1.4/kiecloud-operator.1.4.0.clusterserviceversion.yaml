@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:1.4.0
-    createdAt: "2020-02-12 14:53:59"
+    createdAt: "2020-02-17 12:02:25"
     description: Kie Cloud Operator for deployment and management of RHPAM/RHDM environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat, Inc.
