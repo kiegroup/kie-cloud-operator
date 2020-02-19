@@ -141,8 +141,8 @@ func main() {
 		log.Info("Could not create metrics Service", "error", err.Error())
 	}
 	// Create ServiceMonitor pointing to the metrics service.
-	serviceMonitor := metrics.GenerateServiceMonitor(service)
-	if err := mgr.GetClient().Create(context.TODO(), serviceMonitor); err != nil {
+	services := []*v1.Service{service}
+	if _, err := metrics.CreateServiceMonitors(cfg, namespace, services); err != nil {
 		log.Info("Failed to create ServiceMonitor based on metrics Service", "error", err.Error())
 	}
 	log.Info("Starting the Operator.")
