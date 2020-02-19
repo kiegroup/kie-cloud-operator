@@ -330,7 +330,7 @@
                 {
                   "label": "Role recursion",
                   "type": "integer",
-                  "jsonPath": "$.spec.auth.ldap.baseCtxDN",
+                  "jsonPath": "$.spec.auth.ldap.roleRecursion",
                   "default": "1",
                   "description": "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
                 },
