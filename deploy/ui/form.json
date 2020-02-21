@@ -643,22 +643,6 @@
                       "originalJsonPath": "$.spec.objects.console.jvm.javaDebugPort"
                     },
                     {
-                      "label": "Container core limit",
-                      "type": "integer",
-                      "required": false,
-                      "description": "A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'.",
-                      "jsonPath": "$.spec.objects.console.jvm.containerCoreLimit",
-                      "originalJsonPath": "$.spec.objects.console.jvm.containerCoreLimit"
-                    },
-                    {
-                      "label": "Container max memory",
-                      "type": "integer",
-                      "required": false,
-                      "description": "Memory limit given to the container. e.g. '1024'.",
-                      "jsonPath": "$.spec.objects.console.jvm.containerMaxMemory",
-                      "originalJsonPath": "$.spec.objects.console.jvm.containerMaxMemory"
-                    },
-                    {
                       "label": "GC min heap free ratio",
                       "type": "integer",
                       "required": false,
@@ -1292,22 +1276,6 @@
                           "description": "Port used for remote debugging. Defaults to 5005. e.g. '8787'.",
                           "jsonPath": "$.spec.objects.servers[*].jvm.javaDebugPort",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.javaDebugPort"
-                        },
-                        {
-                          "label": "Container core limit",
-                          "type": "integer",
-                          "required": false,
-                          "description": "A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'.",
-                          "jsonPath": "$.spec.objects.servers[*].jvm.containerCoreLimit",
-                          "originalJsonPath": "$.spec.objects.servers[*].jvm.containerCoreLimit"
-                        },
-                        {
-                          "label": "Container max memory",
-                          "type": "integer",
-                          "required": false,
-                          "description": "Memory limit given to the container. e.g. '1024'.",
-                          "jsonPath": "$.spec.objects.servers[*].jvm.containerMaxMemory",
-                          "originalJsonPath": "$.spec.objects.servers[*].jvm.containerMaxMemory"
                         },
                         {
                           "label": "GC min heap free ratio",
