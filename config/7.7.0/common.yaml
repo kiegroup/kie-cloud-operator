@@ -225,14 +225,6 @@ console:
                   - name: JAVA_DEBUG_PORT
                     value: "[[.Console.Jvm.JavaDebugPort]]"
                   #[[end]]
-                  #[[if .Console.Jvm.ContainerCoreLimit]]
-                  - name: CONTAINER_CORE_LIMIT
-                    value: "[[.Console.Jvm.ContainerCoreLimit]]"
-                  #[[end]]
-                  #[[if .Console.Jvm.ContainerMaxMemory]]
-                  - name: CONTAINER_MAX_MEMORY
-                    value: "[[.Console.Jvm.ContainerMaxMemory]]"
-                  #[[end]]
                   #[[if .Console.Jvm.GcMinHeapFreeRatio]]
                   - name: GC_MIN_HEAP_FREE_RATIO
                     value: "[[.Console.Jvm.GcMinHeapFreeRatio]]"
@@ -774,14 +766,6 @@ servers:
                     #[[if .Jvm.JavaDebugPort]]
                     - name: JAVA_DEBUG_PORT
                       value: "[[.Jvm.JavaDebugPort]]"
-                    #[[end]]
-                    #[[if .Jvm.ContainerCoreLimit]]
-                    - name: CONTAINER_CORE_LIMIT
-                      value: "[[.Jvm.ContainerCoreLimit]]"
-                    #[[end]]
-                    #[[if .Jvm.ContainerMaxMemory]]
-                    - name: CONTAINER_MAX_MEMORY
-                      value: "[[.Jvm.ContainerMaxMemory]]"
                     #[[end]]
                     #[[if .Jvm.GcMinHeapFreeRatio]]
                     - name: GC_MIN_HEAP_FREE_RATIO

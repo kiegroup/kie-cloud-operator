@@ -182,8 +182,6 @@ type JvmObject struct {
 	JavaDiagnostics            *bool  `json:"javaDiagnostics,omitempty"`
 	JavaDebug                  *bool  `json:"javaDebug,omitempty"`
 	JavaDebugPort              *int32 `json:"javaDebugPort,omitempty"`
-	ContainerCoreLimit         *int32 `json:"containerCoreLimit,omitempty"`
-	ContainerMaxMemory         *int32 `json:"containerMaxMemory,omitempty"`
 	GcMinHeapFreeRatio         *int32 `json:"gcMinHeapFreeRatio,omitempty"`
 	GcMaxHeapFreeRatio         *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
 	GcTimeRatio                *int32 `json:"gcTimeRatio,omitempty"`
