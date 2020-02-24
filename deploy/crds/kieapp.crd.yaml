@@ -211,14 +211,6 @@ spec:
                               type: integer
                               format: int32
                               description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
-                            containerCoreLimit:
-                              type: integer
-                              format: int32
-                              description: A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'
-                            containerMaxMemory:
-                              type: integer
-                              format: int32
-                              description: Memory limit given to the container. e.g. '1024'
                             gcMinHeapFreeRatio:
                               type: integer
                               format: int32
@@ -589,14 +581,6 @@ spec:
                                 type: integer
                                 format: int32
                                 description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
-                              containerCoreLimit:
-                                type: integer
-                                format: int32
-                                description: A calculated core limit as described in https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. e.g. '2'
-                              containerMaxMemory:
-                                type: integer
-                                format: int32
-                                description: Memory limit given to the container. e.g. '1024'
                               gcMinHeapFreeRatio:
                                 type: integer
                                 format: int32

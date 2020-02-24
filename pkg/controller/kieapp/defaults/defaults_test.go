@@ -629,8 +629,6 @@ func createJvmTestObject() *api.JvmObject {
 		JavaDiagnostics:            Pbool(true),
 		JavaDebug:                  Pbool(true),
 		JavaDebugPort:              Pint32(8787),
-		ContainerCoreLimit:         Pint32(2),
-		ContainerMaxMemory:         Pint32(1024),
 		GcMinHeapFreeRatio:         Pint32(20),
 		GcMaxHeapFreeRatio:         Pint32(40),
 		GcTimeRatio:                Pint32(4),
@@ -664,12 +662,6 @@ func testJvmEnv(t *testing.T, envs []corev1.EnvVar) {
 
 		case "JAVA_DEBUG_PORT":
 			assert.Equal(t, "8787", env.Value)
-
-		case "CONTAINER_CORE_LIMIT":
-			assert.Equal(t, "2", env.Value)
-
-		case "CONTAINER_MAX_MEMORY":
-			assert.Equal(t, "1024", env.Value)
 
 		case "GC_MIN_HEAP_FREE_RATIO":
 			assert.Equal(t, "20", env.Value)

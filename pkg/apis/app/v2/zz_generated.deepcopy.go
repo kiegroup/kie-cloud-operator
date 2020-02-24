@@ -444,16 +444,6 @@ func (in *JvmObject) DeepCopyInto(out *JvmObject) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.ContainerCoreLimit != nil {
-		in, out := &in.ContainerCoreLimit, &out.ContainerCoreLimit
-		*out = new(int32)
-		**out = **in
-	}
-	if in.ContainerMaxMemory != nil {
-		in, out := &in.ContainerMaxMemory, &out.ContainerMaxMemory
-		*out = new(int32)
-		**out = **in
-	}
 	if in.GcMinHeapFreeRatio != nil {
 		in, out := &in.GcMinHeapFreeRatio, &out.GcMinHeapFreeRatio
 		*out = new(int32)
