@@ -179,5 +179,5 @@ make csv
 
 # OR
 # w/ sha lookup/replacement against registry.redhat.io
-USER_TOKEN="<username>:<password>" make csv
+DIGESTS=true USER_TOKEN="<username>:<password>" make csv
 ```
