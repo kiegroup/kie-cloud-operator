@@ -36,13 +36,13 @@ import (
 var log = logs.GetLogger("csv.generator")
 
 var (
-	rh              = "Red Hat, Inc."
+	rh              = "Red Hat"
 	maturity        = "stable"
 	major, minor, _ = defaults.MajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
 			Name:         "kiecloud",
-			DisplayName:  "Kie Cloud",
+			DisplayName:  "Business Automation",
 			OperatorName: "kie-cloud-operator",
 			CsvDir:       "community",
 			Registry:     "quay.io",
@@ -123,7 +123,7 @@ func main() {
 		csvVersionedName := operatorName + "." + version.Version
 		templateStruct.Name = csvVersionedName
 		templateStruct.Namespace = "placeholder"
-		descrip := csv.DisplayName + " Operator for deployment and management of RHPAM/RHDM environments."
+		descrip := "Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments."
 		repository := "https://github.com/kiegroup/kie-cloud-operator"
 		examples := []string{"{\x22apiVersion\x22:\x22app.kiegroup.org/v2\x22,\x22kind\x22:\x22KieApp\x22,\x22metadata\x22:{\x22name\x22:\x22rhpam-trial\x22},\x22spec\x22:{\x22environment\x22:\x22rhpam-trial\x22}}"}
 		templateStruct.SetAnnotations(
@@ -150,7 +150,7 @@ func main() {
 		opVersion.Version = semver.MustParse(version.Version)
 		templateStruct.Spec.Version = opVersion
 		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
-		templateStruct.Spec.Description = descrip
+		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = maturity
 		templateStruct.Spec.Maintainers = []csvv1.Maintainer{{Name: rh, Email: "bsig-cloud@redhat.com"}}
@@ -161,7 +161,7 @@ func main() {
 		}
 		templateStruct.Spec.Icon = []csvv1.Icon{
 			{
-				Data:      "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2Q3MWUwMH0uY2xzLTJ7ZmlsbDojYzIxYTAwfS5jbHMtM3tmaWxsOiNmZmZ9LmNscy00e2ZpbGw6I2VhZWFlYX0uY2xzLTV7ZmlsbDojYjdiN2I3fS5jbHMtNntmaWxsOiNjZGNkY2R9PC9zdHlsZT48L2RlZnM+PHRpdGxlPkxvZ288L3RpdGxlPjxnIGlkPSJMYXllcl8xIiBkYXRhLW5hbWU9IkxheWVyIDEiPjxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIHRyYW5zZm9ybT0icm90YXRlKC00NSA1MCA1MCkiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik04NS4zNiAxNC42NGE1MCA1MCAwIDAgMS03MC43MiA3MC43MnoiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik02NS43NiAzNC4yOEwxNS42IDQzLjE1djEuMTNhLjM0LjM0IDAgMCAwIC4zLjM0YzEuNDcuMTcgNy45MyAyLjExIDggMjMuNDlhLjQ2LjQ2IDAgMCAwIC4zNS40NGwyLjU5LjU3cy0xLjIxLTI1LjU0IDguNzctMjcuMDYgMTEuMiAyNy4yNyAxMS4zMyAzMS4xYS41NC41NCAwIDAgMCAuNDMuNTFsMy41MS43OHMuMDYtMzQuNTQgMTQuOTItMzYuODJ2LTMuMzV6Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNjUuMzUgMjcuNTZMMTYuMTggMzguNDJhLjc1Ljc1IDAgMCAwLS41OS43M3Y0bDUwLjE3LTguODd2LTYuNzZhMS42OCAxLjY4IDAgMCAwLS40MS4wNHoiLz48cGF0aCBjbGFzcz0iY2xzLTUiIGQ9Ik0zNS42MSA0Mi4wNWMtNC42MS43LTYuODMgNi41NC03Ljg5IDEyLjYxbDEzLjY1LTEuMzNjMC0uMTcuMDktLjM0LjEzLS41MXMuMTQtLjUzLjIxLS44bC4yLS42OHEuMTItLjQuMjUtLjhsLjItLjYyYy4xMi0uMzYuMjUtLjcxLjM5LTEuMDZsLjEyLS4zMmMtMS42NC00LjE3LTMuOTgtNi45OS03LjI2LTYuNDl6TTgyLjIzIDMxLjE5bC0xNi0zLjYyYTEuOSAxLjkgMCAwIDAtLjQyIDB2Ni43NmwxNy4wNiAyLjgzdi01LjIzYS43Ni43NiAwIDAgMC0uNjQtLjc0ek01My40MyA1My42MmwxOC40MS0xLjEzYzIuMS02LjA1IDUuNTEtMTEuNzUgMTEtMTIuOGwtMTctMi4wOGMtNi42OCAxLjEyLTEwLjM2IDguMjktMTIuNDEgMTYuMDF6Ii8+PHBhdGggY2xhc3M9ImNscy02IiBkPSJNNDEuNzEgNTJsLjEzLS40NS0uMTMuNDZ6TTQxLjkxIDUxLjM0bC0uMDYuMjIuMDctLjIzek0yNy43MiA1NC42NmE2OC4yNiA2OC4yNiAwIDAgMC0uOTMgMTJ2Mi40MkwzOSA2Ni4xYTEuMDYgMS4wNiAwIDAgMCAuODEtMSA1OC43MiA1OC43MiAwIDAgMSAxLjY5LTEyLjI2YzAgLjE2LS4wOS4zMy0uMTMuNDl6TTY1Ljc4IDM0LjI4bC4wMSAzLjM0IDE3LjAzIDIuMDd2LTIuNThsLTE3LjA0LTIuODN6TTUwLjg3IDc0LjQ0TDY4IDY4LjY4YS45Mi45MiAwIDAgMCAuNjMtLjc5IDcyLjQ2IDcyLjQ2IDAgMCAxIDMuMTgtMTUuNGwtMTguMzggMS4xM2E5MC45MSA5MC45MSAwIDAgMC0yLjU2IDIwLjgyek01My40MyA1My42MnoiLz48L2c+PC9zdmc+",
+				Data:      "PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjEuMTUgNzIxLjE1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2RkMzkyNjt9LmNscy0ye2ZpbGw6I2NjMzQyNzt9LmNscy0ze2ZpbGw6I2ZmZjt9LmNscy00e2ZpbGw6I2U1ZTVlNDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlByb2R1Y3RfSWNvbi1SZWRfSGF0LUF1dG9tYXRpb24tUkdCPC90aXRsZT48Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjM2MC41NyIgY3k9IjM2MC41NyIgcj0iMzU4LjU4Ii8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNjEzLjc4LDEwNy4wOSwxMDYuNzIsNjE0LjE2YzE0MC4xNCwxMzguNjIsMzY2LjExLDEzOC4xNiw1MDUuNjctMS40Uzc1Mi40LDI0Ny4yNCw2MTMuNzgsMTA3LjA5WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIzNzguOTcgMzI3LjQ4IDQ2MS43NyAxNTkuNTcgMjU5LjY3IDE1OS40OSAyNTkuNjcgNDEzLjEgMzA2Ljk3IDQxMy43OCAzOTMuMjcgMzI3LjQ3IDM3OC45NyAzMjcuNDgiLz48cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iMzU5LjYgNTc4LjA2IDQ4Mi41NSAzMjcuNDUgMzkzLjI3IDMyNy40NyAzMDYuOTcgNDEzLjc4IDM1OS42IDQxNC41MiAzNTkuNiA1NzguMDYiLz48L3N2Zz4=",
 				MediaType: "image/svg+xml",
 			},
 		}
