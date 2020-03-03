@@ -77,6 +77,7 @@ servers:
             template.alpha.openshift.io/wait-for-ready: "true"
         spec:
           source:
+            type: Image
             images:
               - from:
                   kind: ImageStreamTag
