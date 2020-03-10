@@ -20,6 +20,7 @@ func init() {
 		if err != nil {
 			log.Errorf("Unable to register finalizer. ", err)
 		}
+		kieapp.CreateConsoleYAMLSamples(&reconciler)
 		return kieapp.Add(mgr, &extReconciler)
 	}
 	AddToManagerFuncs = []func(manager.Manager) error{addManager}

@@ -286,7 +286,7 @@ func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{consolev1.GroupVersion.Group},
-				Resources: []string{"consolelinks"},
+				Resources: []string{"consolelinks", "consoleyamlsamples"},
 				Verbs: []string{
 					"get",
 					"create",
