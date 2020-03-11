@@ -11,6 +11,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -164,6 +165,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		return false
 	}
 	ignoreEmptyMaps(dc1, dc2)
+	sortDeploymentVars(dc1.Spec.Template, dc2.Spec.Template)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{dc1.Name, dc2.Name})
@@ -224,6 +226,7 @@ func equalDeployment(deployed resource.KubernetesResource, requested resource.Ku
 	delete(d1.Annotations, deploymentRevisionAnnotation)
 
 	ignoreEmptyMaps(d1, d2)
+	sortDeploymentVars(&d1.Spec.Template, &d2.Spec.Template)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{d1.Name, d2.Name})
@@ -236,6 +239,51 @@ func equalDeployment(deployed resource.KubernetesResource, requested resource.Ku
 		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
 	}
 	return equal
+}
+
+func sortBuildConfigVars(bc1 *buildv1.BuildConfig, bc2 *buildv1.BuildConfig) {
+	if &bc1.Spec.Strategy == nil || &bc2.Spec.Strategy == nil {
+		return
+	}
+	if bc1.Spec.Strategy.CustomStrategy != nil && bc2.Spec.Strategy.CustomStrategy != nil {
+		sortEnvVars(bc1.Spec.Strategy.CustomStrategy.Env, bc2.Spec.Strategy.CustomStrategy.Env)
+	}
+	if bc1.Spec.Strategy.DockerStrategy != nil && bc2.Spec.Strategy.DockerStrategy != nil {
+		sortEnvVars(bc1.Spec.Strategy.DockerStrategy.Env, bc2.Spec.Strategy.DockerStrategy.Env)
+	}
+	if bc1.Spec.Strategy.JenkinsPipelineStrategy != nil && bc2.Spec.Strategy.JenkinsPipelineStrategy != nil {
+		sortEnvVars(bc1.Spec.Strategy.JenkinsPipelineStrategy.Env, bc2.Spec.Strategy.JenkinsPipelineStrategy.Env)
+	}
+	if bc1.Spec.Strategy.SourceStrategy != nil && bc2.Spec.Strategy.SourceStrategy != nil {
+		sortEnvVars(bc1.Spec.Strategy.SourceStrategy.Env, bc2.Spec.Strategy.SourceStrategy.Env)
+	}
+}
+
+func sortDeploymentVars(pod1 *corev1.PodTemplateSpec, pod2 *corev1.PodTemplateSpec) {
+	for index := range pod1.Spec.Containers {
+		if len(pod2.Spec.Containers) <= index {
+			logger.Info("No matching container found in requested resource", "deployed container", pod1.Spec.Containers[index])
+			return
+		}
+		sortEnvVars(pod1.Spec.Containers[index].Env, pod2.Spec.Containers[index].Env)
+	}
+
+	for index := range pod1.Spec.InitContainers {
+		if len(pod2.Spec.InitContainers) <= index {
+			logger.Info("No matching init container found in requested resource", "deployed container", pod1.Spec.InitContainers[index])
+			return
+		}
+		sortEnvVars(pod1.Spec.InitContainers[index].Env, pod2.Spec.InitContainers[index].Env)
+	}
+}
+
+func sortEnvVars(envs1 []corev1.EnvVar, envs2 []corev1.EnvVar) {
+	sort.Slice(envs1, func(i, j int) bool {
+		return envs1[i].Name < envs1[j].Name
+	})
+	sort.Slice(envs2, func(i, j int) bool {
+		return envs2[i].Name < envs2[j].Name
+	})
 }
 
 func checkGeneratePodValues(pod1 *corev1.PodTemplateSpec, pod2 *corev1.PodTemplateSpec, triggerBasedImage map[string]bool) bool {
@@ -542,6 +590,7 @@ func equalBuildConfigs(deployed resource.KubernetesResource, requested resource.
 		bc1.Spec.FailedBuildsHistoryLimit = nil
 	}
 	ignoreEmptyMaps(bc1, bc2)
+	sortBuildConfigVars(bc1, bc2)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{bc1.Name, bc2.Name})

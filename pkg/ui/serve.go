@@ -4,6 +4,7 @@ package ui
 
 import (
 	"encoding/json"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"io/ioutil"
 
 	"github.com/RHsyseng/console-cr-form/pkg/web"
@@ -11,7 +12,6 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/gobuffalo/packr/v2"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -51,7 +51,7 @@ func apply(cr string) error {
 	}
 	config.ContentConfig.GroupVersion = &api.SchemeGroupVersion
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
+	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
 	restClient, err := rest.UnversionedRESTClientFor(config)
 	if err != nil {

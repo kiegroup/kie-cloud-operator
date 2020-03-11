@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"os"
 	"strings"
 	"text/template"
@@ -15,7 +17,6 @@ import (
 	"github.com/imdario/mergo"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,7 +30,7 @@ var log = logs.GetLogger("kieapp.defaults")
 
 // GetEnvironment returns an Environment from merging the common config and the config
 // related to the environment set in the KieApp definition
-func GetEnvironment(cr *api.KieApp, service api.PlatformService) (api.Environment, error) {
+func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Environment, error) {
 	minor, micro, err := checkProductUpgrade(cr)
 	if err != nil {
 		return api.Environment{}, err
@@ -105,7 +106,7 @@ func GetEnvironment(cr *api.KieApp, service api.PlatformService) (api.Environmen
 	return mergedEnv, nil
 }
 
-func mergeDB(service api.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+func mergeDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	dbEnvs := make(map[api.DatabaseType]api.Environment)
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
@@ -133,7 +134,7 @@ func mergeDB(service api.PlatformService, cr *api.KieApp, env api.Environment, e
 	return env, nil
 }
 
-func mergeJms(service api.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+func mergeJms(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	var jmsEnv api.Environment
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
@@ -767,7 +768,7 @@ func getWebhookSecret(webhookType api.WebhookType, webhooks []api.WebhookSecret)
 }
 
 // important to parse template first with this function, before unmarshalling into object
-func loadYaml(service api.PlatformService, filename, productVersion, namespace string, env api.EnvTemplate) ([]byte, error) {
+func loadYaml(service kubernetes.PlatformService, filename, productVersion, namespace string, env api.EnvTemplate) ([]byte, error) {
 	// prepend specified product version dir to filepath
 	filename = strings.Join([]string{productVersion, filename}, "/")
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
@@ -873,7 +874,7 @@ func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Sch
 }
 
 // UseEmbeddedFiles checks environment variables WATCH_NAMESPACE & OPERATOR_NAME
-func UseEmbeddedFiles(service api.PlatformService) (opName string, depNameSpace string, useEmbedded bool) {
+func UseEmbeddedFiles(service kubernetes.PlatformService) (opName string, depNameSpace string, useEmbedded bool) {
 	namespace := os.Getenv(constants.NameSpaceEnv)
 	name := os.Getenv(constants.OpNameEnv)
 	if service.IsMockService() || namespace == "" || name == "" {

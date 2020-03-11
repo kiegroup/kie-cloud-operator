@@ -1,8 +1,8 @@
 package status
 
 import (
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

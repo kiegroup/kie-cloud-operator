@@ -3,6 +3,7 @@ package defaults
 import (
 	"context"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"strings"
 
 	"github.com/gobuffalo/packr/v2"
@@ -54,7 +55,7 @@ func MajorMinorMicro(productVersion string) (major, minor, micro string) {
 }
 
 // getConfigVersionDiffs ...
-func getConfigVersionDiffs(fromVersion, toVersion string, service api.PlatformService) error {
+func getConfigVersionDiffs(fromVersion, toVersion string, service kubernetes.PlatformService) error {
 	if checkVersion(fromVersion) && checkVersion(toVersion) {
 		fromList, toList := getConfigVersionLists(fromVersion, toVersion)
 		diffs := configDiffs(fromList, toList)

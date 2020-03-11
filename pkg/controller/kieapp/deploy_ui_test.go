@@ -45,6 +45,7 @@ func TestUpdateLink(t *testing.T) {
 	err = yaml.Unmarshal(bytes, operator)
 	assert.Nil(t, err, "Error parsing Operator file")
 
+	operator.Namespace = "placeholder"
 	err = controllerutil.SetControllerReference(csv, operator, service.GetScheme())
 	assert.Nil(t, err, "Error setting operator owner as CSV")
 
@@ -95,6 +96,7 @@ func TestUpdateExistingLink(t *testing.T) {
 	err = yaml.Unmarshal(bytes, operator)
 	assert.Nil(t, err, "Error parsing Operator file")
 
+	operator.Namespace = "placeholder"
 	err = controllerutil.SetControllerReference(csv, operator, service.GetScheme())
 	assert.Nil(t, err, "Error setting operator owner as CSV")
 

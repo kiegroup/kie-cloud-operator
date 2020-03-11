@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"reflect"
 	"regexp"
 	"strings"
@@ -13,10 +14,10 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write"
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/status"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -39,7 +40,7 @@ var log = logs.GetLogger("kieapp.controller")
 
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
-	Service api.PlatformService
+	Service kubernetes.PlatformService
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -304,7 +305,7 @@ func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.Ku
 	for i := range objects {
 		for j := range objects[i].Routes {
 			route := &objects[i].Routes[j]
-			route.SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+			route.SetGroupVersionKind(routev1.GroupVersion.WithKind("Route"))
 			route.SetNamespace(instance.GetNamespace())
 			requestedRoutes = append(requestedRoutes, route)
 		}
@@ -416,7 +417,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 			},
 		},
 	}
-	isnew.SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStreamTag"))
+	isnew.SetGroupVersionKind(oimagev1.GroupVersion.WithKind("ImageStreamTag"))
 	if registry.Insecure {
 		isnew.Tag.ImportPolicy = oimagev1.TagImportPolicy{
 			Insecure: true,
@@ -600,7 +601,7 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 		allObjects = append(allObjects, &object.RoleBindings[index])
 	}
 	for index := range object.DeploymentConfigs {
-		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.SchemeGroupVersion.WithKind("DeploymentConfig"))
+		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.GroupVersion.WithKind("DeploymentConfig"))
 		if len(object.BuildConfigs) == 0 {
 			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
 				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
@@ -623,15 +624,15 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 		allObjects = append(allObjects, &object.StatefulSets[index])
 	}
 	for index := range object.Routes {
-		object.Routes[index].SetGroupVersionKind(routev1.SchemeGroupVersion.WithKind("Route"))
+		object.Routes[index].SetGroupVersionKind(routev1.GroupVersion.WithKind("Route"))
 		allObjects = append(allObjects, &object.Routes[index])
 	}
 	for index := range object.ImageStreams {
-		object.ImageStreams[index].SetGroupVersionKind(oimagev1.SchemeGroupVersion.WithKind("ImageStream"))
+		object.ImageStreams[index].SetGroupVersionKind(oimagev1.GroupVersion.WithKind("ImageStream"))
 		allObjects = append(allObjects, &object.ImageStreams[index])
 	}
 	for index := range object.BuildConfigs {
-		object.BuildConfigs[index].SetGroupVersionKind(buildv1.SchemeGroupVersion.WithKind("BuildConfig"))
+		object.BuildConfigs[index].SetGroupVersionKind(buildv1.GroupVersion.WithKind("BuildConfig"))
 		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
 			object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, _ = reconciler.ensureImageStream(
 				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Name,

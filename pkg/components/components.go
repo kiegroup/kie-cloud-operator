@@ -169,11 +169,11 @@ func GetRole(operatorName string) *rbacv1.Role {
 				APIGroups: []string{
 					"",
 					appsv1.SchemeGroupVersion.Group,
-					oappsv1.SchemeGroupVersion.Group,
+					oappsv1.GroupVersion.Group,
 					rbacv1.SchemeGroupVersion.Group,
-					routev1.SchemeGroupVersion.Group,
-					buildv1.SchemeGroupVersion.Group,
-					oimagev1.SchemeGroupVersion.Group,
+					routev1.GroupVersion.Group,
+					buildv1.GroupVersion.Group,
+					oimagev1.GroupVersion.Group,
 					api.SchemeGroupVersion.Group,
 				},
 				Resources: []string{"*"},
@@ -323,9 +323,8 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 			Name: plural + "." + api.SchemeGroupVersion.Group,
 		},
 		Spec: extv1beta1.CustomResourceDefinitionSpec{
-			Scope:   "Namespaced",
-			Group:   api.SchemeGroupVersion.Group,
-			Version: api.SchemeGroupVersion.Version,
+			Scope: "Namespaced",
+			Group: api.SchemeGroupVersion.Group,
 			Versions: []extv1beta1.CustomResourceDefinitionVersion{
 				{
 					Name:    api.SchemeGroupVersion.Version,
