@@ -1,8 +1,12 @@
 package version
 
+import (
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+)
+
 var (
 	// Version - current version
-	Version = "1.4.0"
+	Version = constants.CurrentVersion
 	// PriorVersion - prior version
-	PriorVersion = "1.3.0"
+	PriorVersion = "1.4.0"
 )
