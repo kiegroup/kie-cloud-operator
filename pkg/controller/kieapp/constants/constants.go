@@ -9,14 +9,14 @@ import (
 const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.8.0"
-	// LastMicroVersion product version supported
-	LastMicroVersion = "7.6.0"
-	// LastMinorVersion product version supported
-	LastMinorVersion = "7.7.0"
+	// PriorVersion1 product version supported
+	PriorVersion1 = "7.7.0"
+	// PriorVersion2 product version supported
+	PriorVersion2 = "7.6.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, LastMicroVersion, LastMinorVersion}
+var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -203,14 +203,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	LastMicroVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.2",
-	},
-	LastMinorVersion: {
+	PriorVersion1: {
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
@@ -225,6 +218,13 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		MySQLComponent:      MySQL57Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
+	},
+	PriorVersion2: {
+		APIVersion:       api.SchemeGroupVersion.Version,
+		BrokerImage:      "amq-broker",
+		BrokerImageTag:   "7.5",
+		DatagridImage:    "datagrid73-openshift",
+		DatagridImageTag: "1.3",
 	},
 }
 
