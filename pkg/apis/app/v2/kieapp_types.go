@@ -1,20 +1,16 @@
 package v2
 
 import (
-	"context"
-
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -572,21 +568,6 @@ type KieAppStatus struct {
 	ConsoleHost string               `json:"consoleHost,omitempty"`
 	Deployments olm.DeploymentStatus `json:"deployments"`
 	Phase       ConditionType        `json:"phase,omitempty"`
-}
-
-// PlatformService ...
-type PlatformService interface {
-	Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error
-	Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) error
-	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
-	List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error
-	Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error
-	Patch(ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) error
-	DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) error
-	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
-	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
-	GetScheme() *runtime.Scheme
-	IsMockService() bool
 }
 
 func init() {

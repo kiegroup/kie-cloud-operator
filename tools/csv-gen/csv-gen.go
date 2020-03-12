@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"net/http"
 	"os"
 	"sort"
@@ -17,7 +18,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -187,7 +187,7 @@ func main() {
 				Resources: []csvv1.APIResourceReference{
 					{
 						Kind:    "DeploymentConfig",
-						Version: oappsv1.SchemeGroupVersion.String(),
+						Version: oappsv1.GroupVersion.String(),
 					},
 					{
 						Kind:    "StatefulSet",
@@ -203,15 +203,15 @@ func main() {
 					},
 					{
 						Kind:    "Route",
-						Version: routev1.SchemeGroupVersion.String(),
+						Version: routev1.GroupVersion.String(),
 					},
 					{
 						Kind:    "BuildConfig",
-						Version: buildv1.SchemeGroupVersion.String(),
+						Version: buildv1.GroupVersion.String(),
 					},
 					{
 						Kind:    "ImageStream",
-						Version: oimagev1.SchemeGroupVersion.String(),
+						Version: oimagev1.GroupVersion.String(),
 					},
 					{
 						Kind:    "Secret",
@@ -303,7 +303,7 @@ func main() {
 		// create image-references file for automated ART digest find/replace
 		imageRef := constants.ImageRef{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: oimagev1.SchemeGroupVersion.String(),
+				APIVersion: oimagev1.GroupVersion.String(),
 				Kind:       "ImageStream",
 			},
 			Spec: constants.ImageRefSpec{

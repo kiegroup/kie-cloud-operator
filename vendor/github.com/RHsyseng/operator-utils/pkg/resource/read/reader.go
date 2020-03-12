@@ -38,7 +38,7 @@ func (this *resourceReader) WithOwnerObject(ownerObject metav1.Object) *resource
 // any error from underlying calls is directly returned as well
 func (this *resourceReader) List(listObject runtime.Object) ([]resource.KubernetesResource, error) {
 	var resources []resource.KubernetesResource
-	err := this.reader.List(context.TODO(), listObject, clientv1.InNamespace(this.namespace))
+	err := this.reader.List(context.TODO(), listObject, &clientv1.ListOptions{Namespace: this.namespace})
 	if err != nil {
 		return nil, err
 	}

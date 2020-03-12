@@ -69,7 +69,8 @@ func TestGenerateSecret(t *testing.T) {
 func TestSpecifySecret(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
@@ -129,7 +130,8 @@ func TestSpecifySecret(t *testing.T) {
 func TestConsoleHost(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
