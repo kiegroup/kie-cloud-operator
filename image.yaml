@@ -2,7 +2,7 @@ schema_version: 1
 
 name: "rhpam-7/rhpam-rhel8-operator"
 description: "Red Hat Business Automation Operator"
-version: "7.6.0"
+version: "7.7.0"
 from: "ubi8:8-released"
 labels:
   - name: "maintainer"
@@ -15,8 +15,6 @@ labels:
     value: "Red Hat Business Automation Operator"
   - name: "io.openshift.tags"
     value: "rhpam,rhdm,operator"
-  - name: "com.redhat.delivery.appregistry"
-    value: "true"
 packages:
   content_sets:
     x86_64:

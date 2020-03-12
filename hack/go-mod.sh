@@ -1,15 +1,12 @@
 #!/bin/sh
 
-. ./hack/go-mod-env.sh
+source ./hack/go-mod-env.sh
 
-echo Reset vendor diectory
-
-setGoModEnv
+echo Reset vendor directory
 
 if [[ -z ${CI} ]]; then
     go mod tidy
+    go mod vendor
 else
-    go mod tidy -v
+    go mod vendor -v
 fi
-
-go mod vendor

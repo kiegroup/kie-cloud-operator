@@ -3,19 +3,20 @@ package constants
 import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.7.0"
-	// LastMicroVersion product version supported
-	LastMicroVersion = "7.5.1"
-	// LastMinorVersion product version supported
-	LastMinorVersion = "7.6.0"
+	CurrentVersion = "7.8.0"
+	// PriorVersion1 product version supported
+	PriorVersion1 = "7.7.0"
+	// PriorVersion2 product version supported
+	PriorVersion2 = "7.6.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, LastMicroVersion, LastMinorVersion}
+var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -59,6 +60,8 @@ const (
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
+	// DefaultExtensionImageInstallDir Default Extension Install Dir for JDBC drivers
+	DefaultExtensionImageInstallDir = "/extensions"
 	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
@@ -73,25 +76,150 @@ const (
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
 	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
+
+	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
+	DmDecisionCentralVar   = "DM_DC_IMAGE_"
+	DmControllerVar        = "DM_CONTROLLER_IMAGE_"
+	PamKieImageVar         = "PAM_KIESERVER_IMAGE_"
+	PamControllerVar       = "PAM_CONTROLLER_IMAGE_"
+	PamBusinessCentralVar  = "PAM_BC_IMAGE_"
+	PamBCMonitoringVar     = "PAM_BC_MONITORING_IMAGE_"
+	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
+
+	OauthVar       = "OAUTH_PROXY_IMAGE"
+	OauthImageURL  = ImageRegistry + "/openshift3/oauth-proxy:v3.11"
+	OauthComponent = "golang-github-openshift-oauth-proxy-container"
+
+	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
+	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
+	PostgreSQL10Component = "rh-postgresql10-container"
+
+	MySQLVar         = "MYSQL_PROXY_IMAGE_"
+	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
+	MySQL57Component = "rh-mysql57-container"
+
+	OseCliVar          = "OSE_CLI_IMAGE_"
+	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
+	OseCli311Component = "openshift-enterprise-cli-container"
+
+	BrokerVar         = "BROKER_IMAGE_"
+	Broker75Image     = "amq-broker"
+	Broker75ImageTag  = "7.5"
+	Broker75ImageURL  = ImageRegistry + "/amq7/" + Broker75Image + ":" + Broker75ImageTag
+	Broker75Component = "amq-broker-openshift-container"
+
+	DatagridVar         = "DATAGRID_IMAGE_"
+	Datagrid73Image     = "datagrid73-openshift"
+	Datagrid73ImageTag  = "1.3"
+	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
+	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
+
+	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
+	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
+	RhelVersion = "-rhel8"
 )
+
+var Images = []ImageEnv{
+	{
+		Var:       DmKieImageVar,
+		Component: "rhdm-7-kieserver-rhel8-container",
+		Registry:  DmContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       DmControllerVar,
+		Component: "rhdm-7-controller-rhel8-container",
+		Registry:  DmContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       DmDecisionCentralVar,
+		Component: "rhdm-7-decisioncentral-rhel8-container",
+		Registry:  DmContext + "decisioncentral" + RhelVersion,
+	},
+	{
+		Var:       PamKieImageVar,
+		Component: "rhpam-7-kieserver-rhel8-container",
+		Registry:  PamContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       PamControllerVar,
+		Component: "rhpam-7-controller-rhel8-container",
+		Registry:  PamContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       PamBusinessCentralVar,
+		Component: "rhpam-7-businesscentral-rhel8-container",
+		Registry:  PamContext + "businesscentral" + RhelVersion,
+	},
+	{
+		Var:       PamBCMonitoringVar,
+		Component: "rhpam-7-businesscentral-monitoring-rhel8-container",
+		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
+	},
+	{
+		Var:       PamProcessMigrationVar,
+		Component: "rhpam-7-process-migration-rhel8-container",
+		Registry:  PamContext + "process-migration" + RhelVersion,
+	},
+	{
+		Var:       PamSmartRouterVar,
+		Component: "rhpam-7-smartrouter-rhel8-container",
+		Registry:  PamContext + "smartrouter" + RhelVersion,
+	},
+}
+
+type ImageEnv struct {
+	Var       string
+	Component string
+	Registry  string
+}
+type ImageRef struct {
+	metav1.TypeMeta `json:",inline"`
+	Spec            ImageRefSpec `json:"spec"`
+}
+type ImageRefSpec struct {
+	Tags []ImageRefTag `json:"tags"`
+}
+type ImageRefTag struct {
+	Name string                  `json:"name"`
+	From *corev1.ObjectReference `json:"from"`
+}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         Broker75Image,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag,
+		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	LastMicroVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.2",
+	PriorVersion1: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         Broker75Image,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag,
+		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	LastMinorVersion: {
+	PriorVersion2: {
 		APIVersion:       api.SchemeGroupVersion.Version,
 		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.5",
@@ -100,9 +228,9 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 }
 
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},

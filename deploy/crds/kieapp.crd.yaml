@@ -55,6 +55,9 @@ spec:
                 version:
                   type: string
                   description: The version of the application deployment.
+                useImageTags:
+                  type: boolean
+                  description: Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
                 commonConfig:
                   type: object
                   description: Configuration of the RHPAM components
@@ -62,9 +65,6 @@ spec:
                     applicationName:
                       type: string
                       description: The name of the application deployment.
-                    imageTag:
-                      type: string
-                      description: The tag to use for the application images.
                     keyStorePassword:
                       type: string
                       description: The password to use for keystore generation.
@@ -182,6 +182,58 @@ spec:
                                 name:
                                   type: string
                                   description: Reference object Name for the GitHooks
+                        jvm:
+                          type: object
+                          description: JVM configuration
+                          properties:
+                            javaOptsAppend:
+                              type: string
+                              description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                            javaMaxMemRatio:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.
+                            javaInitialMemRatio:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'
+                            javaMaxInitialMem:
+                              type: integer
+                              format: int32
+                              description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'
+                            javaDiagnostics:
+                              type: boolean
+                              description: Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'
+                            javaDebug:
+                              type: boolean
+                              description: If set remote debugging will be switched on. Disabled by default. e.g. 'true'
+                            javaDebugPort:
+                              type: integer
+                              format: int32
+                              description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
+                            gcMinHeapFreeRatio:
+                              type: integer
+                              format: int32
+                              description: Minimum percentage of heap free after GC to avoid expansion. e.g. '20'
+                            gcMaxHeapFreeRatio:
+                              type: integer
+                              format: int32
+                              description: Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'
+                            gcTimeRatio:
+                              type: integer
+                              format: int32
+                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                            gcAdaptiveSizePolicyWeight:
+                              type: integer
+                              format: int32
+                              description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                            gcMaxMetaspaceSize:
+                              type: integer
+                              format: int32
+                              description: The maximum metaspace size. e.g. '100'
+                            gcContainerOptions:
+                              type: string
+                              description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
                     servers:
                       type: array
                       description: Configuration of the each individual KIE server
@@ -235,10 +287,22 @@ spec:
                           build:
                             type: object
                             description: Configuration of build configs for immutable KIE servers
-                            required:
-                              - kieServerContainerDeployment
-                              - gitSource
+                            oneOf:
+                              - required:
+                                  - extensionImageStreamTag
+                              - required:
+                                  - kieServerContainerDeployment
+                                  - gitSource
                             properties:
+                              extensionImageStreamTag:
+                                type: string
+                                description: ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0.
+                              extensionImageStreamTagNamespace:
+                                type: string
+                                description: Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
+                              extensionImageInstallDir:
+                                type: string
+                                description: Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).
                               kieServerContainerDeployment:
                                 type: string
                                 description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
@@ -488,6 +552,58 @@ spec:
                               amqEnableSSL:
                                 type: boolean
                                 description: Not intended to be set by the user, if will be set to true if all required SSL parameters are set.
+                          jvm:
+                            type: object
+                            description: JVM configuration
+                            properties:
+                              javaOptsAppend:
+                                type: string
+                                description: User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                              javaMaxMemRatio:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.
+                              javaInitialMemRatio:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'
+                              javaMaxInitialMem:
+                                type: integer
+                                format: int32
+                                description: Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'
+                              javaDiagnostics:
+                                type: boolean
+                                description: Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'
+                              javaDebug:
+                                type: boolean
+                                description: If set remote debugging will be switched on. Disabled by default. e.g. 'true'
+                              javaDebugPort:
+                                type: integer
+                                format: int32
+                                description: Port used for remote debugging. Defaults to 5005. e.g. '8787'
+                              gcMinHeapFreeRatio:
+                                type: integer
+                                format: int32
+                                description: Minimum percentage of heap free after GC to avoid expansion. e.g. '20'
+                              gcMaxHeapFreeRatio:
+                                type: integer
+                                format: int32
+                                description: Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'
+                              gcTimeRatio:
+                                type: integer
+                                format: int32
+                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                              gcAdaptiveSizePolicyWeight:
+                                type: integer
+                                format: int32
+                                description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                              gcMaxMetaspaceSize:
+                                type: integer
+                                format: int32
+                                description: The maximum metaspace size. e.g. '100'
+                              gcContainerOptions:
+                                type: string
+                                description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
                     smartRouter:
                       type: object
                       description: Configuration of the RHPAM smart router
@@ -556,9 +672,6 @@ spec:
                   type: object
                   description: Authentication integration configuration
                   properties:
-                    externalOnly:
-                      type: boolean
-                      description: When true, only users defined in SSO/LDAP will be allowed. The default behaviour is to allow also application internal credentials.
                     sso:
                       type: object
                       description: RH-SSO integration configuration
@@ -770,15 +883,6 @@ spec:
                     amqClusterPassword:
                       type: string
                       description: The password to use for amq cluster user.
-                    controllerPassword:
-                      type: string
-                      description: The password to use for the controllerUser.
-                    serverPassword:
-                      type: string
-                      description: The password to use for the executionUser.
-                    mavenPassword:
-                      type: string
-                      description: The password to use for the mavenUser.
                 objects:
                   type: object
                   description: Configuration of the RHPAM components

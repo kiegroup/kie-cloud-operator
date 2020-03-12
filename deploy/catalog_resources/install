@@ -1,0 +1,3 @@
+#!/bin/sh
+mv /tmp/scripts/catalog_resources/redhat /manifests
+ls -l /manifests

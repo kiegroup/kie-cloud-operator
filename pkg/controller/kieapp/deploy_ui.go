@@ -178,6 +178,11 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 	if shared.EnvVarSet(constants.DebugTrue, operator.Spec.Template.Spec.Containers[0].Env) {
 		debug = constants.DebugTrue
 	}
+
+	oauthImage := constants.OauthImageURL
+	if val, exists := os.LookupEnv(constants.OauthVar); exists {
+		oauthImage = val
+	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
 	httpsPort := int32(8443)
@@ -192,9 +197,10 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 			Volumes:            []corev1.Volume{volume},
 			Containers: []corev1.Container{
 				{
-					Name:  "oauth-proxy",
-					Image: "registry.access.redhat.com/openshift3/oauth-proxy",
-					Ports: []corev1.ContainerPort{{Name: "public", ContainerPort: httpsPort}},
+					Name:            "oauth-proxy",
+					Image:           oauthImage,
+					ImagePullPolicy: operator.Spec.Template.Spec.Containers[0].ImagePullPolicy,
+					Ports:           []corev1.ContainerPort{{Name: "public", ContainerPort: httpsPort}},
 					Args: []string{
 						"--http-address=",
 						fmt.Sprintf("--https-address=:%d", httpsPort),

@@ -34,7 +34,7 @@ func TestGetConfigVersionDiffs(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
-			Version:     constants.LastMicroVersion,
+			Version:     constants.PriorVersion2,
 			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
@@ -70,7 +70,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMicroVersion,
+			Version:     constants.PriorVersion2,
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -85,7 +85,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMicroVersion,
+			Version:     constants.PriorVersion2,
 			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
@@ -105,7 +105,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMicroVersion,
+			Version:     constants.PriorVersion2,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
@@ -143,7 +143,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.LastMicroVersion,
+			Version:     constants.PriorVersion2,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: false},
 		},
 	}

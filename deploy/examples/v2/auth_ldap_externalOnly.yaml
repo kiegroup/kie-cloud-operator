@@ -5,7 +5,6 @@ metadata:
 spec:
   environment: rhpam-production
   auth:
-    externalOnly: true
     ldap:
       url: ldaps://myldap.example.com
       bindDN: uid=admin,ou=users,ou=exmample,ou=com

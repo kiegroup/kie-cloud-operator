@@ -3,7 +3,7 @@ module github.com/kiegroup/kie-cloud-operator
 go 1.12
 
 require (
-	github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6
+	github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
 	github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/prometheus-operator v0.29.0
@@ -13,7 +13,9 @@ require (
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/google/go-cmp v0.3.1
 	github.com/gophercloud/gophercloud v0.6.0 // indirect
+	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.7
+	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/openshift/api v3.9.1-0.20190424152011-77b8897ec79a+incompatible
 	github.com/openshift/client-go v0.0.0-20190401163519-84c2b942258a
 	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20191115003340-16619cd27fa5
@@ -23,6 +25,8 @@ require (
 	github.com/prometheus/common v0.4.1
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
+	github.com/tidwall/gjson v1.4.0 // indirect
+	github.com/tidwall/sjson v1.0.4
 	go.uber.org/zap v1.10.0
 	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
@@ -60,9 +64,9 @@ replace (
 
 // Pin RHsyseng library versions
 replace (
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20191125212019-0b9d5493caf6
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
 
 )
 
-replace github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.2.0
+replace github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1
