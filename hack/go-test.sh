@@ -14,7 +14,7 @@ else
     else
         git remote add origin ${REPO_LINK}
         git fetch origin ${BASE_SHA}
-        VERSION=$(go run getversion.go -product)
+        VERSION=$(go run getversion.go)
         RESULT=$(git diff --name-only ${BASE_SHA} | grep "^config/" | grep -v "^config/${VERSION}")
         if [[ ${RESULT} ]]; then
             echo "Detected changes to an older version's config file(s). Current version changes are only allowed in config/${VERSION}."

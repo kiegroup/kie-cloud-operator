@@ -3,7 +3,7 @@
 source ./hack/go-mod-env.sh
 
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=$(go run getversion.go -operator)
+BRANCH=$(go run getversion.go)
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
 TAR=${BRANCH}.tar.gz

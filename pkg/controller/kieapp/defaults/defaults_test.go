@@ -2525,7 +2525,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 
 	// test that env var works with older version
 	cr.Spec.UseImageTags = false
-	cr.Spec.Version = constants.LastMinorVersion
+	cr.Spec.Version = constants.LastMicroVersion
 	imageTag = cr.Spec.Version
 	imageName = image + ":" + imageTag
 	imageURL = "registry.redhat.io/openshift/" + imageName
