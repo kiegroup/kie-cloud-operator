@@ -136,11 +136,15 @@ func main() {
 		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
 	}
 	// Create Service object to expose the metrics port(s).
-	_, err = metrics.CreateMetricsService(ctx, cfg, servicePorts)
+	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
 	if err != nil {
 		log.Info("Could not create metrics Service", "error", err.Error())
 	}
-
+	// Create ServiceMonitor pointing to the metrics service.
+	services := []*v1.Service{service}
+	if _, err := metrics.CreateServiceMonitors(cfg, namespace, services); err != nil {
+		log.Info("Failed to create ServiceMonitor based on metrics Service", "error", err.Error())
+	}
 	log.Info("Starting the Operator.")
 
 	message := "ConfigMaps not available. Using embedded configs."

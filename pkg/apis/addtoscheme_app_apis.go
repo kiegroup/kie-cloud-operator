@@ -1,6 +1,7 @@
 package apis
 
 import (
+	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -22,5 +23,6 @@ func init() {
 		oimagev1.Install,
 		buildv1.Install,
 		operatorsv1alpha1.AddToScheme,
+		monv1.AddToScheme,
 	)
 }
