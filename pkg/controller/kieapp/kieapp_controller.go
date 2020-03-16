@@ -297,7 +297,7 @@ func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *cor
 			return reconciler.Service.Get(context.TODO(), name, obj)
 		}
 	}
-	return fmt.Errorf("Unsupported Kind: %s", ref.Kind)
+	return fmt.Errorf("unsupported Kind: %s", ref.Kind)
 }
 
 func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.KubernetesResource {

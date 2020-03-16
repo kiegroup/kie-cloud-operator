@@ -172,7 +172,7 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 				Kind: "Service",
 			},
 		},
-		errMsg: "Unsupported Kind: Service",
+		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -279,7 +279,7 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 				Kind: "Service",
 			},
 		},
-		errMsg: "Unsupported Kind: Service",
+		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		gitHooks: &api.GitHooksVolume{
