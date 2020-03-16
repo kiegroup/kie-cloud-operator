@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.8.0
-    createdAt: "2020-03-12 08:17:48"
+    createdAt: "2020-03-16 10:57:43"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -223,17 +223,119 @@ spec:
       - rules:
         - apiGroups:
           - ""
+          resources:
+          - configmaps
+          - pods
+          - services
+          - serviceaccounts
+          - persistentvolumeclaims
+          - secrets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - apps
+          resources:
+          - deployments
+          - deployments/finalizers
+          - replicasets
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - build.openshift.io
+          resources:
+          - buildconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - image.openshift.io
+          resources:
+          - imagestreams
+          - imagestreamtags
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - app.kiegroup.org
           resources:
-          - '*'
+          - kieapps
+          - kieapps/finalizers
           verbs:
-          - '*'
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - monitoring.coreos.com
           resources:
@@ -246,15 +348,11 @@ spec:
           resources:
           - clusterserviceversions
           verbs:
-          - '*'
-        - apiGroups:
-          - apps
-          resourceNames:
-          - kie-cloud-operator
-          resources:
-          - deployments/finalizers
-          verbs:
+          - get
+          - list
+          - patch
           - update
+          - watch
         serviceAccountName: kie-cloud-operator
     strategy: deployment
   installModes:
