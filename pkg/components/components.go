@@ -168,16 +168,85 @@ func GetRole(operatorName string) *rbacv1.Role {
 			{
 				APIGroups: []string{
 					"",
+				},
+				Resources: []string{
+					"configmaps",
+					"pods",
+					"services",
+					"serviceaccounts",
+					"persistentvolumeclaims",
+					"secrets",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					appsv1.SchemeGroupVersion.Group,
-					oappsv1.GroupVersion.Group,
+				},
+				Resources: []string{
+					"deployments",
+					"deployments/finalizers",
+					"replicasets",
+					"statefulsets",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
+					oappsv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"deploymentconfigs",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					rbacv1.SchemeGroupVersion.Group,
-					routev1.GroupVersion.Group,
-					buildv1.GroupVersion.Group,
-					oimagev1.GroupVersion.Group,
+				},
+				Resources: []string{
+					"rolebindings",
+					"roles",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
+					routev1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"routes",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
+					buildv1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"buildconfigs",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
+					oimagev1.SchemeGroupVersion.Group,
+				},
+				Resources: []string{
+					"imagestreams",
+					"imagestreamtags",
+				},
+				Verbs: Verbs,
+			},
+			{
+				APIGroups: []string{
 					api.SchemeGroupVersion.Group,
 				},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
+				Resources: []string{
+					"kieapps",
+					"kieapps/finalizers",
+				},
+				Verbs: Verbs,
 			},
 			{
 				APIGroups: []string{
@@ -191,122 +260,14 @@ func GetRole(operatorName string) *rbacv1.Role {
 					csvv1.SchemeGroupVersion.Group,
 				},
 				Resources: []string{"clusterserviceversions"},
-				Verbs:     []string{"*"},
+				Verbs: []string{
+					"get",
+					"list",
+					"patch",
+					"update",
+					"watch",
+				},
 			},
-			{
-				APIGroups: []string{
-					appsv1.SchemeGroupVersion.Group,
-				},
-				ResourceNames: []string{operatorName},
-				Resources:     []string{"deployments/finalizers"},
-				Verbs:         []string{"update"},
-			},
-			// swap out once 7.5.1 roles off, gets rid of wildcard perms
-			/*
-				{
-					APIGroups: []string{
-						"",
-					},
-					Resources: []string{
-						"configmaps",
-						"pods",
-						"services",
-						"serviceaccounts",
-						"persistentvolumeclaims",
-						"secrets",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						appsv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"deployments",
-						"deployments/finalizers",
-						"replicasets",
-						"statefulsets",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						oappsv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"deploymentconfigs",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						rbacv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"rolebindings",
-						"roles",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						routev1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"routes",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						buildv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"buildconfigs",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						oimagev1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"imagestreams",
-						"imagestreamtags",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						api.SchemeGroupVersion.Group,
-					},
-					Resources: []string{
-						"kieapps",
-						"kieapps/finalizers",
-					},
-					Verbs: Verbs,
-				},
-				{
-					APIGroups: []string{
-						monv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{"servicemonitors"},
-					Verbs:     []string{"get", "create"},
-				},
-				{
-					APIGroups: []string{
-						csvv1.SchemeGroupVersion.Group,
-					},
-					Resources: []string{"clusterserviceversions"},
-					Verbs: []string{
-						"get",
-						"list",
-						"patch",
-						"update",
-						"watch",
-					},
-				},
-			*/
 		},
 	}
 	return role
