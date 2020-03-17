@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"os"
 	"runtime"
 	"time"
@@ -15,8 +14,9 @@ import (
 	// Import necessary packr module for builds
 	_ "github.com/gobuffalo/packr/v2/jam"
 
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
-	app "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/version"
@@ -186,7 +186,7 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 func serveCRMetrics(cfg *rest.Config) error {
 	// Below function returns filtered operator/CustomResource specific GVKs.
 	// For more control override the below GVK list with your own custom logic.
-	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(app.SchemeBuilder.AddToScheme)
+	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(api.SchemeBuilder.AddToScheme)
 	if err != nil {
 		return err
 	}
