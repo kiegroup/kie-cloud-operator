@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.8.0
-    createdAt: "2020-03-16 10:57:43"
+    createdAt: "2020-03-17 11:21:09"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -119,6 +119,18 @@ spec:
     mediatype: image/svg+xml
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consolelinks
+          verbs:
+          - get
+          - create
+          - update
+          - delete
+        serviceAccountName: kie-cloud-operator
       deployments:
       - name: kie-cloud-operator
         spec:
