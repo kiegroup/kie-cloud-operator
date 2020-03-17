@@ -82,8 +82,9 @@ type csvDeployments struct {
 	Spec appsv1.DeploymentSpec `json:"spec,omitempty"`
 }
 type csvStrategySpec struct {
-	Permissions []csvPermissions `json:"permissions"`
-	Deployments []csvDeployments `json:"deployments"`
+	Permissions        []csvPermissions `json:"permissions"`
+	ClusterPermissions []csvPermissions `json:"clusterPermissions"`
+	Deployments        []csvDeployments `json:"deployments"`
 }
 type channel struct {
 	Name       string `json:"name"`
@@ -113,6 +114,8 @@ func main() {
 		templateStrategySpec.Deployments = append(templateStrategySpec.Deployments, []csvDeployments{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
 		role := components.GetRole(csv.OperatorName)
 		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
+		clusterRole := components.GetClusterRole(csv.OperatorName)
+		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
 		// Re-serialize deployments and permissions into csv strategy.
 		updatedStrat, err := json.Marshal(templateStrategySpec)
 		if err != nil {

@@ -1,6 +1,7 @@
 package components
 
 import (
+	consolev1 "github.com/openshift/api/console/v1"
 	"sort"
 	"strings"
 
@@ -271,6 +272,30 @@ func GetRole(operatorName string) *rbacv1.Role {
 		},
 	}
 	return role
+}
+
+func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
+	return &rbacv1.ClusterRole{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: rbacv1.SchemeGroupVersion.String(),
+			Kind:       "ClusterRole",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: operatorName,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{consolev1.GroupVersion.Group},
+				Resources: []string{"consolelinks"},
+				Verbs: []string{
+					"get",
+					"create",
+					"update",
+					"delete",
+				},
+			},
+		},
+	}
 }
 
 func GetCrd() *extv1beta1.CustomResourceDefinition {

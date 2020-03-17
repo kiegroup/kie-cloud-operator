@@ -6,6 +6,7 @@ import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
@@ -24,5 +25,6 @@ func init() {
 		buildv1.Install,
 		operatorsv1alpha1.AddToScheme,
 		monv1.AddToScheme,
+		consolev1.Install,
 	)
 }
