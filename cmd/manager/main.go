@@ -25,7 +25,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
-	"github.com/operator-framework/operator-sdk/pkg/restmapper"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
@@ -45,6 +44,7 @@ var (
 var log = logs.GetLogger("cmd")
 
 func printVersion() {
+	log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
@@ -91,7 +91,6 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		SyncPeriod:         &syncPeriod,
-		MapperProvider:     restmapper.NewDynamicRESTMapper,
 		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
 	})
 	if err != nil {
@@ -126,25 +125,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = serveCRMetrics(cfg); err != nil {
-		log.Info("Could not generate and serve custom resource metrics: ", err.Error())
-	}
+	// Add the Metrics Service
+	addMetrics(ctx, cfg, namespace)
 
-	// Add to the below struct any other metrics ports you want to expose.
-	servicePorts := []v1.ServicePort{
-		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
-		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
-	}
-	// Create Service object to expose the metrics port(s).
-	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
-	if err != nil {
-		log.Info("Could not create metrics Service", "error", err.Error())
-	}
-	// Create ServiceMonitor pointing to the metrics service.
-	services := []*v1.Service{service}
-	if _, err := metrics.CreateServiceMonitors(cfg, namespace, services); err != nil {
-		log.Info("Failed to create ServiceMonitor based on metrics Service", "error", err.Error())
-	}
 	log.Info("Starting the Operator.")
 
 	message := "ConfigMaps not available. Using embedded configs."
@@ -159,6 +142,43 @@ func main() {
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error("Manager exited non-zero. ", err)
 		os.Exit(1)
+	}
+}
+
+// addMetrics will create the Services and Service Monitors to allow the operator export the metrics by using
+// the Prometheus operator
+func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
+	if err := serveCRMetrics(cfg); err != nil {
+		if err == k8sutil.ErrRunLocal {
+			log.Info("Skipping CR metrics server creation; not running in a cluster.")
+			return
+		}
+		log.Info("Could not generate and serve custom resource metrics", "error", err.Error())
+	}
+
+	// Add to the below struct any other metrics ports you want to expose.
+	servicePorts := []v1.ServicePort{
+		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
+		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
+	}
+
+	// Create Service object to expose the metrics port(s).
+	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
+	if err != nil {
+		log.Info("Could not create metrics Service", "error", err.Error())
+	}
+
+	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
+	// necessary to configure Prometheus to scrape metrics from this operator.
+	services := []*v1.Service{service}
+	_, err = metrics.CreateServiceMonitors(cfg, namespace, services)
+	if err != nil {
+		log.Info("Could not create ServiceMonitor object", "error", err.Error())
+		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
+		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
+		if err == metrics.ErrServiceMonitorNotPresent {
+			log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
+		}
 	}
 }
 

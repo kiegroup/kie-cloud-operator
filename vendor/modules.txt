@@ -103,16 +103,16 @@ github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 # github.com/gobuffalo/packr/v2 v2.7.1 => github.com/gobuffalo/packr/v2 v2.7.1
 github.com/gobuffalo/packr/v2/jam
 github.com/gobuffalo/packr/v2
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/jam/store
 github.com/gobuffalo/packr/v2/plog
 github.com/gobuffalo/packr/v2/file
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
+github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/karrick/godirwalk
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/errx
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
@@ -196,7 +196,6 @@ github.com/operator-framework/operator-sdk/pkg/kube-metrics
 github.com/operator-framework/operator-sdk/pkg/leader
 github.com/operator-framework/operator-sdk/pkg/log/zap
 github.com/operator-framework/operator-sdk/pkg/metrics
-github.com/operator-framework/operator-sdk/pkg/restmapper
 github.com/operator-framework/operator-sdk/version
 # github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
 github.com/pavel-v-chernykh/keystore-go
@@ -403,17 +402,17 @@ k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/runtime/serializer
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/pkg/util/wait
-k8s.io/apimachinery/pkg/api/meta
-k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/runtime/serializer/streaming
 k8s.io/apimachinery/pkg/util/net
 k8s.io/apimachinery/pkg/util/sets
+k8s.io/apimachinery/pkg/api/meta
 k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/conversion/queryparams
 k8s.io/apimachinery/pkg/util/errors
 k8s.io/apimachinery/pkg/util/json
 k8s.io/apimachinery/pkg/util/naming
+k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/fields
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/selection
@@ -444,7 +443,6 @@ k8s.io/client-go/discovery
 k8s.io/client-go/dynamic
 k8s.io/client-go/kubernetes
 k8s.io/client-go/tools/cache
-k8s.io/client-go/restmapper
 k8s.io/client-go/plugin/pkg/client/auth/azure
 k8s.io/client-go/plugin/pkg/client/auth/gcp
 k8s.io/client-go/plugin/pkg/client/auth/oidc
@@ -514,6 +512,7 @@ k8s.io/client-go/tools/clientcmd/api/latest
 k8s.io/client-go/util/homedir
 k8s.io/client-go/tools/record/util
 k8s.io/client-go/tools/reference
+k8s.io/client-go/restmapper
 k8s.io/client-go/third_party/forked/golang/template
 k8s.io/client-go/tools/clientcmd/api/v1
 # k8s.io/klog v1.0.0
