@@ -564,7 +564,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	counter := 0
 	service.CreateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
 		k8sresource := obj.(resource.KubernetesResource)
-		if k8sresource.GetGenerateName() != "" {
+		if k8sresource.GetName() == "" && k8sresource.GetGenerateName() != "" {
 			k8sresource.SetName(fmt.Sprintf("%s%d", k8sresource.GetGenerateName(), counter))
 			counter++
 		}
@@ -587,9 +587,11 @@ func TestConsoleLinkCreation(t *testing.T) {
 
 	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
+	assert.Nil(t, err)
 
 	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
+	assert.Nil(t, err)
 
 	cr = reloadCR(t, service, crNamespacedName)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
@@ -643,6 +645,8 @@ func TestConsoleLinkCreation(t *testing.T) {
 
 	assert.Len(t, cr.GetFinalizers(), 1)
 	assert.Equal(t, constants.ConsoleLinkFinalizer, cr.GetFinalizers()[0])
+	assert.Equal(t, "testns-cr-0", cr.Status.ConsoleLink)
+
 	consoleLink := &consolev1.ConsoleLink{}
 	extReconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
 	assert.Equal(t, "Business Central", consoleLink.Spec.Text)
@@ -662,7 +666,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	assert.Len(t, cr.GetFinalizers(), 0)
 	consoleLink = &consolev1.ConsoleLink{}
 	err = extReconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
-	assert.Error(t, err)
+	assert.Error(t, err, "ConsoleLink must have been removed by the Finalizer")
 }
 
 func getNamespacedName(namespace string, name string) types.NamespacedName {

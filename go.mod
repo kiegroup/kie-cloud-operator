@@ -35,7 +35,7 @@ require (
 replace (
 	// Pin RHsyseng library versions
 	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
-	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200318230845-8e48081eaa5a
+	github.com/RHsyseng/operator-utils => github.com/ruromero/operator-utils v0.0.0-20200318153723-2b9619179901
 
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1

@@ -284,6 +284,12 @@ func main() {
 						Path:         "consoleHost",
 						XDescriptors: []string{"urn:alm:descriptor:org.w3:link"},
 					},
+					{
+						Description:  "The reference to the generated NamespacedDashboard ConsoleLink to Business/Decision Central URL.",
+						DisplayName:  "Business/Decision Central ConsoleLink",
+						Path:         "consoleLink",
+						XDescriptors: []string{"urn:alm:descriptor:org.w3:link"},
+					},
 				},
 			},
 		}
