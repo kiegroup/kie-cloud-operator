@@ -1,6 +1,6 @@
 schema_version: 1
 
-name: "rhpam-7/rhpam-rhel8-prod-operator-metadata"
+name: "rhpam-7/rhpam-rhel8-operator-metadata"
 description: "Red Hat Business Automation Operator Metadata"
 version: "7.7.0"
 from: "ubi8-minimal:8-released"
@@ -8,7 +8,7 @@ labels:
   - name: "maintainer"
     value: "bsig-cloud@redhat.com"
   - name: "com.redhat.component"
-    value: "rhpam-7-rhel8-prod-operator-metadata-container"
+    value: "rhpam-7-rhel8-operator-metadata-container"
   - name: "io.k8s.description"
     value: "Operator Metadata for deploying RHPAM & RHDM"
   - name: "io.k8s.display-name"
