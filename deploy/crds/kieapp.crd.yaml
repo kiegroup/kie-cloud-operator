@@ -158,6 +158,9 @@ spec:
                               type: object
                             requests:
                               type: object
+                        storageClassName:
+                          type: string
+                          description: The storageClassName to use for console pvc's.
                         ssoClient:
                           type: object
                           description: Client definitions used for creating the RH-SSO clients in the specified Realm
@@ -410,6 +413,9 @@ spec:
                                 type: object
                               requests:
                                 type: object
+                          storageClassName:
+                            type: string
+                            description: The storageClassName to use for server pvc's.
                           ssoClient:
                             type: object
                             description: Client definitions used for creating the RH-SSO clients in the specified Realm
@@ -443,6 +449,9 @@ spec:
                               size:
                                 type: string
                                 description: Size of the PersistentVolumeClaim to create. For example, 100Gi
+                              storageClassName:
+                                type: string
+                                description: The storageClassName to use for database pvc's.
                               externalConfig:
                                 type: object
                                 description: External Database configuration
@@ -675,6 +684,9 @@ spec:
                               type: object
                             requests:
                               type: object
+                        storageClassName:
+                          type: string
+                          description: The storageClassName to use for smart router pvc's.
                 imageRegistry:
                   type: object
                   description: If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.

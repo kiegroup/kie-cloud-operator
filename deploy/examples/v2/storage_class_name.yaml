@@ -1,17 +1,17 @@
 apiVersion: app.kiegroup.org/v2
 kind: KieApp
 metadata:
-  name: server-h2
+  name: storage-class-name
 spec:
-  environment: rhpam-trial
+  environment: rhpam-authoring
   objects:
+    console:
+      storageClassName: fast
     servers:
-      - deployments: 2
-        database:
-          type: h2
-          size: 30Gi
       - deployments: 1
         database:
-          type: h2
+          type: mysql
           size: 30Gi
           storageClassName: gold
+    smartRouter:
+      storageClassName: slow

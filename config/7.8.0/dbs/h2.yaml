@@ -61,6 +61,9 @@ servers:
             application: "[[$.ApplicationName]]"
             service: "[[.KieName]]"
         spec:
+          # [[ if ne .Database.StorageClassName "" ]]
+          storageClassName: "[[.Database.StorageClassName]]"
+          # [[ end ]]
           accessModes:
             - ReadWriteOnce
           resources:

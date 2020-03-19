@@ -309,6 +309,9 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:
@@ -380,6 +383,9 @@ smartRouter:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
       spec:
+        # [[ if ne .SmartRouter.StorageClassName "" ]]
+        storageClassName: "[[.SmartRouter.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:

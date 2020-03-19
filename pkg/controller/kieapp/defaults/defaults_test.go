@@ -2579,6 +2579,101 @@ func TestEnvCustomImageTag(t *testing.T) {
 	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
+func TestStorageClassName(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prod",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Deployments: Pint(1),
+						Database:    &api.DatabaseObject{Type: api.DatabaseMySQL},
+					},
+					{
+						Deployments: Pint(1),
+						Database:    &api.DatabaseObject{Type: api.DatabasePostgreSQL},
+					},
+					{
+						Deployments: Pint(1),
+						Database:    &api.DatabaseObject{Type: api.DatabaseH2},
+					},
+				},
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Nil(t, env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Len(t, env.Others[0].StatefulSets, 0)
+
+	cr.Spec.Objects.Servers[0].Database.Size = "10Gi"
+	cr.Spec.Objects.Servers[1].Database.Size = "10Gi"
+	cr.Spec.Objects.Servers[2].Database.Size = "10Gi"
+	cr.Spec.Objects.Servers[0].StorageClassName = "silver"
+	cr.Spec.Objects.Servers[1].StorageClassName = "silver"
+	cr.Spec.Objects.Servers[2].StorageClassName = "silver"
+	cr.Spec.Objects.Console.StorageClassName = "fast"
+	cr.Spec.Objects.SmartRouter.StorageClassName = "slow"
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Nil(t, env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Len(t, env.Others[0].StatefulSets, 0)
+	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
+
+	cr.Spec.Objects.Servers[0].Database.StorageClassName = "gold"
+	cr.Spec.Objects.Servers[1].Database.StorageClassName = "gold1"
+	cr.Spec.Objects.Servers[2].Database.StorageClassName = "gold2"
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Len(t, env.Others[0].StatefulSets, 0)
+
+	cr.Spec.Environment = api.RhpamAuthoringHA
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "fast", *env.Others[0].StatefulSets[0].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
+	assert.Equal(t, "fast", *env.Others[0].StatefulSets[1].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
+
+	cr.Spec.Environment = api.RhdmAuthoring
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Len(t, env.Others[0].StatefulSets, 0)
+
+	cr.Spec.Environment = api.RhdmAuthoringHA
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "fast", *env.Console.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold1", *env.Servers[1].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "gold2", *env.Servers[2].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "slow", *env.SmartRouter.PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, "fast", *env.Others[0].StatefulSets[0].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
+	assert.Equal(t, "fast", *env.Others[0].StatefulSets[1].Spec.VolumeClaimTemplates[0].Spec.StorageClassName)
+}
+
 func TestGitHooks(t *testing.T) {
 	var defaultMode int32 = 420
 	tests := []struct {
