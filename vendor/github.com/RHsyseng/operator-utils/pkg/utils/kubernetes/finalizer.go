@@ -63,10 +63,6 @@ func (e *ExtendedReconciler) finalizeOnDelete(owner resource.KubernetesResource)
 			if err != nil {
 				return err
 			}
-			err = e.UnregisterFinalizer(f)
-			if err != nil {
-				return err
-			}
 		} else {
 			return fmt.Errorf("finalizer %s does not have a Finalizer handler registered", finalizer)
 		}

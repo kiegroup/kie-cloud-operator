@@ -80,9 +80,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
-	if instance.GetDeletionTimestamp() != nil {
-		return reconcile.Result{}, err
-	}
 
 	//Obtain in-memory representation of basic environment being requested:
 	env, err := defaults.GetEnvironment(instance, reconciler.Service)
@@ -154,10 +151,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		if resourceType == reflect.TypeOf(consolev1.ConsoleLink{}) && len(delta.Added) == 1 {
-			instance.Status.ConsoleLink = delta.Added[0].GetName()
-		}
-
 		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -166,7 +159,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-
 		hasUpdates = hasUpdates || added || updated || removed
 	}
 	if hasUpdates && status.SetProvisioning(instance) {
@@ -174,6 +166,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	} else if !hasUpdates {
 		log.Debug("Reconcile loop did not find any resource changes to apply")
 	}
+
 	// Check the KieServer ConfigMaps for necessary changes
 	reconciler.checkKieServerConfigMap(instance, env)
 
@@ -560,7 +553,11 @@ func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Env
 	for _, obj := range objects {
 		resources = append(resources, reconciler.getCustomObjectResources(obj, cr)...)
 	}
-	return reconciler.addConsoleLinkResources(resources, cr)
+	consoleLink := reconciler.getConsoleLinkResource(cr)
+	if consoleLink != nil {
+		resources = append(resources, consoleLink)
+	}
+	return resources
 }
 
 func getCustomObjects(env api.Environment) []api.CustomObject {
@@ -901,16 +898,16 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	}
 	resourceMap[reflect.TypeOf(corev1.Secret{})] = secrets
 
-	if instance.Status.ConsoleLink != "" {
-		consoleLink := &consolev1.ConsoleLink{}
-		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: instance.Status.ConsoleLink}, consoleLink)
-		if err != nil && !errors.IsNotFound(err) {
-			log.Warn("Failed to load ConsoleLink", err)
-			return nil, err
+	consoleLink := &consolev1.ConsoleLink{}
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: string(instance.GetUID())}, consoleLink)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return resourceMap, nil
 		}
-		resourceMap[reflect.TypeOf(*consoleLink)] = []resource.KubernetesResource{consoleLink}
+		log.Warn("Failed to load ConsoleLink", err)
+		return resourceMap, err
 	}
-
+	resourceMap[reflect.TypeOf(*consoleLink)] = []resource.KubernetesResource{consoleLink}
 	return resourceMap, nil
 }
 
@@ -930,12 +927,13 @@ func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1al
 	return csv
 }
 
-func (reconciler *Reconciler) addConsoleLinkResources(resources []resource.KubernetesResource, cr *api.KieApp) []resource.KubernetesResource {
-	if cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") {
-		return resources
+func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.KubernetesResource {
+	if cr.GetDeletionTimestamp() != nil || cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") {
+		return nil
 	}
 	consoleLink := &consolev1.ConsoleLink{
 		ObjectMeta: metav1.ObjectMeta{
+			Name: string(cr.GetUID()),
 			Labels: map[string]string{
 				"rhpam-namespace": cr.Namespace,
 				"rhpam-app":       cr.Name,
@@ -952,12 +950,8 @@ func (reconciler *Reconciler) addConsoleLinkResources(resources []resource.Kuber
 			},
 		},
 	}
-	if cr.Status.ConsoleLink != "" {
-		consoleLink.ObjectMeta.Name = cr.Status.ConsoleLink
-	}
-	consoleLink.ObjectMeta.GenerateName = fmt.Sprintf("%s-%s-", cr.Namespace, cr.Name)
 	controllerutil.AddFinalizer(cr, constants.ConsoleLinkFinalizer)
-	return append(resources, consoleLink)
+	return consoleLink
 }
 
 type ConsoleLinkFinalizer struct{}
@@ -968,16 +962,13 @@ func (c *ConsoleLinkFinalizer) GetName() string {
 
 func (c *ConsoleLinkFinalizer) OnFinalize(owner resource.KubernetesResource, service kubernetes.PlatformService) error {
 	kieapp := owner.(*api.KieApp)
-	if kieapp.Status.ConsoleLink != "" {
-		link := &consolev1.ConsoleLink{}
-		if kieapp.Status.ConsoleLink != "" {
-			err := service.Get(context.TODO(), types.NamespacedName{Name: kieapp.Status.ConsoleLink}, link)
-			if err == nil {
-				err = service.Delete(context.TODO(), link)
-			} else if errors.IsNotFound(err) {
-				err = nil
-			}
-		}
+	link := &consolev1.ConsoleLink{}
+	err := service.Get(context.TODO(), types.NamespacedName{Name: string(kieapp.GetUID())}, link)
+	if err == nil {
+		return service.Delete(context.TODO(), link)
 	}
-	return nil
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	return err
 }

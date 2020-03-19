@@ -11,6 +11,7 @@ require (
 	github.com/go-openapi/spec v0.19.6
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/google/go-cmp v0.3.1
+	github.com/google/uuid v1.1.1
 	github.com/gophercloud/gophercloud v0.6.0 // indirect
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.8
@@ -35,7 +36,7 @@ require (
 replace (
 	// Pin RHsyseng library versions
 	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
-	github.com/RHsyseng/operator-utils => github.com/ruromero/operator-utils v0.0.0-20200318153723-2b9619179901
+	github.com/RHsyseng/operator-utils => github.com/ruromero/operator-utils v0.0.0-20200319122538-b8437606be48
 
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1

@@ -3,8 +3,8 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
+	"github.com/google/uuid"
 	consolev1 "github.com/openshift/api/console/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
@@ -561,15 +561,6 @@ func TestConsoleLinkCreation(t *testing.T) {
 		Environment: api.RhpamAuthoring,
 	}
 	service := test.MockService()
-	counter := 0
-	service.CreateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
-		k8sresource := obj.(resource.KubernetesResource)
-		if k8sresource.GetName() == "" && k8sresource.GetGenerateName() != "" {
-			k8sresource.SetName(fmt.Sprintf("%s%d", k8sresource.GetGenerateName(), counter))
-			counter++
-		}
-		return service.Client.Create(ctx, obj, opts...)
-	}
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
 	reconciler := Reconciler{Service: service}
@@ -645,13 +636,12 @@ func TestConsoleLinkCreation(t *testing.T) {
 
 	assert.Len(t, cr.GetFinalizers(), 1)
 	assert.Equal(t, constants.ConsoleLinkFinalizer, cr.GetFinalizers()[0])
-	assert.Equal(t, "testns-cr-0", cr.Status.ConsoleLink)
 
 	consoleLink := &consolev1.ConsoleLink{}
-	extReconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
+	extReconciler.Service.Get(context.TODO(), getNamespacedName("", string(cr.GetUID())), consoleLink)
 	assert.Equal(t, "Business Central", consoleLink.Spec.Text)
 	assert.Equal(t, "https://example", consoleLink.Spec.Href)
-	assert.Equal(t, "testns-cr-0", consoleLink.Name)
+	assert.Equal(t, string(cr.GetUID()), consoleLink.GetName())
 	assert.Len(t, consoleLink.Spec.NamespaceDashboard.Namespaces, 1)
 	assert.Contains(t, consoleLink.Spec.NamespaceDashboard.Namespaces, "testns")
 
@@ -688,6 +678,7 @@ func getInstance(namespacedName types.NamespacedName) *api.KieApp {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      namespacedName.Name,
 			Namespace: namespacedName.Namespace,
+			UID:       types.UID(uuid.New().String()),
 		},
 	}
 	return cr
