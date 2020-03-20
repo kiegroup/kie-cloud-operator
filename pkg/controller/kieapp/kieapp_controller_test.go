@@ -565,7 +565,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	assert.Nil(t, err)
 	reconciler := Reconciler{Service: service}
 	extReconciler := kubernetes.NewExtendedReconciler(service, &reconciler, &api.KieApp{})
-	extReconciler.RegisterFinalizer(&ConsoleLinkFinalizer{})
+	extReconciler.RegisterFinalizer(constants.ConsoleLinkFinalizer)
 	result, err := extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
@@ -635,7 +635,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
 
 	assert.Len(t, cr.GetFinalizers(), 1)
-	assert.Equal(t, constants.ConsoleLinkFinalizer, cr.GetFinalizers()[0])
+	assert.Equal(t, constants.ConsoleLinkFinalizer.GetName(), cr.GetFinalizers()[0])
 
 	consoleLink := &consolev1.ConsoleLink{}
 	extReconciler.Service.Get(context.TODO(), getNamespacedName("", string(cr.GetUID())), consoleLink)

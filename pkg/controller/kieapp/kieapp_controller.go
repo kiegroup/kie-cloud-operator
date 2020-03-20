@@ -950,25 +950,6 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 			},
 		},
 	}
-	controllerutil.AddFinalizer(cr, constants.ConsoleLinkFinalizer)
+	controllerutil.AddFinalizer(cr, constants.ConsoleLinkFinalizer.GetName())
 	return consoleLink
-}
-
-type ConsoleLinkFinalizer struct{}
-
-func (c *ConsoleLinkFinalizer) GetName() string {
-	return constants.ConsoleLinkFinalizer
-}
-
-func (c *ConsoleLinkFinalizer) OnFinalize(owner resource.KubernetesResource, service kubernetes.PlatformService) error {
-	kieapp := owner.(*api.KieApp)
-	link := &consolev1.ConsoleLink{}
-	err := service.Get(context.TODO(), types.NamespacedName{Name: string(kieapp.GetUID())}, link)
-	if err == nil {
-		return service.Delete(context.TODO(), link)
-	}
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	return err
 }
