@@ -38,6 +38,7 @@ osbs:
       platforms:
         only:
           - x86_64
+  extra_dir: osbs-extra
   repository:
     name: containers/rhpam-7-operator
     branch: rhba-7-rhel-8
