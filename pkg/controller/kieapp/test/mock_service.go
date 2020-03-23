@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
+
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
-	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -75,12 +75,6 @@ var knownTypes = map[schema.GroupVersion][]runtime.Object{
 	buildv1.GroupVersion: {
 		&buildv1.BuildConfig{},
 		&buildv1.BuildConfigList{},
-	},
-	consolev1.GroupVersion: {
-		&consolev1.ConsoleLink{},
-		&consolev1.ConsoleLinkList{},
-		&consolev1.ConsoleYAMLSample{},
-		&consolev1.ConsoleYAMLSampleList{},
 	},
 }
 

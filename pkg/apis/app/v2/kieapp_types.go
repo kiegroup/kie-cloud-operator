@@ -65,12 +65,11 @@ type EnvironmentConstants struct {
 
 // AppConstants data type to store application deployment constants
 type AppConstants struct {
-	Product      string `json:"name,omitempty"`
-	Prefix       string `json:"prefix,omitempty"`
-	ImageName    string `json:"imageName,omitempty"`
-	ImageVar     string `json:"imageVar,omitempty"`
-	MavenRepo    string `json:"mavenRepo,omitempty"`
-	FriendlyName string `json:"friendlyName,omitempty"`
+	Product   string `json:"name,omitempty"`
+	Prefix    string `json:"prefix,omitempty"`
+	ImageName string `json:"imageName,omitempty"`
+	ImageVar  string `json:"imageVar,omitempty"`
+	MavenRepo string `json:"mavenRepo,omitempty"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
@@ -567,7 +566,6 @@ type Condition struct {
 type KieAppStatus struct {
 	Conditions  []Condition          `json:"conditions"`
 	ConsoleHost string               `json:"consoleHost,omitempty"`
-	ConsoleLink string               `json:"consoleLink,omitempty"`
 	Deployments olm.DeploymentStatus `json:"deployments"`
 	Phase       ConditionType        `json:"phase,omitempty"`
 }
