@@ -79,6 +79,8 @@ var knownTypes = map[schema.GroupVersion][]runtime.Object{
 	consolev1.GroupVersion: {
 		&consolev1.ConsoleLink{},
 		&consolev1.ConsoleLinkList{},
+		&consolev1.ConsoleYAMLSample{},
+		&consolev1.ConsoleYAMLSampleList{},
 	},
 }
 

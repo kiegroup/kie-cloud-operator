@@ -7,6 +7,7 @@ rules:
   - console.openshift.io
   resources:
   - consolelinks
+  - consoleyamlsamples
   verbs:
   - get
   - create
