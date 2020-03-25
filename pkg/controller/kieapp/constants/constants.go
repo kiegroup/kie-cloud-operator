@@ -1,8 +1,6 @@
 package constants
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
-	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -296,20 +294,3 @@ var DebugFalse = corev1.EnvVar{
 	Name:  "DEBUG",
 	Value: "false",
 }
-
-// NoOpFinalizer No action is really needed because when the KieApp is marked for deletion the object won't be added to the
-// expected resources. If present, it will be deleted but adding the finalizer is needed to ensure the reconcile
-// loop is executed one last time
-type NoOpFinalizer struct {
-	Name string
-}
-
-func (c *NoOpFinalizer) GetName() string {
-	return c.Name
-}
-
-func (c *NoOpFinalizer) OnFinalize(owner resource.KubernetesResource, service kubernetes.PlatformService) error {
-	return nil
-}
-
-var ConsoleLinkFinalizer = &NoOpFinalizer{Name: "finalizer.console.openshift.io"}

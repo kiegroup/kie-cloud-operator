@@ -6,7 +6,6 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"reflect"
 	"regexp"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strings"
 	"time"
 
@@ -67,17 +66,35 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Fetch the KieApp instance
-	instance := &api.KieApp{}
+	instance := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      request.Name,
+			Namespace: request.Namespace,
+		},
+	}
+	var crDeleted bool
 	err := reconciler.Service.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			return reconcile.Result{}, nil
+			log.Info("Resource is being deleted. Reconcile for deletion.")
+			crDeleted = true
+		} else {
+			// Error reading the object - requeue the request.
+			reconciler.setFailedStatus(instance, api.UnknownReason, err)
+			return reconcile.Result{}, err
 		}
-		// Error reading the object - requeue the request.
-		reconciler.setFailedStatus(instance, api.UnknownReason, err)
+	}
+	requestedResources := []resource.KubernetesResource{}
+
+	if crDeleted {
+		deployed, err := reconciler.getDeployedResources(instance)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		_, err = reconciler.reconcileResources(instance, requestedResources, deployed)
 		return reconcile.Result{}, err
 	}
 
@@ -105,10 +122,10 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	delta := compare.DefaultComparator().CompareArrays(deployedRoutes, requestedRoutes)
 
-	writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
 	//If not all routes are created, then create the missing ones. Other changes can be applied later.
 	if len(delta.Added) > 0 {
 		log.Debugf("Will create %d routes that were not found", len(delta.Added))
+		writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
 		added, err := writer.AddResources(delta.Added)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -120,9 +137,8 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	//With route hostnames now available, set remaining environment configuration:
 	env = reconciler.setEnvironmentProperties(instance, env, deployedRoutes)
-
 	//Create a list of objects that should be deployed
-	requestedResources := reconciler.getKubernetesResources(instance, env)
+	requestedResources = reconciler.getKubernetesResources(instance, env)
 	for index := range requestedResources {
 		if isNamespaced(requestedResources[index]) {
 			requestedResources[index].SetNamespace(instance.Namespace)
@@ -137,29 +153,9 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	setDeploymentStatus(instance, deployed[reflect.TypeOf(oappsv1.DeploymentConfig{})])
 
-	//Compare what's deployed with what should be deployed
-	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
-	comparator := getComparator()
-	deltas := comparator.Compare(deployed, requested)
-	var hasUpdates bool
-	for resourceType, delta := range deltas {
-		if !delta.HasChanges() {
-			continue
-		}
-		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := writer.AddResources(delta.Added)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		removed, err := writer.RemoveResources(delta.Removed)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		hasUpdates = hasUpdates || added || updated || removed
+	hasUpdates, err := reconciler.reconcileResources(instance, requestedResources, deployed)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 	if hasUpdates && status.SetProvisioning(instance) {
 		return reconciler.UpdateObj(instance)
@@ -206,6 +202,35 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (reconciler *Reconciler) reconcileResources(instance *api.KieApp, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
+	writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
+	//Compare what's deployed with what should be deployed
+	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
+	comparator := getComparator()
+	deltas := comparator.Compare(deployed, requested)
+	var hasUpdates bool
+	for resourceType, delta := range deltas {
+		if !delta.HasChanges() {
+			continue
+		}
+		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
+		added, err := writer.AddResources(delta.Added)
+		if err != nil {
+			return false, err
+		}
+		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
+		if err != nil {
+			return false, err
+		}
+		removed, err := writer.RemoveResources(delta.Removed)
+		if err != nil {
+			return false, err
+		}
+		hasUpdates = hasUpdates || added || updated || removed
+	}
+	return hasUpdates, nil
 }
 
 func isNamespaced(resource resource.KubernetesResource) bool {
@@ -861,7 +886,6 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 		&routev1.RouteList{},
 		&oimagev1.ImageStreamList{},
 		&buildv1.BuildConfigList{},
-		&consolev1.ConsoleLinkList{},
 	)
 	if err != nil {
 		log.Warn("Failed to list deployed objects. ", err)
@@ -899,7 +923,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	resourceMap[reflect.TypeOf(corev1.Secret{})] = secrets
 
 	consoleLink := &consolev1.ConsoleLink{}
-	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: string(instance.GetUID())}, consoleLink)
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: getConsoleLinkName(instance)}, consoleLink)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return resourceMap, nil
@@ -933,7 +957,7 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 	}
 	consoleLink := &consolev1.ConsoleLink{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: string(cr.GetUID()),
+			Name: getConsoleLinkName(cr),
 			Labels: map[string]string{
 				"rhpam-namespace": cr.Namespace,
 				"rhpam-app":       cr.Name,
@@ -950,6 +974,9 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 			},
 		},
 	}
-	controllerutil.AddFinalizer(cr, constants.ConsoleLinkFinalizer.GetName())
 	return consoleLink
+}
+
+func getConsoleLinkName(cr *api.KieApp) string {
+	return fmt.Sprintf("%s-link-%s", cr.Namespace, cr.Name)
 }

@@ -3,7 +3,6 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/google/uuid"
 	consolev1 "github.com/openshift/api/console/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -564,23 +563,21 @@ func TestConsoleLinkCreation(t *testing.T) {
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
 	reconciler := Reconciler{Service: service}
-	extReconciler := kubernetes.NewExtendedReconciler(service, &reconciler, &api.KieApp{})
-	extReconciler.RegisterFinalizer(constants.ConsoleLinkFinalizer)
-	result, err := extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
 
 	// Simulate server setting the host
 	bcRoute := &routev1.Route{}
-	extReconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), bcRoute)
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), bcRoute)
 	bcRoute.Spec.Host = "example"
-	extReconciler.Service.Update(context.TODO(), bcRoute)
+	reconciler.Service.Update(context.TODO(), bcRoute)
 
-	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
 	assert.Nil(t, err)
 
-	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
 	assert.Nil(t, err)
 
@@ -602,7 +599,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 		return err
 	}
 
-	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
 
@@ -624,7 +621,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 		return err
 	}
 
-	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
 
@@ -634,14 +631,11 @@ func TestConsoleLinkCreation(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
 	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
 
-	assert.Len(t, cr.GetFinalizers(), 1)
-	assert.Equal(t, constants.ConsoleLinkFinalizer.GetName(), cr.GetFinalizers()[0])
-
 	consoleLink := &consolev1.ConsoleLink{}
-	extReconciler.Service.Get(context.TODO(), getNamespacedName("", string(cr.GetUID())), consoleLink)
+	reconciler.Service.Get(context.TODO(), getNamespacedName("", getConsoleLinkName(cr)), consoleLink)
 	assert.Equal(t, "Business Central", consoleLink.Spec.Text)
 	assert.Equal(t, "https://example", consoleLink.Spec.Href)
-	assert.Equal(t, string(cr.GetUID()), consoleLink.GetName())
+	assert.Equal(t, "testns-link-cr", consoleLink.GetName())
 	assert.Len(t, consoleLink.Spec.NamespaceDashboard.Namespaces, 1)
 	assert.Contains(t, consoleLink.Spec.NamespaceDashboard.Namespaces, "testns")
 
@@ -651,11 +645,11 @@ func TestConsoleLinkCreation(t *testing.T) {
 	err = service.Update(context.TODO(), cr)
 	assert.Nil(t, err)
 
-	result, err = extReconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	cr = reloadCR(t, service, crNamespacedName)
 	assert.Len(t, cr.GetFinalizers(), 0)
 	consoleLink = &consolev1.ConsoleLink{}
-	err = extReconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
+	err = reconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
 	assert.Error(t, err, "ConsoleLink must have been removed by the Finalizer")
 }
 
