@@ -66,13 +66,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Fetch the KieApp instance
-	instance := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      request.Name,
-			Namespace: request.Namespace,
-		},
-	}
-	var crDeleted bool
+	instance := &api.KieApp{}
 	err := reconciler.Service.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -80,21 +74,19 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			log.Info("Resource is being deleted. Reconcile for deletion.")
-			crDeleted = true
-		} else {
-			// Error reading the object - requeue the request.
-			reconciler.setFailedStatus(instance, api.UnknownReason, err)
+			instance.ObjectMeta = metav1.ObjectMeta{
+				Name:      request.Name,
+				Namespace: request.Namespace,
+			}
+			deployed, err := reconciler.getDeployedResources(instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			_, err = reconciler.reconcileResources(instance, nil, deployed)
 			return reconcile.Result{}, err
 		}
-	}
-	requestedResources := []resource.KubernetesResource{}
-
-	if crDeleted {
-		deployed, err := reconciler.getDeployedResources(instance)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		_, err = reconciler.reconcileResources(instance, requestedResources, deployed)
+		// Error reading the object - requeue the request.
+		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
 
@@ -138,7 +130,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	//With route hostnames now available, set remaining environment configuration:
 	env = reconciler.setEnvironmentProperties(instance, env, deployedRoutes)
 	//Create a list of objects that should be deployed
-	requestedResources = reconciler.getKubernetesResources(instance, env)
+	requestedResources := reconciler.getKubernetesResources(instance, env)
 	for index := range requestedResources {
 		if isNamespaced(requestedResources[index]) {
 			requestedResources[index].SetNamespace(instance.Namespace)
