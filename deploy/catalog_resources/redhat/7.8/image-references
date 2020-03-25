@@ -36,10 +36,6 @@ spec:
     name: rhpam-7-businesscentral-monitoring-rhel8-container
   - from:
       kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
-    name: rhpam-7-process-migration-rhel8-container
-  - from:
-      kind: DockerImage
       name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
     name: rhpam-7-smartrouter-rhel8-container
   - from:
@@ -72,10 +68,6 @@ spec:
     name: rhpam-7-businesscentral-monitoring-rhel8-container
   - from:
       kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
-    name: rhpam-7-process-migration-rhel8-container
-  - from:
-      kind: DockerImage
       name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
     name: rhpam-7-smartrouter-rhel8-container
   - from:
@@ -106,10 +98,6 @@ spec:
       kind: DockerImage
       name: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.6.0
     name: rhpam-7-businesscentral-monitoring-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.6.0
-    name: rhpam-7-process-migration-rhel8-container
   - from:
       kind: DockerImage
       name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.6.0
