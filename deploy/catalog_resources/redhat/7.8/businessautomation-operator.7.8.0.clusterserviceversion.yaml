@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
-    createdAt: "2020-03-17 16:53:43"
+    createdAt: "2020-03-25 15:21:10"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -183,8 +183,6 @@ spec:
                   value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.8.0
                 - name: PAM_BC_MONITORING_IMAGE_7.8.0
                   value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
-                - name: PAM_PROCESS_MIGRATION_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
                 - name: PAM_SMARTROUTER_IMAGE_7.8.0
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
                 - name: OSE_CLI_IMAGE_7.8.0
@@ -211,8 +209,6 @@ spec:
                   value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.0
                 - name: PAM_BC_MONITORING_IMAGE_7.7.0
                   value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
-                - name: PAM_PROCESS_MIGRATION_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
                 - name: PAM_SMARTROUTER_IMAGE_7.7.0
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
                 - name: OSE_CLI_IMAGE_7.7.0
@@ -418,8 +414,6 @@ spec:
     name: rhpam-businesscentral-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
     name: rhpam-businesscentral-monitoring-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
-    name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
     name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
@@ -436,8 +430,6 @@ spec:
     name: rhpam-businesscentral-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
     name: rhpam-businesscentral-monitoring-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
-    name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
     name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/openshift3/oauth-proxy:v3.11
