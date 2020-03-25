@@ -79,8 +79,6 @@ spec:
           value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.0
         - name: PAM_BC_MONITORING_IMAGE_7.7.0
           value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
-        - name: PAM_PROCESS_MIGRATION_IMAGE_7.7.0
-          value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.7.0
         - name: PAM_SMARTROUTER_IMAGE_7.7.0
           value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
         - name: OSE_CLI_IMAGE_7.7.0
