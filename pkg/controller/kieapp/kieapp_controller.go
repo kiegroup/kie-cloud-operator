@@ -3,12 +3,12 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
@@ -73,7 +73,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			log.Info("Resource is being deleted. Reconcile for deletion.")
+			log.Infof("No Custom Resource found named %s. Checking for dependent objects to delete.", request.Name)
 			instance.ObjectMeta = metav1.ObjectMeta{
 				Name:      request.Name,
 				Namespace: request.Namespace,

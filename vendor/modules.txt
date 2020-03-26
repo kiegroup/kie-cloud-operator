@@ -20,7 +20,7 @@ github.com/PuerkitoBio/urlesc
 # github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
 github.com/RHsyseng/console-cr-form/pkg/web
 github.com/RHsyseng/console-cr-form/pkg/web/packrd
-# github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458 => github.com/RHsyseng/operator-utils v0.0.0-20200318230845-8e48081eaa5a
+# github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458 => github.com/RHsyseng/operator-utils v0.0.0-20200324072727-841309f096a1
 github.com/RHsyseng/operator-utils/pkg/logs
 github.com/RHsyseng/operator-utils/pkg/olm
 github.com/RHsyseng/operator-utils/pkg/utils/kubernetes
@@ -541,7 +541,6 @@ sigs.k8s.io/controller-runtime/pkg/manager/signals
 sigs.k8s.io/controller-runtime/pkg/scheme
 sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/controller
-sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
 sigs.k8s.io/controller-runtime/pkg/handler
 sigs.k8s.io/controller-runtime/pkg/reconcile
 sigs.k8s.io/controller-runtime/pkg/source
@@ -559,6 +558,7 @@ sigs.k8s.io/controller-runtime/pkg/recorder
 sigs.k8s.io/controller-runtime/pkg/runtime/inject
 sigs.k8s.io/controller-runtime/pkg/webhook
 sigs.k8s.io/controller-runtime/pkg/runtime/log
+sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
 sigs.k8s.io/controller-runtime/pkg/internal/controller
 sigs.k8s.io/controller-runtime/pkg/predicate
 sigs.k8s.io/controller-runtime/pkg/event
