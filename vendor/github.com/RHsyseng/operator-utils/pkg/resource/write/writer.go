@@ -65,7 +65,7 @@ func (this *resourceWriter) AddResources(resources []resource.KubernetesResource
 		requested := resources[index]
 		if this.ownerRefs != nil {
 			requested.SetOwnerReferences(this.ownerRefs)
-		} else if this.ownerController != nil {
+		} else if this.canSetOwnerRef(requested, this.ownerController) {
 			err := controllerutil.SetControllerReference(this.ownerController, requested, this.scheme)
 			if err != nil {
 				return added, err
@@ -78,6 +78,16 @@ func (this *resourceWriter) AddResources(resources []resource.KubernetesResource
 		added = true
 	}
 	return added, nil
+}
+
+func (this *resourceWriter) canSetOwnerRef(resource metav1.Object, owner metav1.Object) bool {
+	if owner == nil {
+		return false
+	}
+	if resource.GetNamespace() == "" {
+		return owner.GetNamespace() == ""
+	}
+	return owner.GetNamespace() != ""
 }
 
 // UpdateResources finds the updated counterpart for each of the provided resources in the existing array and uses it to set resource version and GVK

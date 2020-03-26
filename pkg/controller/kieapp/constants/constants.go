@@ -118,8 +118,6 @@ const (
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
-
-	ConsoleLinkFinalizer = "finalizer.console.openshift.io"
 )
 
 var Images = []ImageEnv{

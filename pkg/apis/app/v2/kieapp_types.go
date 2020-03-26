@@ -567,7 +567,6 @@ type Condition struct {
 type KieAppStatus struct {
 	Conditions  []Condition          `json:"conditions"`
 	ConsoleHost string               `json:"consoleHost,omitempty"`
-	ConsoleLink string               `json:"consoleLink,omitempty"`
 	Deployments olm.DeploymentStatus `json:"deployments"`
 	Phase       ConditionType        `json:"phase,omitempty"`
 }
