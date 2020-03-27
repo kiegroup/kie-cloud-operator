@@ -77,6 +77,8 @@ clean:
 	rm -rf build/_output \
 		pkg/controller/kieapp/defaults/defaults-packr.go \
 		pkg/controller/kieapp/defaults/packrd \
+		pkg/controller/kieapp/kieapp-packr.go \
+		pkg/controller/kieapp/packrd \
 		pkg/ui/ui-packr.go \
 		pkg/ui/packrd \
 		target/
