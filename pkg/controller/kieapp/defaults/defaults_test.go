@@ -2547,11 +2547,10 @@ func TestEnvCustomImageTag(t *testing.T) {
 	if isTagImage := getImageChangeName(env.SmartRouter.DeploymentConfigs[0]); isTagImage != "" {
 		assert.Equal(t, imageName, isTagImage)
 	}
-	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageURL, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageURL, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageURL, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageURL, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting imagetag in CR overrides env vars
 	imageTag = "1.5"
@@ -2575,10 +2574,10 @@ func TestEnvCustomImageTag(t *testing.T) {
 		assert.Equal(t, imageName, isTagImage)
 	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting image in CR overrides env vars
 	image = "testing-images"
@@ -2602,10 +2601,10 @@ func TestEnvCustomImageTag(t *testing.T) {
 		assert.Equal(t, imageName, isTagImage)
 	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestGitHooks(t *testing.T) {
