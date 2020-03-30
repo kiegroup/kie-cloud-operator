@@ -11,12 +11,29 @@ spec:
     singular: kieapp
   scope: Namespaced
   version: v2
+  additionalPrinterColumns:
+  - name: Version
+    type: string
+    description: The version of the application deployment
+    JSONPath: .spec.version
+  - name: Environment
+    type: string
+    description: The name of the environment used as a baseline
+    JSONPath: .spec.environment
+  - name: Status
+    type: string
+    description: The status of the KieApp deployment
+    JSONPath: .status.phase
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp  
   versions:
     - name: v2
       served: true
       storage: true
       schema:
         openAPIV3Schema:
+          type: object
           required:
             - spec
           properties:
@@ -817,6 +834,7 @@ spec:
       storage: false
       schema:
         openAPIV3Schema:
+          type: object
           required:
             - spec
           properties:
