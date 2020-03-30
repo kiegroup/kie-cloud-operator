@@ -8,11 +8,11 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.7.0"
+	CurrentVersion = "7.7.1"
 	// LastMicroVersion product version supported
-	LastMicroVersion = "7.5.1"
+	LastMicroVersion = "7.6.0"
 	// LastMinorVersion product version supported
-	LastMinorVersion = "7.6.0"
+	LastMinorVersion = "7.7.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -208,16 +208,25 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	LastMicroVersion: {
 		APIVersion:       api.SchemeGroupVersion.Version,
 		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.2",
-	},
-	LastMinorVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
 		BrokerImageTag:   "7.5",
 		DatagridImage:    "datagrid73-openshift",
 		DatagridImageTag: "1.3",
+	},
+	LastMinorVersion: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         Broker75Image,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag,
+		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
 }
 
