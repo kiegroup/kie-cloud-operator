@@ -118,6 +118,9 @@ const (
 	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
+	Datagrid73ImageTag15 = "1.5"
+	Datagrid73ImageURL15 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag15
+
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
@@ -200,8 +203,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		BrokerImageTag:      Broker76ImageTag,
 		BrokerImageURL:      Broker76ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag,
-		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL57ImageURL,
 		MySQLComponent:      MySQL57Component,
