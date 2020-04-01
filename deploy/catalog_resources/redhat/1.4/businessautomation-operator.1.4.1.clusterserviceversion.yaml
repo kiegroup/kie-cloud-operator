@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.7.1
-    createdAt: "2020-03-30 15:29:53"
+    createdAt: "2020-04-01 17:17:26"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -179,7 +179,7 @@ spec:
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.1
                   value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
                 - name: DATAGRID_IMAGE_7.7.1
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
                 - name: BROKER_IMAGE_7.7.1
                   value: registry.redhat.io/amq7/amq-broker:7.5
                 - name: DM_KIESERVER_IMAGE_7.7.0
@@ -330,6 +330,8 @@ spec:
   - image: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
     name: postgresql-10-rhel7
   - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+    name: datagrid73-openshift
+  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
     name: datagrid73-openshift
   - image: registry.redhat.io/amq7/amq-broker:7.5
     name: amq-broker
