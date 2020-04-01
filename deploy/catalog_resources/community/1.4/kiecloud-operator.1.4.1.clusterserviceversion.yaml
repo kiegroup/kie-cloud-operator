@@ -6,8 +6,8 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "false"
-    containerImage: quay.io/kiegroup/kie-cloud-operator:7.8.0
-    createdAt: "2020-04-01 16:16:00"
+    containerImage: quay.io/kiegroup/kie-cloud-operator:1.4.1
+    createdAt: "2020-04-01 17:17:26"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -15,7 +15,7 @@ metadata:
     tectonic-visibility: ocs
   labels:
     operator-kiecloud: "true"
-  name: kiecloud-operator.7.8.0
+  name: kiecloud-operator.1.4.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -119,19 +119,6 @@ spec:
     mediatype: image/svg+xml
   install:
     spec:
-      clusterPermissions:
-      - rules:
-        - apiGroups:
-          - console.openshift.io
-          resources:
-          - consolelinks
-          - consoleyamlsamples
-          verbs:
-          - get
-          - create
-          - update
-          - delete
-        serviceAccountName: kie-cloud-operator
       deployments:
       - name: kie-cloud-operator
         spec:
@@ -169,32 +156,6 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                - name: DM_KIESERVER_IMAGE_7.8.0
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.8.0
-                - name: DM_CONTROLLER_IMAGE_7.8.0
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.8.0
-                - name: DM_DC_IMAGE_7.8.0
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.8.0
-                - name: PAM_KIESERVER_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.8.0
-                - name: PAM_CONTROLLER_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.8.0
-                - name: PAM_BC_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.8.0
-                - name: PAM_BC_MONITORING_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
-                - name: PAM_SMARTROUTER_IMAGE_7.8.0
-                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
-                - name: OSE_CLI_IMAGE_7.8.0
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
-                - name: MYSQL_PROXY_IMAGE_7.8.0
-                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
-                - name: POSTGRESQL_PROXY_IMAGE_7.8.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-                - name: DATAGRID_IMAGE_7.8.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
-                - name: BROKER_IMAGE_7.8.0
-                  value: registry.redhat.io/amq7/amq-broker:7.6
                 - name: DM_KIESERVER_IMAGE_7.7.1
                   value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
                 - name: DM_CONTROLLER_IMAGE_7.7.1
@@ -249,7 +210,7 @@ spec:
                   value: registry.redhat.io/amq7/amq-broker:7.5
                 - name: OAUTH_PROXY_IMAGE
                   value: registry.redhat.io/openshift3/oauth-proxy:v3.11
-                image: quay.io/kiegroup/kie-cloud-operator:7.8.0
+                image: quay.io/kiegroup/kie-cloud-operator:1.4.1
                 imagePullPolicy: Always
                 name: kie-cloud-operator
                 resources: {}
@@ -258,119 +219,17 @@ spec:
       - rules:
         - apiGroups:
           - ""
-          resources:
-          - configmaps
-          - pods
-          - services
-          - serviceaccounts
-          - persistentvolumeclaims
-          - secrets
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - apps
-          resources:
-          - deployments
-          - deployments/finalizers
-          - replicasets
-          - statefulsets
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - apps.openshift.io
-          resources:
-          - deploymentconfigs
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - rbac.authorization.k8s.io
-          resources:
-          - rolebindings
-          - roles
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - route.openshift.io
-          resources:
-          - routes
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - build.openshift.io
-          resources:
-          - buildconfigs
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - image.openshift.io
-          resources:
-          - imagestreams
-          - imagestreamtags
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - app.kiegroup.org
           resources:
-          - kieapps
-          - kieapps/finalizers
+          - '*'
           verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
+          - '*'
         - apiGroups:
           - monitoring.coreos.com
           resources:
@@ -383,11 +242,15 @@ spec:
           resources:
           - clusterserviceversions
           verbs:
-          - get
-          - list
-          - patch
+          - '*'
+        - apiGroups:
+          - apps
+          resourceNames:
+          - kie-cloud-operator
+          resources:
+          - deployments/finalizers
+          verbs:
           - update
-          - watch
         serviceAccountName: kie-cloud-operator
     strategy: deployment
   installModes:
@@ -411,12 +274,12 @@ spec:
   - operator
   labels:
     alm-owner-kiecloud: kiecloud-operator
-    operated-by: kiecloud-operator.7.8.0
+    operated-by: kiecloud-operator.1.4.1
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
   - name: Documentation
-    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.8/#category-deploying-red-hat-process-automation-manager-on-openshift
+    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.7/#category-deploying-red-hat-process-automation-manager-on-openshift
   maintainers:
   - email: bsig-cloud@redhat.com
     name: Red Hat
@@ -424,24 +287,8 @@ spec:
   provider:
     name: Red Hat
   relatedImages:
-  - image: quay.io/kiegroup/kie-cloud-operator:7.8.0
+  - image: quay.io/kiegroup/kie-cloud-operator:1.4.1
     name: kie-cloud-operator
-  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.8.0
-    name: rhdm-kieserver-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.8.0
-    name: rhdm-controller-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.8.0
-    name: rhdm-decisioncentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.8.0
-    name: rhpam-kieserver-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.8.0
-    name: rhpam-controller-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.8.0
-    name: rhpam-businesscentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
-    name: rhpam-businesscentral-monitoring-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
-    name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
     name: rhdm-kieserver-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.1
@@ -488,11 +335,9 @@ spec:
     name: datagrid73-openshift
   - image: registry.redhat.io/amq7/amq-broker:7.5
     name: amq-broker
-  - image: registry.redhat.io/amq7/amq-broker:7.6
-    name: amq-broker
-  replaces: kiecloud-operator.1.4.1
+  replaces: kiecloud-operator.1.4.0
   selector:
     matchLabels:
       alm-owner-kiecloud: kiecloud-operator
-      operated-by: kiecloud-operator.7.8.0
-  version: 7.8.0
+      operated-by: kiecloud-operator.1.4.1
+  version: 1.4.1

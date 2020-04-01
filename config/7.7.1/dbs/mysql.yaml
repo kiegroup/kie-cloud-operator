@@ -15,9 +15,9 @@ servers:
                       "/bin/bash",
                       "-c",
                       ">-
-                        replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-mysql; replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
+                       replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-mysql; replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
-                  image: registry.redhat.io/openshift3/ose-cli:v3.11
+                  image: "[[$.Constants.OseCliImageURL]]"
                   imagePullPolicy: IfNotPresent
                   name: "[[.KieName]]-mysql-init"
                   terminationMessagePolicy: FallbackToLogsOnError
@@ -66,15 +66,6 @@ servers:
           strategy:
             type: Recreate
           triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "[[.KieName]]-mysql"
-                from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "mysql:5.7"
             - type: ConfigChange
           replicas: 1
           selector:
@@ -91,7 +82,7 @@ servers:
               terminationGracePeriodSeconds: 60
               containers:
                 - name: "[[.KieName]]-mysql"
-                  image: mysql
+                  image: "[[$.Constants.MySQLImageURL]]"
                   imagePullPolicy: Always
                   livenessProbe:
                     tcpSocket:

@@ -2523,37 +2523,8 @@ func TestEnvCustomImageTag(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Spec.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
-	// test that env var works with older version
-	cr.Spec.UseImageTags = false
-	cr.Spec.Version = constants.PriorVersion2
-	imageTag = cr.Spec.Version
-	imageName = image + ":" + imageTag
-	imageURL = "registry.redhat.io/openshift/" + imageName
-	os.Setenv(envConstants.App.ImageVar+cr.Spec.Version, imageURL)
-	os.Setenv(constants.DmKieImageVar+cr.Spec.Version, imageURL)
-	os.Setenv(constants.PamSmartRouterVar+cr.Spec.Version, imageURL)
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
-	if isTagImage := getImageChangeName(env.Console.DeploymentConfigs[0]); isTagImage != "" {
-		assert.Equal(t, imageName, isTagImage)
-	}
-	if isTagImage := getImageChangeName(env.Servers[0].DeploymentConfigs[0]); isTagImage != "" {
-		assert.Equal(t, imageName, isTagImage)
-	}
-	if isTagImage := getImageChangeName(env.Servers[1].DeploymentConfigs[0]); isTagImage != "" {
-		assert.Equal(t, imageName, isTagImage)
-	}
-	if isTagImage := getImageChangeName(env.SmartRouter.DeploymentConfigs[0]); isTagImage != "" {
-		assert.Equal(t, imageName, isTagImage)
-	}
-	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
 	// test that setting imagetag in CR overrides env vars
+	cr.Spec.UseImageTags = false
 	imageTag = "1.5"
 	imageName = image + ":" + imageTag
 	cr.Spec.Objects.Console.ImageTag = imageTag
@@ -2575,10 +2546,10 @@ func TestEnvCustomImageTag(t *testing.T) {
 		assert.Equal(t, imageName, isTagImage)
 	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting image in CR overrides env vars
 	image = "testing-images"
@@ -2602,10 +2573,10 @@ func TestEnvCustomImageTag(t *testing.T) {
 		assert.Equal(t, imageName, isTagImage)
 	}
 	// as versions progress and configs evolve, the following 4 tests should change from "imageName/image" to "imageURL" as the above tests do
-	assert.Equal(t, image, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, imageName, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, image, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, imageName, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestGitHooks(t *testing.T) {

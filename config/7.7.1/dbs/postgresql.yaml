@@ -15,9 +15,9 @@ servers:
                       "/bin/bash",
                       "-c",
                       ">-
-                        replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
+                       replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
-                  image: registry.redhat.io/openshift3/ose-cli:v3.11
+                  image: "[[$.Constants.OseCliImageURL]]"
                   imagePullPolicy: IfNotPresent
                   name: "[[.KieName]]-postgresql-init"
                   terminationMessagePolicy: FallbackToLogsOnError
@@ -66,15 +66,6 @@ servers:
           strategy:
             type: Recreate
           triggers:
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "[[.KieName]]-postgresql"
-                from:
-                  kind: ImageStreamTag
-                  namespace: "openshift"
-                  name: "postgresql:10"
             - type: ConfigChange
           replicas: 1
           selector:
@@ -90,7 +81,7 @@ servers:
             spec:
               containers:
                 - name: "[[.KieName]]-postgresql"
-                  image: postgresql
+                  image: "[[$.Constants.PostgreSQLImageURL]]"
                   imagePullPolicy: IfNotPresent
                   livenessProbe:
                     exec:
