@@ -377,9 +377,23 @@ func main() {
 			},
 		})
 		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.Datagrid73Component,
+			From: &corev1.ObjectReference{
+				Name: constants.Datagrid73ImageURL15,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
 			Name: constants.Broker75Component,
 			From: &corev1.ObjectReference{
 				Name: constants.Broker75ImageURL,
+				Kind: "DockerImage",
+			},
+		})
+		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+			Name: constants.Broker75Component,
+			From: &corev1.ObjectReference{
+				Name: constants.Broker76ImageURL,
 				Kind: "DockerImage",
 			},
 		})
@@ -390,7 +404,9 @@ func main() {
 		relatedImages = append(relatedImages, getRelatedImage(constants.MySQL57ImageURL))
 		relatedImages = append(relatedImages, getRelatedImage(constants.PostgreSQL10ImageURL))
 		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL15))
 		relatedImages = append(relatedImages, getRelatedImage(constants.Broker75ImageURL))
+		relatedImages = append(relatedImages, getRelatedImage(constants.Broker76ImageURL))
 
 		if logs.GetBoolEnv("DIGESTS") {
 			url := "https://" + constants.ImageRegistry
