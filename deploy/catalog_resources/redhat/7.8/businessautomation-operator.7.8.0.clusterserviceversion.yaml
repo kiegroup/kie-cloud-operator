@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
-    createdAt: "2020-04-01 17:24:33"
+    createdAt: "2020-04-01 16:16:00"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -195,6 +195,32 @@ spec:
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
                 - name: BROKER_IMAGE_7.8.0
                   value: registry.redhat.io/amq7/amq-broker:7.6
+                - name: DM_KIESERVER_IMAGE_7.7.1
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
+                - name: DM_CONTROLLER_IMAGE_7.7.1
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.1
+                - name: DM_DC_IMAGE_7.7.1
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.1
+                - name: PAM_KIESERVER_IMAGE_7.7.1
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.1
+                - name: PAM_CONTROLLER_IMAGE_7.7.1
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.1
+                - name: PAM_BC_IMAGE_7.7.1
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.1
+                - name: PAM_BC_MONITORING_IMAGE_7.7.1
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.1
+                - name: PAM_SMARTROUTER_IMAGE_7.7.1
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.1
+                - name: OSE_CLI_IMAGE_7.7.1
+                  value: registry.redhat.io/openshift3/ose-cli:v3.11
+                - name: MYSQL_PROXY_IMAGE_7.7.1
+                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+                - name: POSTGRESQL_PROXY_IMAGE_7.7.1
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                - name: DATAGRID_IMAGE_7.7.1
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
+                - name: BROKER_IMAGE_7.7.1
+                  value: registry.redhat.io/amq7/amq-broker:7.5
                 - name: DM_KIESERVER_IMAGE_7.7.0
                   value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
                 - name: DM_CONTROLLER_IMAGE_7.7.0
@@ -416,6 +442,22 @@ spec:
     name: rhpam-businesscentral-monitoring-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
     name: rhpam-smartrouter-rhel8
+  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
+    name: rhdm-kieserver-rhel8
+  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.1
+    name: rhdm-controller-rhel8
+  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.1
+    name: rhdm-decisioncentral-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.1
+    name: rhpam-kieserver-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.1
+    name: rhpam-controller-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.1
+    name: rhpam-businesscentral-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.1
+    name: rhpam-businesscentral-monitoring-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.1
+    name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
     name: rhdm-kieserver-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.0
@@ -448,7 +490,7 @@ spec:
     name: amq-broker
   - image: registry.redhat.io/amq7/amq-broker:7.6
     name: amq-broker
-  replaces: businessautomation-operator.1.4.0
+  replaces: businessautomation-operator.1.4.1
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator

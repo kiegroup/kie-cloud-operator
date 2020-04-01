@@ -10,9 +10,9 @@ const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.8.0"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.7.0"
+	PriorVersion1 = "7.7.1"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.6.0"
+	PriorVersion2 = "7.7.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -219,8 +219,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		BrokerImageTag:      Broker75ImageTag,
 		BrokerImageURL:      Broker75ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag,
-		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL57ImageURL,
 		MySQLComponent:      MySQL57Component,
@@ -228,11 +228,20 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
 	PriorVersion2: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag,
+		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
 }
 

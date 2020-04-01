@@ -40,6 +40,38 @@ spec:
     name: rhpam-7-smartrouter-rhel8-container
   - from:
       kind: DockerImage
+      name: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
+    name: rhdm-7-kieserver-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.1
+    name: rhdm-7-controller-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.1
+    name: rhdm-7-decisioncentral-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.1
+    name: rhpam-7-kieserver-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.1
+    name: rhpam-7-controller-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.1
+    name: rhpam-7-businesscentral-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.1
+    name: rhpam-7-businesscentral-monitoring-rhel8-container
+  - from:
+      kind: DockerImage
+      name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.1
+    name: rhpam-7-smartrouter-rhel8-container
+  - from:
+      kind: DockerImage
       name: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
     name: rhdm-7-kieserver-rhel8-container
   - from:
@@ -69,38 +101,6 @@ spec:
   - from:
       kind: DockerImage
       name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
-    name: rhpam-7-smartrouter-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.6.0
-    name: rhdm-7-kieserver-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.6.0
-    name: rhdm-7-controller-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.6.0
-    name: rhdm-7-decisioncentral-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.6.0
-    name: rhpam-7-kieserver-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.6.0
-    name: rhpam-7-controller-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.6.0
-    name: rhpam-7-businesscentral-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.6.0
-    name: rhpam-7-businesscentral-monitoring-rhel8-container
-  - from:
-      kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.6.0
     name: rhpam-7-smartrouter-rhel8-container
   - from:
       kind: DockerImage
