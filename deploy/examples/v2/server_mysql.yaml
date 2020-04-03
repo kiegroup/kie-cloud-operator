@@ -10,4 +10,8 @@ spec:
         database:
           type: mysql
           size: 30Gi
-
+      - deployments: 1
+        database:
+          type: mysql
+          size: 30Gi
+          storageClassName: gold

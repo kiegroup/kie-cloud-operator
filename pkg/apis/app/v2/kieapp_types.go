@@ -189,12 +189,13 @@ type JvmObject struct {
 
 // KieAppObject Generic object definition
 type KieAppObject struct {
-	Env            []corev1.EnvVar             `json:"env,omitempty"`
-	Replicas       *int32                      `json:"replicas,omitempty"`
-	Resources      corev1.ResourceRequirements `json:"resources"`
-	KeystoreSecret string                      `json:"keystoreSecret,omitempty"`
-	Image          string                      `json:"image,omitempty"`
-	ImageTag       string                      `json:"imageTag,omitempty"`
+	Env              []corev1.EnvVar             `json:"env,omitempty"`
+	Replicas         *int32                      `json:"replicas,omitempty"`
+	Resources        corev1.ResourceRequirements `json:"resources"`
+	KeystoreSecret   string                      `json:"keystoreSecret,omitempty"`
+	Image            string                      `json:"image,omitempty"`
+	ImageTag         string                      `json:"imageTag,omitempty"`
+	StorageClassName string                      `json:"storageClassName,omitempty"`
 }
 
 type Environment struct {
@@ -347,9 +348,10 @@ const (
 // DatabaseObject Defines how a KieServer will manage and create a new Database
 // or connect to an existing one
 type DatabaseObject struct {
-	Type           DatabaseType            `json:"type,omitempty"`
-	Size           string                  `json:"size,omitempty"`
-	ExternalConfig *ExternalDatabaseObject `json:"externalConfig,omitempty"`
+	Type             DatabaseType            `json:"type,omitempty"`
+	Size             string                  `json:"size,omitempty"`
+	StorageClassName string                  `json:"storageClassName,omitempty"`
+	ExternalConfig   *ExternalDatabaseObject `json:"externalConfig,omitempty"`
 }
 
 // ExternalDatabaseObject configuration definition of an external database
@@ -409,33 +411,35 @@ type TemplateConstants struct {
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	OmitImageStream bool           `json:"omitImageStream"`
-	SSOAuthClient   SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name            string         `json:"name,omitempty"`
-	Replicas        int32          `json:"replicas,omitempty"`
-	Image           string         `json:"image,omitempty"`
-	ImageTag        string         `json:"imageTag,omitempty"`
-	ImageURL        string         `json:"imageURL,omitempty"`
-	KeystoreSecret  string         `json:"keystoreSecret,omitempty"`
-	GitHooks        GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm             JvmObject      `json:"jvm,omitempty"`
+	OmitImageStream  bool           `json:"omitImageStream"`
+	SSOAuthClient    SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name             string         `json:"name,omitempty"`
+	Replicas         int32          `json:"replicas,omitempty"`
+	Image            string         `json:"image,omitempty"`
+	ImageTag         string         `json:"imageTag,omitempty"`
+	ImageURL         string         `json:"imageURL,omitempty"`
+	KeystoreSecret   string         `json:"keystoreSecret,omitempty"`
+	GitHooks         GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm              JvmObject      `json:"jvm,omitempty"`
+	StorageClassName string         `json:"storageClassName,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	OmitImageStream bool                   `json:"omitImageStream"`
-	KieName         string                 `json:"kieName,omitempty"`
-	KieServerID     string                 `json:"kieServerID,omitempty"`
-	Replicas        int32                  `json:"replicas,omitempty"`
-	SSOAuthClient   SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From            corev1.ObjectReference `json:"from,omitempty"`
-	ImageURL        string                 `json:"imageURL,omitempty"`
-	Build           BuildTemplate          `json:"build,omitempty"`
-	KeystoreSecret  string                 `json:"keystoreSecret,omitempty"`
-	Database        DatabaseObject         `json:"database,omitempty"`
-	Jms             KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter     SmartRouterObject      `json:"smartRouter,omitempty"`
-	Jvm             JvmObject              `json:"jvm,omitempty"`
+	OmitImageStream  bool                   `json:"omitImageStream"`
+	KieName          string                 `json:"kieName,omitempty"`
+	KieServerID      string                 `json:"kieServerID,omitempty"`
+	Replicas         int32                  `json:"replicas,omitempty"`
+	SSOAuthClient    SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From             corev1.ObjectReference `json:"from,omitempty"`
+	ImageURL         string                 `json:"imageURL,omitempty"`
+	Build            BuildTemplate          `json:"build,omitempty"`
+	KeystoreSecret   string                 `json:"keystoreSecret,omitempty"`
+	Database         DatabaseObject         `json:"database,omitempty"`
+	Jms              KieAppJmsObject        `json:"jms,omitempty"`
+	SmartRouter      SmartRouterObject      `json:"smartRouter,omitempty"`
+	Jvm              JvmObject              `json:"jvm,omitempty"`
+	StorageClassName string                 `json:"storageClassName,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
@@ -448,6 +452,7 @@ type SmartRouterTemplate struct {
 	Image            string `json:"image,omitempty"`
 	ImageTag         string `json:"imageTag,omitempty"`
 	ImageURL         string `json:"imageURL,omitempty"`
+	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type

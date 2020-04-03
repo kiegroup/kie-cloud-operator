@@ -13,6 +13,9 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteOnce
         resources:

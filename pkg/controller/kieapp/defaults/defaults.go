@@ -6,11 +6,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/logs"
-	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/RHsyseng/operator-utils/pkg/logs"
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
@@ -253,6 +254,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	template.Replicas = replicas
 	template.Name = envConstants.App.Prefix
 	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Spec.Version
+	template.StorageClassName = cr.Spec.Objects.Console.StorageClassName
 
 	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Spec.Version); exists && !cr.Spec.UseImageTags {
 		template.ImageURL = val
@@ -305,6 +307,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		}
 
 		template.UseExternalRoute = cr.Spec.Objects.SmartRouter.UseExternalRoute
+		template.StorageClassName = cr.Spec.Objects.SmartRouter.StorageClassName
 
 		// Set replicas
 		envReplicas := api.Replicas{}
@@ -422,10 +425,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 			usedNames[name] = true
 			template := api.ServerTemplate{
-				KieName:        name,
-				KieServerID:    name,
-				Build:          getBuildConfig(product, cr, serverSet),
-				KeystoreSecret: serverSet.KeystoreSecret,
+				KieName:          name,
+				KieServerID:      name,
+				Build:            getBuildConfig(product, cr, serverSet),
+				KeystoreSecret:   serverSet.KeystoreSecret,
+				StorageClassName: serverSet.StorageClassName,
 			}
 			if serverSet.ID != "" {
 				template.KieServerID = serverSet.ID

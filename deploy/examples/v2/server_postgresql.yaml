@@ -10,3 +10,8 @@ spec:
         database:
           type: postgresql
           size: 30Gi
+      - deployments: 1
+        database:
+          type: postgresql
+          size: 30Gi
+          storageClassName: gold
