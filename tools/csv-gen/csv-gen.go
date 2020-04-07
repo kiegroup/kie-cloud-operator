@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/blang/semver"
 	"github.com/heroku/docker-registry-client/registry"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -291,9 +291,6 @@ func main() {
 		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
 		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
 
-		imageName, _, _ := defaults.GetImage(deployment.Spec.Template.Spec.Containers[0].Image)
-		relatedImages := []image{}
-
 		if csv.OperatorName == "kie-cloud-operator" {
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
@@ -301,112 +298,40 @@ func main() {
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
-		relatedImages = append(relatedImages, image{Name: imageName, Image: deployment.Spec.Template.Spec.Containers[0].Image})
 
 		// create image-references file for automated ART digest find/replace
-		imageRef := constants.ImageRef{
+		imageRef := &constants.ImageRef{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: oimagev1.GroupVersion.String(),
 				Kind:       "ImageStream",
 			},
-			Spec: constants.ImageRefSpec{
-				Tags: []constants.ImageRefTag{
-					{
-						// Needs to match the component name for upstream and downstream.
-						Name: "rhpam-7-rhel8-operator-container",
-						From: &corev1.ObjectReference{
-							// Needs to match the image that is in your CSV that you want to replace.
-							Name: deployment.Spec.Template.Spec.Containers[0].Image,
-							Kind: "DockerImage",
-						},
-					},
-				},
-			},
 		}
+		relatedImages := []image{}
+		relatedImages = addRefRelatedImages(deployment.Spec.Template.Spec.Containers[0].Image, "rhpam-7"+constants.RhelVersion+"-operator-container", imageRef, relatedImages)
+
 		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 		for _, imageVersion := range constants.SupportedVersions {
 			for _, i := range constants.Images {
-				imageURL := i.Registry + ":" + imageVersion
-				imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-					Name: i.Component,
-					From: &corev1.ObjectReference{
-						Name: imageURL,
-						Kind: "DockerImage",
-					},
-				})
-				if imageVersion >= "7.7.0" {
-					relatedImages = append(relatedImages, getRelatedImage(imageURL))
-				}
+				relatedImages = addRefRelatedImages(i.Registry+":"+imageVersion, i.Component, imageRef, relatedImages)
 			}
 		}
 
-		// add ancillary images to image-references file
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.OauthComponent,
-			From: &corev1.ObjectReference{
-				Name: constants.OauthImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.OseCli311Component,
-			From: &corev1.ObjectReference{
-				Name: constants.OseCli311ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.MySQL57Component,
-			From: &corev1.ObjectReference{
-				Name: constants.MySQL57ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.PostgreSQL10Component,
-			From: &corev1.ObjectReference{
-				Name: constants.PostgreSQL10ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Datagrid73Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Datagrid73ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Datagrid73Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Datagrid73ImageURL15,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Broker75Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Broker75ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Broker75Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Broker76ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-
 		// add ancillary images to relatedImages
-		relatedImages = append(relatedImages, getRelatedImage(constants.OauthImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.OseCli311ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.MySQL57ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.PostgreSQL10ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL15))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Broker75ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Broker76ImageURL))
+		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
+		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
+		for _, ocpVersion := range constants.SupportedOcpVersions {
+			if ocpVersion > "4" {
+				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
+			}
+		}
+		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker75ImageURL, constants.BrokerComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 
 		if logs.GetBoolEnv("DIGESTS") {
 			url := "https://" + constants.ImageRegistry
@@ -531,6 +456,17 @@ func getRelatedImage(imageURL string) image {
 		Name:  imageName,
 		Image: imageURL,
 	}
+}
+
+func addRefRelatedImages(url, component string, imageRef *constants.ImageRef, relatedImages []image) []image {
+	imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+		Name: component,
+		From: &corev1.ObjectReference{
+			Name: url,
+			Kind: "DockerImage",
+		},
+	})
+	return append(relatedImages, getRelatedImage(url))
 }
 
 // fileExists checks if a file exists and is not a directory before we

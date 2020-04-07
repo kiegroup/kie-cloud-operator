@@ -1,7 +1,6 @@
 package components
 
 import (
-	consolev1 "github.com/openshift/api/console/v1"
 	"sort"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
@@ -114,44 +114,53 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 	for _, imageVersion := range constants.SupportedVersions {
-		if imageVersion >= "7.7.0" {
-			for _, i := range constants.Images {
-				env := corev1.EnvVar{
-					Name:  i.Var + imageVersion,
-					Value: i.Registry + ":" + imageVersion,
-				}
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, env)
-			}
-			if versionConstants, found := constants.VersionConstants[imageVersion]; found {
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name:  constants.OseCliVar + imageVersion,
-					Value: versionConstants.OseCliImageURL,
-				})
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name:  constants.MySQLVar + imageVersion,
-					Value: versionConstants.MySQLImageURL,
-				})
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name:  constants.PostgreSQLVar + imageVersion,
-					Value: versionConstants.PostgreSQLImageURL,
-				})
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name:  constants.DatagridVar + imageVersion,
-					Value: versionConstants.DatagridImageURL,
-				})
-				deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name:  constants.BrokerVar + imageVersion,
-					Value: versionConstants.BrokerImageURL,
-				})
-			}
+		for _, i := range constants.Images {
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  i.Var + imageVersion,
+				Value: i.Registry + ":" + imageVersion,
+			})
+		}
+		if versionConstants, found := constants.VersionConstants[imageVersion]; found {
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.OseCliVar + imageVersion,
+				Value: versionConstants.OseCliImageURL,
+			})
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.MySQLVar + imageVersion,
+				Value: versionConstants.MySQLImageURL,
+			})
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.PostgreSQLVar + imageVersion,
+				Value: versionConstants.PostgreSQLImageURL,
+			})
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.DatagridVar + imageVersion,
+				Value: versionConstants.DatagridImageURL,
+			})
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.BrokerVar + imageVersion,
+				Value: versionConstants.BrokerImageURL,
+			})
 		}
 	}
-	// add oauth-proxy image reference
+	// add oauth-proxy image references
 	deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-		Name:  constants.OauthVar,
-		Value: constants.OauthImageURL,
+		Name:  constants.OauthVar + "LATEST",
+		Value: constants.Oauth4ImageLatestURL,
 	})
-	//
+	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
+	for _, ocpVersion := range constants.SupportedOcpVersions {
+		if strings.Split(ocpVersion, ".")[0] == "4" {
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  constants.OauthVar + ocpVersion,
+				Value: constants.Oauth4ImageURL + ":" + ocpVersion,
+			})
+		}
+	}
+	deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  constants.OauthVar + "3",
+		Value: constants.Oauth3ImageLatestURL,
+	})
 
 	return deployment
 }

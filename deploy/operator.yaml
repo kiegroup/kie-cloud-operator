@@ -115,8 +115,16 @@ spec:
           value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
         - name: BROKER_IMAGE_7.7.0
           value: registry.redhat.io/amq7/amq-broker:7.5
-        - name: OAUTH_PROXY_IMAGE
-          value: registry.redhat.io/openshift3/oauth-proxy:v3.11
+        - name: OAUTH_PROXY_IMAGE_LATEST
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+        - name: OAUTH_PROXY_IMAGE_4.3
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+        - name: OAUTH_PROXY_IMAGE_4.2
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+        - name: OAUTH_PROXY_IMAGE_4.1
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+        - name: OAUTH_PROXY_IMAGE_3
+          value: registry.redhat.io/openshift3/oauth-proxy:latest
         image: quay.io/kiegroup/kie-cloud-operator:7.8.0
         imagePullPolicy: Always
         name: kie-cloud-operator

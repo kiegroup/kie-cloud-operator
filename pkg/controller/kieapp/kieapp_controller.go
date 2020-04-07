@@ -41,7 +41,10 @@ var log = logs.GetLogger("kieapp.controller")
 
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
-	Service kubernetes.PlatformService
+	Service         kubernetes.PlatformService
+	OcpVersion      string
+	OcpVersionMajor string
+	OcpVersionMinor string
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read

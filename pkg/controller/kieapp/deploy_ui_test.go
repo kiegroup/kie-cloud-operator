@@ -24,7 +24,7 @@ import (
 )
 
 func TestUpdateLink(t *testing.T) {
-	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
+	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{}, &corev1.ConfigMap{})
 
 	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
 	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
