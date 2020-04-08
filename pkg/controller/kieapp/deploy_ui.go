@@ -49,7 +49,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
 	image := getImage(operator)
-	pod := getPod(namespace, image, sa.Name, operator)
+	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersionMajor, reconciler.OcpVersionMinor, operator)
 	service := getService(namespace)
 	route := getRoute(namespace)
 	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
@@ -61,6 +61,11 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
 	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
+	if reconciler.OcpVersionMajor+"."+reconciler.OcpVersionMinor >= "4.2" {
+		if _, err = writer.AddResources([]resource.KubernetesResource{getConfigMap(namespace)}); err != nil {
+			log.Warnf("Got error applying changes %v", err)
+		}
+	}
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
 		if !delta.HasChanges() {
@@ -159,12 +164,12 @@ func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1al
 	return nil
 }
 
-func getPod(namespace string, image string, sa string, operator *appsv1.Deployment) *corev1.Pod {
+func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.Deployment) *corev1.Pod {
 	labels := map[string]string{
 		"app":  operatorName,
 		"name": name,
 	}
-	volume := corev1.Volume{Name: "proxy-tls"}
+	volume := corev1.Volume{Name: operatorName + "-proxy-tls"}
 	volume.Secret = &corev1.SecretVolumeSource{SecretName: volume.Name}
 	sar, err := json.Marshal(map[string]string{
 		"name":      name,
@@ -180,14 +185,23 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 		debug = constants.DebugTrue
 	}
 
-	oauthImage := constants.OauthImageURL
-	if val, exists := os.LookupEnv(constants.OauthVar); exists {
+	// set oauth image by ocp version, default to latest available
+	oauthImage := constants.Oauth4ImageLatestURL
+	if val, exists := os.LookupEnv(constants.OauthVar + ocpMajor + "." + ocpMinor); exists {
 		oauthImage = val
+	} else if val, exists := os.LookupEnv(constants.OauthVar + "LATEST"); exists {
+		oauthImage = val
+	}
+	if ocpMajor == "3" {
+		oauthImage = constants.Oauth3ImageLatestURL
+		if val, exists := os.LookupEnv(constants.OauthVar + ocpMajor); exists {
+			oauthImage = val
+		}
 	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
 	httpsPort := int32(8443)
-	return &corev1.Pod{
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -209,6 +223,7 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 						"--provider=openshift",
 						sarString,
 						fmt.Sprintf("--openshift-service-account=%s", sa),
+						"--openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
 						"--tls-cert=/etc/tls/private/tls.crt",
 						"--tls-key=/etc/tls/private/tls.key",
 						"--cookie-secret=SECRET",
@@ -249,6 +264,20 @@ func getPod(namespace string, image string, sa string, operator *appsv1.Deployme
 			},
 		},
 	}
+	if ocpMajor+"."+ocpMinor >= "4.2" {
+		caVolume := corev1.Volume{
+			Name: operatorName + "-trusted-cabundle",
+		}
+		caVolume.ConfigMap = &corev1.ConfigMapVolumeSource{
+			Items: []corev1.KeyToPath{{Key: "ca-bundle.crt", Path: "ca-bundle.crt"}},
+		}
+		caVolume.ConfigMap.Name = caVolume.Name
+		pod.Spec.Volumes = append(pod.Spec.Volumes, caVolume)
+		mountPath := "/etc/pki/ca-trust/extracted/crt"
+		pod.Spec.Containers[0].Args = append(pod.Spec.Containers[0].Args, "--openshift-ca="+mountPath+"/"+caVolume.ConfigMap.Items[0].Key)
+		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: caVolume.Name, MountPath: mountPath, ReadOnly: true})
+	}
+	return pod
 }
 
 func getImage(operator *appsv1.Deployment) string {
@@ -266,7 +295,7 @@ func getService(namespace string) *corev1.Service {
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				"service.alpha.openshift.io/serving-cert-secret-name": "proxy-tls",
+				"service.beta.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls",
 			},
 			Labels: labels,
 		},
@@ -302,6 +331,20 @@ func getRoute(namespace string) *routev1.Route {
 			TLS: &routev1.TLSConfig{
 				Termination: routev1.TLSTerminationReencrypt,
 			},
+		},
+	}
+}
+
+func getConfigMap(namespace string) *corev1.ConfigMap {
+	labels := map[string]string{
+		"app": operatorName,
+		"config.openshift.io/inject-trusted-cabundle": "true",
+	}
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      operatorName + "-trusted-cabundle",
+			Namespace: namespace,
+			Labels:    labels,
 		},
 	}
 }

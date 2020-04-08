@@ -18,6 +18,9 @@ const (
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
+// SupportedOcpVersions - Supported OpenShift minor versions
+var SupportedOcpVersions = []string{"4.3", "4.2", "4.1", "3.11"}
+
 const (
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
@@ -87,9 +90,11 @@ const (
 	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
 	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
 
-	OauthVar       = "OAUTH_PROXY_IMAGE"
-	OauthImageURL  = ImageRegistry + "/openshift3/oauth-proxy:v3.11"
-	OauthComponent = "golang-github-openshift-oauth-proxy-container"
+	OauthVar             = "OAUTH_PROXY_IMAGE_"
+	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
+	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
+	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
+	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
 
 	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
@@ -103,11 +108,11 @@ const (
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
 	OseCli311Component = "openshift-enterprise-cli-container"
 
-	BrokerVar         = "BROKER_IMAGE_"
-	BrokerImage       = "amq-broker"
-	Broker75ImageTag  = "7.5"
-	Broker75ImageURL  = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
-	Broker75Component = "amq-broker-openshift-container"
+	BrokerComponent  = "amq-broker-openshift-container"
+	BrokerVar        = "BROKER_IMAGE_"
+	BrokerImage      = "amq-broker"
+	Broker75ImageTag = "7.5"
+	Broker75ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
 
 	Broker76ImageTag = "7.6"
 	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
