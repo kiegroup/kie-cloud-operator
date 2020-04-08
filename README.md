@@ -178,6 +178,6 @@ CSV Generation
 make csv
 
 # OR
-# w/ sha lookup/replacement against registry.redhat.io
-DIGESTS=true USER_TOKEN="<username>:<password>" make csv
+# w/ sha lookup/replacement against registry.redhat.io && registry.stage.redhat.io
+DIGESTS=true PROD_USER_TOKEN="<username>:<password>" STAGE_USER_TOKEN="<username>:<password>" make csv
 ```

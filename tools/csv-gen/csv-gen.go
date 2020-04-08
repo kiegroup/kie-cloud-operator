@@ -335,62 +335,36 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 
 		if logs.GetBoolEnv("DIGESTS") {
-			url := "https://" + constants.ImageRegistry
+			// use stage registry for current release image digest population
+			url := "https://registry.stage.redhat.io"
 			if val, ok := os.LookupEnv("REGISTRY"); ok {
 				url = val
 			}
-			username := "" // anonymous
-			password := "" // anonymous
-			if userToken := strings.Split(os.Getenv("USER_TOKEN"), ":"); len(userToken) > 1 {
-				username = userToken[0]
-				password = userToken[1]
+			stageuser := "" // anonymous
+			stagepass := "" // anonymous
+			if userToken := strings.Split(os.Getenv("STAGE_USER_TOKEN"), ":"); len(userToken) > 1 {
+				stageuser = userToken[0]
+				stagepass = userToken[1]
 			}
-			hub, err := registry.New(url, username, password)
-			if err != nil {
-				log.Error(err)
+			stagehub, err := registry.New(url, stageuser, stagepass)
+			if err == nil {
+				imageShaMap = retrieveImageShas(imageRef, imageShaMap, stagehub, true)
 			} else {
-				defaultCheckRedirect := hub.Client.CheckRedirect
-				for _, tagRef := range imageRef.Spec.Tags {
-					hub.Client.CheckRedirect = defaultCheckRedirect
-					if _, ok := imageShaMap[tagRef.From.Name]; !ok {
-						imageShaMap[tagRef.From.Name] = ""
-						imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
-						repo := imageContext + "/" + imageName
-						tags, err := hub.Tags(repo)
-						if err != nil {
-							log.Error(err)
-						}
-						// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
-						hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-							return http.ErrUseLastResponse
-						}
-						if _, exists := shared.Find(tags, imageTag); exists {
-							req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
-							if err != nil {
-								log.Error(err)
-							}
-							req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
-							resp, err := hub.Client.Do(req)
-							if err != nil {
-								log.Error(err)
-							}
-							if resp != nil {
-								defer resp.Body.Close()
-							}
-							if resp.StatusCode == 302 || resp.StatusCode == 301 {
-								digestURL, err := resp.Location()
-								if err != nil {
-									log.Error(err)
-								}
-								if digestURL != nil {
-									if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
-										imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
-									}
-								}
-							}
-						}
-					}
-				}
+				log.Error(err)
+			}
+
+			// use prod registry for prior release and ancillary image digest population
+			produser := "" // anonymous
+			prodpass := "" // anonymous
+			if userToken := strings.Split(os.Getenv("PROD_USER_TOKEN"), ":"); len(userToken) > 1 {
+				produser = userToken[0]
+				prodpass = userToken[1]
+			}
+			prodhub, err := registry.New("https://"+constants.ImageRegistry, produser, prodpass)
+			if err == nil {
+				imageShaMap = retrieveImageShas(imageRef, imageShaMap, prodhub, false)
+			} else {
+				log.Error(err)
 			}
 		}
 		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
@@ -449,6 +423,60 @@ func main() {
 		util.MarshallObject(packagedata, pwr)
 		pwr.Flush()
 	}
+}
+
+func retrieveImageShas(imageRef *constants.ImageRef, imageShaMap map[string]string, registry *registry.Registry, stage bool) map[string]string {
+	defaultCheckRedirect := registry.Client.CheckRedirect
+	for _, tagRef := range imageRef.Spec.Tags {
+		registry.Client.CheckRedirect = defaultCheckRedirect
+		if _, ok := imageShaMap[tagRef.From.Name]; !ok {
+			var retrieve bool
+			imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
+			if !stage ||
+				(stage && imageTag == constants.CurrentVersion &&
+					(strings.Contains(imageContext, constants.RhpamPrefix+"-") || strings.Contains(imageContext, constants.RhdmPrefix+"-"))) {
+				retrieve = true
+			}
+			if retrieve {
+				imageShaMap[tagRef.From.Name] = ""
+				repo := imageContext + "/" + imageName
+				tags, err := registry.Tags(repo)
+				if err != nil {
+					log.Error(err)
+				}
+				// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
+				registry.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				if _, exists := shared.Find(tags, imageTag); exists {
+					req, err := http.NewRequest("GET", registry.URL+"/v2/"+repo+"/manifests/"+imageTag, nil)
+					if err != nil {
+						log.Error(err)
+					}
+					req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+					resp, err := registry.Client.Do(req)
+					if err != nil {
+						log.Error(err)
+					}
+					if resp != nil {
+						defer resp.Body.Close()
+					}
+					if resp.StatusCode == 302 || resp.StatusCode == 301 {
+						digestURL, err := resp.Location()
+						if err != nil {
+							log.Error(err)
+						}
+						if digestURL != nil {
+							if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
+								imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return imageShaMap
 }
 
 func getRelatedImage(imageURL string) image {
