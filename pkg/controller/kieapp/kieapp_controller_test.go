@@ -3,20 +3,20 @@ package kieapp
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	consolev1 "github.com/openshift/api/console/v1"
-	routev1 "github.com/openshift/api/route/v1"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/google/uuid"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	consolev1 "github.com/openshift/api/console/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -154,7 +154,7 @@ func TestConsoleHost(t *testing.T) {
 	assert.Nil(t, err, "Error creating a new environment")
 	reconciler := &Reconciler{Service: mockService}
 	reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
-	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
+	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "status.ConsoleHost should be URL from the resulting workbench route host")
 }
 
 func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
@@ -233,7 +233,7 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
-			Auth:        api.KieAppAuthObject{},
+			Auth:        &api.KieAppAuthObject{},
 		},
 	}
 	scheme, err := api.SchemeBuilder.Build()
@@ -252,6 +252,8 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 			return fmt.Errorf("Mock: Not found")
 		}
 		cr.Spec.Auth.RoleMapper = test.roleMapper
+		_, err = defaults.GetEnvironment(cr, reconciler.Service)
+		assert.NotNil(t, err)
 		err = reconciler.verifyExternalReferences(cr)
 		if test.errMsg == "" {
 			assert.Nil(t, err, "%s: Expected nil found [%s]", test.name, err)
@@ -391,13 +393,13 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", defaults.GetVersion(cr)), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", defaults.GetVersion(cr)), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", defaults.GetVersion(cr)), isTag.Tag.From.Name)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
@@ -418,13 +420,13 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", defaults.GetVersion(cr)), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", defaults.GetVersion(cr)), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", defaults.GetVersion(cr)), isTag.Tag.From.Name)
 }
 
 func TestCreateTagVersionImageStreams(t *testing.T) {
@@ -445,13 +447,13 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage, constants.VersionConstants[defaults.GetVersion(cr)].DatagridImageTag), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage, constants.VersionConstants[defaults.GetVersion(cr)].DatagridImageTag), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage, constants.VersionConstants[defaults.GetVersion(cr)].DatagridImageTag), isTag.Tag.From.Name)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
@@ -472,14 +474,14 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Spec.Version].DatagridImage), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Spec.Version].DatagridImage), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage), metav1.GetOptions{})
 	assert.Nil(t, err)
 	fmt.Print(isTag)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[defaults.GetVersion(cr)].DatagridImage), isTag.Tag.From.Name)
 }
 
 func TestStatusDeploymentsProgression(t *testing.T) {

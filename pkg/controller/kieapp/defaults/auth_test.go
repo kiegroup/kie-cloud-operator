@@ -86,7 +86,7 @@ func TestConfigureHostname(t *testing.T) {
 	}
 	cr := &api.KieApp{
 		Spec: api.KieAppSpec{
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com",
 					Realm: "therealm",
@@ -119,7 +119,7 @@ func TestAuthMultipleType(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO:  &api.SSOAuthConfig{},
 				LDAP: &api.LDAPAuthConfig{},
 			},
@@ -136,7 +136,7 @@ func TestAuthOnlyRoleMapper(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				RoleMapper: &api.RoleMapperAuthConfig{},
 			},
 		},
@@ -165,7 +165,7 @@ func TestAuthSSOEmptyConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{},
 			},
 		},
@@ -181,7 +181,7 @@ func TestAuthSSOConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
@@ -230,7 +230,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
@@ -322,7 +322,7 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{},
 			},
 		},
@@ -343,7 +343,7 @@ func TestAuthLDAPConfig(t *testing.T) {
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",
@@ -503,7 +503,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",

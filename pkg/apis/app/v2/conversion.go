@@ -29,7 +29,7 @@ func convertKieAppV1toV2(kieAppV1 *v1.KieApp) (*KieApp, error) {
 		},
 		Spec: KieAppSpec{
 			Version: kieAppV1.Spec.CommonConfig.Version,
-			Upgrades: KieAppUpgrades{
+			Upgrades: &KieAppUpgrades{
 				Enabled: *kieAppV1.Spec.Upgrades.Patch,
 				Minor:   kieAppV1.Spec.Upgrades.Minor,
 			},

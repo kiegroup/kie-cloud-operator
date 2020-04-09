@@ -1,18 +1,17 @@
 package defaults
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
-
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 
 	"github.com/ghodss/yaml"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestMergeServices(t *testing.T) {
@@ -594,7 +593,7 @@ func getParsedTemplateFromCR(cr *api.KieApp, filename string, object interface{}
 		log.Error("Error getting environment template", err)
 	}
 
-	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Spec.Version, cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(test.MockService(), filename, GetVersion(cr), cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}

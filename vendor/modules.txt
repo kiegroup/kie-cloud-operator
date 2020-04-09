@@ -104,16 +104,16 @@ github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 # github.com/gobuffalo/packr/v2 v2.7.1 => github.com/gobuffalo/packr/v2 v2.7.1
 github.com/gobuffalo/packr/v2/jam
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/jam/store
 github.com/gobuffalo/packr/v2/plog
 github.com/gobuffalo/packr/v2/file
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/karrick/godirwalk
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/errx
+github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys

@@ -3,7 +3,7 @@ package status
 import (
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,30 +21,21 @@ func SetProvisioning(cr *api.KieApp) bool {
 		return false
 	}
 	log.Debug("Status: set provisioning")
-	condition := api.Condition{
-		Type:               api.ProvisioningConditionType,
-		Status:             corev1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-	}
-	cr.Status.Conditions = addCondition(cr, condition)
+	cr.Status.Conditions = addCondition(cr, api.Condition{Type: api.ProvisioningConditionType})
 	return true
 }
 
 // SetDeployed - Updates the condition with the DeployedCondition and True status
 func SetDeployed(cr *api.KieApp) bool {
 	log := log.With("kind", cr.Kind, "name", cr.Name, "namespace", cr.Namespace)
+	cr.Status.Version = defaults.GetVersion(cr)
 	size := len(cr.Status.Conditions)
 	if size > 0 && cr.Status.Conditions[size-1].Type == api.DeployedConditionType {
 		log.Debug("Status: unchanged status [deployed].")
 		return false
 	}
 	log.Debugf("Status: changed status [deployed].")
-	condition := api.Condition{
-		Type:               api.DeployedConditionType,
-		Status:             corev1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-	}
-	cr.Status.Conditions = addCondition(cr, condition)
+	cr.Status.Conditions = addCondition(cr, api.Condition{Type: api.DeployedConditionType})
 	return true
 }
 
@@ -53,16 +44,17 @@ func SetFailed(cr *api.KieApp, reason api.ReasonType, err error) {
 	log := log.With("kind", cr.Kind, "name", cr.Name, "namespace", cr.Namespace)
 	log.Debug("Status: set failed")
 	condition := api.Condition{
-		Type:               api.FailedConditionType,
-		Status:             corev1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-		Reason:             reason,
-		Message:            err.Error(),
+		Type:    api.FailedConditionType,
+		Reason:  reason,
+		Message: err.Error(),
 	}
 	cr.Status.Conditions = addCondition(cr, condition)
 }
 
 func addCondition(cr *api.KieApp, condition api.Condition) []api.Condition {
+	condition.Status = corev1.ConditionTrue
+	condition.LastTransitionTime = metav1.Now()
+	condition.Version = defaults.GetVersion(cr)
 	conditions := cr.Status.Conditions
 	size := len(conditions) + 1
 	first := 0

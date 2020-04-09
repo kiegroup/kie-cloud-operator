@@ -3,14 +3,13 @@ package defaults
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"strings"
 
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/google/go-cmp/cmp"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/version"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -18,13 +17,13 @@ import (
 // checkProductUpgrade ...
 func checkProductUpgrade(cr *api.KieApp) (minor, micro bool, err error) {
 	setDefaults(cr)
-	if checkVersion(cr.Spec.Version) {
-		if cr.Spec.Version != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
+	if checkVersion(GetVersion(cr)) {
+		if cr.Spec.Upgrades != nil && GetVersion(cr) != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
 			micro = cr.Spec.Upgrades.Enabled
 			minor = cr.Spec.Upgrades.Minor
 		}
 	} else {
-		err = fmt.Errorf("Product version %s is not allowed in operator version %s. The following versions are allowed - %s", cr.Spec.Version, version.Version, constants.SupportedVersions)
+		err = fmt.Errorf("Product version %s is not allowed. The following versions are allowed - %s", GetVersion(cr), constants.SupportedVersions)
 	}
 	return minor, micro, err
 }

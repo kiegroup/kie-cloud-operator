@@ -14,7 +14,7 @@ const ssoClientVar = "SSO_CLIENT"
 // ConfigureHostname sets the HOSTNAME_HTTPS environment variable with the provided hostname
 // IF not yet set AND SSO auth is configured AND SSO_CLIENT exists
 func ConfigureHostname(object *api.CustomObject, cr *api.KieApp, hostname string) {
-	if cr.Spec.Auth.SSO == nil {
+	if cr.Spec.Auth == nil || cr.Spec.Auth.SSO == nil {
 		return
 	}
 	for dcIdx := range object.DeploymentConfigs {
@@ -61,13 +61,20 @@ func configureSSO(cr *api.KieApp, envTemplate *api.EnvTemplate) error {
 	}
 	// Set defaults
 	if len(cr.Spec.Auth.SSO.PrincipalAttribute) == 0 {
-		cr.Spec.Auth.SSO.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
+		if cr.Status.Generated.Auth == nil {
+			cr.Status.Generated.Auth = &api.KieAppAuthObject{SSO: &api.SSOAuthConfig{}}
+		}
+		cr.Status.Generated.Auth.SSO.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
 	}
-	envTemplate.Auth.SSO = *cr.Spec.Auth.SSO.DeepCopy()
-	if cr.Spec.Objects.Console.SSOClient != nil {
-		envTemplate.Console.SSOAuthClient = *cr.Spec.Objects.Console.SSOClient.DeepCopy()
+	resolvedSpec, err := ResolveSpec(cr)
+	if err != nil {
+		return err
 	}
-	if cr.Spec.Auth.SSO != nil {
+	if resolvedSpec.Objects.Console.SSOClient != nil {
+		envTemplate.Console.SSOAuthClient = *resolvedSpec.Objects.Console.SSOClient.DeepCopy()
+	}
+	if resolvedSpec.Auth.SSO != nil {
+		envTemplate.Auth.SSO = *resolvedSpec.Auth.SSO.DeepCopy()
 		for index := range envTemplate.Servers {
 			serverSet, _ := GetServerSet(cr, index)
 			if serverSet.SSOClient != nil {
