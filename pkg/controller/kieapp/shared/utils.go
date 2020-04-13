@@ -7,14 +7,15 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"math/big"
+	"math/rand"
+	"time"
+
 	"github.com/pavel-v-chernykh/keystore-go"
 	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"math/big"
-	"math/rand"
-	"time"
 )
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
@@ -173,4 +174,13 @@ func GetNamespacedName(object metav1.Object) types.NamespacedName {
 		Name:      object.GetName(),
 		Namespace: object.GetNamespace(),
 	}
+}
+
+func Find(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
 }

@@ -22,17 +22,21 @@ func init() {
 			log.Error(err)
 		}
 		if info.IsOpenShift() {
-			version := openshift.MapKnownVersion(info)
-			if version.Version != "" {
-				log.Info(fmt.Sprintf("OpenShift Version: %s", version.Version))
-				reconciler.OcpVersion = version.Version
-				reconciler.OcpVersionMajor = version.MajorVersion()
-				reconciler.OcpVersionMinor = version.MinorVersion()
+			mappedVersion := openshift.MapKnownVersion(info)
+			if mappedVersion.Version != "" {
+				log.Info(fmt.Sprintf("OpenShift Version: %s", mappedVersion.Version))
+				reconciler.OcpVersion = mappedVersion.Version
+				reconciler.OcpVersionMajor = mappedVersion.MajorVersion()
+				reconciler.OcpVersionMinor = mappedVersion.MinorVersion()
+				/* ?? warning if ocp version isn't in SupportedOcpVersions slice ??
+				if _, ok := shared.Find(constants.SupportedOcpVersions, reconciler.OcpVersion); !ok {
+					log.Warn("OpenShift version not supported.")
+				}
+				*/
+			} else {
+				log.Warn("OpenShift version could not be determined.")
 			}
 		}
-
-		// ??? check against supported ocp versions here and log something if version doesn't match???
-
 		kieapp.CreateConsoleYAMLSamples(&reconciler)
 		return kieapp.Add(mgr, &reconciler)
 	}
