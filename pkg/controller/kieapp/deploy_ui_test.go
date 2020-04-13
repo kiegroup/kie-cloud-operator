@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
@@ -121,4 +123,64 @@ func TestUpdateExistingLink(t *testing.T) {
 	assert.NotNil(t, link, "Found no console link in CSV")
 	assert.True(t, strings.Contains(updatedCSV.Spec.Description, constants.ConsoleDescription), "Found no information about link in description")
 	assert.Equal(t, fmt.Sprintf("https://%s", url), link.URL, "The console link did not have the expected value")
+}
+
+func TestProxyVersion(t *testing.T) {
+	checkConsoleProxySettings(t, "4.3")
+	checkConsoleProxySettings(t, "4.2")
+	checkConsoleProxySettings(t, "4.1")
+	// ocp 3.x versions should default to latest oauth3 image
+	checkConsoleProxySettings(t, "3.11")
+	checkConsoleProxySettings(t, "3.5")
+	// unknown ocp version should default to 'latest' proxy image
+	checkConsoleProxySettings(t, "7.3")
+}
+
+func checkConsoleProxySettings(t *testing.T, ocpVersion string) {
+	box := packr.New("Operator", "../../../deploy")
+	bytes, err := box.Find("operator.yaml")
+	assert.Nil(t, err, "Error reading Operator file")
+	operator := &appsv1.Deployment{}
+	err = yaml.Unmarshal(bytes, operator)
+	assert.Nil(t, err, "Error parsing Operator file")
+	operatorName = operator.Name
+	ocpVersionMajor := strings.Split(ocpVersion, ".")[0]
+	ocpVersionMinor := strings.Split(ocpVersion, ".")[1]
+	for _, envVar := range operator.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == constants.OauthVar+ocpVersion {
+			os.Setenv(envVar.Name, envVar.Value)
+		}
+	}
+	for _, envVar := range operator.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == constants.OauthVar+"3" {
+			os.Setenv(envVar.Name, envVar.Value)
+		}
+	}
+	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersionMajor, ocpVersionMinor, operator)
+	caBundlePath := "--openshift-ca=/etc/pki/ca-trust/extracted/crt/ca-bundle.crt"
+	if ocpVersionMajor < "4" {
+		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
+		assert.Equal(t, getService(pod.Namespace, ocpVersionMajor).Annotations,
+			map[string]string{
+				"service.alpha.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
+			},
+			"should use service.alpha.openshift.io version of serving-cert-secret-name",
+		)
+		assert.Equal(t, constants.Oauth3ImageLatestURL, pod.Spec.Containers[0].Image)
+	} else {
+		if ocpVersion >= "4.2" {
+			assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
+		}
+		assert.Equal(t, getService(pod.Namespace, ocpVersionMajor).Annotations,
+			map[string]string{
+				"service.beta.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
+			},
+			"should use service.beta.openshift.io version of serving-cert-secret-name",
+		)
+		if _, ok := shared.Find(constants.SupportedOcpVersions, ocpVersion); ok {
+			assert.Equal(t, constants.Oauth4ImageURL+":"+ocpVersion, pod.Spec.Containers[0].Image)
+		} else {
+			assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)
+		}
+	}
 }

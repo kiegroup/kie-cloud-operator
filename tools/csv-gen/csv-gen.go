@@ -18,6 +18,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -363,7 +364,7 @@ func main() {
 						hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 							return http.ErrUseLastResponse
 						}
-						if _, exists := find(tags, imageTag); exists {
+						if _, exists := shared.Find(tags, imageTag); exists {
 							req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
 							if err != nil {
 								log.Error(err)
@@ -489,13 +490,4 @@ func createFile(filepath string, obj interface{}) {
 	writer := bufio.NewWriter(f)
 	util.MarshallObject(obj, writer)
 	writer.Flush()
-}
-
-func find(slice []string, val string) (int, bool) {
-	for i, item := range slice {
-		if item == val {
-			return i, true
-		}
-	}
-	return -1, false
 }

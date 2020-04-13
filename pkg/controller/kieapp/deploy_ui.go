@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-var name = "console-cr-form"
+var consoleName = "console-cr-form"
 var operatorName string
 
 func shouldDeployConsole() bool {
@@ -50,7 +50,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	sa := getServiceAccount(namespace)
 	image := getImage(operator)
 	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersionMajor, reconciler.OcpVersionMinor, operator)
-	service := getService(namespace)
+	service := getService(namespace, reconciler.OcpVersionMajor)
 	route := getRoute(namespace)
 	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
 	deployed, err := loadCounterparts(reconciler, namespace, requested)
@@ -167,12 +167,12 @@ func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1al
 func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.Deployment) *corev1.Pod {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
 	volume := corev1.Volume{Name: operatorName + "-proxy-tls"}
 	volume.Secret = &corev1.SecretVolumeSource{SecretName: volume.Name}
 	sar, err := json.Marshal(map[string]string{
-		"name":      name,
+		"name":      consoleName,
 		"namespace": namespace,
 		"resource":  "services",
 		"verb":      "patch",
@@ -203,7 +203,7 @@ func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.De
 	httpsPort := int32(8443)
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      consoleName,
 			Namespace: namespace,
 			Labels:    labels,
 		},
@@ -231,7 +231,7 @@ func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.De
 					VolumeMounts: []corev1.VolumeMount{{Name: volume.Name, MountPath: "/etc/tls/private"}},
 				},
 				{
-					Name:            name,
+					Name:            consoleName,
 					Image:           image,
 					ImagePullPolicy: operator.Spec.Template.Spec.Containers[0].ImagePullPolicy,
 					Command: []string{
@@ -285,19 +285,17 @@ func getImage(operator *appsv1.Deployment) string {
 	return image
 }
 
-func getService(namespace string) *corev1.Service {
+func getService(namespace, ocpMajor string) *corev1.Service {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
-	return &corev1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Annotations: map[string]string{
-				"service.beta.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls",
-			},
-			Labels: labels,
+			Name:        consoleName,
+			Namespace:   namespace,
+			Annotations: map[string]string{"service.beta.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"},
+			Labels:      labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -310,23 +308,27 @@ func getService(namespace string) *corev1.Service {
 			Selector: labels,
 		},
 	}
+	if ocpMajor < "4" {
+		svc.Annotations = map[string]string{"service.alpha.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"}
+	}
+	return svc
 }
 
 func getRoute(namespace string) *routev1.Route {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
 	return &routev1.Route{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      consoleName,
 			Namespace: namespace,
 			Labels:    labels,
 		},
 		Spec: routev1.RouteSpec{
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
-				Name: name,
+				Name: consoleName,
 			},
 			TLS: &routev1.TLSConfig{
 				Termination: routev1.TLSTerminationReencrypt,
@@ -352,11 +354,11 @@ func getConfigMap(namespace string) *corev1.ConfigMap {
 func getRole(namespace string) *rbacv1.Role {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      consoleName,
 			Namespace: namespace,
 			Labels:    labels,
 		},
@@ -373,22 +375,22 @@ func getRole(namespace string) *rbacv1.Role {
 func getRoleBinding(namespace string) *rbacv1.RoleBinding {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
 	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      consoleName,
 			Namespace: namespace,
 			Labels:    labels,
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind: "Role",
-			Name: name,
+			Name: consoleName,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind: "ServiceAccount",
-				Name: name,
+				Name: consoleName,
 			},
 		},
 	}
@@ -397,7 +399,7 @@ func getRoleBinding(namespace string) *rbacv1.RoleBinding {
 func getServiceAccount(namespace string) *corev1.ServiceAccount {
 	labels := map[string]string{
 		"app":  operatorName,
-		"name": name,
+		"name": consoleName,
 	}
 	type reference struct {
 		Kind string `json:"kind"`
@@ -413,7 +415,7 @@ func getServiceAccount(namespace string) *corev1.ServiceAccount {
 		APIVersion: "v1",
 		Reference: reference{
 			Kind: "Route",
-			Name: name,
+			Name: consoleName,
 		},
 	})
 	if err != nil {
@@ -421,7 +423,7 @@ func getServiceAccount(namespace string) *corev1.ServiceAccount {
 	}
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      consoleName,
 			Namespace: namespace,
 			Labels:    labels,
 			Annotations: map[string]string{
