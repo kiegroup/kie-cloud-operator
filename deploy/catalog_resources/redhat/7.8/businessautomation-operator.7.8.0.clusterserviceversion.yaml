@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
-    createdAt: "2020-04-08 14:39:49"
+    createdAt: "2020-04-09 16:58:44"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -186,15 +186,15 @@ spec:
                 - name: PAM_SMARTROUTER_IMAGE_7.8.0
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
                 - name: OSE_CLI_IMAGE_7.8.0
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
+                  value: registry.redhat.io/openshift3/ose-cli@sha256:8643bfd9cda3afeb02da4c6e79245d4805b07a7a8d83068fa796df44178fbe5d
                 - name: MYSQL_PROXY_IMAGE_7.8.0
-                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+                  value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.8.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
                 - name: DATAGRID_IMAGE_7.8.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:3375ec169d274278da56d1401c5c1285f7d2812ea0bde2ac9ad9652b69f80893
                 - name: BROKER_IMAGE_7.8.0
-                  value: registry.redhat.io/amq7/amq-broker:7.6
+                  value: registry.redhat.io/amq7/amq-broker@sha256:690b802891b015fa2ca0b5e6d7eee9831772d774754364b9ac73e215f520d6e5
                 - name: DM_KIESERVER_IMAGE_7.7.1
                   value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
                 - name: DM_CONTROLLER_IMAGE_7.7.1
@@ -212,51 +212,51 @@ spec:
                 - name: PAM_SMARTROUTER_IMAGE_7.7.1
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.1
                 - name: OSE_CLI_IMAGE_7.7.1
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
+                  value: registry.redhat.io/openshift3/ose-cli@sha256:8643bfd9cda3afeb02da4c6e79245d4805b07a7a8d83068fa796df44178fbe5d
                 - name: MYSQL_PROXY_IMAGE_7.7.1
-                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+                  value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.1
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
                 - name: DATAGRID_IMAGE_7.7.1
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:3375ec169d274278da56d1401c5c1285f7d2812ea0bde2ac9ad9652b69f80893
                 - name: BROKER_IMAGE_7.7.1
-                  value: registry.redhat.io/amq7/amq-broker:7.5
+                  value: registry.redhat.io/amq7/amq-broker@sha256:ba5273b390a4762c21f005fdc92a837680417250dcd5e6d9d3c8f776e9cc372e
                 - name: DM_KIESERVER_IMAGE_7.7.0
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:372d0de47fe02ecacca9f2b48f7ae0f7bfa81f0130eba4f3c6bd8d280c5a9fc1
                 - name: DM_CONTROLLER_IMAGE_7.7.0
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:47779af90707a6b8239ed848cd472eca55949c60927ded8b9ed295716dbb94c9
                 - name: DM_DC_IMAGE_7.7.0
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.0
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:fe5a2b692031862b8a2c8c869a64d2965e2a6c00490dbf807d8b8f2271b506fc
                 - name: PAM_KIESERVER_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:d905132e2856709b053442fc586e8c63f5828eea37636bdd76ca57150828f47d
                 - name: PAM_CONTROLLER_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:511bd9427fa369a50df782a6cf7370b4bf42eb5b995a7494ff88d6df6b621a55
                 - name: PAM_BC_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:4b634fbd2e44cca9bd04d69ff80d36c9d52590c2c02c49e11fb5818c17b9da61
                 - name: PAM_BC_MONITORING_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:18571b10e500d7579f64e1b1d8aecdd7beba45d2c886054342922149f00194b4
                 - name: PAM_SMARTROUTER_IMAGE_7.7.0
-                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:34ccf7889abce588bf0db5956b1747d785934dc5630135094949318bef49a70e
                 - name: OSE_CLI_IMAGE_7.7.0
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
+                  value: registry.redhat.io/openshift3/ose-cli@sha256:8643bfd9cda3afeb02da4c6e79245d4805b07a7a8d83068fa796df44178fbe5d
                 - name: MYSQL_PROXY_IMAGE_7.7.0
-                  value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+                  value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
                 - name: DATAGRID_IMAGE_7.7.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
                 - name: BROKER_IMAGE_7.7.0
-                  value: registry.redhat.io/amq7/amq-broker:7.5
+                  value: registry.redhat.io/amq7/amq-broker@sha256:ba5273b390a4762c21f005fdc92a837680417250dcd5e6d9d3c8f776e9cc372e
                 - name: OAUTH_PROXY_IMAGE_LATEST
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:7a4d8734d3a066248569de73c581ce18d12869312a2de70fcd3008dd9e88b897
                 - name: OAUTH_PROXY_IMAGE_4.3
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:f32f957063bee5a12787f8ce7990499a62874a2984c883205c6617b9ebe50ea5
                 - name: OAUTH_PROXY_IMAGE_4.2
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:4be6afd636c51f83fdd9118eb12768a23acd2c5cd0786b986bf80a9450a5c697
                 - name: OAUTH_PROXY_IMAGE_4.1
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:512a3096734987157936894a0062caf87752150d1902a60f51c67b3cbd6559ab
                 - name: OAUTH_PROXY_IMAGE_3
-                  value: registry.redhat.io/openshift3/oauth-proxy:latest
+                  value: registry.redhat.io/openshift3/oauth-proxy@sha256:fbf396fa968b2155343d594ea0e4279364195dbb35cf40bfa430b18542e55197
                 image: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
                 imagePullPolicy: Always
                 name: business-automation-operator
@@ -466,45 +466,45 @@ spec:
     name: rhpam-businesscentral-monitoring-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.1
     name: rhpam-smartrouter-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.0
+  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:372d0de47fe02ecacca9f2b48f7ae0f7bfa81f0130eba4f3c6bd8d280c5a9fc1
     name: rhdm-kieserver-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.0
+  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:47779af90707a6b8239ed848cd472eca55949c60927ded8b9ed295716dbb94c9
     name: rhdm-controller-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.7.0
+  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:fe5a2b692031862b8a2c8c869a64d2965e2a6c00490dbf807d8b8f2271b506fc
     name: rhdm-decisioncentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.7.0
+  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:d905132e2856709b053442fc586e8c63f5828eea37636bdd76ca57150828f47d
     name: rhpam-kieserver-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.7.0
+  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:511bd9427fa369a50df782a6cf7370b4bf42eb5b995a7494ff88d6df6b621a55
     name: rhpam-controller-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.7.0
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:4b634fbd2e44cca9bd04d69ff80d36c9d52590c2c02c49e11fb5818c17b9da61
     name: rhpam-businesscentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.7.0
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:18571b10e500d7579f64e1b1d8aecdd7beba45d2c886054342922149f00194b4
     name: rhpam-businesscentral-monitoring-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.7.0
+  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:34ccf7889abce588bf0db5956b1747d785934dc5630135094949318bef49a70e
     name: rhpam-smartrouter-rhel8
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:7a4d8734d3a066248569de73c581ce18d12869312a2de70fcd3008dd9e88b897
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:f32f957063bee5a12787f8ce7990499a62874a2984c883205c6617b9ebe50ea5
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:4be6afd636c51f83fdd9118eb12768a23acd2c5cd0786b986bf80a9450a5c697
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:512a3096734987157936894a0062caf87752150d1902a60f51c67b3cbd6559ab
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift3/oauth-proxy:latest
+  - image: registry.redhat.io/openshift3/oauth-proxy@sha256:fbf396fa968b2155343d594ea0e4279364195dbb35cf40bfa430b18542e55197
     name: oauth-proxy
-  - image: registry.redhat.io/openshift3/ose-cli:v3.11
+  - image: registry.redhat.io/openshift3/ose-cli@sha256:8643bfd9cda3afeb02da4c6e79245d4805b07a7a8d83068fa796df44178fbe5d
     name: ose-cli
-  - image: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+  - image: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
     name: mysql-57-rhel7
-  - image: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+  - image: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
     name: postgresql-10-rhel7
-  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
+  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
     name: datagrid73-openshift
-  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
+  - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:3375ec169d274278da56d1401c5c1285f7d2812ea0bde2ac9ad9652b69f80893
     name: datagrid73-openshift
-  - image: registry.redhat.io/amq7/amq-broker:7.5
+  - image: registry.redhat.io/amq7/amq-broker@sha256:ba5273b390a4762c21f005fdc92a837680417250dcd5e6d9d3c8f776e9cc372e
     name: amq-broker
-  - image: registry.redhat.io/amq7/amq-broker:7.6
+  - image: registry.redhat.io/amq7/amq-broker@sha256:690b802891b015fa2ca0b5e6d7eee9831772d774754364b9ac73e215f520d6e5
     name: amq-broker
   replaces: businessautomation-operator.1.4.1
   selector:
