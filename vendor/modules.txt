@@ -17,7 +17,7 @@ github.com/BurntSushi/toml
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
+# github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976 => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
 github.com/RHsyseng/console-cr-form/pkg/web
 github.com/RHsyseng/console-cr-form/pkg/web/packrd
 # github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc => github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc
