@@ -3,7 +3,7 @@ module github.com/kiegroup/kie-cloud-operator
 go 1.12
 
 require (
-	github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
+	github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
 	github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/prometheus-operator v0.35.1
@@ -15,6 +15,7 @@ require (
 	github.com/gophercloud/gophercloud v0.6.0 // indirect
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.8
+	github.com/kr/pty v1.1.5 // indirect
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20191115003340-16619cd27fa5
@@ -35,7 +36,7 @@ require (
 
 replace (
 	// Pin RHsyseng library versions
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc
 
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm

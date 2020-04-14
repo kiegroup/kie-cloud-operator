@@ -52,8 +52,8 @@ github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbt
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d h1:XmCGuoQVbY5Jhy9O0jpxTiarpmZVHxgP0pqcMMWKYpU=
-github.com/RHsyseng/console-cr-form v0.0.0-20200129200812-dc119cb0bd4d/go.mod h1:b1BUyQinnYJTvUGO4Yf+QqXy7PrBWT1CU6T85wDUobI=
+github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976 h1:eQoThFh4+/DCdTfYYVqMFGss5UTmyWsXn6a6CQjsRV4=
+github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976/go.mod h1:C1ZIfbcXaSyLzEjK55s2qWdnOo+mzhFLvzyreV3qmUY=
 github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc h1:vLX23bFfKpGVgq/ronXPDlsOMe3RiRZU/7WZCkyx+Gs=
 github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc/go.mod h1:ZFQi9Pp9lp0+2rKqgESwj1MMEgHqPfsMm2JqOXEh+Ok=
 github.com/Rican7/retry v0.1.0/go.mod h1:FgOROf8P5bebcC1DS0PdOQiqGUridaZvikzUmkFW6gg=
