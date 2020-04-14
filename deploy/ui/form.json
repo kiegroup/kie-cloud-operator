@@ -474,6 +474,13 @@
               "type": "integer"
             },
             {
+              "label": "StorageClass Name",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.storageClassName",
+              "type": "text",
+              "description": "The storageClassName to use for console pvc's."
+            },
+            {
               "label": "GitHooks",
               "required": false,
               "jsonPath": "$.spec.objects.console.gitHooks",
@@ -1350,6 +1357,13 @@
                           "description": "Size of the Persistent Volume Claim to create. For example, 100Gi"
                         },
                         {
+                          "label": "StorageClass Name",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].database.storageClassName",
+                          "type": "text",
+                          "description": "The storageClassName to use for database pvc's."
+                        },
+                        {
                           "label": "External database",
                           "type": "fieldGroup",
                           "required": true,
@@ -1536,6 +1550,13 @@
                   "jsonPath": "$.spec.objects.smartRouter.replicas",
                   "type": "integer",
                   "description": "The number of replicas for the console component."
+                },
+                {
+                  "label": "StorageClass Name",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.storageClassName",
+                  "type": "text",
+                  "description": "The storageClassName to use for smart router pvc's."
                 },
                 {
                   "label": "Environment variable",
