@@ -13,6 +13,7 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write"
+	"github.com/blang/semver"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -49,8 +50,12 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
 	image := getImage(operator)
-	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersionMajor, reconciler.OcpVersionMinor, operator)
-	service := getService(namespace, reconciler.OcpVersionMajor)
+	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersion, operator)
+	var ocpMajor uint64
+	if reconciler.OcpVersion != nil {
+		ocpMajor = reconciler.OcpVersion.Major
+	}
+	service := getService(namespace, ocpMajor)
 	route := getRoute(namespace)
 	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
 	deployed, err := loadCounterparts(reconciler, namespace, requested)
@@ -61,7 +66,8 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
 	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
-	if reconciler.OcpVersionMajor+"."+reconciler.OcpVersionMinor >= "4.2" {
+	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
+	if reconciler.OcpVersion == nil || reconciler.OcpVersion.GE(semver.MustParse("4.2.0")) {
 		if _, err = writer.AddResources([]resource.KubernetesResource{getConfigMap(namespace)}); err != nil {
 			log.Warnf("Got error applying changes %v", err)
 		}
@@ -129,7 +135,7 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 	}
 	url := fmt.Sprintf("https://%s", found.Spec.Host)
 	csv := reconciler.getCSV(operator)
-	if reflect.DeepEqual(csv, &operatorsv1alpha1.ClusterServiceVersion{}) {
+	if reflect.ValueOf(csv).IsNil() {
 		log.Info("No ClusterServiceVersion found, likely because no such owner was set on the operator. This might be because the operator was not installed through OLM")
 		return
 	}
@@ -164,7 +170,7 @@ func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1al
 	return nil
 }
 
-func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.Deployment) *corev1.Pod {
+func getPod(namespace, image, sa string, v *semver.Version, operator *appsv1.Deployment) *corev1.Pod {
 	labels := map[string]string{
 		"app":  operatorName,
 		"name": consoleName,
@@ -185,16 +191,21 @@ func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.De
 		debug = constants.DebugTrue
 	}
 
+	var ocpMajor, ocpMinor uint64
+	if v != nil {
+		ocpMajor = v.Major
+		ocpMinor = v.Minor
+	}
 	// set oauth image by ocp version, default to latest available
 	oauthImage := constants.Oauth4ImageLatestURL
-	if val, exists := os.LookupEnv(constants.OauthVar + ocpMajor + "." + ocpMinor); exists {
+	if val, exists := os.LookupEnv(fmt.Sprintf(constants.OauthVar+"%d.%d", ocpMajor, ocpMinor)); exists {
 		oauthImage = val
 	} else if val, exists := os.LookupEnv(constants.OauthVar + "LATEST"); exists {
 		oauthImage = val
 	}
-	if ocpMajor == "3" {
+	if ocpMajor == 3 {
 		oauthImage = constants.Oauth3ImageLatestURL
-		if val, exists := os.LookupEnv(constants.OauthVar + ocpMajor); exists {
+		if val, exists := os.LookupEnv(constants.OauthVar + "3"); exists {
 			oauthImage = val
 		}
 	}
@@ -264,7 +275,8 @@ func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.De
 			},
 		},
 	}
-	if ocpMajor+"."+ocpMinor >= "4.2" {
+	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
+	if v == nil || v.GE(semver.MustParse("4.2.0")) {
 		caVolume := corev1.Volume{
 			Name: operatorName + "-trusted-cabundle",
 		}
@@ -276,6 +288,8 @@ func getPod(namespace, image, sa, ocpMajor, ocpMinor string, operator *appsv1.De
 		mountPath := "/etc/pki/ca-trust/extracted/crt"
 		pod.Spec.Containers[0].Args = append(pod.Spec.Containers[0].Args, "--openshift-ca="+mountPath+"/"+caVolume.ConfigMap.Items[0].Key)
 		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: caVolume.Name, MountPath: mountPath, ReadOnly: true})
+	} else {
+		log.Warn(err)
 	}
 	return pod
 }
@@ -285,7 +299,7 @@ func getImage(operator *appsv1.Deployment) string {
 	return image
 }
 
-func getService(namespace, ocpMajor string) *corev1.Service {
+func getService(namespace string, ocpMajor uint64) *corev1.Service {
 	labels := map[string]string{
 		"app":  operatorName,
 		"name": consoleName,
@@ -308,7 +322,7 @@ func getService(namespace, ocpMajor string) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	if ocpMajor < "4" {
+	if ocpMajor == 3 {
 		svc.Annotations = map[string]string{"service.alpha.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"}
 	}
 	return svc

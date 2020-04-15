@@ -312,8 +312,12 @@ func main() {
 
 		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 		for _, imageVersion := range constants.SupportedVersions {
+			v, err := semver.New(imageVersion)
+			if err != nil {
+				log.Error(err)
+			}
 			for _, i := range constants.Images {
-				if i.Var == constants.PamProcessMigrationVar && imageVersion < "7.8.0" {
+				if i.Var == constants.PamProcessMigrationVar && v.LT(semver.MustParse("7.8.0")) {
 					continue
 				}
 				relatedImages = addRefRelatedImages(i.Registry+":"+imageVersion, i.Component, imageRef, relatedImages)
@@ -324,8 +328,8 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
 		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
 		for _, ocpVersion := range constants.SupportedOcpVersions {
-			if ocpVersion > "4" {
-				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
+			if strings.Split(ocpVersion, ".")[0] == "4" {
+				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
 			}
 		}
 		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)

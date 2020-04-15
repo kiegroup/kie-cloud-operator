@@ -12,6 +12,7 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
+	"github.com/blang/semver"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
@@ -123,8 +124,21 @@ func mergeDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environ
 			continue
 		}
 		dbType := kieServerSet.Database.Type
-		if err := loadDBYamls(service, cr, envTemplate, "dbs/servers/%s.yaml", dbType, dbEnvs); err != nil {
-			return api.Environment{}, err
+		if isGE78(cr) {
+			if err := loadDBYamls(service, cr, envTemplate, "dbs/servers/%s.yaml", dbType, dbEnvs); err != nil {
+				return api.Environment{}, err
+			}
+		} else if _, loadedDB := dbEnvs[dbType]; !loadedDB {
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Spec.Version, cr.Namespace, envTemplate)
+			if err != nil {
+				return api.Environment{}, err
+			}
+			var dbEnv api.Environment
+			err = yaml.Unmarshal(yamlBytes, &dbEnv)
+			if err != nil {
+				return api.Environment{}, err
+			}
+			dbEnvs[dbType] = dbEnv
 		}
 		dbServer, found := findCustomObjectByName(env.Servers[i], dbEnvs[dbType].Servers)
 		if found {
@@ -138,10 +152,7 @@ func mergeJms(service kubernetes.PlatformService, cr *api.KieApp, env api.Enviro
 	var jmsEnv api.Environment
 	for i := range env.Servers {
 		kieServerSet := envTemplate.Servers[i]
-
-		isJmsEnabled := kieServerSet.Jms.EnableIntegration
-
-		if isJmsEnabled {
+		if kieServerSet.Jms.EnableIntegration {
 			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Status.Applied.Version, cr.Namespace, envTemplate)
 			if err != nil {
 				return api.Environment{}, err
@@ -151,7 +162,6 @@ func mergeJms(service kubernetes.PlatformService, cr *api.KieApp, env api.Enviro
 				return api.Environment{}, err
 			}
 		}
-
 		jmsServer, found := findCustomObjectByName(env.Servers[i], jmsEnv.Servers)
 		if found {
 			env.Servers[i] = mergeCustomObject(env.Servers[i], jmsServer)
@@ -184,16 +194,13 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		SmartRouter: getSmartRouterTemplate(cr),
 		Constants:   *getTemplateConstants(cr),
 	}
-
-	// !!! add checks to only add PIM for only version 7.8.0 and higher ...
-	// !!! should also only add 7.8.0 images or higher to csv
 	processMigrationConfig, err := getProcessMigrationTemplate(cr, serversConfig)
 	if err != nil {
 		return envTemplate, err
 	}
-	envTemplate.ProcessMigration = *processMigrationConfig
-	//
-
+	if processMigrationConfig != nil {
+		envTemplate.ProcessMigration = *processMigrationConfig
+	}
 	envTemplate.Databases = getDatabaseDeploymentTemplate(cr, serversConfig, processMigrationConfig)
 	envTemplate.CommonConfig = &cr.Status.Applied.CommonConfig
 	if cr.Status.Applied.Auth != nil {
@@ -202,7 +209,6 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 			return envTemplate, err
 		}
 	}
-
 	return envTemplate, nil
 }
 
@@ -930,9 +936,9 @@ func SetDefaults(cr *api.KieApp) {
 	setPasswords(cr, isTrialEnv)
 }
 
-func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (*api.ProcessMigrationTemplate, error) {
-	processMigrationTemplate := api.ProcessMigrationTemplate{}
+func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (processMigrationTemplate *api.ProcessMigrationTemplate, err error) {
 	if deployProcessMigration(cr) {
+		processMigrationTemplate = &api.ProcessMigrationTemplate{}
 		processMigrationTemplate.ImageURL = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 			processMigrationTemplate.ImageURL = val
@@ -965,29 +971,29 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.Database = *cr.Status.Applied.Objects.ProcessMigration.Database.DeepCopy()
 		}
 	}
-	return &processMigrationTemplate, nil
+	return processMigrationTemplate, nil
 }
 
 func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
-	var ProcessMigrationEnv api.Environment
+	var processMigrationEnv api.Environment
 	if deployProcessMigration(cr) {
 		yamlBytes, err := loadYaml(service, "pim/process-migration.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
 		if err != nil {
 			return api.Environment{}, err
 		}
-		err = yaml.Unmarshal(yamlBytes, &ProcessMigrationEnv)
+		err = yaml.Unmarshal(yamlBytes, &processMigrationEnv)
 		if err != nil {
 			return api.Environment{}, err
 		}
 
-		env.ProcessMigration = mergeCustomObject(env.ProcessMigration, ProcessMigrationEnv.ProcessMigration)
+		env.ProcessMigration = mergeCustomObject(env.ProcessMigration, processMigrationEnv.ProcessMigration)
 
 		env, err = mergeProcessMigrationDB(service, cr, env, envTemplate)
 		if err != nil {
 			return api.Environment{}, nil
 		}
 	} else {
-		ProcessMigrationEnv.ProcessMigration.Omit = true
+		processMigrationEnv.ProcessMigration.Omit = true
 	}
 
 	return env, nil
@@ -1020,7 +1026,15 @@ func isRHPAM(cr *api.KieApp) bool {
 }
 
 func deployProcessMigration(cr *api.KieApp) bool {
-	return cr.Status.Applied.Objects.ProcessMigration != nil && isRHPAM(cr)
+	return isGE78(cr) && cr.Status.Applied.Objects.ProcessMigration != nil && isRHPAM(cr)
+}
+
+func isGE78(cr *api.KieApp) bool {
+	v, err := semver.New(cr.Status.Applied.Version)
+	if err != nil {
+		log.Error(err)
+	}
+	return err == nil && v != nil && v.GE(semver.MustParse("7.8.0"))
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,
@@ -1051,9 +1065,6 @@ func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTem
 
 func mergeDBDeployment(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	env.Databases = make([]api.CustomObject, len(envTemplate.Databases))
-	if envTemplate.Databases == nil {
-		return env, nil
-	}
 	dbEnvs := make(map[api.DatabaseType]api.Environment)
 	for i, dbTemplate := range envTemplate.Databases {
 		if err := loadDBYamls(service, cr, envTemplate, "dbs/%s.yaml", dbTemplate.Type, dbEnvs); err != nil {

@@ -19,7 +19,8 @@ const (
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 // SupportedOcpVersions - Supported OpenShift minor versions
-var SupportedOcpVersions = []string{"4.3", "4.2", "4.1", "3.11"}
+// var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1", "3.11"}
+var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// RhpamPrefix RHPAM prefix
