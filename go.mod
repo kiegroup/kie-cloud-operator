@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
-	github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc
+	github.com/RHsyseng/operator-utils v0.0.0-20200414154239-8ab0e9a7d0f7
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/prometheus-operator v0.35.1
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
@@ -37,7 +37,7 @@ require (
 replace (
 	// Pin RHsyseng library versions
 	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
-	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200407154515-94a3ad1cdcfc
+	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200414154239-8ab0e9a7d0f7
 
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1

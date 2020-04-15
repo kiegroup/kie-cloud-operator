@@ -36,8 +36,12 @@ func init() {
 			} else {
 				log.Warn("OpenShift version could not be determined.")
 			}
+			if mappedVersion.Version < "4.3" {
+				log.Warn("Console YAML sample is not added, curVer:", mappedVersion.Version)
+			} else {
+				kieapp.CreateConsoleYAMLSamples(&reconciler)
+			}
 		}
-		kieapp.CreateConsoleYAMLSamples(&reconciler)
 		return kieapp.Add(mgr, &reconciler)
 	}
 	AddToManagerFuncs = []func(manager.Manager) error{addManager}
