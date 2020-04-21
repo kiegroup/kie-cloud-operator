@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.8.0
-    createdAt: "2020-04-09 16:57:24"
+    createdAt: "2020-04-14 16:48:47"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -185,6 +185,8 @@ spec:
                   value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
                 - name: PAM_SMARTROUTER_IMAGE_7.8.0
                   value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
+                - name: PAM_PROCESS_MIGRATION_IMAGE_7.8.0
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
                 - name: OSE_CLI_IMAGE_7.8.0
                   value: registry.redhat.io/openshift3/ose-cli@sha256:8643bfd9cda3afeb02da4c6e79245d4805b07a7a8d83068fa796df44178fbe5d
                 - name: MYSQL_PROXY_IMAGE_7.8.0
@@ -450,6 +452,8 @@ spec:
     name: rhpam-businesscentral-monitoring-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
     name: rhpam-smartrouter-rhel8
+  - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
+    name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.7.1
     name: rhdm-kieserver-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.7.1

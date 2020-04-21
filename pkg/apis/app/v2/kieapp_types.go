@@ -109,6 +109,8 @@ type KieAppObjects struct {
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
 	SmartRouter *SmartRouterObject `json:"smartRouter,omitempty"`
+	// ProcessMigration
+	ProcessMigration *ProcessMigrationObject `json:"processMigration,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
@@ -199,10 +201,12 @@ type KieAppObject struct {
 }
 
 type Environment struct {
-	Console     CustomObject   `json:"console,omitempty"`
-	SmartRouter CustomObject   `json:"smartRouter,omitempty"`
-	Servers     []CustomObject `json:"servers,omitempty"`
-	Others      []CustomObject `json:"others,omitempty"`
+	Console          CustomObject   `json:"console,omitempty"`
+	SmartRouter      CustomObject   `json:"smartRouter,omitempty"`
+	Servers          []CustomObject `json:"servers,omitempty"`
+	ProcessMigration CustomObject   `json:"processMigration,omitempty"`
+	Databases        []CustomObject `json:"databases,omitempty"`
+	Others           []CustomObject `json:"others,omitempty"`
 }
 
 type CustomObject struct {
@@ -218,6 +222,7 @@ type CustomObject struct {
 	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
+	ConfigMaps             []corev1.ConfigMap             `json:"configMaps,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
@@ -348,21 +353,28 @@ const (
 // DatabaseObject Defines how a KieServer will manage and create a new Database
 // or connect to an existing one
 type DatabaseObject struct {
-	Type             DatabaseType            `json:"type,omitempty"`
-	Size             string                  `json:"size,omitempty"`
-	StorageClassName string                  `json:"storageClassName,omitempty"`
-	ExternalConfig   *ExternalDatabaseObject `json:"externalConfig,omitempty"`
+	InternalDatabaseObject `json:",inline"`
+	ExternalConfig         *ExternalDatabaseObject `json:"externalConfig,omitempty"`
 }
 
-// ExternalDatabaseObject configuration definition of an external database
-type ExternalDatabaseObject struct {
+// ProcessMigrationDatabaseObject Defines how a Process Migration server will manage
+// and create a new Database or connect to an existing one
+type ProcessMigrationDatabaseObject struct {
+	InternalDatabaseObject `json:",inline"`
+	ExternalConfig         *CommonExternalDatabaseObject `json:"externalConfig,omitempty"`
+}
+
+// InternalDatabaseObject Defines how a KieServer will manage and create a new Database
+type InternalDatabaseObject struct {
+	Type             DatabaseType `json:"type,omitempty"`
+	Size             string       `json:"size,omitempty"`
+	StorageClassName string       `json:"storageClassName,omitempty"`
+}
+
+// CommonExternalDatabaseObject common configuration definition of an external database
+type CommonExternalDatabaseObject struct {
 	Driver                     string `json:"driver,omitempty"`
-	Dialect                    string `json:"dialect,omitempty"`
-	Name                       string `json:"name,omitempty"`
-	Host                       string `json:"host,omitempty"`
-	Port                       string `json:"port,omitempty"`
 	JdbcURL                    string `json:"jdbcURL,omitempty"`
-	NonXA                      string `json:"nonXA,omitempty"`
 	Username                   string `json:"username,omitempty"`
 	Password                   string `json:"password,omitempty"`
 	MinPoolSize                string `json:"minPoolSize,omitempty"`
@@ -373,18 +385,30 @@ type ExternalDatabaseObject struct {
 	BackgroundValidationMillis string `json:"backgroundValidationMillis,omitempty"`
 }
 
+// ExternalDatabaseObject configuration definition of an external database
+type ExternalDatabaseObject struct {
+	Dialect                      string `json:"dialect,omitempty"`
+	Name                         string `json:"name,omitempty"`
+	Host                         string `json:"host,omitempty"`
+	Port                         string `json:"port,omitempty"`
+	NonXA                        string `json:"nonXA,omitempty"`
+	CommonExternalDatabaseObject `json:",inline"`
+}
+
 type OpenShiftObject interface {
 	metav1.Object
 	runtime.Object
 }
 
 type EnvTemplate struct {
-	*CommonConfig `json:",inline"`
-	Console       ConsoleTemplate     `json:"console,omitempty"`
-	Servers       []ServerTemplate    `json:"servers,omitempty"`
-	SmartRouter   SmartRouterTemplate `json:"smartRouter,omitempty"`
-	Auth          AuthTemplate        `json:"auth,omitempty"`
-	Constants     TemplateConstants   `json:"constants,omitempty"`
+	*CommonConfig    `json:",inline"`
+	Console          ConsoleTemplate          `json:"console,omitempty"`
+	Servers          []ServerTemplate         `json:"servers,omitempty"`
+	SmartRouter      SmartRouterTemplate      `json:"smartRouter,omitempty"`
+	Auth             AuthTemplate             `json:"auth,omitempty"`
+	ProcessMigration ProcessMigrationTemplate `json:"processMigration,omitempty"`
+	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
+	Constants        TemplateConstants        `json:"constants,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -440,6 +464,14 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject      `json:"smartRouter,omitempty"`
 	Jvm              JvmObject              `json:"jvm,omitempty"`
 	StorageClassName string                 `json:"storageClassName,omitempty"`
+}
+
+// DatabaseTemplate contains all the variables used in the yaml templates
+type DatabaseTemplate struct {
+	InternalDatabaseObject `json:",inline"`
+	ServerName             string `json:"serverName,omitempty"`
+	Username               string `json:"username,omitempty"`
+	DatabaseName           string `json:"databaseName,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
@@ -525,6 +557,30 @@ type AuthTemplate struct {
 type RoleMapperTemplate struct {
 	MountPath            string `json:"mountPath,omitempty"`
 	RoleMapperAuthConfig `json:",inline"`
+}
+
+// ProcessMigrationObject
+type ProcessMigrationObject struct {
+	Image    string                         `json:"image,omitempty"`
+	ImageTag string                         `json:"imageTag,omitempty"`
+	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
+}
+
+// ProcessMigrationTemplate
+type ProcessMigrationTemplate struct {
+	OmitImageStream  bool                           `json:"omitImageStream"`
+	Image            string                         `json:"image,omitempty"`
+	ImageTag         string                         `json:"imageTag,omitempty"`
+	ImageURL         string                         `json:"imageURL,omitempty"`
+	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
+	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
+}
+
+// KieServerClient
+type KieServerClient struct {
+	Host     string `json:"host,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // ConditionType - type of condition

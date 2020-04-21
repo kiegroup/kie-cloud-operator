@@ -79,6 +79,16 @@ const (
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
 	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
+	// DefaultKieServerDatabaseName Default database name for Kie Server
+	DefaultKieServerDatabaseName = "rhpam7"
+	// DefaultKieServerDatabaseUsername Default database username for Kie Server
+	DefaultKieServerDatabaseUsername = "rhpam"
+	// DefaultProcessMigrationDatabaseType Default database type for Process Migration
+	DefaultProcessMigrationDatabaseType = api.DatabaseH2
+	// DefaultProcessMigrationDatabaseName Default database name for Process Migration
+	DefaultProcessMigrationDatabaseName = "pimdb"
+	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
+	DefaultProcessMigrationDatabaseUsername = "pim"
 
 	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = "DM_DC_IMAGE_"
@@ -172,13 +182,11 @@ var Images = []ImageEnv{
 		Component: "rhpam-7-smartrouter-rhel8-container",
 		Registry:  PamContext + "smartrouter" + RhelVersion,
 	},
-	/*
-		{
-			Var:       PamProcessMigrationVar,
-			Component: "rhpam-7-process-migration-rhel8-container",
-			Registry:  PamContext + "process-migration" + RhelVersion,
-		},
-	*/
+	{
+		Var:       PamProcessMigrationVar,
+		Component: "rhpam-7-process-migration-rhel8-container",
+		Registry:  PamContext + "process-migration" + RhelVersion,
+	},
 }
 
 type ImageEnv struct {
@@ -276,11 +284,11 @@ var replicasAuthoringHA = api.ReplicaConstants{
 }
 
 // DefaultDatabaseConfig defines the default Database to use for each environment
-var databaseRhpamAuthoring = &api.DatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}
-var databaseRhpamAuthoringHA = &api.DatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}
-var databaseRhpamProduction = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamProductionImmutable = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamTrial = &api.DatabaseObject{Type: api.DatabaseH2, Size: ""}
+var databaseRhpamAuthoring = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}}
+var databaseRhpamAuthoringHA = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProduction = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProductionImmutable = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamTrial = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: ""}}
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{

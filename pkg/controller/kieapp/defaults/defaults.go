@@ -104,6 +104,14 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	if err != nil {
 		return api.Environment{}, err
 	}
+	mergedEnv, err = mergeProcessMigration(service, cr, mergedEnv, envTemplate)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	mergedEnv, err = mergeDBDeployment(service, cr, mergedEnv, envTemplate)
+	if err != nil {
+		return api.Environment{}, err
+	}
 	return mergedEnv, nil
 }
 
@@ -115,17 +123,8 @@ func mergeDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environ
 			continue
 		}
 		dbType := kieServerSet.Database.Type
-		if _, loadedDB := dbEnvs[dbType]; !loadedDB {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/%s.yaml", dbType), cr.Spec.Version, cr.Namespace, envTemplate)
-			if err != nil {
-				return api.Environment{}, err
-			}
-			var dbEnv api.Environment
-			err = yaml.Unmarshal(yamlBytes, &dbEnv)
-			if err != nil {
-				return api.Environment{}, err
-			}
-			dbEnvs[dbType] = dbEnv
+		if err := loadDBYamls(service, cr, envTemplate, "dbs/servers/%s.yaml", dbType, dbEnvs); err != nil {
+			return api.Environment{}, err
 		}
 		dbServer, found := findCustomObjectByName(env.Servers[i], dbEnvs[dbType].Servers)
 		if found {
@@ -179,12 +178,18 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 	if err != nil {
 		return envTemplate, err
 	}
+	processMigrationConfig, err := getProcessMigrationTemplate(cr, serversConfig)
+	if err != nil {
+		return envTemplate, err
+	}
 	envTemplate = api.EnvTemplate{
-		CommonConfig: &cr.Spec.CommonConfig,
-		Console:      getConsoleTemplate(cr),
-		Servers:      serversConfig,
-		SmartRouter:  getSmartRouterTemplate(cr),
-		Constants:    *getTemplateConstants(cr),
+		CommonConfig:     &cr.Spec.CommonConfig,
+		Console:          getConsoleTemplate(cr),
+		Servers:          serversConfig,
+		SmartRouter:      getSmartRouterTemplate(cr),
+		ProcessMigration: *processMigrationConfig,
+		Databases:        getDatabaseDeploymentTemplate(cr, serversConfig, processMigrationConfig),
+		Constants:        *getTemplateConstants(cr),
 	}
 	if err := configureAuth(cr, &envTemplate); err != nil {
 		log.Error("unable to setup authentication: ", err)
@@ -927,4 +932,172 @@ func setDefaults(cr *api.KieApp) {
 	}
 	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
 	setPasswords(cr, isTrialEnv)
+}
+
+func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (*api.ProcessMigrationTemplate, error) {
+	processMigrationTemplate := api.ProcessMigrationTemplate{}
+	if deployProcessMigration(cr) {
+		processMigrationTemplate.ImageURL = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + cr.Spec.Version
+		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + cr.Spec.Version); exists && !cr.Spec.UseImageTags {
+			processMigrationTemplate.ImageURL = val
+			processMigrationTemplate.OmitImageStream = true
+		}
+		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, _ = GetImage(processMigrationTemplate.ImageURL)
+		if cr.Spec.Objects.ProcessMigration.Image != "" {
+			processMigrationTemplate.Image = cr.Spec.Objects.ProcessMigration.Image
+			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
+			processMigrationTemplate.OmitImageStream = false
+		}
+		if cr.Spec.Objects.ProcessMigration.ImageTag != "" {
+			processMigrationTemplate.ImageTag = cr.Spec.Objects.ProcessMigration.ImageTag
+			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
+			processMigrationTemplate.OmitImageStream = false
+		}
+		for _, sc := range serversConfig {
+			processMigrationTemplate.KieServerClients = append(processMigrationTemplate.KieServerClients, api.KieServerClient{
+				Host:     fmt.Sprintf("http://%s:8080/services/rest/server", sc.KieName),
+				Username: cr.Spec.CommonConfig.AdminUser,
+				Password: cr.Spec.CommonConfig.AdminPassword,
+			})
+		}
+		if cr.Spec.Objects.ProcessMigration.Database.Type == "" {
+			processMigrationTemplate.Database.Type = constants.DefaultProcessMigrationDatabaseType
+		} else if cr.Spec.Objects.ProcessMigration.Database.Type == api.DatabaseExternal &&
+			cr.Spec.Objects.ProcessMigration.Database.ExternalConfig == nil {
+			return nil, fmt.Errorf("external database configuration is mandatory for external database type of process migration")
+		} else {
+			processMigrationTemplate.Database = *cr.Spec.Objects.ProcessMigration.Database.DeepCopy()
+		}
+	}
+	return &processMigrationTemplate, nil
+}
+
+func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	var ProcessMigrationEnv api.Environment
+	if deployProcessMigration(cr) {
+		yamlBytes, err := loadYaml(service, "pim/process-migration.yaml", cr.Spec.Version, cr.Namespace, envTemplate)
+		if err != nil {
+			return api.Environment{}, err
+		}
+		err = yaml.Unmarshal(yamlBytes, &ProcessMigrationEnv)
+		if err != nil {
+			return api.Environment{}, err
+		}
+
+		env.ProcessMigration = mergeCustomObject(env.ProcessMigration, ProcessMigrationEnv.ProcessMigration)
+
+		env, err = mergeProcessMigrationDB(service, cr, env, envTemplate)
+		if err != nil {
+			return api.Environment{}, nil
+		}
+	} else {
+		ProcessMigrationEnv.ProcessMigration.Omit = true
+	}
+
+	return env, nil
+}
+
+func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	if envTemplate.ProcessMigration.Database.Type == api.DatabaseH2 {
+		return env, nil
+	}
+
+	yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/pim/%s.yaml", envTemplate.ProcessMigration.Database.Type), cr.Spec.Version, cr.Namespace, envTemplate)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	var dbEnv api.Environment
+	err = yaml.Unmarshal(yamlBytes, &dbEnv)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	env.ProcessMigration = mergeCustomObject(env.ProcessMigration, dbEnv.ProcessMigration)
+
+	return env, nil
+}
+
+func isRHPAM(cr *api.KieApp) bool {
+	switch cr.Spec.Environment {
+	case api.RhpamTrial, api.RhpamAuthoring, api.RhpamAuthoringHA, api.RhpamProduction, api.RhpamProductionImmutable:
+		return true
+	}
+	return false
+}
+
+func deployProcessMigration(cr *api.KieApp) bool {
+	return cr.Spec.Objects.ProcessMigration != nil && isRHPAM(cr)
+}
+
+func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,
+	processMigrationTemplate *api.ProcessMigrationTemplate) []api.DatabaseTemplate {
+	var databaseDeploymentTemplate []api.DatabaseTemplate
+	if serversConfig != nil {
+		for _, sc := range serversConfig {
+			if isDeployDB(sc.Database.Type) {
+				databaseDeploymentTemplate = append(databaseDeploymentTemplate, api.DatabaseTemplate{
+					InternalDatabaseObject: sc.Database.InternalDatabaseObject,
+					ServerName:             sc.KieName,
+					Username:               constants.DefaultKieServerDatabaseUsername,
+					DatabaseName:           constants.DefaultKieServerDatabaseName,
+				})
+			}
+		}
+	}
+	if processMigrationTemplate != nil && isDeployDB(processMigrationTemplate.Database.Type) {
+		databaseDeploymentTemplate = append(databaseDeploymentTemplate, api.DatabaseTemplate{
+			InternalDatabaseObject: processMigrationTemplate.Database.InternalDatabaseObject,
+			ServerName:             cr.Name + "-process-migration",
+			Username:               constants.DefaultProcessMigrationDatabaseUsername,
+			DatabaseName:           constants.DefaultProcessMigrationDatabaseName,
+		})
+	}
+	return databaseDeploymentTemplate
+}
+
+func mergeDBDeployment(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	env.Databases = make([]api.CustomObject, len(envTemplate.Databases))
+	if envTemplate.Databases == nil {
+		return env, nil
+	}
+	dbEnvs := make(map[api.DatabaseType]api.Environment)
+	for i, dbTemplate := range envTemplate.Databases {
+		if err := loadDBYamls(service, cr, envTemplate, "dbs/%s.yaml", dbTemplate.Type, dbEnvs); err != nil {
+			return api.Environment{}, err
+		}
+		deploymentName := dbTemplate.ServerName + "-" + string(dbTemplate.Type)
+		for _, db := range dbEnvs[dbTemplate.Type].Databases {
+			if len(db.DeploymentConfigs) == 0 {
+				continue
+			}
+			if deploymentName == db.DeploymentConfigs[0].ObjectMeta.Name {
+				env.Databases[i] = mergeCustomObject(env.Databases[i], db)
+			}
+		}
+	}
+	return env, nil
+}
+
+func loadDBYamls(service kubernetes.PlatformService, cr *api.KieApp, envTemplate api.EnvTemplate,
+	dbTemplates string, dbType api.DatabaseType, dbEnvs map[api.DatabaseType]api.Environment) error {
+	if _, loadedDB := dbEnvs[dbType]; !loadedDB {
+		yamlBytes, err := loadYaml(service, fmt.Sprintf(dbTemplates, dbType), cr.Spec.Version, cr.Namespace, envTemplate)
+		if err != nil {
+			return err
+		}
+		var dbEnv api.Environment
+		err = yaml.Unmarshal(yamlBytes, &dbEnv)
+		if err != nil {
+			return err
+		}
+		dbEnvs[dbType] = dbEnv
+	}
+	return nil
+}
+
+func isDeployDB(dbType api.DatabaseType) bool {
+	switch dbType {
+	case api.DatabaseMySQL, api.DatabasePostgreSQL:
+		return true
+	}
+	return false
 }

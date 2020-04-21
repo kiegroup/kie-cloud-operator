@@ -47,9 +47,12 @@ var knownTypes = map[schema.GroupVersion][]runtime.Object{
 		&corev1.ServiceAccount{},
 		&corev1.Secret{},
 		&corev1.Service{},
+		&corev1.ServiceList{},
 		&corev1.PersistentVolumeClaimList{},
 		&corev1.ServiceAccountList{},
-		&corev1.ServiceList{}},
+		&corev1.ConfigMap{},
+		&corev1.ConfigMapList{},
+	},
 	oappsv1.GroupVersion: {
 		&oappsv1.DeploymentConfig{},
 		&oappsv1.DeploymentConfigList{},
