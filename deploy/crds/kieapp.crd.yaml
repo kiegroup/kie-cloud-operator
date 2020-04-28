@@ -15,7 +15,7 @@ spec:
     - name: Version
       type: string
       description: The version of the application deployment
-      JSONPath: .spec.version
+      JSONPath: .status.version
     - name: Environment
       type: string
       description: The name of the environment used as a baseline

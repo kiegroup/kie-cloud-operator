@@ -115,6 +115,9 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 	for _, imageVersion := range constants.SupportedVersions {
 		for _, i := range constants.Images {
+			if i.Var == constants.PamProcessMigrationVar && imageVersion < "7.8.0" {
+				continue
+			}
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  i.Var + imageVersion,
 				Value: i.Registry + ":" + imageVersion,

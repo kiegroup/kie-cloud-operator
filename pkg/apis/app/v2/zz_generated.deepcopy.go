@@ -714,7 +714,11 @@ func (in *KieAppObject) DeepCopyInto(out *KieAppObject) {
 		*out = new(int32)
 		**out = **in
 	}
-	in.Resources.DeepCopyInto(&out.Resources)
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -788,7 +792,11 @@ func (in *KieAppSpec) DeepCopyInto(out *KieAppSpec) {
 	}
 	in.Objects.DeepCopyInto(&out.Objects)
 	out.CommonConfig = in.CommonConfig
-	in.Auth.DeepCopyInto(&out.Auth)
+	if in.Auth != nil {
+		in, out := &in.Auth, &out.Auth
+		*out = new(KieAppAuthObject)
+		(*in).DeepCopyInto(*out)
+	}
 	out.Upgrades = in.Upgrades
 	return
 }
@@ -814,6 +822,7 @@ func (in *KieAppStatus) DeepCopyInto(out *KieAppStatus) {
 		}
 	}
 	in.Deployments.DeepCopyInto(&out.Deployments)
+	in.Generated.DeepCopyInto(&out.Generated)
 	return
 }
 

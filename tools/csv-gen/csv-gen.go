@@ -259,19 +259,13 @@ func main() {
 						Path:         "environment",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
 					},
+				},
+				StatusDescriptors: []csvv1.StatusDescriptor{
 					{
 						Description:  "Product version installed.",
 						DisplayName:  "Version",
 						Path:         "version",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
-					},
-				},
-				StatusDescriptors: []csvv1.StatusDescriptor{
-					{
-						Description:  "Deployments for the KieApp environment.",
-						DisplayName:  "Deployments",
-						Path:         "deployments",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
 					},
 					{
 						Description:  "Current phase.",
@@ -284,6 +278,12 @@ func main() {
 						DisplayName:  "Business/Decision Central URL",
 						Path:         "consoleHost",
 						XDescriptors: []string{"urn:alm:descriptor:org.w3:link"},
+					},
+					{
+						Description:  "Deployments for the KieApp environment.",
+						DisplayName:  "Deployments",
+						Path:         "deployments",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
 					},
 				},
 			},
@@ -313,6 +313,9 @@ func main() {
 		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 		for _, imageVersion := range constants.SupportedVersions {
 			for _, i := range constants.Images {
+				if i.Var == constants.PamProcessMigrationVar && imageVersion < "7.8.0" {
+					continue
+				}
 				relatedImages = addRefRelatedImages(i.Registry+":"+imageVersion, i.Component, imageRef, relatedImages)
 			}
 		}

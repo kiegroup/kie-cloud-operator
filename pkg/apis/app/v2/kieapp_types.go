@@ -1,7 +1,6 @@
 package v2
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/olm"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
@@ -13,22 +12,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // KieAppSpec defines the desired state of KieApp
 type KieAppSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment   EnvironmentType  `json:"environment,omitempty"`
-	ImageRegistry *KieAppRegistry  `json:"imageRegistry,omitempty"`
-	Objects       KieAppObjects    `json:"objects,omitempty"`
-	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
-	Auth          KieAppAuthObject `json:"auth,omitempty"`
-	Upgrades      KieAppUpgrades   `json:"upgrades,omitempty"`
-	Version       string           `json:"version,omitempty"`
-	UseImageTags  bool             `json:"useImageTags"`
+	Environment   EnvironmentType   `json:"environment,omitempty"`
+	ImageRegistry *KieAppRegistry   `json:"imageRegistry,omitempty"`
+	Objects       KieAppObjects     `json:"objects,omitempty"`
+	CommonConfig  CommonConfig      `json:"commonConfig,omitempty"`
+	Auth          *KieAppAuthObject `json:"auth,omitempty"`
+	Upgrades      KieAppUpgrades    `json:"upgrades,omitempty"`
+	UseImageTags  bool              `json:"useImageTags,omitempty"`
+	Version       string            `json:"version,omitempty"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -76,7 +70,7 @@ type AppConstants struct {
 // KieAppRegistry defines the registry that should be used for rhpam images
 type KieAppRegistry struct {
 	Registry string `json:"registry,omitempty"` // Registry to use, can also be set w/ "REGISTRY" env variable
-	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
+	Insecure bool   `json:"insecure,omitempty"` // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -115,8 +109,8 @@ type KieAppObjects struct {
 
 // KieAppUpgrades KIE App product upgrade flags
 type KieAppUpgrades struct {
-	Enabled bool `json:"enabled"`
-	Minor   bool `json:"minor"`
+	Enabled bool `json:"enabled,omitempty"`
+	Minor   bool `json:"minor,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
@@ -191,13 +185,13 @@ type JvmObject struct {
 
 // KieAppObject Generic object definition
 type KieAppObject struct {
-	Env              []corev1.EnvVar             `json:"env,omitempty"`
-	Replicas         *int32                      `json:"replicas,omitempty"`
-	Resources        corev1.ResourceRequirements `json:"resources"`
-	KeystoreSecret   string                      `json:"keystoreSecret,omitempty"`
-	Image            string                      `json:"image,omitempty"`
-	ImageTag         string                      `json:"imageTag,omitempty"`
-	StorageClassName string                      `json:"storageClassName,omitempty"`
+	Env              []corev1.EnvVar              `json:"env,omitempty"`
+	Replicas         *int32                       `json:"replicas,omitempty"`
+	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
+	KeystoreSecret   string                       `json:"keystoreSecret,omitempty"`
+	Image            string                       `json:"image,omitempty"`
+	ImageTag         string                       `json:"imageTag,omitempty"`
+	StorageClassName string                       `json:"storageClassName,omitempty"`
 }
 
 type Environment struct {
@@ -581,49 +575,6 @@ type KieServerClient struct {
 	Host     string `json:"host,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
-}
-
-// ConditionType - type of condition
-type ConditionType string
-
-const (
-	// DeployedConditionType - the kieapp is deployed
-	DeployedConditionType ConditionType = "Deployed"
-	// ProvisioningConditionType - the kieapp is being provisioned
-	ProvisioningConditionType ConditionType = "Provisioning"
-	// FailedConditionType - the kieapp is in a failed state
-	FailedConditionType ConditionType = "Failed"
-)
-
-// ReasonType - type of reason
-type ReasonType string
-
-const (
-	// DeploymentFailedReason - Unable to deploy the application
-	DeploymentFailedReason ReasonType = "DeploymentFailed"
-	// ConfigurationErrorReason - An invalid configuration caused an error
-	ConfigurationErrorReason ReasonType = "ConfigurationError"
-	// MissingDependenciesReason - Dependencies does not exist or cannot be found
-	MissingDependenciesReason ReasonType = "MissingDependencies"
-	// UnknownReason - Unable to determine the error
-	UnknownReason ReasonType = "Unknown"
-)
-
-// Condition - The condition for the kie-cloud-operator
-type Condition struct {
-	Type               ConditionType          `json:"type"`
-	Status             corev1.ConditionStatus `json:"status"`
-	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
-	Reason             ReasonType             `json:"reason,omitempty"`
-	Message            string                 `json:"message,omitempty"`
-}
-
-// KieAppStatus - The status for custom resources managed by the operator-sdk.
-type KieAppStatus struct {
-	Conditions  []Condition          `json:"conditions"`
-	ConsoleHost string               `json:"consoleHost,omitempty"`
-	Deployments olm.DeploymentStatus `json:"deployments"`
-	Phase       ConditionType        `json:"phase,omitempty"`
 }
 
 func init() {

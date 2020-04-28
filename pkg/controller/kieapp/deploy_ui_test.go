@@ -159,7 +159,6 @@ func checkConsoleProxySettings(t *testing.T, ocpVersion string) {
 	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersionMajor, ocpVersionMinor, operator)
 	caBundlePath := "--openshift-ca=/etc/pki/ca-trust/extracted/crt/ca-bundle.crt"
 	if ocpVersionMajor < "4" {
-		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
 		assert.Equal(t, getService(pod.Namespace, ocpVersionMajor).Annotations,
 			map[string]string{
 				"service.alpha.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
@@ -168,9 +167,6 @@ func checkConsoleProxySettings(t *testing.T, ocpVersion string) {
 		)
 		assert.Equal(t, constants.Oauth3ImageLatestURL, pod.Spec.Containers[0].Image)
 	} else {
-		if ocpVersion >= "4.2" {
-			assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
-		}
 		assert.Equal(t, getService(pod.Namespace, ocpVersionMajor).Annotations,
 			map[string]string{
 				"service.beta.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
@@ -182,5 +178,10 @@ func checkConsoleProxySettings(t *testing.T, ocpVersion string) {
 		} else {
 			assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)
 		}
+	}
+	if ocpVersion >= "4.2" {
+		assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
+	} else {
+		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
 	}
 }
