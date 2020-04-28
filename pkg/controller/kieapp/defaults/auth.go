@@ -61,20 +61,16 @@ func configureSSO(cr *api.KieApp, envTemplate *api.EnvTemplate) error {
 	}
 	// Set defaults
 	if len(cr.Spec.Auth.SSO.PrincipalAttribute) == 0 {
-		if cr.Status.Generated.Auth == nil {
-			cr.Status.Generated.Auth = &api.KieAppAuthObject{SSO: &api.SSOAuthConfig{}}
+		if cr.Status.Applied.Auth == nil {
+			cr.Status.Applied.Auth = &api.KieAppAuthObject{SSO: &api.SSOAuthConfig{}}
 		}
-		cr.Status.Generated.Auth.SSO.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
+		cr.Status.Applied.Auth.SSO.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
 	}
-	resolvedSpec, err := ResolveSpec(cr)
-	if err != nil {
-		return err
+	if cr.Status.Applied.Objects.Console.SSOClient != nil {
+		envTemplate.Console.SSOAuthClient = *cr.Status.Applied.Objects.Console.SSOClient.DeepCopy()
 	}
-	if resolvedSpec.Objects.Console.SSOClient != nil {
-		envTemplate.Console.SSOAuthClient = *resolvedSpec.Objects.Console.SSOClient.DeepCopy()
-	}
-	if resolvedSpec.Auth.SSO != nil {
-		envTemplate.Auth.SSO = *resolvedSpec.Auth.SSO.DeepCopy()
+	if cr.Status.Applied.Auth.SSO != nil {
+		envTemplate.Auth.SSO = *cr.Status.Applied.Auth.SSO.DeepCopy()
 		for index := range envTemplate.Servers {
 			serverSet, _ := GetServerSet(cr, index)
 			if serverSet.SSOClient != nil {

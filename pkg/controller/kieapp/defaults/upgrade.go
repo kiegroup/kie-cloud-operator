@@ -16,14 +16,14 @@ import (
 
 // checkProductUpgrade ...
 func checkProductUpgrade(cr *api.KieApp) (minor, micro bool, err error) {
-	setDefaults(cr)
-	if checkVersion(GetVersion(cr)) {
-		if GetVersion(cr) != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
-			micro = cr.Spec.Upgrades.Enabled
-			minor = cr.Spec.Upgrades.Minor
+	SetDefaults(cr)
+	if checkVersion(cr.Status.Applied.Version) {
+		if cr.Status.Applied.Version != constants.CurrentVersion && cr.Status.Applied.Upgrades.Enabled {
+			micro = cr.Status.Applied.Upgrades.Enabled
+			minor = cr.Status.Applied.Upgrades.Minor
 		}
 	} else {
-		err = fmt.Errorf("Product version %s is not allowed. The following versions are allowed - %s", GetVersion(cr), constants.SupportedVersions)
+		err = fmt.Errorf("Product version %s is not allowed. The following versions are allowed - %s", cr.Status.Applied.Version, constants.SupportedVersions)
 	}
 	return minor, micro, err
 }

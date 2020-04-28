@@ -48,6 +48,6 @@ type KieAppStatus struct {
 	ConsoleHost string               `json:"consoleHost,omitempty"`
 	Deployments olm.DeploymentStatus `json:"deployments"`
 	Phase       ConditionType        `json:"phase,omitempty"`
-	Generated   KieAppSpec           `json:"generated,omitempty"`
+	Applied     KieAppSpec           `json:"applied,omitempty"`
 	Version     string               `json:"version,omitempty"`
 }

@@ -822,7 +822,7 @@ func (in *KieAppStatus) DeepCopyInto(out *KieAppStatus) {
 		}
 	}
 	in.Deployments.DeepCopyInto(&out.Deployments)
-	in.Generated.DeepCopyInto(&out.Generated)
+	in.Applied.DeepCopyInto(&out.Applied)
 	return
 }
 

@@ -3,7 +3,6 @@ package status
 import (
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,7 +27,7 @@ func SetProvisioning(cr *api.KieApp) bool {
 // SetDeployed - Updates the condition with the DeployedCondition and True status
 func SetDeployed(cr *api.KieApp) bool {
 	log := log.With("kind", cr.Kind, "name", cr.Name, "namespace", cr.Namespace)
-	cr.Status.Version = defaults.GetVersion(cr)
+	cr.Status.Version = cr.Status.Applied.Version
 	size := len(cr.Status.Conditions)
 	if size > 0 && cr.Status.Conditions[size-1].Type == api.DeployedConditionType {
 		log.Debug("Status: unchanged status [deployed].")
@@ -54,7 +53,7 @@ func SetFailed(cr *api.KieApp, reason api.ReasonType, err error) {
 func addCondition(cr *api.KieApp, condition api.Condition) []api.Condition {
 	condition.Status = corev1.ConditionTrue
 	condition.LastTransitionTime = metav1.Now()
-	condition.Version = defaults.GetVersion(cr)
+	condition.Version = cr.Status.Applied.Version
 	conditions := cr.Status.Conditions
 	size := len(conditions) + 1
 	first := 0

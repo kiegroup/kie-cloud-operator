@@ -593,7 +593,7 @@ func getParsedTemplateFromCR(cr *api.KieApp, filename string, object interface{}
 		log.Error("Error getting environment template", err)
 	}
 
-	yamlBytes, err := loadYaml(test.MockService(), filename, GetVersion(cr), cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}
