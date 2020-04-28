@@ -18,7 +18,7 @@ import (
 func checkProductUpgrade(cr *api.KieApp) (minor, micro bool, err error) {
 	setDefaults(cr)
 	if checkVersion(GetVersion(cr)) {
-		if cr.Spec.Upgrades != nil && GetVersion(cr) != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
+		if GetVersion(cr) != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
 			micro = cr.Spec.Upgrades.Enabled
 			minor = cr.Spec.Upgrades.Minor
 		}

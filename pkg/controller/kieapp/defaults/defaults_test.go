@@ -1384,7 +1384,7 @@ func TestKieAppDefaults(t *testing.T) {
 	_, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	assert.Nil(t, cr.Spec.Upgrades)
+	assert.False(t, cr.Spec.Upgrades.Enabled)
 	assert.Empty(t, cr.Spec.CommonConfig.ApplicationName)
 	assert.Nil(t, cr.Spec.Objects.Console.Replicas)
 	assert.Nil(t, cr.Spec.Objects.Servers)

@@ -797,11 +797,7 @@ func (in *KieAppSpec) DeepCopyInto(out *KieAppSpec) {
 		*out = new(KieAppAuthObject)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Upgrades != nil {
-		in, out := &in.Upgrades, &out.Upgrades
-		*out = new(KieAppUpgrades)
-		**out = **in
-	}
+	out.Upgrades = in.Upgrades
 	return
 }
 

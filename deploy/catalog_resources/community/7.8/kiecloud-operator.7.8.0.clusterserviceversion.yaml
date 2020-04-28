@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.8.0
-    createdAt: "2020-04-28 14:51:44"
+    createdAt: "2020-04-28 15:29:59"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -84,11 +84,11 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:label
       statusDescriptors:
-      - description: Deployments for the KieApp environment.
-        displayName: Deployments
-        path: deployments
+      - description: Product version installed.
+        displayName: Version
+        path: version
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:podStatuses
+        - urn:alm:descriptor:com.tectonic.ui:label
       - description: Current phase.
         displayName: Status
         path: phase
@@ -99,11 +99,11 @@ spec:
         path: consoleHost
         x-descriptors:
         - urn:alm:descriptor:org.w3:link
-      - description: Product version installed.
-        displayName: Version
-        path: version
+      - description: Deployments for the KieApp environment.
+        displayName: Deployments
+        path: deployments
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:label
+        - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v2
   description: |-
     Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.

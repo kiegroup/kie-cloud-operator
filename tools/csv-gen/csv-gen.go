@@ -262,10 +262,10 @@ func main() {
 				},
 				StatusDescriptors: []csvv1.StatusDescriptor{
 					{
-						Description:  "Deployments for the KieApp environment.",
-						DisplayName:  "Deployments",
-						Path:         "deployments",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
+						Description:  "Product version installed.",
+						DisplayName:  "Version",
+						Path:         "version",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
 					},
 					{
 						Description:  "Current phase.",
@@ -280,10 +280,10 @@ func main() {
 						XDescriptors: []string{"urn:alm:descriptor:org.w3:link"},
 					},
 					{
-						Description:  "Product version installed.",
-						DisplayName:  "Version",
-						Path:         "version",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
+						Description:  "Deployments for the KieApp environment.",
+						DisplayName:  "Deployments",
+						Path:         "deployments",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
 					},
 				},
 			},

@@ -18,7 +18,7 @@ func TestUpgradesTrue(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
-			Upgrades:    &api.KieAppUpgrades{Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
@@ -34,7 +34,7 @@ func TestGetConfigVersionDiffs(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Version:     constants.PriorVersion2,
-			Upgrades:    &api.KieAppUpgrades{Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
 	err := getConfigVersionDiffs(GetVersion(cr), constants.CurrentVersion, test.MockService())
@@ -50,7 +50,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Version:     "6.3.1",
-			Upgrades:    &api.KieAppUpgrades{Minor: true, Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
 	minor, micro, err := checkProductUpgrade(cr)
@@ -85,7 +85,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Version:     constants.PriorVersion2,
-			Upgrades:    &api.KieAppUpgrades{Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -105,7 +105,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Version:     constants.PriorVersion2,
-			Upgrades:    &api.KieAppUpgrades{Minor: true, Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -124,7 +124,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Upgrades:    &api.KieAppUpgrades{Minor: true, Enabled: true},
+			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -143,7 +143,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Version:     constants.PriorVersion2,
-			Upgrades:    &api.KieAppUpgrades{Minor: true, Enabled: false},
+			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: false},
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)

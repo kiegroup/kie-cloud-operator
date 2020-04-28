@@ -20,7 +20,7 @@ type KieAppSpec struct {
 	Objects       KieAppObjects     `json:"objects,omitempty"`
 	CommonConfig  CommonConfig      `json:"commonConfig,omitempty"`
 	Auth          *KieAppAuthObject `json:"auth,omitempty"`
-	Upgrades      *KieAppUpgrades   `json:"upgrades,omitempty"`
+	Upgrades      KieAppUpgrades    `json:"upgrades,omitempty"`
 	UseImageTags  bool              `json:"useImageTags,omitempty"`
 	Version       string            `json:"version,omitempty"`
 }
