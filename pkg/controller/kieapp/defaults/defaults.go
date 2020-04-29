@@ -36,18 +36,19 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		return api.Environment{}, err
 	}
 	// handle upgrade logic from here
-	cMajor, _, _ := MajorMinorMicro(GetVersion(cr))
+	cMajor, _, _ := MajorMinorMicro(cr.Status.Applied.Version)
 	lMajor, _, _ := MajorMinorMicro(constants.CurrentVersion)
-	minorVersion := GetMinorImageVersion(GetVersion(cr))
+	minorVersion := GetMinorImageVersion(cr.Status.Applied.Version)
 	latestMinorVersion := GetMinorImageVersion(constants.CurrentVersion)
 	if (micro && minorVersion == latestMinorVersion) ||
 		(minor && minorVersion != latestMinorVersion && cMajor == lMajor) {
-		if err := getConfigVersionDiffs(GetVersion(cr), constants.CurrentVersion, service); err != nil {
+		if err := getConfigVersionDiffs(cr.Status.Applied.Version, constants.CurrentVersion, service); err != nil {
 			return api.Environment{}, err
 		}
-		// reset current annotations and update CR use to latest product version
+		// reset current annotations and update CR to use latest product version
 		cr.SetAnnotations(map[string]string{})
-		SetVersion(cr, constants.CurrentVersion)
+		cr.Status.Applied.Version = constants.CurrentVersion
+		cr.Spec.Version = ""
 	}
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
@@ -55,7 +56,7 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	}
 
 	var common api.Environment
-	yamlBytes, err := loadYaml(service, "common.yaml", GetVersion(cr), cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(service, "common.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return api.Environment{}, err
 	}
@@ -64,7 +65,7 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		return api.Environment{}, err
 	}
 	var env api.Environment
-	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Spec.Environment), GetVersion(cr), cr.Namespace, envTemplate)
+	yamlBytes, err = loadYaml(service, fmt.Sprintf("envs/%s.yaml", cr.Status.Applied.Environment), cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return api.Environment{}, err
 	}
@@ -72,7 +73,7 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	if err != nil {
 		return api.Environment{}, err
 	}
-	if cr.Spec.Objects.SmartRouter == nil {
+	if cr.Status.Applied.Objects.SmartRouter == nil {
 		env.SmartRouter.Omit = true
 	}
 
@@ -141,7 +142,7 @@ func mergeJms(service kubernetes.PlatformService, cr *api.KieApp, env api.Enviro
 		isJmsEnabled := kieServerSet.Jms.EnableIntegration
 
 		if isJmsEnabled {
-			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), GetVersion(cr), cr.Namespace, envTemplate)
+			yamlBytes, err := loadYaml(service, fmt.Sprintf("jms/activemq-jms-config.yaml"), cr.Status.Applied.Version, cr.Namespace, envTemplate)
 			if err != nil {
 				return api.Environment{}, err
 			}
@@ -172,7 +173,7 @@ func findCustomObjectByName(template api.CustomObject, objects []api.CustomObjec
 }
 
 func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
-	setDefaults(cr)
+	SetDefaults(cr)
 	serversConfig, err := getServersConfig(cr)
 	if err != nil {
 		return envTemplate, err
@@ -194,12 +195,8 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 	//
 
 	envTemplate.Databases = getDatabaseDeploymentTemplate(cr, serversConfig, processMigrationConfig)
-	resolvedSpec, err := ResolveSpec(cr)
-	if err != nil {
-		return envTemplate, err
-	}
-	envTemplate.CommonConfig = &resolvedSpec.CommonConfig
-	if cr.Spec.Auth != nil {
+	envTemplate.CommonConfig = &cr.Status.Applied.CommonConfig
+	if cr.Status.Applied.Auth != nil {
 		if err := configureAuth(cr, &envTemplate); err != nil {
 			log.Error("unable to setup authentication: ", err)
 			return envTemplate, err
@@ -211,12 +208,12 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 
 func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Micro = MajorMinorMicro(GetVersion(cr))
-	if envConstants, found := constants.EnvironmentConstants[cr.Spec.Environment]; found {
+	c.Major, c.Minor, c.Micro = MajorMinorMicro(cr.Status.Applied.Version)
+	if envConstants, found := constants.EnvironmentConstants[cr.Status.Applied.Environment]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
 	}
-	if versionConstants, found := constants.VersionConstants[GetVersion(cr)]; found {
+	if versionConstants, found := constants.VersionConstants[cr.Status.Applied.Version]; found {
 		c.BrokerImage = versionConstants.BrokerImage
 		c.BrokerImageTag = versionConstants.BrokerImageTag
 		c.DatagridImage = versionConstants.DatagridImage
@@ -228,19 +225,19 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 		c.DatagridImageURL = versionConstants.DatagridImageURL
 		c.BrokerImageURL = versionConstants.BrokerImageURL
 	}
-	if val, exists := os.LookupEnv(constants.OseCliVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+	if val, exists := os.LookupEnv(constants.OseCliVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		c.OseCliImageURL = val
 	}
-	if val, exists := os.LookupEnv(constants.MySQLVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+	if val, exists := os.LookupEnv(constants.MySQLVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		c.MySQLImageURL = val
 	}
-	if val, exists := os.LookupEnv(constants.PostgreSQLVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+	if val, exists := os.LookupEnv(constants.PostgreSQLVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		c.PostgreSQLImageURL = val
 	}
-	if val, exists := os.LookupEnv(constants.DatagridVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+	if val, exists := os.LookupEnv(constants.DatagridVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		c.DatagridImageURL = val
 	}
-	if val, exists := os.LookupEnv(constants.BrokerVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+	if val, exists := os.LookupEnv(constants.BrokerVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		c.BrokerImageURL = val
 	}
 	return c
@@ -248,107 +245,89 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 
 func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	// Set replicas
-	consoleReplicas := cr.Status.Generated.Objects.Console.Replicas
-	if cr.Spec.Objects.Console.Replicas != nil {
-		consoleReplicas = cr.Spec.Objects.Console.Replicas
-	}
 	template := api.ConsoleTemplate{}
-	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if !hasEnv {
 		return template
 	}
-	replicas, denyScale := setReplicas(consoleReplicas, envConstants.Replica.Console, hasEnv)
-	if denyScale && cr.Spec.Objects.Console.Replicas != nil {
-		cr.Spec.Objects.Console.Replicas = nil
+	replicas, denyScale := setReplicas(cr.Status.Applied.Objects.Console.Replicas, envConstants.Replica.Console, hasEnv)
+	if denyScale || cr.Status.Applied.Objects.Console.Replicas == nil {
+		cr.Status.Applied.Objects.Console.Replicas = Pint32(replicas)
 	}
-	if cr.Spec.Objects.Console.Replicas == nil {
-		cr.Status.Generated.Objects.Console.Replicas = Pint32(replicas)
-	}
-	resolvedSpec, err := ResolveSpec(cr)
-	if err != nil {
-		log.Error("Could not Resolve spec - ", err)
-		return template
-	}
-	template.Replicas = *resolvedSpec.Objects.Console.Replicas
+	template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 	template.Name = envConstants.App.Prefix
-	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + GetVersion(cr)
-	template.KeystoreSecret = resolvedSpec.Objects.Console.KeystoreSecret
+	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 	if template.KeystoreSecret == "" {
-		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{resolvedSpec.CommonConfig.ApplicationName, "businesscentral"}, "-"))
+		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
 	}
-	template.StorageClassName = resolvedSpec.Objects.Console.StorageClassName
-	if val, exists := os.LookupEnv(envConstants.App.ImageVar + GetVersion(cr)); exists && !resolvedSpec.UseImageTags {
+	template.StorageClassName = cr.Status.Applied.Objects.Console.StorageClassName
+	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 		template.ImageURL = val
 		template.OmitImageStream = true
 	}
 	template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
-	if resolvedSpec.Objects.Console.Image != "" {
-		template.Image = resolvedSpec.Objects.Console.Image
+	if cr.Status.Applied.Objects.Console.Image != "" {
+		template.Image = cr.Status.Applied.Objects.Console.Image
 		template.ImageURL = template.Image + ":" + template.ImageTag
 		template.OmitImageStream = false
 	}
-	if resolvedSpec.Objects.Console.ImageTag != "" {
-		template.ImageTag = resolvedSpec.Objects.Console.ImageTag
+	if cr.Status.Applied.Objects.Console.ImageTag != "" {
+		template.ImageTag = cr.Status.Applied.Objects.Console.ImageTag
 		template.ImageURL = template.Image + ":" + template.ImageTag
 		template.OmitImageStream = false
 	}
-	if resolvedSpec.Objects.Console.GitHooks != nil {
-		template.GitHooks = *resolvedSpec.Objects.Console.GitHooks.DeepCopy()
+	if cr.Status.Applied.Objects.Console.GitHooks != nil {
+		template.GitHooks = *cr.Status.Applied.Objects.Console.GitHooks.DeepCopy()
 		if template.GitHooks.MountPath == "" {
 			template.GitHooks.MountPath = constants.GitHooksDefaultDir
 		}
 	}
 	// JVM configuration
-	if resolvedSpec.Objects.Console.Jvm != nil {
-		template.Jvm = *resolvedSpec.Objects.Console.Jvm.DeepCopy()
+	if cr.Status.Applied.Objects.Console.Jvm != nil {
+		template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
 	}
 	return template
 }
 
 func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 	template := api.SmartRouterTemplate{}
-	if cr.Spec.Objects.SmartRouter != nil {
-		envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	if cr.Status.Applied.Objects.SmartRouter != nil {
+		envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 		if !hasEnv {
 			return template
 		}
 		// Set replicas
-		cr.Status.Generated.Objects.SmartRouter = nil
-		if cr.Spec.Objects.SmartRouter.Replicas == nil {
-			cr.Status.Generated.Objects.SmartRouter = &api.SmartRouterObject{KieAppObject: api.KieAppObject{Replicas: &envConstants.Replica.SmartRouter.Replicas}}
+		if cr.Status.Applied.Objects.SmartRouter.Replicas == nil {
+			cr.Status.Applied.Objects.SmartRouter.Replicas = &envConstants.Replica.SmartRouter.Replicas
 		}
-		resolvedSpec, err := ResolveSpec(cr)
-		if err != nil {
-			log.Error("Could not Resolve spec - ", err)
-			return template
-		}
-		template.Replicas = *resolvedSpec.Objects.SmartRouter.Replicas
-		if cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
-			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{resolvedSpec.CommonConfig.ApplicationName, "smartrouter"}, "-"))
+		template.Replicas = *cr.Status.Applied.Objects.SmartRouter.Replicas
+		if cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
+			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-"))
 		} else {
-			template.KeystoreSecret = cr.Spec.Objects.SmartRouter.KeystoreSecret
+			template.KeystoreSecret = cr.Status.Applied.Objects.SmartRouter.KeystoreSecret
 		}
-		if cr.Spec.Objects.SmartRouter.Protocol == "" {
+		if cr.Status.Applied.Objects.SmartRouter.Protocol == "" {
 			template.Protocol = constants.SmartRouterProtocol
 		} else {
-			template.Protocol = cr.Spec.Objects.SmartRouter.Protocol
+			template.Protocol = cr.Status.Applied.Objects.SmartRouter.Protocol
 		}
-		template.UseExternalRoute = cr.Spec.Objects.SmartRouter.UseExternalRoute
-		template.StorageClassName = cr.Spec.Objects.SmartRouter.StorageClassName
-		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + GetVersion(cr)
-		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
+		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
+		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 			template.ImageURL = val
 			template.OmitImageStream = true
 		}
 		template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
 
-		if cr.Spec.Objects.SmartRouter.Image != "" {
-			template.Image = cr.Spec.Objects.SmartRouter.Image
+		if cr.Status.Applied.Objects.SmartRouter.Image != "" {
+			template.Image = cr.Status.Applied.Objects.SmartRouter.Image
 			template.ImageURL = template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
-		if cr.Spec.Objects.SmartRouter.ImageTag != "" {
-			template.ImageTag = cr.Spec.Objects.SmartRouter.ImageTag
+		if cr.Status.Applied.Objects.SmartRouter.ImageTag != "" {
+			template.ImageTag = cr.Status.Applied.Objects.SmartRouter.ImageTag
 			template.ImageURL = template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
@@ -413,24 +392,15 @@ func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
 func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	var servers []api.ServerTemplate
 	serverReplicas := Pint32(1)
-	envConstants, hasEnv := constants.EnvironmentConstants[cr.Spec.Environment]
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if hasEnv {
 		serverReplicas = &envConstants.Replica.Server.Replicas
 	}
-	product := GetProduct(cr.Spec.Environment)
+	product := GetProduct(cr.Status.Applied.Environment)
 	usedNames := map[string]bool{}
 	unsetNames := 0
-	cr.Status.Generated.Objects.Servers = serverSortBlanks(cr.Status.Generated.Objects.Servers)
-	serverSlice := cr.Status.Generated.Objects.Servers
-	if len(cr.Spec.Objects.Servers) != 0 {
-		cr.Status.Generated.Objects.Servers = nil
-		cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
-		serverSlice = cr.Spec.Objects.Servers
-	}
-	appName := cr.Status.Generated.CommonConfig.ApplicationName
-	if len(cr.Spec.CommonConfig.ApplicationName) != 0 {
-		appName = cr.Spec.CommonConfig.ApplicationName
-	}
+	cr.Status.Applied.Objects.Servers = serverSortBlanks(cr.Status.Applied.Objects.Servers)
+	serverSlice := cr.Status.Applied.Objects.Servers
 	for index := range serverSlice {
 		serverSet := &serverSlice[index]
 		if serverSet.Deployments == nil {
@@ -438,7 +408,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 		}
 		if serverSet.Name == "" {
 			for i := 0; i < len(serverSlice); i++ {
-				serverSetName := getKieSetName(appName, serverSet.Name, unsetNames)
+				serverSetName := getKieSetName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, unsetNames)
 				if !usedNames[serverSetName] {
 					serverSet.Name = serverSetName
 					break
@@ -447,7 +417,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 		}
 		for i := 0; i < *serverSet.Deployments; i++ {
-			name := getKieDeploymentName(appName, serverSet.Name, unsetNames, i)
+			name := getKieDeploymentName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, unsetNames, i)
 			if usedNames[name] {
 				return []api.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", name)
 			}
@@ -468,7 +438,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				}
 				template.From = corev1.ObjectReference{
 					Kind:      "ImageStreamTag",
-					Name:      fmt.Sprintf("%s-kieserver:latest", appName),
+					Name:      fmt.Sprintf("%s-kieserver:latest", cr.Status.Applied.CommonConfig.ApplicationName),
 					Namespace: "",
 				}
 			} else {
@@ -483,15 +453,15 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 
 			// if, SmartRouter object is nil, ignore it
 			// get smart router protocol configuration
-			if cr.Spec.Objects.SmartRouter != nil {
-				if cr.Spec.Objects.SmartRouter.Protocol == "" {
+			if cr.Status.Applied.Objects.SmartRouter != nil {
+				if cr.Status.Applied.Objects.SmartRouter.Protocol == "" {
 					template.SmartRouter.Protocol = constants.SmartRouterProtocol
 				} else {
-					template.SmartRouter.Protocol = cr.Spec.Objects.SmartRouter.Protocol
+					template.SmartRouter.Protocol = cr.Status.Applied.Objects.SmartRouter.Protocol
 				}
 			}
 
-			dbConfig, err := getDatabaseConfig(cr.Spec.Environment, serverSet.Database)
+			dbConfig, err := getDatabaseConfig(cr.Status.Applied.Environment, serverSet.Database)
 			if err != nil {
 				return servers, err
 			}
@@ -499,7 +469,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.Database = *dbConfig
 			}
 
-			jmsConfig, err := getJmsConfig(cr.Spec.Environment, serverSet.Jms)
+			jmsConfig, err := getJmsConfig(cr.Status.Applied.Environment, serverSet.Jms)
 			if err != nil {
 				return servers, err
 			}
@@ -527,15 +497,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 func GetServerSet(cr *api.KieApp, requestedIndex int) (serverSet api.KieServerSet, kieName string) {
 	count := 0
 	unnamedSets := 0
-	resolvedSpec, err := ResolveSpec(cr)
-	if err != nil {
-		return
-	}
-	for _, thisServerSet := range resolvedSpec.Objects.Servers {
+	for _, thisServerSet := range cr.Status.Applied.Objects.Servers {
 		for relativeIndex := 0; relativeIndex < *thisServerSet.Deployments; relativeIndex++ {
 			if count == requestedIndex {
 				serverSet = thisServerSet
-				kieName = getKieDeploymentName(resolvedSpec.CommonConfig.ApplicationName, serverSet.Name, unnamedSets, relativeIndex)
+				kieName = getKieDeploymentName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, unnamedSets, relativeIndex)
 				return
 			}
 			count++
@@ -549,14 +515,9 @@ func GetServerSet(cr *api.KieApp, requestedIndex int) (serverSet api.KieServerSe
 
 // ConsolidateObjects construct all CustomObjects prior to creation
 func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
-	resolvedSpec, err := ResolveSpec(cr)
-	if err != nil {
-		log.Error(err)
-		return api.Environment{}
-	}
-	env.Console = ConstructObject(env.Console, resolvedSpec.Objects.Console.KieAppObject)
-	if resolvedSpec.Objects.SmartRouter != nil {
-		env.SmartRouter = ConstructObject(env.SmartRouter, resolvedSpec.Objects.SmartRouter.KieAppObject)
+	env.Console = ConstructObject(env.Console, cr.Status.Applied.Objects.Console.KieAppObject)
+	if cr.Status.Applied.Objects.SmartRouter != nil {
+		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Status.Applied.Objects.SmartRouter.KieAppObject)
 	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
@@ -655,13 +616,13 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 	if serverSet.From != nil {
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
-	envVar := constants.PamKieImageVar + GetVersion(cr)
+	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
 	if product == constants.RhdmPrefix {
-		envVar = constants.DmKieImageVar + GetVersion(cr)
+		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
 	}
 
-	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + GetVersion(cr)
-	if val, exists := os.LookupEnv(envVar); exists && !cr.Spec.UseImageTags {
+	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	if val, exists := os.LookupEnv(envVar); exists && !cr.Status.Applied.UseImageTags {
 		imageURL = val
 		omitImageTrigger = true
 	}
@@ -773,11 +734,11 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 
 func setPasswords(cr *api.KieApp, isTrialEnv bool) {
 	passwords := []*string{
-		&cr.Status.Generated.CommonConfig.KeyStorePassword,
-		&cr.Status.Generated.CommonConfig.AdminPassword,
-		&cr.Status.Generated.CommonConfig.DBPassword,
-		&cr.Status.Generated.CommonConfig.AMQPassword,
-		&cr.Status.Generated.CommonConfig.AMQClusterPassword,
+		&cr.Status.Applied.CommonConfig.KeyStorePassword,
+		&cr.Status.Applied.CommonConfig.AdminPassword,
+		&cr.Status.Applied.CommonConfig.DBPassword,
+		&cr.Status.Applied.CommonConfig.AMQPassword,
+		&cr.Status.Applied.CommonConfig.AMQClusterPassword,
 	}
 	for i := range passwords {
 		if len(*passwords[i]) > 0 {
@@ -788,21 +749,6 @@ func setPasswords(cr *api.KieApp, isTrialEnv bool) {
 		} else {
 			*passwords[i] = string(shared.GeneratePassword(8))
 		}
-	}
-	if len(cr.Spec.CommonConfig.KeyStorePassword) != 0 {
-		cr.Status.Generated.CommonConfig.KeyStorePassword = ""
-	}
-	if len(cr.Spec.CommonConfig.AdminPassword) != 0 {
-		cr.Status.Generated.CommonConfig.AdminPassword = ""
-	}
-	if len(cr.Spec.CommonConfig.DBPassword) != 0 {
-		cr.Status.Generated.CommonConfig.DBPassword = ""
-	}
-	if len(cr.Spec.CommonConfig.AMQPassword) != 0 {
-		cr.Status.Generated.CommonConfig.AMQPassword = ""
-	}
-	if len(cr.Spec.CommonConfig.AMQClusterPassword) != 0 {
-		cr.Status.Generated.CommonConfig.AMQClusterPassword = ""
 	}
 }
 
@@ -955,97 +901,68 @@ func GetProduct(env api.EnvironmentType) (product string) {
 	return
 }
 
-// ResolveSpec returns a combined spec which can be used for product template configuration
-func ResolveSpec(cr *api.KieApp) (api.KieAppSpec, error) {
-	mergedSpec := cr.Spec.DeepCopy()
-	err := mergo.Merge(mergedSpec, cr.Status.Generated)
-	return *mergedSpec, err
-}
-
-// GetVersion returns set KieApp version
-func GetVersion(cr *api.KieApp) (v string) {
-	if cr.Spec.Version != "" {
-		return cr.Spec.Version
-	}
-	return cr.Status.Generated.Version
-}
-
-// SetVersion sets KieApp version
-func SetVersion(cr *api.KieApp, v string) {
-	if cr.Spec.Version != "" {
-		cr.Spec.Version = v
-		return
-	}
-	cr.Status.Generated.Version = v
-}
-
-// setDefaults set default values where not provided
-func setDefaults(cr *api.KieApp) {
+// SetDefaults set default values where not provided
+func SetDefaults(cr *api.KieApp) {
 	if cr.GetAnnotations() == nil {
 		cr.SetAnnotations(map[string]string{
 			api.SchemeGroupVersion.Group: version.Version,
 		})
 	}
-	cr.Status.Generated.Version = constants.CurrentVersion
-	if len(cr.Spec.Version) != 0 {
-		cr.Status.Generated.Version = ""
+	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
+	appliedSpec := cr.Spec.DeepCopy()
+	if err := mergo.Merge(&appliedSpec.CommonConfig, cr.Status.Applied.CommonConfig); err != nil {
+		log.Error(err)
 	}
-	cr.Status.Generated.CommonConfig.ApplicationName = cr.Name
-	if len(cr.Spec.CommonConfig.ApplicationName) != 0 {
-		cr.Status.Generated.CommonConfig.ApplicationName = ""
+	cr.Status.Applied = *appliedSpec
+	if len(cr.Status.Applied.Version) == 0 {
+		cr.Status.Applied.Version = constants.CurrentVersion
 	}
-	cr.Status.Generated.CommonConfig.AdminUser = constants.DefaultAdminUser
-	if len(cr.Spec.CommonConfig.AdminUser) != 0 {
-		cr.Status.Generated.CommonConfig.AdminUser = ""
+	if len(cr.Status.Applied.CommonConfig.ApplicationName) == 0 {
+		cr.Status.Applied.CommonConfig.ApplicationName = cr.Name
 	}
-	cr.Status.Generated.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
-	if len(cr.Spec.Objects.Servers) != 0 {
-		cr.Status.Generated.Objects.Servers = nil
+	if len(cr.Status.Applied.CommonConfig.AdminUser) == 0 {
+		cr.Status.Applied.CommonConfig.AdminUser = constants.DefaultAdminUser
 	}
-	if cr.Spec.Objects.Console.Replicas != nil {
-		cr.Status.Generated.Objects.Console.Replicas = nil
+	if len(cr.Status.Applied.Objects.Servers) == 0 {
+		cr.Status.Applied.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
 	}
-	isTrialEnv := strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix)
+	isTrialEnv := strings.HasSuffix(string(cr.Status.Applied.Environment), constants.TrialEnvSuffix)
 	setPasswords(cr, isTrialEnv)
 }
 
 func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (*api.ProcessMigrationTemplate, error) {
 	processMigrationTemplate := api.ProcessMigrationTemplate{}
 	if deployProcessMigration(cr) {
-		resolvedSpec, err := ResolveSpec(cr)
-		if err != nil {
-			return &processMigrationTemplate, err
-		}
-		processMigrationTemplate.ImageURL = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + GetVersion(cr)
-		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + GetVersion(cr)); exists && !cr.Spec.UseImageTags {
+		processMigrationTemplate.ImageURL = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 			processMigrationTemplate.ImageURL = val
 			processMigrationTemplate.OmitImageStream = true
 		}
 		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, _ = GetImage(processMigrationTemplate.ImageURL)
-		if cr.Spec.Objects.ProcessMigration.Image != "" {
-			processMigrationTemplate.Image = cr.Spec.Objects.ProcessMigration.Image
+		if cr.Status.Applied.Objects.ProcessMigration.Image != "" {
+			processMigrationTemplate.Image = cr.Status.Applied.Objects.ProcessMigration.Image
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
 			processMigrationTemplate.OmitImageStream = false
 		}
-		if cr.Spec.Objects.ProcessMigration.ImageTag != "" {
-			processMigrationTemplate.ImageTag = cr.Spec.Objects.ProcessMigration.ImageTag
+		if cr.Status.Applied.Objects.ProcessMigration.ImageTag != "" {
+			processMigrationTemplate.ImageTag = cr.Status.Applied.Objects.ProcessMigration.ImageTag
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
 			processMigrationTemplate.OmitImageStream = false
 		}
 		for _, sc := range serversConfig {
 			processMigrationTemplate.KieServerClients = append(processMigrationTemplate.KieServerClients, api.KieServerClient{
 				Host:     fmt.Sprintf("http://%s:8080/services/rest/server", sc.KieName),
-				Username: resolvedSpec.CommonConfig.AdminUser,
-				Password: resolvedSpec.CommonConfig.AdminPassword,
+				Username: cr.Status.Applied.CommonConfig.AdminUser,
+				Password: cr.Status.Applied.CommonConfig.AdminPassword,
 			})
 		}
-		if cr.Spec.Objects.ProcessMigration.Database.Type == "" {
+		if cr.Status.Applied.Objects.ProcessMigration.Database.Type == "" {
 			processMigrationTemplate.Database.Type = constants.DefaultProcessMigrationDatabaseType
-		} else if cr.Spec.Objects.ProcessMigration.Database.Type == api.DatabaseExternal &&
-			cr.Spec.Objects.ProcessMigration.Database.ExternalConfig == nil {
+		} else if cr.Status.Applied.Objects.ProcessMigration.Database.Type == api.DatabaseExternal &&
+			cr.Status.Applied.Objects.ProcessMigration.Database.ExternalConfig == nil {
 			return nil, fmt.Errorf("external database configuration is mandatory for external database type of process migration")
 		} else {
-			processMigrationTemplate.Database = *cr.Spec.Objects.ProcessMigration.Database.DeepCopy()
+			processMigrationTemplate.Database = *cr.Status.Applied.Objects.ProcessMigration.Database.DeepCopy()
 		}
 	}
 	return &processMigrationTemplate, nil
@@ -1054,7 +971,7 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	var ProcessMigrationEnv api.Environment
 	if deployProcessMigration(cr) {
-		yamlBytes, err := loadYaml(service, "pim/process-migration.yaml", GetVersion(cr), cr.Namespace, envTemplate)
+		yamlBytes, err := loadYaml(service, "pim/process-migration.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
 		if err != nil {
 			return api.Environment{}, err
 		}
@@ -1080,7 +997,7 @@ func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp,
 	if envTemplate.ProcessMigration.Database.Type == api.DatabaseH2 {
 		return env, nil
 	}
-	yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/pim/%s.yaml", envTemplate.ProcessMigration.Database.Type), GetVersion(cr), cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(service, fmt.Sprintf("dbs/pim/%s.yaml", envTemplate.ProcessMigration.Database.Type), cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return api.Environment{}, err
 	}
@@ -1095,7 +1012,7 @@ func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp,
 }
 
 func isRHPAM(cr *api.KieApp) bool {
-	switch cr.Spec.Environment {
+	switch cr.Status.Applied.Environment {
 	case api.RhpamTrial, api.RhpamAuthoring, api.RhpamAuthoringHA, api.RhpamProduction, api.RhpamProductionImmutable:
 		return true
 	}
@@ -1103,7 +1020,7 @@ func isRHPAM(cr *api.KieApp) bool {
 }
 
 func deployProcessMigration(cr *api.KieApp) bool {
-	return cr.Spec.Objects.ProcessMigration != nil && isRHPAM(cr)
+	return cr.Status.Applied.Objects.ProcessMigration != nil && isRHPAM(cr)
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,
@@ -1158,7 +1075,7 @@ func mergeDBDeployment(service kubernetes.PlatformService, cr *api.KieApp, env a
 func loadDBYamls(service kubernetes.PlatformService, cr *api.KieApp, envTemplate api.EnvTemplate,
 	dbTemplates string, dbType api.DatabaseType, dbEnvs map[api.DatabaseType]api.Environment) error {
 	if _, loadedDB := dbEnvs[dbType]; !loadedDB {
-		yamlBytes, err := loadYaml(service, fmt.Sprintf(dbTemplates, dbType), GetVersion(cr), cr.Namespace, envTemplate)
+		yamlBytes, err := loadYaml(service, fmt.Sprintf(dbTemplates, dbType), cr.Status.Applied.Version, cr.Namespace, envTemplate)
 		if err != nil {
 			return err
 		}

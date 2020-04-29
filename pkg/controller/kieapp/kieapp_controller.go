@@ -319,15 +319,11 @@ func setDeploymentStatus(instance *api.KieApp, resources []resource.KubernetesRe
 
 func (reconciler *Reconciler) verifyExternalReferences(cr *api.KieApp) error {
 	var err error
-	resolvedSpec, err := defaults.ResolveSpec(cr)
-	if err != nil {
-		return err
+	if cr.Status.Applied.Auth != nil && cr.Status.Applied.Auth.RoleMapper != nil {
+		err = reconciler.verifyExternalReference(cr.GetNamespace(), cr.Status.Applied.Auth.RoleMapper.From)
 	}
-	if resolvedSpec.Auth != nil && resolvedSpec.Auth.RoleMapper != nil {
-		err = reconciler.verifyExternalReference(cr.GetNamespace(), resolvedSpec.Auth.RoleMapper.From)
-	}
-	if err == nil && resolvedSpec.Objects.Console.GitHooks != nil {
-		err = reconciler.verifyExternalReference(cr.GetNamespace(), resolvedSpec.Objects.Console.GitHooks.From)
+	if err == nil && cr.Status.Applied.Objects.Console.GitHooks != nil {
+		err = reconciler.verifyExternalReference(cr.GetNamespace(), cr.Status.Applied.Objects.Console.GitHooks.From)
 	}
 	return err
 }
@@ -387,6 +383,16 @@ func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) boo
 	if !reflect.DeepEqual(instance.Status, cached.Status) {
 		return true
 	}
+	if len(instance.Status.Applied.Objects.Servers) > 0 {
+		if len(instance.Status.Applied.Objects.Servers) != len(cached.Status.Applied.Objects.Servers) {
+			return true
+		}
+		for i := range instance.Status.Applied.Objects.Servers {
+			if !reflect.DeepEqual(instance.Status.Applied.Objects.Servers[i], cached.Status.Applied.Objects.Servers[i]) {
+				return true
+			}
+		}
+	}
 	return false
 }
 
@@ -420,18 +426,18 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
-	product := defaults.GetProduct(cr.Spec.Environment)
+	product := defaults.GetProduct(cr.Status.Applied.Environment)
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	imageName := tagName
-	major, _, _ := defaults.MajorMinorMicro(defaults.GetVersion(cr))
+	major, _, _ := defaults.MajorMinorMicro(cr.Status.Applied.Version)
 	regContext := fmt.Sprintf("%s-%s", product, major)
 
 	// default registry settings
 	registry := &api.KieAppRegistry{
 		Insecure: logs.GetBoolEnv("INSECURE"),
 	}
-	if cr.Spec.ImageRegistry != nil {
-		registry = cr.Spec.ImageRegistry
+	if cr.Status.Applied.ImageRegistry != nil {
+		registry = cr.Status.Applied.ImageRegistry
 	}
 	if registry.Registry == "" {
 		registry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry)
@@ -503,18 +509,13 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 }
 
 func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) api.Environment {
-	resolvedSpec, err := defaults.ResolveSpec(cr)
-	if err != nil {
-		log.Error("Could not Resolve spec - ", err)
-		return api.Environment{}
-	}
 	// console keystore generation
 	if !env.Console.Omit {
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
-		if resolvedSpec.Objects.Console.KeystoreSecret == "" {
+		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" {
 			env.Console.Secrets = append(env.Console.Secrets, generateKeystoreSecret(
-				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{resolvedSpec.CommonConfig.ApplicationName, "businesscentral"}, "-")),
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 				consoleCN,
 				cr,
 			))
@@ -535,7 +536,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 			}
 		}
 		if serverCN == "" {
-			serverCN = resolvedSpec.CommonConfig.ApplicationName
+			serverCN = cr.Status.Applied.CommonConfig.ApplicationName
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
@@ -560,13 +561,13 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 			}
 		}
 		if smartCN == "" {
-			smartCN = resolvedSpec.CommonConfig.ApplicationName
+			smartCN = cr.Status.Applied.CommonConfig.ApplicationName
 		}
 
 		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
-		if cr.Spec.Objects.SmartRouter == nil || cr.Spec.Objects.SmartRouter.KeystoreSecret == "" {
+		if cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
 			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, generateKeystoreSecret(
-				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{resolvedSpec.CommonConfig.ApplicationName, "smartrouter"}, "-")),
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-")),
 				smartCN,
 				cr,
 			))
@@ -586,12 +587,7 @@ func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment
 		}
 	}
 	if consoleCN == "" {
-		resolvedSpec, err := defaults.ResolveSpec(cr)
-		if err != nil {
-			log.Error("Could not Resolve spec - ", err)
-			return ""
-		}
-		consoleCN = resolvedSpec.CommonConfig.ApplicationName
+		consoleCN = cr.Status.Applied.CommonConfig.ApplicationName
 		cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
 	}
 	return consoleCN
@@ -632,22 +628,17 @@ func filterOmittedObjects(objects []api.CustomObject) []api.CustomObject {
 }
 
 func generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) corev1.Secret {
-	resolvedSpec, err := defaults.ResolveSpec(cr)
-	if err != nil {
-		log.Error("Could not Resolve spec - ", err)
-		return corev1.Secret{}
-	}
 	return corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 			Labels: map[string]string{
-				"app":         resolvedSpec.CommonConfig.ApplicationName,
-				"application": resolvedSpec.CommonConfig.ApplicationName,
+				"app":         cr.Status.Applied.CommonConfig.ApplicationName,
+				"application": cr.Status.Applied.CommonConfig.ApplicationName,
 			},
 		},
 		Data: map[string][]byte{
-			"keystore.jks": shared.GenerateKeystore(keystoreCN, "jboss", []byte(resolvedSpec.CommonConfig.KeyStorePassword)),
+			"keystore.jks": shared.GenerateKeystore(keystoreCN, "jboss", []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)),
 		},
 	}
 }
@@ -727,7 +718,7 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 }
 
 func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *api.KieApp) (string, error) {
-	if cr.Spec.ImageRegistry != nil {
+	if cr.Status.Applied.ImageRegistry != nil {
 		if reconciler.checkImageStreamTag(name, cr.Namespace) {
 			return cr.Namespace, nil
 		}
@@ -1003,7 +994,7 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 		Spec: consolev1.ConsoleLinkSpec{
 			Link: consolev1.Link{
 				Href: cr.Status.ConsoleHost,
-				Text: constants.EnvironmentConstants[cr.Spec.Environment].App.FriendlyName,
+				Text: constants.EnvironmentConstants[cr.Status.Applied.Environment].App.FriendlyName,
 			},
 			Location: consolev1.NamespaceDashboard,
 			NamespaceDashboard: &consolev1.NamespaceDashboardSpec{

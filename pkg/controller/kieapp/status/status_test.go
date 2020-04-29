@@ -6,7 +6,6 @@ import (
 
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,8 +13,7 @@ import (
 
 func TestSetDeployed(t *testing.T) {
 	now := metav1.Now()
-	cr := &api.KieApp{Spec: api.KieAppSpec{Version: constants.CurrentVersion}}
-
+	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.CurrentVersion}}}
 	assert.True(t, SetDeployed(cr))
 
 	assert.NotEmpty(t, cr.Status.Conditions)
@@ -42,7 +40,7 @@ func TestSetDeployedSkipUpdate(t *testing.T) {
 
 func TestSetProvisioning(t *testing.T) {
 	now := metav1.Now()
-	cr := &api.KieApp{Spec: api.KieAppSpec{Version: constants.CurrentVersion}}
+	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.CurrentVersion}}}
 	assert.True(t, SetProvisioning(cr))
 
 	assert.NotEmpty(t, cr.Status.Conditions)
@@ -69,11 +67,11 @@ func TestSetProvisioningSkipUpdate(t *testing.T) {
 
 func TestSetProvisioningAndThenDeployed(t *testing.T) {
 	now := metav1.Now()
-	cr := &api.KieApp{Spec: api.KieAppSpec{Version: constants.PriorVersion1}}
+	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.PriorVersion1}}}
 
 	assert.True(t, SetProvisioning(cr))
 	assert.True(t, SetDeployed(cr))
-	defaults.SetVersion(cr, constants.CurrentVersion)
+	cr.Status.Applied.Version = constants.CurrentVersion
 	assert.True(t, SetProvisioning(cr))
 	assert.True(t, SetDeployed(cr))
 
@@ -105,7 +103,7 @@ func TestSetProvisioningAndThenDeployed(t *testing.T) {
 }
 
 func TestBuffer(t *testing.T) {
-	cr := &api.KieApp{Spec: api.KieAppSpec{Version: constants.CurrentVersion}}
+	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.CurrentVersion}}}
 	for i := 0; i < maxBuffer+2; i++ {
 		SetFailed(cr, api.UnknownReason, fmt.Errorf("Error %d", i))
 	}
