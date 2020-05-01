@@ -4,6 +4,7 @@ package kieapp
 
 import (
 	"context"
+
 	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"

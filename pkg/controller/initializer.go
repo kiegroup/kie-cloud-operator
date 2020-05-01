@@ -7,6 +7,9 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
+	"golang.org/x/mod/semver"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -24,23 +27,17 @@ func init() {
 		if info.IsOpenShift() {
 			mappedVersion := openshift.MapKnownVersion(info)
 			if mappedVersion.Version != "" {
-				log.Info(fmt.Sprintf("OpenShift Version: %s", mappedVersion.Version))
-				reconciler.OcpVersion = mappedVersion.Version
-				reconciler.OcpVersionMajor = mappedVersion.MajorVersion()
-				reconciler.OcpVersionMinor = mappedVersion.MinorVersion()
-				/* ?? warning if ocp version isn't in SupportedOcpVersions slice ??
-				if _, ok := shared.Find(constants.SupportedOcpVersions, reconciler.OcpVersion); !ok {
+				if _, ok := shared.Find(constants.SupportedOcpVersions, mappedVersion.Version); !ok {
 					log.Warn("OpenShift version not supported.")
 				}
-				*/
+				reconciler.OcpVersion = semver.MajorMinor("v" + mappedVersion.Version)
+				log.Info(fmt.Sprintf("OpenShift Version: %s", reconciler.OcpVersion))
 			} else {
 				log.Warn("OpenShift version could not be determined.")
 			}
-			if mappedVersion.Version < "4.3" {
-				log.Warn("Console YAML sample is not added, curVer:", mappedVersion.Version)
-			} else {
-				kieapp.CreateConsoleYAMLSamples(&reconciler)
-			}
+		}
+		if semver.Compare(reconciler.OcpVersion, "v4.3") >= 0 || reconciler.OcpVersion == "" {
+			kieapp.CreateConsoleYAMLSamples(&reconciler)
 		}
 		return kieapp.Add(mgr, &reconciler)
 	}

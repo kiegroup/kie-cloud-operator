@@ -119,12 +119,14 @@ spec:
           value: registry.redhat.io/amq7/amq-broker:7.5
         - name: OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+        - name: OAUTH_PROXY_IMAGE_4.4
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
         - name: OAUTH_PROXY_IMAGE_4.3
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
         - name: OAUTH_PROXY_IMAGE_4.2
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
         - name: OAUTH_PROXY_IMAGE_4.1
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
         - name: OAUTH_PROXY_IMAGE_3
           value: registry.redhat.io/openshift3/oauth-proxy:latest
         image: quay.io/kiegroup/kie-cloud-operator:7.8.0

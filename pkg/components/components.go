@@ -14,6 +14,7 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -115,7 +116,7 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 	for _, imageVersion := range constants.SupportedVersions {
 		for _, i := range constants.Images {
-			if i.Var == constants.PamProcessMigrationVar && imageVersion < "7.8.0" {
+			if i.Var == constants.PamProcessMigrationVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.8") < 0 {
 				continue
 			}
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -156,7 +157,7 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 		if strings.Split(ocpVersion, ".")[0] == "4" {
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  constants.OauthVar + ocpVersion,
-				Value: constants.Oauth4ImageURL + ":" + ocpVersion,
+				Value: constants.Oauth4ImageURL + ":v" + ocpVersion,
 			})
 		}
 	}

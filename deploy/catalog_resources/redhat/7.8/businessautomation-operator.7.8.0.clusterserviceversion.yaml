@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
-    createdAt: "2020-04-28 15:29:59"
+    createdAt: "2020-05-01 11:17:24"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -251,12 +251,14 @@ spec:
                   value: registry.redhat.io/amq7/amq-broker:7.5
                 - name: OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+                - name: OAUTH_PROXY_IMAGE_4.4
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
                 - name: OAUTH_PROXY_IMAGE_4.3
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
                 - name: OAUTH_PROXY_IMAGE_4.2
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
                 - name: OAUTH_PROXY_IMAGE_4.1
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
                 - name: OAUTH_PROXY_IMAGE_3
                   value: registry.redhat.io/openshift3/oauth-proxy:latest
                 image: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
@@ -488,11 +490,13 @@ spec:
     name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/openshift4/ose-oauth-proxy:latest
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.3
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.2
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy:4.1
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
+    name: ose-oauth-proxy
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
     name: ose-oauth-proxy
   - image: registry.redhat.io/openshift3/oauth-proxy:latest
     name: oauth-proxy

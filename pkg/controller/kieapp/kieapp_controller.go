@@ -26,6 +26,7 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -41,10 +42,8 @@ var log = logs.GetLogger("kieapp.controller")
 
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
-	Service         kubernetes.PlatformService
-	OcpVersion      string
-	OcpVersionMajor string
-	OcpVersionMinor string
+	Service    kubernetes.PlatformService
+	OcpVersion string
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -59,10 +58,10 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		myDep := &appsv1.Deployment{}
 		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
 		if err == nil {
-			reconciler.CreateConfigMaps(myDep)
 			if shouldDeployConsole() {
 				deployConsole(reconciler, myDep)
 			}
+			reconciler.CreateConfigMaps(myDep)
 		} else {
 			log.Error("Can't properly create ConfigMaps. ", err)
 		}
@@ -950,16 +949,19 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	}
 	resourceMap[reflect.TypeOf(corev1.Secret{})] = secrets
 
-	consoleLink := &consolev1.ConsoleLink{}
-	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: getConsoleLinkName(instance)}, consoleLink)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return resourceMap, nil
+	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
+		consoleLink := &consolev1.ConsoleLink{}
+		err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: getConsoleLinkName(instance)}, consoleLink)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return resourceMap, nil
+			}
+			log.Warn("Failed to load ConsoleLink", err)
+			return resourceMap, err
 		}
-		log.Warn("Failed to load ConsoleLink", err)
-		return resourceMap, err
+		resourceMap[reflect.TypeOf(*consoleLink)] = []resource.KubernetesResource{consoleLink}
 	}
-	resourceMap[reflect.TypeOf(*consoleLink)] = []resource.KubernetesResource{consoleLink}
+
 	return resourceMap, nil
 }
 
@@ -980,7 +982,8 @@ func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1al
 }
 
 func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.KubernetesResource {
-	if cr.GetDeletionTimestamp() != nil || cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") {
+	if cr.GetDeletionTimestamp() != nil || cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") ||
+		(reconciler.OcpVersion != "" && semver.Compare(reconciler.OcpVersion, "v4.2") < 0) {
 		return nil
 	}
 	consoleLink := &consolev1.ConsoleLink{

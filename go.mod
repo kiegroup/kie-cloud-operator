@@ -27,6 +27,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/gjson v1.4.0 // indirect
 	github.com/tidwall/sjson v1.0.4
+	golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee
 	k8s.io/api v0.17.2
 	k8s.io/apiextensions-apiserver v0.17.2-0.20200115000228-b5a272542936
 	k8s.io/apimachinery v0.17.3-beta.0
