@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/blang/semver"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -18,6 +17,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	operators "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,7 +68,6 @@ func TestProxyVersion(t *testing.T) {
 }
 
 func checkConsoleProxySettings(t *testing.T, version string) {
-	var v *semver.Version
 	box := packr.New("Operator", "../../../deploy")
 	bytes, err := box.Find("operator.yaml")
 	assert.Nil(t, err, "Error reading Operator file")
@@ -76,39 +75,37 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 	err = yaml.Unmarshal(bytes, operator)
 	assert.Nil(t, err, "Error parsing Operator file")
 	operatorName = operator.Name
-	if version != "" {
-		v, err = semver.New(version)
-		assert.Nil(t, err)
-	}
-	var ocpMajor, ocpMinor uint64
-	if v != nil {
-		ocpMajor = v.Major
-		ocpMinor = v.Minor
+	var ocpMajor, ocpMinor string
+	splitVersion := strings.Split(version, ".")
+	if len(splitVersion) > 1 {
+		ocpMajor = splitVersion[0]
+		ocpMinor = splitVersion[1]
 	}
 	for _, envVar := range operator.Spec.Template.Spec.Containers[0].Env {
-		if envVar.Name == fmt.Sprintf(constants.OauthVar+"%d.%d", ocpMajor, ocpMinor) {
+		if envVar.Name == fmt.Sprintf(constants.OauthVar+"%s.%s", ocpMajor, ocpMinor) {
 			os.Setenv(envVar.Name, envVar.Value)
 		}
 	}
 	for _, envVar := range operator.Spec.Template.Spec.Containers[0].Env {
-		if envVar.Name == fmt.Sprintf(constants.OauthVar+"%d", ocpMinor) {
+		if envVar.Name == fmt.Sprintf(constants.OauthVar+"%s", ocpMinor) {
 			os.Setenv(envVar.Name, envVar.Value)
 		}
 	}
-	pod := getPod(operator.Namespace, getImage(operator), "saName", v, operator)
+	ocpVersion := semver.MajorMinor("v" + version)
+	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersion, operator)
 	caBundlePath := "--openshift-ca=/etc/pki/ca-trust/extracted/crt/ca-bundle.crt"
-	if ocpMajor == 3 {
+	if ocpMajor == "3" {
 		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
 		assert.Equal(t,
 			map[string]string{
 				"service.alpha.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
 			},
-			getService(pod.Namespace, ocpMajor).Annotations,
+			getService(pod.Namespace, ocpVersion).Annotations,
 			"should use service.alpha.openshift.io version of serving-cert-secret-name",
 		)
 		assert.Equal(t, constants.Oauth3ImageLatestURL, pod.Spec.Containers[0].Image)
 	} else {
-		if v == nil || v.GE(semver.MustParse("4.2.0")) {
+		if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 			assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
 		} else {
 			log.Warn(err)
@@ -117,16 +114,16 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 			map[string]string{
 				"service.beta.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
 			},
-			getService(pod.Namespace, ocpMajor).Annotations,
+			getService(pod.Namespace, ocpVersion).Annotations,
 			"should use service.beta.openshift.io version of serving-cert-secret-name",
 		)
-		if _, ok := shared.Find(constants.SupportedOcpVersions, fmt.Sprintf("%d.%d", ocpMajor, ocpMinor)); ok {
-			assert.Equal(t, constants.Oauth4ImageURL+":v"+fmt.Sprintf("%d.%d", ocpMajor, ocpMinor), pod.Spec.Containers[0].Image)
+		if _, ok := shared.Find(constants.SupportedOcpVersions, fmt.Sprintf("%s.%s", ocpMajor, ocpMinor)); ok {
+			assert.Equal(t, constants.Oauth4ImageURL+":v"+fmt.Sprintf("%s.%s", ocpMajor, ocpMinor), pod.Spec.Containers[0].Image)
 		} else {
 			assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)
 		}
 	}
-	if v == nil || v.GE(semver.MustParse("4.2.0")) {
+	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 		assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
 	} else {
 		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
@@ -161,11 +158,7 @@ func checkCSV(t *testing.T, csv *operators.ClusterServiceVersion) {
 		}
 		return service.Client.Create(ctx, obj, opts...)
 	}
-	v, err := semver.New("4.1.0")
-	if err != nil {
-		log.Warn("OpenShift version could not be parsed.")
-	}
-	deployConsole(&Reconciler{Service: service, OcpVersion: v}, operator)
+	deployConsole(&Reconciler{Service: service, OcpVersion: "v4.1"}, operator)
 
 	updatedCSV := &operators.ClusterServiceVersion{}
 	err = service.Get(context.TODO(), types.NamespacedName{Name: csv.Name, Namespace: csv.Namespace}, updatedCSV)

@@ -12,7 +12,6 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
-	"github.com/blang/semver"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
@@ -20,6 +19,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1030,11 +1030,7 @@ func deployProcessMigration(cr *api.KieApp) bool {
 }
 
 func isGE78(cr *api.KieApp) bool {
-	v, err := semver.New(cr.Status.Applied.Version)
-	if err != nil {
-		log.Error(err)
-	}
-	return err == nil && v != nil && v.GE(semver.MustParse("7.8.0"))
+	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.8") >= 0
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,

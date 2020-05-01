@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
 	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -15,7 +14,7 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
-	"github.com/prometheus/common/log"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -116,12 +115,8 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 	for _, imageVersion := range constants.SupportedVersions {
-		v, err := semver.New(imageVersion)
-		if err != nil {
-			log.Error(err)
-		}
 		for _, i := range constants.Images {
-			if i.Var == constants.PamProcessMigrationVar && v.LT(semver.MustParse("7.8.0")) {
+			if i.Var == constants.PamProcessMigrationVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.8") < 0 {
 				continue
 			}
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{

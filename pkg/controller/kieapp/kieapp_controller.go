@@ -15,7 +15,6 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
-	"github.com/blang/semver"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
@@ -27,6 +26,7 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -43,7 +43,7 @@ var log = logs.GetLogger("kieapp.controller")
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
 	Service    kubernetes.PlatformService
-	OcpVersion *semver.Version
+	OcpVersion string
 }
 
 // Reconcile reads that state of the cluster for a KieApp object and makes changes based on the state read
@@ -949,7 +949,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	}
 	resourceMap[reflect.TypeOf(corev1.Secret{})] = secrets
 
-	if reconciler.OcpVersion == nil || reconciler.OcpVersion.GE(semver.MustParse("4.2.0")) {
+	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
 		consoleLink := &consolev1.ConsoleLink{}
 		err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: getConsoleLinkName(instance)}, consoleLink)
 		if err != nil {
@@ -983,7 +983,7 @@ func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1al
 
 func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.KubernetesResource {
 	if cr.GetDeletionTimestamp() != nil || cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") ||
-		(reconciler.OcpVersion != nil && reconciler.OcpVersion.LT(semver.MustParse("4.2.0"))) {
+		(reconciler.OcpVersion != "" && semver.Compare(reconciler.OcpVersion, "v4.2") < 0) {
 		return nil
 	}
 	consoleLink := &consolev1.ConsoleLink{
