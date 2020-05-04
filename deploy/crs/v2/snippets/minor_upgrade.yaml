@@ -1,0 +1,13 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: minor-upgrade
+  annotations:
+    consoleName: snippet-minor-upgrade
+    consoleTitle: Enable Upgrades
+    consoleDesc: Use this snippet to enable product upgrades
+    consoleSnippet: true
+spec:
+  upgrades:
+    enabled: true
+    minor: true

@@ -1,0 +1,18 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-production-immutable
+  annotations:
+    consoleName: rhpam-production-immutable
+    consoleTitle: PAM Production Immutable
+    consoleDesc: Deploys a PAM Production Immutable environment
+spec:
+  environment: rhpam-production-immutable
+  objects:
+    servers:
+      - build:
+          kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+          gitSource:
+            uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
+            reference: master
+            contextDir: quickstarts/library-process/library

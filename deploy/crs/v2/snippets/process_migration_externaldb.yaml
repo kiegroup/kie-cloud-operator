@@ -1,0 +1,29 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: process-migration-externaldb
+  annotations:
+    consoleName: snippet-process-migration-externaldb
+    consoleTitle: Configure PIM with external DB
+    consoleDesc: Use this snippet to configure pim with external db
+    consoleSnippet: true
+spec:
+  objects:
+    processMigration:
+      # An example image which is supposed to be based on the process migration image
+      # and packaged with the jdbc driver for the external db connection
+      image: "rhpam-process-migration-rhel8-mssql"
+      database:
+        type: external
+        externalConfig:
+          driver: mssql
+          jdbcURL: jdbc:sqlserver://10.10.10.20:1433;DatabaseName=rhpam
+          username: pim
+          password: pim
+          minPoolSize: "10"
+          maxPoolSize: "10"
+          connectionChecker: org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker
+          exceptionSorter: org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter
+          backgroundValidation: "false"
+          backgroundValidationMillis: "150000"
+          dialect: org.hibernate.dialect.SQLServerDialect

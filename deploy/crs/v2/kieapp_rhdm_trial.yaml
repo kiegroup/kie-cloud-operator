@@ -1,0 +1,10 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhdm-trial
+  annotations:
+    consoleName: rhdm-trial
+    consoleTitle: DM Trial
+    consoleDesc: Deploys a DM Trial environment
+spec:
+  environment: rhdm-trial

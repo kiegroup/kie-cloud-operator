@@ -11,23 +11,13 @@ import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/sjson"
 )
-
-func TestSampleCustomResources(t *testing.T) {
-	schema := getSchema(t, api.SchemeGroupVersion.Version)
-	box := packr.New("deploy/crs", "../../../../deploy/crs")
-	for _, file := range box.List() {
-		yamlString, err := box.FindString(file)
-		assert.NoError(t, err, "Error reading %v CR yaml", file)
-		var input map[string]interface{}
-		assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
-		assert.NoError(t, schema.Validate(input), "File %v does not validate against the CRD schema", file)
-	}
-}
 
 func TestExampleCustomResources(t *testing.T) {
 	schema := getSchema(t, v1.SchemeGroupVersion.Version)
-	box := packr.New("deploy/examples/v1", "../../../../deploy/examples/v1")
+	box := packr.New("deploy/crs/v1", "../../../../deploy/crs/v1")
+	assert.Greater(t, len(box.List()), 0)
 	for _, file := range box.List() {
 		yamlString, err := box.FindString(file)
 		assert.NoError(t, err, "Error reading %v CR yaml", file)
@@ -36,9 +26,12 @@ func TestExampleCustomResources(t *testing.T) {
 		assert.NoError(t, schema.Validate(input), "File %v does not validate against the CRD schema", file)
 	}
 	schema = getSchema(t, api.SchemeGroupVersion.Version)
-	box = packr.New("deploy/examples/v2", "../../../../deploy/examples/v2")
+	box = packr.New("deploy/crs/v2", "../../../../deploy/crs/v2")
+	assert.Greater(t, len(box.List()), 0)
 	for _, file := range box.List() {
 		yamlString, err := box.FindString(file)
+		assert.Nil(t, err)
+		yamlString = snippets(t, file, yamlString)
 		assert.NoError(t, err, "Error reading %v CR yaml", file)
 		var input map[string]interface{}
 		assert.NoError(t, yaml.Unmarshal([]byte(yamlString), &input))
@@ -172,4 +165,18 @@ func getAPIVersions(t *testing.T) (apiVersions []string) {
 	}
 	assert.Contains(t, apiVersions, api.SchemeGroupVersion.Version)
 	return apiVersions
+}
+
+// for proper crd validation of snippet files... add required environment field to yaml
+func snippets(t *testing.T, file, yamlStr string) string {
+	if strings.Split(file, "/")[0] == "snippets" {
+		jsonByte, err := yaml.YAMLToJSON([]byte(yamlStr))
+		assert.Nil(t, err)
+		jsonByte, err = sjson.SetBytes(jsonByte, "spec.environment", api.RhpamTrial)
+		assert.Nil(t, err)
+		yamlByte, err := yaml.JSONToYAML(jsonByte)
+		assert.Nil(t, err)
+		return string(yamlByte)
+	}
+	return yamlStr
 }

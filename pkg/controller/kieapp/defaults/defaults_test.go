@@ -2001,7 +2001,8 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 }
 
 func TestExampleServerCommonConfig(t *testing.T) {
-	kieApp := LoadKieApp(t, "examples/"+api.SchemeGroupVersion.Version, "server_config.yaml")
+	kieApp := LoadKieApp(t, "crs/v2/snippets/", "server_config.yaml")
+	kieApp.Spec.Environment = api.RhpamTrial
 	env, err := GetEnvironment(&kieApp, test.MockService())
 	assert.NoError(t, err, "Error getting environment for %v", kieApp.Spec.Environment)
 	assert.Equal(t, 6, len(env.Servers), "Expect six servers")
@@ -3154,6 +3155,7 @@ func getImageChangeName(dc appsv1.DeploymentConfig) string {
 
 func LoadKieApp(t *testing.T, folder string, fileName string) api.KieApp {
 	box := packr.New("deploy/"+folder, "../../../../deploy/"+folder)
+	assert.Greater(t, len(box.List()), 0)
 	yamlString, err := box.FindString(fileName)
 	assert.NoError(t, err, "Error reading yaml %v/%v", folder, fileName)
 	var kieApp api.KieApp
