@@ -404,26 +404,14 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	}
 	product := GetProduct(cr.Status.Applied.Environment)
 	usedNames := map[string]bool{}
-	unsetNames := 0
-	cr.Status.Applied.Objects.Servers = serverSortBlanks(cr.Status.Applied.Objects.Servers)
 	serverSlice := cr.Status.Applied.Objects.Servers
 	for index := range serverSlice {
 		serverSet := &serverSlice[index]
 		if serverSet.Deployments == nil {
 			serverSet.Deployments = Pint(constants.DefaultKieDeployments)
 		}
-		if serverSet.Name == "" {
-			for i := 0; i < len(serverSlice); i++ {
-				serverSetName := getKieSetName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, unsetNames)
-				if !usedNames[serverSetName] {
-					serverSet.Name = serverSetName
-					break
-				}
-				unsetNames++
-			}
-		}
 		for i := 0; i < *serverSet.Deployments; i++ {
-			name := getKieDeploymentName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, unsetNames, i)
+			name := getKieDeploymentName(cr.Status.Applied.CommonConfig.ApplicationName, serverSet.Name, 0, i)
 			if usedNames[name] {
 				return []api.ServerTemplate{}, fmt.Errorf("duplicate kieserver name %s", name)
 			}
@@ -519,6 +507,20 @@ func GetServerSet(cr *api.KieApp, requestedIndex int) (serverSet api.KieServerSe
 	return
 }
 
+func setKieSetName(spec *api.KieAppSpec, index, unsetNames int, usedNames map[string]bool) int {
+	if spec.Objects.Servers[index].Name == "" {
+		for i := 0; i < len(spec.Objects.Servers); i++ {
+			serverSetName := getKieDeploymentName(spec.CommonConfig.ApplicationName, spec.Objects.Servers[index].Name, unsetNames, 0)
+			if !usedNames[serverSetName] {
+				spec.Objects.Servers[index].Name = serverSetName
+				break
+			}
+			unsetNames++
+		}
+	}
+	return unsetNames
+}
+
 // ConsolidateObjects construct all CustomObjects prior to creation
 func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 	env.Console = ConstructObject(env.Console, cr.Status.Applied.Objects.Console.KieAppObject)
@@ -548,11 +550,6 @@ func ConstructObject(object api.CustomObject, appObject api.KieAppObject) api.Cu
 		object.DeploymentConfigs[dcIndex] = dc
 	}
 	return object
-}
-
-// getKieSetName aids in server indexing, depending on number of deployments and sets
-func getKieSetName(applicationName string, setName string, arrayIdx int) string {
-	return getKieDeploymentName(applicationName, setName, arrayIdx, 0)
 }
 
 func getKieDeploymentName(applicationName string, setName string, arrayIdx, deploymentsIdx int) string {
@@ -600,6 +597,11 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 		}
 
 	} else {
+		for index := range serverSet.Build.Webhooks {
+			if serverSet.Build.Webhooks[index].Secret == "" {
+				serverSet.Build.Webhooks[index].Secret = string(shared.GeneratePassword(8))
+			}
+		}
 		// build app from source template
 		buildTemplate = api.BuildTemplate{
 			GitSource:                    serverSet.Build.GitSource,
@@ -675,17 +677,14 @@ func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseOb
 }
 
 func getJmsConfig(environment api.EnvironmentType, jms *api.KieAppJmsObject) (*api.KieAppJmsObject, error) {
-
 	envConstants := constants.EnvironmentConstants[environment]
 	if envConstants == nil || jms == nil || !jms.EnableIntegration {
 		return nil, nil
 	}
-
 	if jms.AMQSecretName != "" && jms.AMQKeystoreName != "" && jms.AMQKeystorePassword != "" &&
 		jms.AMQTruststoreName != "" && jms.AMQTruststorePassword != "" {
 		jms.AMQEnableSSL = true
 	}
-
 	t := true
 	if jms.Executor == nil {
 		jms.Executor = &t
@@ -695,7 +694,7 @@ func getJmsConfig(environment api.EnvironmentType, jms *api.KieAppJmsObject) (*a
 	}
 
 	// if enabled, prepare the default values
-	defaultJms := &api.KieAppJmsObject{
+	defaultJms := api.KieAppJmsObject{
 		QueueExecutor: "queue/KIE.SERVER.EXECUTOR",
 		QueueRequest:  "queue/KIE.SERVER.REQUEST",
 		QueueResponse: "queue/KIE.SERVER.RESPONSE",
@@ -723,8 +722,9 @@ func getJmsConfig(environment api.EnvironmentType, jms *api.KieAppJmsObject) (*a
 	defaultJms.AMQQueues = strings.Join(queuesList[:], ", ")
 
 	// merge the defaultJms into jms, preserving the values set by cr
-	mergo.Merge(jms, defaultJms)
-
+	if err := mergo.Merge(jms, defaultJms); err != nil {
+		return jms, err
+	}
 	return jms, nil
 }
 
@@ -764,7 +764,7 @@ func getWebhookSecret(webhookType api.WebhookType, webhooks []api.WebhookSecret)
 			return webhook.Secret
 		}
 	}
-	return string(shared.GeneratePassword(8))
+	return ""
 }
 
 // important to parse template first with this function, before unmarshalling into object
@@ -914,12 +914,47 @@ func SetDefaults(cr *api.KieApp) {
 			api.SchemeGroupVersion.Group: version.Version,
 		})
 	}
+	// retain ONLY generated passwords / usernames from status...
+	// everything else in status should be recreated with each reconcile.
 	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
-	appliedSpec := cr.Spec.DeepCopy()
-	if err := mergo.Merge(&appliedSpec.CommonConfig, cr.Status.Applied.CommonConfig); err != nil {
+	specApply := cr.Spec.DeepCopy()
+	if err := mergo.Merge(&specApply.CommonConfig, cr.Status.Applied.CommonConfig); err != nil {
 		log.Error(err)
 	}
-	cr.Status.Applied = *appliedSpec
+	usedNames := map[string]bool{}
+	for _, server := range specApply.Objects.Servers {
+		if server.Name != "" {
+			usedNames[server.Name] = true
+		}
+	}
+	for _, statusServer := range cr.Status.Applied.Objects.Servers {
+		unsetNames := 0
+		for index := range specApply.Objects.Servers {
+			unsetNames = setKieSetName(specApply, index, unsetNames, usedNames)
+			usedNames[specApply.Objects.Servers[index].Name] = true
+			if statusServer.Name == specApply.Objects.Servers[index].Name {
+				if statusServer.Jms != nil && specApply.Objects.Servers[index].Jms != nil {
+					if specApply.Objects.Servers[index].Jms.Username == "" && statusServer.Jms.Username != "" {
+						specApply.Objects.Servers[index].Jms.Username = statusServer.Jms.Username
+					}
+					if specApply.Objects.Servers[index].Jms.Password == "" && statusServer.Jms.Password != "" {
+						specApply.Objects.Servers[index].Jms.Password = statusServer.Jms.Password
+					}
+				}
+				if statusServer.Build != nil && specApply.Objects.Servers[index].Build != nil {
+					for _, statusWh := range statusServer.Build.Webhooks {
+						for bI := range specApply.Objects.Servers[index].Build.Webhooks {
+							if statusWh.Type == specApply.Objects.Servers[index].Build.Webhooks[bI].Type &&
+								specApply.Objects.Servers[index].Build.Webhooks[bI].Secret == "" && statusWh.Secret != "" {
+								specApply.Objects.Servers[index].Build.Webhooks[bI].Secret = statusWh.Secret
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	cr.Status.Applied = *specApply
 	if len(cr.Status.Applied.Version) == 0 {
 		cr.Status.Applied.Version = constants.CurrentVersion
 	}

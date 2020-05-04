@@ -556,6 +556,16 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Empty(t, cr.Spec.Objects.Servers[0].Jms.Username)
+	assert.Empty(t, cr.Spec.Objects.Servers[0].Jms.Password)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Jms.Username)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Jms.Password)
+	user := cr.Status.Applied.Objects.Servers[0].Jms.Username
+	password := cr.Status.Applied.Objects.Servers[0].Jms.Password
+	_, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, user, cr.Status.Applied.Objects.Servers[0].Jms.Username)
+	assert.Equal(t, password, cr.Status.Applied.Objects.Servers[0].Jms.Password)
 
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
@@ -877,8 +887,7 @@ func TestBuildConfiguration(t *testing.T) {
 							},
 							Webhooks: []api.WebhookSecret{
 								{
-									Type:   api.GitHubWebhook,
-									Secret: "s3cr3t",
+									Type: api.GitHubWebhook,
 								},
 							},
 						},
@@ -895,9 +904,23 @@ func TestBuildConfiguration(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Empty(t, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
+	secret := cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret
 
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Empty(t, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.Equal(t, secret, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
+
+	secret = "s3cr3t"
+	cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret = secret
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, secret, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.Equal(t, secret, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
 	assert.Equal(t, 2, len(env.Servers))
 	assert.Equal(t, "example", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
 
@@ -911,7 +934,7 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
 	assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
-	assert.NotEmpty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
+	assert.Empty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
 
 	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
