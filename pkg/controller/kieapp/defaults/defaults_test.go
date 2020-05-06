@@ -885,11 +885,6 @@ func TestBuildConfiguration(t *testing.T) {
 								Reference:  "somebranch",
 								ContextDir: "example",
 							},
-							Webhooks: []api.WebhookSecret{
-								{
-									Type: api.GitHubWebhook,
-								},
-							},
 						},
 					},
 					{
@@ -905,24 +900,29 @@ func TestBuildConfiguration(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Empty(t, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
-	secret := cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret
+	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 0)
+	var secret string
+	for _, s := range cr.Status.Applied.Objects.Servers[0].Build.Webhooks {
+		if s.Type == api.GitHubWebhook {
+			secret = s.Secret
+		}
+	}
+	checkWebhooks(t, secret, cr, env)
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Empty(t, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
-	assert.Equal(t, secret, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 0)
+	checkWebhooks(t, secret, cr, env)
 
 	secret = "s3cr3t"
-	cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret = secret
+	cr.Spec.Objects.Servers[0].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret}}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 1)
 	assert.Equal(t, secret, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
-	assert.Equal(t, secret, cr.Status.Applied.Objects.Servers[0].Build.Webhooks[0].Secret)
 	assert.Equal(t, 2, len(env.Servers))
 	assert.Equal(t, "example", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
+	checkWebhooks(t, secret, cr, env)
 
 	// Server #0
 	server := env.Servers[0]
@@ -933,8 +933,12 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
-	assert.Equal(t, "s3cr3t", server.BuildConfigs[0].Spec.Triggers[0].GitHubWebHook.Secret)
-	assert.Empty(t, server.BuildConfigs[0].Spec.Triggers[1].GenericWebHook.Secret)
+	for _, s := range server.BuildConfigs[0].Spec.Triggers {
+		if s.GitHubWebHook != nil {
+			assert.NotEmpty(t, s.GitHubWebHook.Secret)
+			assert.Equal(t, secret, s.GitHubWebHook.Secret)
+		}
+	}
 
 	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -947,6 +951,29 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 	assert.Equal(t, "test", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "other-ns", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func checkWebhooks(t *testing.T, secret string, cr *api.KieApp, env api.Environment) {
+	assert.Len(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks, 2)
+	for _, webhook := range cr.Status.Applied.Objects.Servers[0].Build.Webhooks {
+		if webhook.Type == api.GitHubWebhook {
+			assert.NotEmpty(t, webhook.Secret)
+			assert.Equal(t, secret, webhook.Secret)
+		}
+		if webhook.Type == api.GenericWebhook {
+			assert.NotEmpty(t, webhook.Secret)
+		}
+	}
+	assert.Len(t, env.Servers[0].BuildConfigs[0].Spec.Triggers, 4)
+	for _, trigger := range env.Servers[0].BuildConfigs[0].Spec.Triggers {
+		if trigger.GitHubWebHook != nil {
+			assert.NotEmpty(t, trigger.GitHubWebHook.Secret)
+			assert.Equal(t, secret, trigger.GitHubWebHook.Secret)
+		}
+		if trigger.GenericWebHook != nil {
+			assert.NotEmpty(t, trigger.GenericWebHook.Secret)
+		}
+	}
 }
 
 func getService(services []corev1.Service, name string) corev1.Service {

@@ -597,11 +597,6 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 		}
 
 	} else {
-		for index := range serverSet.Build.Webhooks {
-			if serverSet.Build.Webhooks[index].Secret == "" {
-				serverSet.Build.Webhooks[index].Secret = string(shared.GeneratePassword(8))
-			}
-		}
 		// build app from source template
 		buildTemplate = api.BuildTemplate{
 			GitSource:                    serverSet.Build.GitSource,
@@ -931,24 +926,17 @@ func SetDefaults(cr *api.KieApp) {
 		unsetNames := 0
 		for index := range specApply.Objects.Servers {
 			unsetNames = setKieSetName(specApply, index, unsetNames, usedNames)
-			usedNames[specApply.Objects.Servers[index].Name] = true
-			if statusServer.Name == specApply.Objects.Servers[index].Name {
-				if statusServer.Jms != nil && specApply.Objects.Servers[index].Jms != nil {
-					if specApply.Objects.Servers[index].Jms.Username == "" && statusServer.Jms.Username != "" {
-						specApply.Objects.Servers[index].Jms.Username = statusServer.Jms.Username
-					}
-					if specApply.Objects.Servers[index].Jms.Password == "" && statusServer.Jms.Password != "" {
-						specApply.Objects.Servers[index].Jms.Password = statusServer.Jms.Password
-					}
-				}
-				if statusServer.Build != nil && specApply.Objects.Servers[index].Build != nil {
-					for _, statusWh := range statusServer.Build.Webhooks {
-						for bI := range specApply.Objects.Servers[index].Build.Webhooks {
-							if statusWh.Type == specApply.Objects.Servers[index].Build.Webhooks[bI].Type &&
-								specApply.Objects.Servers[index].Build.Webhooks[bI].Secret == "" && statusWh.Secret != "" {
-								specApply.Objects.Servers[index].Build.Webhooks[bI].Secret = statusWh.Secret
-							}
-						}
+			serverSet := &specApply.Objects.Servers[index]
+			usedNames[serverSet.Name] = true
+			// add any missing webhook types by default
+			addWebhookTypes(serverSet.Build)
+			// carry over existing secrets/passwords from applied server config
+			retainAppliedPwds(serverSet, statusServer)
+			// create webhook secrets where none exist
+			if serverSet.Build != nil {
+				for whIndex := range serverSet.Build.Webhooks {
+					if serverSet.Build.Webhooks[whIndex].Secret == "" {
+						serverSet.Build.Webhooks[whIndex].Secret = string(shared.GeneratePassword(8))
 					}
 				}
 			}
@@ -969,6 +957,50 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	isTrialEnv := strings.HasSuffix(string(cr.Status.Applied.Environment), constants.TrialEnvSuffix)
 	setPasswords(cr, isTrialEnv)
+}
+
+func addWebhookTypes(buildObject *api.KieAppBuildObject) {
+	missingGeneric, missingGithub := true, true
+	if buildObject != nil {
+		for _, whSecret := range buildObject.Webhooks {
+			if whSecret.Type == api.GenericWebhook {
+				missingGeneric = false
+			}
+			if whSecret.Type == api.GitHubWebhook {
+				missingGithub = false
+			}
+		}
+		if missingGeneric {
+			buildObject.Webhooks = append(buildObject.Webhooks, api.WebhookSecret{Type: api.GenericWebhook})
+		}
+		if missingGithub {
+			buildObject.Webhooks = append(buildObject.Webhooks, api.WebhookSecret{Type: api.GitHubWebhook})
+		}
+	}
+}
+
+func retainAppliedPwds(dst *api.KieServerSet, src api.KieServerSet) {
+	if dst.Name == src.Name {
+		if dst.Jms != nil && src.Jms != nil {
+			if dst.Jms.Username == "" && src.Jms.Username != "" {
+				dst.Jms.Username = src.Jms.Username
+			}
+			if dst.Jms.Password == "" && src.Jms.Password != "" {
+				dst.Jms.Password = src.Jms.Password
+			}
+		}
+		if dst.Build != nil && src.Build != nil {
+			for _, srcWh := range src.Build.Webhooks {
+				for whIndex := range dst.Build.Webhooks {
+					if dst.Build.Webhooks[whIndex].Type == srcWh.Type {
+						if dst.Build.Webhooks[whIndex].Secret == "" && srcWh.Secret != "" {
+							dst.Build.Webhooks[whIndex].Secret = srcWh.Secret
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (processMigrationTemplate *api.ProcessMigrationTemplate, err error) {
