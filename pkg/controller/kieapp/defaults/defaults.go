@@ -960,21 +960,19 @@ func SetDefaults(cr *api.KieApp) {
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
-	missingGeneric, missingGithub := true, true
-	if buildObject != nil {
+	if buildObject == nil {
+		return
+	}
+	whTypes := []api.WebhookType{api.GenericWebhook, api.GitHubWebhook}
+	for _, whType := range whTypes {
+		missing := true
 		for _, whSecret := range buildObject.Webhooks {
-			if whSecret.Type == api.GenericWebhook {
-				missingGeneric = false
-			}
-			if whSecret.Type == api.GitHubWebhook {
-				missingGithub = false
+			if whSecret.Type == whType {
+				missing = false
 			}
 		}
-		if missingGeneric {
-			buildObject.Webhooks = append(buildObject.Webhooks, api.WebhookSecret{Type: api.GenericWebhook})
-		}
-		if missingGithub {
-			buildObject.Webhooks = append(buildObject.Webhooks, api.WebhookSecret{Type: api.GitHubWebhook})
+		if missing {
+			buildObject.Webhooks = append(buildObject.Webhooks, api.WebhookSecret{Type: whType})
 		}
 	}
 }
