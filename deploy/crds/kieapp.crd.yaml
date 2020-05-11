@@ -618,7 +618,7 @@ spec:
                               gcTimeRatio:
                                 type: integer
                                 format: int32
-                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.
+                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 means 1% spent on gc, 4 means spent 20% on gc.
                               gcAdaptiveSizePolicyWeight:
                                 type: integer
                                 format: int32
