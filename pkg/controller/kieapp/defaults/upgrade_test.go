@@ -7,7 +7,6 @@ import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	"github.com/kiegroup/kie-cloud-operator/version"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -56,11 +55,11 @@ func TestCheckProductUpgrade(t *testing.T) {
 	}
 	minor, micro, err := checkProductUpgrade(cr)
 	assert.Error(t, err, "Incompatible product versions should throw an error")
-	assert.Equal(t, fmt.Sprintf("Product version %s is not allowed in operator version %s. The following versions are allowed - %s", cr.Spec.Version, version.Version, constants.SupportedVersions), err.Error())
+	assert.Equal(t, fmt.Sprintf("Product version %s is not allowed. The following versions are allowed - %s", cr.Status.Applied.Version, constants.SupportedVersions), err.Error())
 	assert.False(t, minor)
 	assert.False(t, micro)
 
-	diffs := configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	diffs := configDiffs(getConfigVersionLists(cr.Status.Applied.Version, constants.CurrentVersion))
 	assert.Empty(t, diffs)
 
 	// Upgrades default to false
@@ -94,7 +93,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, minor)
 	assert.True(t, micro)
 
-	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	diffs = configDiffs(getConfigVersionLists(cr.Status.Applied.Version, constants.CurrentVersion))
 	assert.NotEmpty(t, diffs)
 	// assert.Empty(t, diffs)
 
@@ -114,7 +113,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.True(t, minor)
 	assert.True(t, micro)
 
-	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	diffs = configDiffs(getConfigVersionLists(cr.Status.Applied.Version, constants.CurrentVersion))
 	assert.NotEmpty(t, diffs)
 	// assert.Empty(t, diffs)
 
@@ -133,7 +132,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, minor)
 	assert.False(t, micro)
 
-	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	diffs = configDiffs(getConfigVersionLists(cr.Status.Applied.Version, constants.CurrentVersion))
 	assert.Empty(t, diffs)
 
 	// Upgrades disabled with minor true
@@ -152,7 +151,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.False(t, minor)
 	assert.False(t, micro)
 
-	diffs = configDiffs(getConfigVersionLists(cr.Spec.Version, constants.CurrentVersion))
+	diffs = configDiffs(getConfigVersionLists(cr.Status.Applied.Version, constants.CurrentVersion))
 	assert.NotEmpty(t, diffs)
 	// assert.Empty(t, diffs)
 }

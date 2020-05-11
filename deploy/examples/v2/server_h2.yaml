@@ -10,3 +10,8 @@ spec:
         database:
           type: h2
           size: 30Gi
+      - deployments: 1
+        database:
+          type: h2
+          size: 30Gi
+          storageClassName: gold

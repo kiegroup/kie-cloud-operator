@@ -11,13 +11,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/blang/semver"
 	"github.com/heroku/docker-registry-client/registry"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -82,8 +83,9 @@ type csvDeployments struct {
 	Spec appsv1.DeploymentSpec `json:"spec,omitempty"`
 }
 type csvStrategySpec struct {
-	Permissions []csvPermissions `json:"permissions"`
-	Deployments []csvDeployments `json:"deployments"`
+	Permissions        []csvPermissions `json:"permissions"`
+	ClusterPermissions []csvPermissions `json:"clusterPermissions"`
+	Deployments        []csvDeployments `json:"deployments"`
 }
 type channel struct {
 	Name       string `json:"name"`
@@ -113,6 +115,8 @@ func main() {
 		templateStrategySpec.Deployments = append(templateStrategySpec.Deployments, []csvDeployments{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
 		role := components.GetRole(csv.OperatorName)
 		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
+		clusterRole := components.GetClusterRole(csv.OperatorName)
+		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
 		// Re-serialize deployments and permissions into csv strategy.
 		updatedStrat, err := json.Marshal(templateStrategySpec)
 		if err != nil {
@@ -187,7 +191,7 @@ func main() {
 				Resources: []csvv1.APIResourceReference{
 					{
 						Kind:    "DeploymentConfig",
-						Version: oappsv1.SchemeGroupVersion.String(),
+						Version: oappsv1.GroupVersion.String(),
 					},
 					{
 						Kind:    "StatefulSet",
@@ -203,15 +207,15 @@ func main() {
 					},
 					{
 						Kind:    "Route",
-						Version: routev1.SchemeGroupVersion.String(),
+						Version: routev1.GroupVersion.String(),
 					},
 					{
 						Kind:    "BuildConfig",
-						Version: buildv1.SchemeGroupVersion.String(),
+						Version: buildv1.GroupVersion.String(),
 					},
 					{
 						Kind:    "ImageStream",
-						Version: oimagev1.SchemeGroupVersion.String(),
+						Version: oimagev1.GroupVersion.String(),
 					},
 					{
 						Kind:    "Secret",
@@ -255,19 +259,13 @@ func main() {
 						Path:         "environment",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
 					},
+				},
+				StatusDescriptors: []csvv1.StatusDescriptor{
 					{
 						Description:  "Product version installed.",
 						DisplayName:  "Version",
 						Path:         "version",
 						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:label"},
-					},
-				},
-				StatusDescriptors: []csvv1.StatusDescriptor{
-					{
-						Description:  "Deployments for the KieApp environment.",
-						DisplayName:  "Deployments",
-						Path:         "deployments",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
 					},
 					{
 						Description:  "Current phase.",
@@ -281,15 +279,18 @@ func main() {
 						Path:         "consoleHost",
 						XDescriptors: []string{"urn:alm:descriptor:org.w3:link"},
 					},
+					{
+						Description:  "Deployments for the KieApp environment.",
+						DisplayName:  "Deployments",
+						Path:         "deployments",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:podStatuses"},
+					},
 				},
 			},
 		}
 
 		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
 		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
-
-		imageName, _, _ := defaults.GetImage(deployment.Spec.Template.Spec.Containers[0].Image)
-		relatedImages := []image{}
 
 		if csv.OperatorName == "kie-cloud-operator" {
 			templateStruct.Annotations["certified"] = "false"
@@ -298,154 +299,79 @@ func main() {
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
-		relatedImages = append(relatedImages, image{Name: imageName, Image: deployment.Spec.Template.Spec.Containers[0].Image})
 
 		// create image-references file for automated ART digest find/replace
-		imageRef := constants.ImageRef{
+		imageRef := &constants.ImageRef{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: oimagev1.SchemeGroupVersion.String(),
+				APIVersion: oimagev1.GroupVersion.String(),
 				Kind:       "ImageStream",
 			},
-			Spec: constants.ImageRefSpec{
-				Tags: []constants.ImageRefTag{
-					{
-						// Needs to match the component name for upstream and downstream.
-						Name: "rhpam-7-rhel8-operator-container",
-						From: &corev1.ObjectReference{
-							// Needs to match the image that is in your CSV that you want to replace.
-							Name: deployment.Spec.Template.Spec.Containers[0].Image,
-							Kind: "DockerImage",
-						},
-					},
-				},
-			},
 		}
+		relatedImages := []image{}
+		relatedImages = addRefRelatedImages(deployment.Spec.Template.Spec.Containers[0].Image, "rhpam-7"+constants.RhelVersion+"-operator-container", imageRef, relatedImages)
+
 		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
 		for _, imageVersion := range constants.SupportedVersions {
+			v, err := semver.New(imageVersion)
+			if err != nil {
+				log.Error(err)
+			}
 			for _, i := range constants.Images {
-				imageURL := i.Registry + ":" + imageVersion
-				imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-					Name: i.Component,
-					From: &corev1.ObjectReference{
-						Name: imageURL,
-						Kind: "DockerImage",
-					},
-				})
-				if imageVersion >= "7.7.0" {
-					relatedImages = append(relatedImages, getRelatedImage(imageURL))
+				if i.Var == constants.PamProcessMigrationVar && v.LT(semver.MustParse("7.8.0")) {
+					continue
 				}
+				relatedImages = addRefRelatedImages(i.Registry+":"+imageVersion, i.Component, imageRef, relatedImages)
 			}
 		}
 
-		// add ancillary images to image-references file
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.OauthComponent,
-			From: &corev1.ObjectReference{
-				Name: constants.OauthImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.OseCli311Component,
-			From: &corev1.ObjectReference{
-				Name: constants.OseCli311ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.MySQL57Component,
-			From: &corev1.ObjectReference{
-				Name: constants.MySQL57ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.PostgreSQL10Component,
-			From: &corev1.ObjectReference{
-				Name: constants.PostgreSQL10ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Datagrid73Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Datagrid73ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-		imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-			Name: constants.Broker75Component,
-			From: &corev1.ObjectReference{
-				Name: constants.Broker75ImageURL,
-				Kind: "DockerImage",
-			},
-		})
-
 		// add ancillary images to relatedImages
-		relatedImages = append(relatedImages, getRelatedImage(constants.OauthImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.OseCli311ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.MySQL57ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.PostgreSQL10ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Datagrid73ImageURL))
-		relatedImages = append(relatedImages, getRelatedImage(constants.Broker75ImageURL))
+		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
+		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
+		for _, ocpVersion := range constants.SupportedOcpVersions {
+			if strings.Split(ocpVersion, ".")[0] == "4" {
+				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
+			}
+		}
+		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker75ImageURL, constants.BrokerComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 
 		if logs.GetBoolEnv("DIGESTS") {
-			url := "https://" + constants.ImageRegistry
+			// use stage registry for current release image digest population
+			url := "https://registry.stage.redhat.io"
 			if val, ok := os.LookupEnv("REGISTRY"); ok {
 				url = val
 			}
-			username := "" // anonymous
-			password := "" // anonymous
-			if userToken := strings.Split(os.Getenv("USER_TOKEN"), ":"); len(userToken) > 1 {
-				username = userToken[0]
-				password = userToken[1]
+			stageuser := "" // anonymous
+			stagepass := "" // anonymous
+			if userToken := strings.Split(os.Getenv("STAGE_USER_TOKEN"), ":"); len(userToken) > 1 {
+				stageuser = userToken[0]
+				stagepass = userToken[1]
 			}
-			hub, err := registry.New(url, username, password)
-			if err != nil {
-				log.Error(err)
+			stagehub, err := registry.New(url, stageuser, stagepass)
+			if err == nil {
+				imageShaMap = retrieveImageShas(imageRef, imageShaMap, stagehub, true)
 			} else {
-				defaultCheckRedirect := hub.Client.CheckRedirect
-				for _, tagRef := range imageRef.Spec.Tags {
-					hub.Client.CheckRedirect = defaultCheckRedirect
-					if _, ok := imageShaMap[tagRef.From.Name]; !ok {
-						imageShaMap[tagRef.From.Name] = ""
-						imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
-						repo := imageContext + "/" + imageName
-						tags, err := hub.Tags(repo)
-						if err != nil {
-							log.Error(err)
-						}
-						// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
-						hub.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-							return http.ErrUseLastResponse
-						}
-						if _, exists := find(tags, imageTag); exists {
-							req, err := http.NewRequest("GET", url+"/v2/"+repo+"/manifests/"+imageTag, nil)
-							if err != nil {
-								log.Error(err)
-							}
-							req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
-							resp, err := hub.Client.Do(req)
-							if err != nil {
-								log.Error(err)
-							}
-							if resp != nil {
-								defer resp.Body.Close()
-							}
-							if resp.StatusCode == 302 || resp.StatusCode == 301 {
-								digestURL, err := resp.Location()
-								if err != nil {
-									log.Error(err)
-								}
-								if digestURL != nil {
-									if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
-										imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
-									}
-								}
-							}
-						}
-					}
-				}
+				log.Error(err)
+			}
+
+			// use prod registry for prior release and ancillary image digest population
+			produser := "" // anonymous
+			prodpass := "" // anonymous
+			if userToken := strings.Split(os.Getenv("PROD_USER_TOKEN"), ":"); len(userToken) > 1 {
+				produser = userToken[0]
+				prodpass = userToken[1]
+			}
+			prodhub, err := registry.New("https://"+constants.ImageRegistry, produser, prodpass)
+			if err == nil {
+				imageShaMap = retrieveImageShas(imageRef, imageShaMap, prodhub, false)
+			} else {
+				log.Error(err)
 			}
 		}
 		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
@@ -506,12 +432,77 @@ func main() {
 	}
 }
 
+func retrieveImageShas(imageRef *constants.ImageRef, imageShaMap map[string]string, registry *registry.Registry, stage bool) map[string]string {
+	defaultCheckRedirect := registry.Client.CheckRedirect
+	for _, tagRef := range imageRef.Spec.Tags {
+		registry.Client.CheckRedirect = defaultCheckRedirect
+		if _, ok := imageShaMap[tagRef.From.Name]; !ok {
+			var retrieve bool
+			imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
+			if !stage ||
+				(stage && imageTag == constants.CurrentVersion &&
+					(strings.Contains(imageContext, constants.RhpamPrefix+"-") || strings.Contains(imageContext, constants.RhdmPrefix+"-"))) {
+				retrieve = true
+			}
+			if retrieve {
+				imageShaMap[tagRef.From.Name] = ""
+				repo := imageContext + "/" + imageName
+				tags, err := registry.Tags(repo)
+				if err != nil {
+					log.Error(err)
+				}
+				// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
+				registry.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				if _, exists := shared.Find(tags, imageTag); exists {
+					req, err := http.NewRequest("GET", registry.URL+"/v2/"+repo+"/manifests/"+imageTag, nil)
+					if err != nil {
+						log.Error(err)
+					}
+					req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+					resp, err := registry.Client.Do(req)
+					if err != nil {
+						log.Error(err)
+					}
+					if resp != nil {
+						defer resp.Body.Close()
+					}
+					if resp.StatusCode == 302 || resp.StatusCode == 301 {
+						digestURL, err := resp.Location()
+						if err != nil {
+							log.Error(err)
+						}
+						if digestURL != nil {
+							if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
+								imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return imageShaMap
+}
+
 func getRelatedImage(imageURL string) image {
 	imageName, _, _ := defaults.GetImage(imageURL)
 	return image{
 		Name:  imageName,
 		Image: imageURL,
 	}
+}
+
+func addRefRelatedImages(url, component string, imageRef *constants.ImageRef, relatedImages []image) []image {
+	imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
+		Name: component,
+		From: &corev1.ObjectReference{
+			Name: url,
+			Kind: "DockerImage",
+		},
+	})
+	return append(relatedImages, getRelatedImage(url))
 }
 
 // fileExists checks if a file exists and is not a directory before we
@@ -534,13 +525,4 @@ func createFile(filepath string, obj interface{}) {
 	writer := bufio.NewWriter(f)
 	util.MarshallObject(obj, writer)
 	writer.Flush()
-}
-
-func find(slice []string, val string) (int, bool) {
-	for i, item := range slice {
-		if item == val {
-			return i, true
-		}
-	}
-	return -1, false
 }

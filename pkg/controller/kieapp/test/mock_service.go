@@ -2,12 +2,11 @@ package test
 
 import (
 	"context"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/logs"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -15,7 +14,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var log = logs.GetLogger("kieapp.test")
@@ -40,11 +41,62 @@ func MockService() *MockPlatformService {
 	return MockServiceWithExtraScheme()
 }
 
+var knownTypes = map[schema.GroupVersion][]runtime.Object{
+	corev1.SchemeGroupVersion: {
+		&corev1.PersistentVolumeClaim{},
+		&corev1.ServiceAccount{},
+		&corev1.Secret{},
+		&corev1.Service{},
+		&corev1.ServiceList{},
+		&corev1.PersistentVolumeClaimList{},
+		&corev1.ServiceAccountList{},
+		&corev1.ConfigMap{},
+		&corev1.ConfigMapList{},
+	},
+	oappsv1.GroupVersion: {
+		&oappsv1.DeploymentConfig{},
+		&oappsv1.DeploymentConfigList{},
+	},
+	appsv1.SchemeGroupVersion: {
+		&appsv1.StatefulSet{},
+		&appsv1.StatefulSetList{},
+	},
+	routev1.GroupVersion: {
+		&routev1.Route{},
+		&routev1.RouteList{},
+	},
+	oimagev1.GroupVersion: {
+		&oimagev1.ImageStream{},
+		&oimagev1.ImageStreamList{},
+	},
+	rbacv1.SchemeGroupVersion: {
+		&rbacv1.Role{},
+		&rbacv1.RoleList{},
+		&rbacv1.RoleBinding{},
+		&rbacv1.RoleBindingList{},
+	},
+	buildv1.GroupVersion: {
+		&buildv1.BuildConfig{},
+		&buildv1.BuildConfigList{},
+	},
+	consolev1.GroupVersion: {
+		&consolev1.ConsoleLink{},
+		&consolev1.ConsoleLinkList{},
+		&consolev1.ConsoleYAMLSample{},
+		&consolev1.ConsoleYAMLSampleList{},
+	},
+}
+
 func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
-	registerObjs := []runtime.Object{&api.KieApp{}, &api.KieAppList{}, &corev1.PersistentVolumeClaim{}, &corev1.ServiceAccount{}, &corev1.Secret{}, &rbacv1.Role{}, &rbacv1.RoleBinding{}, &oappsv1.DeploymentConfig{}, &corev1.Service{}, &appsv1.StatefulSet{}, &routev1.Route{}, &oimagev1.ImageStream{}, &buildv1.BuildConfig{}, &oappsv1.DeploymentConfigList{}, &buildv1.BuildConfigList{}, &corev1.PersistentVolumeClaimList{}, &corev1.ServiceAccountList{}, &rbacv1.RoleList{}, &rbacv1.RoleBindingList{}, &corev1.ServiceList{}, &appsv1.StatefulSetList{}, &routev1.RouteList{}, &oimagev1.ImageStreamList{}}
+	registerObjs := []runtime.Object{&api.KieApp{}, &api.KieAppList{}}
 	registerObjs = append(registerObjs, objs...)
 	api.SchemeBuilder.Register(registerObjs...)
 	scheme, _ := api.SchemeBuilder.Build()
+	for gv, types := range knownTypes {
+		for _, t := range types {
+			scheme.AddKnownTypes(gv, t)
+		}
+	}
 	client := fake.NewFakeClientWithScheme(scheme)
 	log.Debugf("Fake client created as %v", client)
 	mockImageStreamTag := &MockImageStreamTag{}

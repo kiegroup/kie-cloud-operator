@@ -1,0 +1,17 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: storage-class-name
+spec:
+  environment: rhpam-authoring
+  objects:
+    console:
+      storageClassName: fast
+    servers:
+      - deployments: 1
+        database:
+          type: mysql
+          size: 30Gi
+          storageClassName: gold
+    smartRouter:
+      storageClassName: slow

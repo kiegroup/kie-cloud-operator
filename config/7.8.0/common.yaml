@@ -309,6 +309,9 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:
@@ -380,6 +383,9 @@ smartRouter:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
       spec:
+        # [[ if ne .SmartRouter.StorageClassName "" ]]
+        storageClassName: "[[.SmartRouter.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:
@@ -440,6 +446,7 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_HOST
                     valueFrom:
                       fieldRef:
+                        apiVersion: v1
                         fieldPath: status.podIP
                   - name: KIE_SERVER_ROUTER_PORT
                     value: "9000"
@@ -612,10 +619,12 @@ servers:
                     - name: KIE_SERVER_HOST
                       valueFrom:
                         fieldRef:
+                          apiVersion: v1
                           fieldPath: status.podIP
                     - name: KIE_SERVER_ID
                       valueFrom:
                         fieldRef:
+                          apiVersion: v1
                           fieldPath: metadata.labels['services.server.kie.org/kie-server-id']
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "[[.KieName]]"

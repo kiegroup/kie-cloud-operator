@@ -1,67 +1,15 @@
-## KIE Servers BEGIN
-servers:
+## KIE Databases BEGIN
+databases:
   ## RANGE BEGINS
-  #[[ range $index, $Map := .Servers ]]
-  ## KIE server deployment config BEGIN
+  #[[ range $index, $Map := .Databases ]]
   - deploymentConfigs:
-      - metadata:
-          name: "[[.KieName]]"
-        spec:
-          template:
-            spec:
-              initContainers:
-                - command:
-                    [
-                      "/bin/bash",
-                      "-c",
-                      ">-
-                       replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-mysql; replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
-                    ]
-                  image: "[[$.Constants.OseCliImageURL]]"
-                  imagePullPolicy: IfNotPresent
-                  name: "[[.KieName]]-mysql-init"
-                  terminationMessagePolicy: FallbackToLogsOnError
-              containers:
-                - name: "[[.KieName]]"
-                  env:
-                    ## MySQL driver settings BEGIN
-                    - name: DATASOURCES
-                      value: "RHPAM"
-                    - name: RHPAM_DATABASE
-                      value: "rhpam7"
-                    - name: RHPAM_JNDI
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_JTA
-                      value: "true"
-                    - name: KIE_SERVER_PERSISTENCE_DS
-                      value: "java:/jboss/datasources/rhpam"
-                    - name: RHPAM_DRIVER
-                      value: "mariadb"
-                    - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.MySQL57Dialect"
-                    - name: RHPAM_USERNAME
-                      value: "rhpam"
-                    - name: RHPAM_PASSWORD
-                      value: "[[$.DBPassword]]"
-                    - name: RHPAM_SERVICE_HOST
-                      value: "[[.KieName]]-mysql"
-                    - name: RHPAM_SERVICE_PORT
-                      value: "3306"
-                    - name: RHPAM_CONNECTION_CHECKER
-                      value: "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"
-                    - name: RHPAM_EXCEPTION_SORTER
-                      value: "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"
-                    - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
-                      value: "60000"
-                    ## MySQL driver settings END
-      ## KIE server deployment config END
       ## MySQL deployment BEGIN
       - metadata:
-          name: "[[.KieName]]-mysql"
+          name: "[[.ServerName]]-mysql"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]]-mysql"
+            service: "[[.ServerName]]-mysql"
         spec:
           strategy:
             type: Recreate
@@ -69,19 +17,19 @@ servers:
             - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "[[.KieName]]-mysql"
+            deploymentConfig: "[[.ServerName]]-mysql"
           template:
             metadata:
-              name: "[[.KieName]]-mysql"
+              name: "[[.ServerName]]-mysql"
               labels:
-                deploymentConfig: "[[.KieName]]-mysql"
+                deploymentConfig: "[[.ServerName]]-mysql"
                 app: "[[$.ApplicationName]]"
                 application: "[[$.ApplicationName]]"
-                service: "[[.KieName]]-mysql"
+                service: "[[.ServerName]]-mysql"
             spec:
               terminationGracePeriodSeconds: 60
               containers:
-                - name: "[[.KieName]]-mysql"
+                - name: "[[.ServerName]]-mysql"
                   image: "[[$.Constants.MySQLImageURL]]"
                   imagePullPolicy: Always
                   livenessProbe:
@@ -104,37 +52,40 @@ servers:
                       protocol: TCP
                   env:
                     - name: MYSQL_USER
-                      value: "rhpam"
+                      value: "[[.Username]]"
                     - name: MYSQL_PASSWORD
                       value: "[[$.DBPassword]]"
                     - name: MYSQL_DATABASE
-                      value: "rhpam7"
+                      value: "[[.DatabaseName]]"
                   volumeMounts:
                     - mountPath: "/var/lib/mysql/data"
-                      name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
-              ## [[ if ne .Database.Size "" ]]
+                      name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+              ## [[ if ne .Size "" ]]
               volumes:
-                - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+                - name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   persistentVolumeClaim:
-                    claimName: "[[.KieName]]-mysql-claim"
+                    claimName: "[[.ServerName]]-mysql-claim"
     ## MySQL persistent volume claim BEGIN
     persistentVolumeClaims:
       - metadata:
-          name: "[[.KieName]]-mysql-claim"
+          name: "[[.ServerName]]-mysql-claim"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]]-mysql"
+            service: "[[.ServerName]]-mysql"
         spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
           accessModes:
             - ReadWriteOnce
           resources:
             requests:
-              storage: "[[.Database.Size]]"
+              storage: "[[.Size]]"
               ## MySQL persistent volume claim END
               ## [[ else ]]
               volumes:
-                - name: "[[.KieName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+                - name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
                   emptyDir: {}
     ## [[ end ]]
     ## MySQL deployment END
@@ -144,15 +95,15 @@ servers:
             - port: 3306
               targetPort: 3306
           selector:
-            deploymentConfig: "[[.KieName]]-mysql"
+            deploymentConfig: "[[.ServerName]]-mysql"
         metadata:
-          name: "[[.KieName]]-mysql"
+          name: "[[.ServerName]]-mysql"
           labels:
             app: "[[$.ApplicationName]]"
             application: "[[$.ApplicationName]]"
-            service: "[[.KieName]]-mysql"
+            service: "[[.ServerName]]-mysql"
           annotations:
             description: The MySQL server's port.
   #[[end]]
   ## RANGE ends
-## KIE Servers END
+## KIE Databases END

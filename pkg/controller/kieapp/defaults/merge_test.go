@@ -1,18 +1,17 @@
 package defaults
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
-
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 
 	"github.com/ghodss/yaml"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestMergeServices(t *testing.T) {
@@ -131,9 +130,9 @@ func getEnvironment(environment api.EnvironmentType, name string) (api.Environme
 
 func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var dbEnv api.Environment
-	err := getParsedTemplate("dbs/postgresql.yaml", "prod", &dbEnv)
+	err := getParsedTemplateWithDB("dbs/postgresql.yaml", "prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, dbEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, dbEnv.Databases[0].DeploymentConfigs[0].Spec.Strategy.Type)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
@@ -147,7 +146,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	prodEnvCount := len(prodEnv.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 
 	mergedDCs := mergeDeploymentConfigs(common.Servers[0].DeploymentConfigs, prodEnv.Servers[0].DeploymentConfigs)
-	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Databases[0].DeploymentConfigs)
 
 	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
 	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors but got %v", len(mergedDCs))
@@ -162,7 +161,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 
 func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	var dbEnv api.Environment
-	err := getParsedTemplate("dbs/h2.yaml", "immutable-prod", &dbEnv)
+	err := getParsedTemplate("dbs/servers/h2.yaml", "immutable-prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
 
 	var jmsEnv api.Environment
@@ -476,11 +475,113 @@ func TestMergeDeploymentconfigs_PodSpec_Volumes(t *testing.T) {
 	assert.Equal(t, "/etc/kieserver/dc1/path2", results[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
 }
 
+func TestMergeConfigMaps(t *testing.T) {
+	baseline := []corev1.ConfigMap{
+		*buildConfigMap("overwrite-cm2",
+			map[string]string{
+				"cm2-data-key-1": "cm2-data-value",
+				"cm2-data-key-2": "cm2-data-value",
+				"cm2-data-key-3": "cm2-data-value",
+			},
+			map[string][]byte{
+				"cm2-binary-data-key": {1, 3, 5, 7, 9},
+			},
+		),
+		*buildConfigMap("cm1",
+			map[string]string{
+				"cm1-data-key": "cm1-data-value",
+			},
+			map[string][]byte{
+				"cm1-binary-data-key-1": {1, 2, 3, 4, 5},
+				"cm1-binary-data-key-2": {1, 2, 3, 4, 5},
+				"cm1-binary-data-key-3": {1, 2, 3, 4, 5},
+			},
+		),
+	}
+
+	overwrite := []corev1.ConfigMap{
+		*buildConfigMap("overwrite-cm2",
+			map[string]string{
+				"cm2-data-key-1": "cm2-data-value",
+				"cm2-data-key-2": "cm2-data-value-2",
+				"cm2-data-key-4": "cm2-data-value-3",
+			},
+			map[string][]byte{
+				"cm2-binary-data-key": {1, 3, 5, 7, 9},
+			},
+		),
+		*buildConfigMap("cm1",
+			map[string]string{
+				"cm1-data-key": "cm1-data-value-overwrite",
+			},
+			map[string][]byte{
+				"cm1-binary-data-key-1": {1, 2, 3, 4, 5},
+				"cm1-binary-data-key-2": {6, 7, 8, 9, 0},
+				"cm1-binary-data-key-4": {1, 2, 3, 4, 5},
+			},
+		),
+	}
+	results := mergeConfigMaps(baseline, overwrite)
+
+	expected := []corev1.ConfigMap{
+		*buildConfigMap("overwrite-cm2",
+			map[string]string{
+				"cm2-data-key-1": "cm2-data-value",
+				"cm2-data-key-2": "cm2-data-value-2",
+				"cm2-data-key-3": "cm2-data-value",
+				"cm2-data-key-4": "cm2-data-value-3",
+			},
+			map[string][]byte{
+				"cm2-binary-data-key": {1, 3, 5, 7, 9},
+			},
+		),
+		*buildConfigMap("cm1",
+			map[string]string{
+				"cm1-data-key": "cm1-data-value-overwrite",
+			},
+			map[string][]byte{
+				"cm1-binary-data-key-1": {1, 2, 3, 4, 5},
+				"cm1-binary-data-key-2": {6, 7, 8, 9, 0},
+				"cm1-binary-data-key-3": {1, 2, 3, 4, 5},
+				"cm1-binary-data-key-4": {1, 2, 3, 4, 5},
+			},
+		),
+	}
+
+	assert.Equal(t, 2, len(results))
+	assert.Equal(t, expected[0].Data, results[0].Data)
+	assert.Equal(t, expected[0].BinaryData, results[0].BinaryData)
+	assert.Equal(t, expected[1].Data, results[1].Data)
+	assert.Equal(t, expected[1].BinaryData, results[1].BinaryData)
+}
+
 func getParsedTemplate(filename string, name string, object interface{}) error {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: "test-ns",
+		},
+	}
+	return getParsedTemplateFromCR(cr, filename, object)
+}
+
+func getParsedTemplateWithDB(filename string, name string, object interface{}) error {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: "test-ns",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					Database: api.ProcessMigrationDatabaseObject{
+						InternalDatabaseObject: api.InternalDatabaseObject{
+							Type: api.DatabasePostgreSQL,
+						},
+					},
+				},
+			},
 		},
 	}
 	return getParsedTemplateFromCR(cr, filename, object)
@@ -492,7 +593,7 @@ func getParsedTemplateFromCR(cr *api.KieApp, filename string, object interface{}
 		log.Error("Error getting environment template", err)
 	}
 
-	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Spec.Version, cr.Namespace, envTemplate)
+	yamlBytes, err := loadYaml(test.MockService(), filename, cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
 		return err
 	}
@@ -644,5 +745,13 @@ func buildProbe(name string, delay, timeout int32) *corev1.Probe {
 		},
 		InitialDelaySeconds: delay,
 		TimeoutSeconds:      timeout,
+	}
+}
+
+func buildConfigMap(name string, data map[string]string, binaryData map[string][]byte) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: *buildObjectMeta(name + "-cm"),
+		Data:       data,
+		BinaryData: binaryData,
 	}
 }

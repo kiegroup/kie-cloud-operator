@@ -10,13 +10,17 @@ const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.8.0"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.7.0"
+	PriorVersion1 = "7.7.1"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.6.0"
+	PriorVersion2 = "7.7.0"
 )
 
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
+
+// SupportedOcpVersions - Supported OpenShift minor versions
+// var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1", "3.11"}
+var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// RhpamPrefix RHPAM prefix
@@ -76,6 +80,16 @@ const (
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
 	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
+	// DefaultKieServerDatabaseName Default database name for Kie Server
+	DefaultKieServerDatabaseName = "rhpam7"
+	// DefaultKieServerDatabaseUsername Default database username for Kie Server
+	DefaultKieServerDatabaseUsername = "rhpam"
+	// DefaultProcessMigrationDatabaseType Default database type for Process Migration
+	DefaultProcessMigrationDatabaseType = api.DatabaseH2
+	// DefaultProcessMigrationDatabaseName Default database name for Process Migration
+	DefaultProcessMigrationDatabaseName = "pimdb"
+	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
+	DefaultProcessMigrationDatabaseUsername = "pim"
 
 	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = "DM_DC_IMAGE_"
@@ -87,9 +101,11 @@ const (
 	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
 	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
 
-	OauthVar       = "OAUTH_PROXY_IMAGE"
-	OauthImageURL  = ImageRegistry + "/openshift3/oauth-proxy:v3.11"
-	OauthComponent = "golang-github-openshift-oauth-proxy-container"
+	OauthVar             = "OAUTH_PROXY_IMAGE_"
+	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
+	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
+	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
+	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
 
 	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
@@ -103,17 +119,23 @@ const (
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
 	OseCli311Component = "openshift-enterprise-cli-container"
 
-	BrokerVar         = "BROKER_IMAGE_"
-	Broker75Image     = "amq-broker"
-	Broker75ImageTag  = "7.5"
-	Broker75ImageURL  = ImageRegistry + "/amq7/" + Broker75Image + ":" + Broker75ImageTag
-	Broker75Component = "amq-broker-openshift-container"
+	BrokerComponent  = "amq-broker-openshift-container"
+	BrokerVar        = "BROKER_IMAGE_"
+	BrokerImage      = "amq-broker"
+	Broker75ImageTag = "7.5"
+	Broker75ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
+
+	Broker76ImageTag = "7.6"
+	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
 
 	DatagridVar         = "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
 	Datagrid73ImageTag  = "1.3"
 	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
+
+	Datagrid73ImageTag15 = "1.5"
+	Datagrid73ImageURL15 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag15
 
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
@@ -157,14 +179,14 @@ var Images = []ImageEnv{
 		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
 	},
 	{
-		Var:       PamProcessMigrationVar,
-		Component: "rhpam-7-process-migration-rhel8-container",
-		Registry:  PamContext + "process-migration" + RhelVersion,
-	},
-	{
 		Var:       PamSmartRouterVar,
 		Component: "rhpam-7-smartrouter-rhel8-container",
 		Registry:  PamContext + "smartrouter" + RhelVersion,
+	},
+	{
+		Var:       PamProcessMigrationVar,
+		Component: "rhpam-7-process-migration-rhel8-container",
+		Registry:  PamContext + "process-migration" + RhelVersion,
 	},
 }
 
@@ -191,12 +213,12 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
-		BrokerImage:         Broker75Image,
-		BrokerImageTag:      Broker75ImageTag,
-		BrokerImageURL:      Broker75ImageURL,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker76ImageTag,
+		BrokerImageURL:      Broker76ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag,
-		DatagridImageURL:    Datagrid73ImageURL,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL57ImageURL,
 		MySQLComponent:      MySQL57Component,
@@ -207,7 +229,23 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
-		BrokerImage:         Broker75Image,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
+	},
+	PriorVersion2: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         BrokerImage,
 		BrokerImageTag:      Broker75ImageTag,
 		BrokerImageURL:      Broker75ImageURL,
 		DatagridImage:       Datagrid73Image,
@@ -219,18 +257,11 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	PriorVersion2: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
-	},
 }
 
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -254,11 +285,11 @@ var replicasAuthoringHA = api.ReplicaConstants{
 }
 
 // DefaultDatabaseConfig defines the default Database to use for each environment
-var databaseRhpamAuthoring = &api.DatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}
-var databaseRhpamAuthoringHA = &api.DatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}
-var databaseRhpamProduction = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamProductionImmutable = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamTrial = &api.DatabaseObject{Type: api.DatabaseH2, Size: ""}
+var databaseRhpamAuthoring = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}}
+var databaseRhpamAuthoringHA = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProduction = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProductionImmutable = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamTrial = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: ""}}
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{

@@ -4,8 +4,8 @@
 
 ## Requirements
 
-- go v1.12+
-- operator-sdk v0.11.0
+- go v1.12.x
+- operator-sdk v0.12.0
 
 ## Build
 
@@ -161,7 +161,7 @@ spec:
 
 ## Build rhel-based image for release
 
-Requires `cekit` v3.1+ and `rhpkg` -
+Requires `cekit` v3.6+ and `rhpkg` -
 
 ```bash
 # local build
@@ -178,6 +178,6 @@ CSV Generation
 make csv
 
 # OR
-# w/ sha lookup/replacement against registry.redhat.io
-DIGESTS=true USER_TOKEN="<username>:<password>" make csv
+# w/ sha lookup/replacement against registry.redhat.io && registry.stage.redhat.io
+DIGESTS=true PROD_USER_TOKEN="<username>:<password>" STAGE_USER_TOKEN="<username>:<password>" make csv
 ```

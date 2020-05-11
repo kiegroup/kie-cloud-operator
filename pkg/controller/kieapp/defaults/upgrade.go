@@ -5,25 +5,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/google/go-cmp/cmp"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/version"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 // checkProductUpgrade ...
 func checkProductUpgrade(cr *api.KieApp) (minor, micro bool, err error) {
-	setDefaults(cr)
-	if checkVersion(cr.Spec.Version) {
-		if cr.Spec.Version != constants.CurrentVersion && cr.Spec.Upgrades.Enabled {
-			micro = cr.Spec.Upgrades.Enabled
-			minor = cr.Spec.Upgrades.Minor
+	SetDefaults(cr)
+	if checkVersion(cr.Status.Applied.Version) {
+		if cr.Status.Applied.Version != constants.CurrentVersion && cr.Status.Applied.Upgrades.Enabled {
+			micro = cr.Status.Applied.Upgrades.Enabled
+			minor = cr.Status.Applied.Upgrades.Minor
 		}
 	} else {
-		err = fmt.Errorf("Product version %s is not allowed in operator version %s. The following versions are allowed - %s", cr.Spec.Version, version.Version, constants.SupportedVersions)
+		err = fmt.Errorf("Product version %s is not allowed. The following versions are allowed - %s", cr.Status.Applied.Version, constants.SupportedVersions)
 	}
 	return minor, micro, err
 }
@@ -54,7 +54,7 @@ func MajorMinorMicro(productVersion string) (major, minor, micro string) {
 }
 
 // getConfigVersionDiffs ...
-func getConfigVersionDiffs(fromVersion, toVersion string, service api.PlatformService) error {
+func getConfigVersionDiffs(fromVersion, toVersion string, service kubernetes.PlatformService) error {
 	if checkVersion(fromVersion) && checkVersion(toVersion) {
 		fromList, toList := getConfigVersionLists(fromVersion, toVersion)
 		diffs := configDiffs(fromList, toList)

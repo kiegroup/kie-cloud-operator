@@ -67,6 +67,7 @@ func mergeCustomObject(baseline api.CustomObject, overwrite api.CustomObject) ap
 	object.BuildConfigs = mergeBuildConfigs(baseline.BuildConfigs, overwrite.BuildConfigs)
 	object.Services = mergeServices(baseline.Services, overwrite.Services)
 	object.Routes = mergeRoutes(baseline.Routes, overwrite.Routes)
+	object.ConfigMaps = mergeConfigMaps(baseline.ConfigMaps, overwrite.ConfigMaps)
 	return object
 }
 
@@ -758,6 +759,54 @@ func getRouteReferenceSlice(objects []routev1.Route) []api.OpenShiftObject {
 		slice[index] = &objects[index]
 	}
 	return slice
+}
+
+func mergeConfigMaps(baseline []corev1.ConfigMap, overwrite []corev1.ConfigMap) []corev1.ConfigMap {
+	if len(overwrite) == 0 {
+		return baseline
+	}
+	if len(baseline) == 0 {
+		return overwrite
+	}
+	baselineRefs := getConfigMapReferenceSlice(baseline)
+	overwriteRefs := getConfigMapReferenceSlice(overwrite)
+	for overwriteIndex := range overwrite {
+		overwriteItem := &overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(overwriteItem, baselineRefs)
+		if baselineIndex >= 0 {
+			baselineItem := baseline[baselineIndex]
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+				return nil
+			}
+			err = mergo.Merge(&overwriteItem.Data, baselineItem.Data)
+			if err != nil {
+				log.Error("Error merging ConfigMap Data. ", err)
+				return nil
+			}
+			err = mergo.Merge(&overwriteItem.BinaryData, baselineItem.BinaryData)
+			if err != nil {
+				log.Error("Error merging ConfigMap BinaryData. ", err)
+				return nil
+			}
+		}
+	}
+	mergedConfigMaps := make([]corev1.ConfigMap, combinedSize(baselineRefs, overwriteRefs))
+	err := mergeObjects(baselineRefs, overwriteRefs, mergedConfigMaps)
+	if err != nil {
+		log.Error("Error merging objects. ", err)
+		return nil
+	}
+	return mergedConfigMaps
+}
+
+func getConfigMapReferenceSlice(objects []corev1.ConfigMap) []api.OpenShiftObject {
+	references := make([]api.OpenShiftObject, len(objects))
+	for index := range objects {
+		references[index] = &objects[index]
+	}
+	return references
 }
 
 func combinedSize(baseline []api.OpenShiftObject, overwrite []api.OpenShiftObject) int {
