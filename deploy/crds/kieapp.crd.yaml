@@ -242,15 +242,15 @@ spec:
                             gcTimeRatio:
                               type: integer
                               format: int32
-                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.
                             gcAdaptiveSizePolicyWeight:
                               type: integer
                               format: int32
-                              description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                              description: The weighting given to the current GC time versus previous GC times  when determining the new heap size. e.g. '90'
                             gcMaxMetaspaceSize:
                               type: integer
                               format: int32
-                              description: The maximum metaspace size. e.g. '100'
+                              description: The maximum metaspace size unit, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
                             gcContainerOptions:
                               type: string
                               description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
@@ -618,15 +618,15 @@ spec:
                               gcTimeRatio:
                                 type: integer
                                 format: int32
-                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.
                               gcAdaptiveSizePolicyWeight:
                                 type: integer
                                 format: int32
-                                description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                                description: The weighting given to the current GC time versus previous GC times when determining the new heap size, between 0 and 100. e.g. '90'
                               gcMaxMetaspaceSize:
                                 type: integer
                                 format: int32
-                                description: The maximum metaspace size. e.g. '100'
+                                description: The maximum metaspace size, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
                               gcContainerOptions:
                                 type: string
                                 description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'

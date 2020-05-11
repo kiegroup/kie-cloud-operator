@@ -1304,7 +1304,7 @@
                           "label": "GC time ratio",
                           "type": "integer",
                           "required": false,
-                          "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'.",
+                          "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcTimeRatio",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.gcTimeRatio"
                         },
@@ -1312,7 +1312,7 @@
                           "label": "GC adaptive size policy weight",
                           "type": "integer",
                           "required": false,
-                          "description": "The weighting given to the current GC time versus previous GC times. e.g. '90'.",
+                          "description": "The weighting given to the current GC time versus previous GC times when determining the new heap size, between 0 and 100. e.g. '90'.",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcAdaptiveSizePolicyWeight",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.gcAdaptiveSizePolicyWeight"
                         },
@@ -1320,7 +1320,7 @@
                           "label": "GC max metaspace size",
                           "type": "integer",
                           "required": false,
-                          "description": "The maximum metaspace size. e.g. '100'.",
+                          "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (Kilo)  e.g. '400m'.",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize"
                         },
