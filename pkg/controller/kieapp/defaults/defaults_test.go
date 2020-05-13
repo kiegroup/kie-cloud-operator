@@ -549,6 +549,17 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 							QueueSignal:        "queue/CUSTOM.KIE.SERVER.SIGNAL",
 						},
 					},
+					{
+						Jms: &api.KieAppJmsObject{
+							EnableIntegration:  true,
+							Executor:           Pbool(false),
+							ExecutorTransacted: true,
+							EnableAudit:        true,
+							QueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableSignal:       true,
+							QueueSignal:        "queue/CUSTOM.KIE.SERVER.SIGNAL",
+						},
+					},
 				},
 			},
 		},
@@ -560,12 +571,21 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Empty(t, cr.Spec.Objects.Servers[0].Jms.Password)
 	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Jms.Username)
 	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[0].Jms.Password)
-	user := cr.Status.Applied.Objects.Servers[0].Jms.Username
-	password := cr.Status.Applied.Objects.Servers[0].Jms.Password
+	user1 := cr.Status.Applied.Objects.Servers[0].Jms.Username
+	password1 := cr.Status.Applied.Objects.Servers[0].Jms.Password
+	assert.Empty(t, cr.Spec.Objects.Servers[1].Jms.Username)
+	assert.Empty(t, cr.Spec.Objects.Servers[1].Jms.Password)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[1].Jms.Username)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Servers[1].Jms.Password)
+	user2 := cr.Status.Applied.Objects.Servers[1].Jms.Username
+	password2 := cr.Status.Applied.Objects.Servers[1].Jms.Password
+
 	_, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, user, cr.Status.Applied.Objects.Servers[0].Jms.Username)
-	assert.Equal(t, password, cr.Status.Applied.Objects.Servers[0].Jms.Password)
+	assert.Equal(t, user1, cr.Status.Applied.Objects.Servers[0].Jms.Username)
+	assert.Equal(t, password1, cr.Status.Applied.Objects.Servers[0].Jms.Password)
+	assert.Equal(t, user2, cr.Status.Applied.Objects.Servers[1].Jms.Username)
+	assert.Equal(t, password2, cr.Status.Applied.Objects.Servers[1].Jms.Password)
 
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
@@ -883,7 +903,19 @@ func TestBuildConfiguration(t *testing.T) {
 							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
-								ContextDir: "example",
+								ContextDir: "example1",
+							},
+						},
+					},
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							MavenMirrorURL:               "https://maven.mirror.com/",
+							ArtifactDir:                  "dir",
+							GitSource: api.GitSource{
+								URI:        "http://git.example.com",
+								Reference:  "somebranch",
+								ContextDir: "example2",
 							},
 						},
 					},
@@ -901,51 +933,81 @@ func TestBuildConfiguration(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 0)
-	var secret string
+	assert.Len(t, cr.Spec.Objects.Servers[1].Build.Webhooks, 0)
+	var secret1, secret2 string
 	for _, s := range cr.Status.Applied.Objects.Servers[0].Build.Webhooks {
 		if s.Type == api.GitHubWebhook {
-			secret = s.Secret
+			secret1 = s.Secret
 		}
 	}
-	checkWebhooks(t, secret, cr, env)
+	for _, s := range cr.Status.Applied.Objects.Servers[1].Build.Webhooks {
+		if s.Type == api.GitHubWebhook {
+			secret2 = s.Secret
+		}
+	}
+	checkWebhooks(t, secret1, secret2, cr, env)
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 0)
-	checkWebhooks(t, secret, cr, env)
+	assert.Len(t, cr.Spec.Objects.Servers[1].Build.Webhooks, 0)
+	assert.Equal(t, "example1", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
+	assert.Equal(t, "example2", env.Servers[1].BuildConfigs[0].Spec.Source.ContextDir)
+	checkWebhooks(t, secret1, secret2, cr, env)
 
-	secret = "s3cr3t"
-	cr.Spec.Objects.Servers[0].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret}}
+	secret1 = "s3cr3t1"
+	secret2 = "s3cr3t2"
+	cr.Spec.Objects.Servers[0].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret1}}
+	cr.Spec.Objects.Servers[1].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret2}}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Len(t, cr.Spec.Objects.Servers[0].Build.Webhooks, 1)
-	assert.Equal(t, secret, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
-	assert.Equal(t, 2, len(env.Servers))
-	assert.Equal(t, "example", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
-	checkWebhooks(t, secret, cr, env)
+	assert.Len(t, cr.Spec.Objects.Servers[1].Build.Webhooks, 1)
+	assert.Equal(t, secret1, cr.Spec.Objects.Servers[0].Build.Webhooks[0].Secret)
+	assert.Equal(t, secret2, cr.Spec.Objects.Servers[1].Build.Webhooks[0].Secret)
+	assert.Equal(t, 3, len(env.Servers))
+	assert.Equal(t, "example1", env.Servers[0].BuildConfigs[0].Spec.Source.ContextDir)
+	assert.Equal(t, "example2", env.Servers[1].BuildConfigs[0].Spec.Source.ContextDir)
+	checkWebhooks(t, secret1, secret2, cr, env)
 
 	// Server #0
 	server := env.Servers[0]
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
-
 	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
 	for _, s := range server.BuildConfigs[0].Spec.Triggers {
 		if s.GitHubWebHook != nil {
 			assert.NotEmpty(t, s.GitHubWebHook.Secret)
-			assert.Equal(t, secret, s.GitHubWebHook.Secret)
+			assert.Equal(t, secret1, s.GitHubWebHook.Secret)
 		}
 	}
-
 	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
-	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[0].Name+":latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 
 	// Server #1
 	server = env.Servers[1]
+	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
+	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
+	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
+	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	for _, s := range server.BuildConfigs[0].Spec.Triggers {
+		if s.GitHubWebHook != nil {
+			assert.NotEmpty(t, s.GitHubWebHook.Secret)
+			assert.Equal(t, secret2, s.GitHubWebHook.Secret)
+		}
+	}
+	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+":latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+
+	// Server #2
+	server = env.Servers[2]
 	assert.Empty(t, server.ImageStreams)
 	assert.Empty(t, server.BuildConfigs)
 	assert.Equal(t, "ImageStreamTag", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
@@ -953,12 +1015,12 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, "other-ns", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
-func checkWebhooks(t *testing.T, secret string, cr *api.KieApp, env api.Environment) {
+func checkWebhooks(t *testing.T, secret1, secret2 string, cr *api.KieApp, env api.Environment) {
 	assert.Len(t, cr.Status.Applied.Objects.Servers[0].Build.Webhooks, 2)
 	for _, webhook := range cr.Status.Applied.Objects.Servers[0].Build.Webhooks {
 		if webhook.Type == api.GitHubWebhook {
 			assert.NotEmpty(t, webhook.Secret)
-			assert.Equal(t, secret, webhook.Secret)
+			assert.Equal(t, secret1, webhook.Secret, "server1 secret not correct")
 		}
 		if webhook.Type == api.GenericWebhook {
 			assert.NotEmpty(t, webhook.Secret)
@@ -968,7 +1030,27 @@ func checkWebhooks(t *testing.T, secret string, cr *api.KieApp, env api.Environm
 	for _, trigger := range env.Servers[0].BuildConfigs[0].Spec.Triggers {
 		if trigger.GitHubWebHook != nil {
 			assert.NotEmpty(t, trigger.GitHubWebHook.Secret)
-			assert.Equal(t, secret, trigger.GitHubWebHook.Secret)
+			assert.Equal(t, secret1, trigger.GitHubWebHook.Secret, "server1 secret not correct")
+		}
+		if trigger.GenericWebHook != nil {
+			assert.NotEmpty(t, trigger.GenericWebHook.Secret)
+		}
+	}
+	assert.Len(t, cr.Status.Applied.Objects.Servers[1].Build.Webhooks, 2)
+	for _, webhook := range cr.Status.Applied.Objects.Servers[1].Build.Webhooks {
+		if webhook.Type == api.GitHubWebhook {
+			assert.NotEmpty(t, webhook.Secret)
+			assert.Equal(t, secret2, webhook.Secret, "server2 secret not correct")
+		}
+		if webhook.Type == api.GenericWebhook {
+			assert.NotEmpty(t, webhook.Secret)
+		}
+	}
+	assert.Len(t, env.Servers[1].BuildConfigs[0].Spec.Triggers, 4)
+	for _, trigger := range env.Servers[1].BuildConfigs[0].Spec.Triggers {
+		if trigger.GitHubWebHook != nil {
+			assert.NotEmpty(t, trigger.GitHubWebHook.Secret)
+			assert.Equal(t, secret2, trigger.GitHubWebHook.Secret, "server2 secret not correct")
 		}
 		if trigger.GenericWebHook != nil {
 			assert.NotEmpty(t, trigger.GenericWebHook.Secret)
@@ -1930,7 +2012,7 @@ func TestSetKieServerFromBuild(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 	assert.Equal(t, "hello-rules:latest", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, "test-kieserver:latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+":latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
@@ -1984,6 +2066,9 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 			},
 		},
 	}
+	// set disconnected env var w/ sha
+	imageURL := "image-registry.openshift-image-registry.svc:5000/openshift/testing@sha256:e1168e1a1c6e4f248"
+	os.Setenv(constants.DmKieImageVar+constants.CurrentVersion, imageURL)
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
@@ -1994,10 +2079,14 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "ImageStreamTag", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
 	assert.Equal(t, "custom-kieserver", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "", env.Servers[0].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[0].Name+":latest", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 
 	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
 	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%v", cr.Status.Applied.Version), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
+	assert.Len(t, env.Servers[1].ImageStreams, 1)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+":latest", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	os.Clearenv()
 }
 
 func TestExampleServerCommonConfig(t *testing.T) {
