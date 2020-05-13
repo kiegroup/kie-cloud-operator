@@ -432,11 +432,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				}
 				template.From = corev1.ObjectReference{
 					Kind:      "ImageStreamTag",
-					Name:      fmt.Sprintf("%s-kieserver:latest", cr.Status.Applied.CommonConfig.ApplicationName),
+					Name:      fmt.Sprintf("%s:latest", serverSet.Name),
 					Namespace: "",
 				}
 			} else {
-				template.From, template.OmitImageStream, template.ImageURL = getDefaultKieServerImage(product, cr, serverSet)
+				template.From, template.OmitImageStream, template.ImageURL = getDefaultKieServerImage(product, cr, serverSet, false)
 			}
 
 			// Set replicas
@@ -507,18 +507,25 @@ func GetServerSet(cr *api.KieApp, requestedIndex int) (serverSet api.KieServerSe
 	return
 }
 
-func setKieSetName(spec *api.KieAppSpec, index, unsetNames int, usedNames map[string]bool) int {
-	if spec.Objects.Servers[index].Name == "" {
-		for i := 0; i < len(spec.Objects.Servers); i++ {
-			serverSetName := getKieDeploymentName(spec.CommonConfig.ApplicationName, spec.Objects.Servers[index].Name, unsetNames, 0)
-			if !usedNames[serverSetName] {
-				spec.Objects.Servers[index].Name = serverSetName
-				break
-			}
-			unsetNames++
+func setKieSetNames(spec *api.KieAppSpec) {
+	spec.Objects.Servers = serverSortBlanks(spec.Objects.Servers)
+	for index := range spec.Objects.Servers {
+		if spec.Objects.Servers[index].Name == "" {
+			spec.Objects.Servers[index].Name = getKieSetName(spec, index)
 		}
 	}
-	return unsetNames
+}
+
+func getKieSetName(spec *api.KieAppSpec, index int) string {
+	unsetNames := 0
+	for i := 0; i < len(spec.Objects.Servers); i++ {
+		serverSetName := getKieDeploymentName(spec.CommonConfig.ApplicationName, spec.Objects.Servers[index].Name, unsetNames, 0)
+		if !usedServerSetName(spec.Objects.Servers, serverSetName) {
+			return serverSetName
+		}
+		unsetNames++
+	}
+	return ""
 }
 
 // ConsolidateObjects construct all CustomObjects prior to creation
@@ -607,7 +614,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 			ArtifactDir:                  serverSet.Build.ArtifactDir,
 		}
 	}
-	buildTemplate.From, _, _ = getDefaultKieServerImage(product, cr, serverSet)
+	buildTemplate.From, _, _ = getDefaultKieServerImage(product, cr, serverSet, true)
 	if serverSet.Build.From != nil {
 		buildTemplate.From = *serverSet.Build.From
 	}
@@ -615,7 +622,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet) (from corev1.ObjectReference, omitImageTrigger bool, imageURL string) {
+func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from corev1.ObjectReference, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
@@ -625,7 +632,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 	}
 
 	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
-	if val, exists := os.LookupEnv(envVar); exists && !cr.Status.Applied.UseImageTags {
+	if val, exists := os.LookupEnv(envVar); exists && !cr.Status.Applied.UseImageTags && !forBuild {
 		imageURL = val
 		omitImageTrigger = true
 	}
@@ -733,13 +740,13 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	return ""
 }
 
-func setPasswords(cr *api.KieApp, isTrialEnv bool) {
+func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 	passwords := []*string{
-		&cr.Status.Applied.CommonConfig.KeyStorePassword,
-		&cr.Status.Applied.CommonConfig.AdminPassword,
-		&cr.Status.Applied.CommonConfig.DBPassword,
-		&cr.Status.Applied.CommonConfig.AMQPassword,
-		&cr.Status.Applied.CommonConfig.AMQClusterPassword,
+		&spec.CommonConfig.KeyStorePassword,
+		&spec.CommonConfig.AdminPassword,
+		&spec.CommonConfig.DBPassword,
+		&spec.CommonConfig.AMQPassword,
+		&spec.CommonConfig.AMQClusterPassword,
 	}
 	for i := range passwords {
 		if len(*passwords[i]) > 0 {
@@ -902,6 +909,15 @@ func GetProduct(env api.EnvironmentType) (product string) {
 	return
 }
 
+func usedServerSetName(servers []api.KieServerSet, serverSetName string) bool {
+	for _, server := range servers {
+		if server.Name == serverSetName {
+			return true
+		}
+	}
+	return false
+}
+
 // SetDefaults set default values where not provided
 func SetDefaults(cr *api.KieApp) {
 	if cr.GetAnnotations() == nil {
@@ -911,52 +927,33 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	// retain ONLY generated passwords / usernames from status...
 	// everything else in status should be recreated with each reconcile.
-	cr.Spec.Objects.Servers = serverSortBlanks(cr.Spec.Objects.Servers)
 	specApply := cr.Spec.DeepCopy()
+	if len(specApply.Version) == 0 {
+		specApply.Version = constants.CurrentVersion
+	}
 	if err := mergo.Merge(&specApply.CommonConfig, cr.Status.Applied.CommonConfig); err != nil {
 		log.Error(err)
 	}
-	usedNames := map[string]bool{}
-	for _, server := range specApply.Objects.Servers {
-		if server.Name != "" {
-			usedNames[server.Name] = true
-		}
+	if len(specApply.CommonConfig.ApplicationName) == 0 {
+		specApply.CommonConfig.ApplicationName = cr.Name
 	}
-	for _, statusServer := range cr.Status.Applied.Objects.Servers {
-		unsetNames := 0
-		for index := range specApply.Objects.Servers {
-			unsetNames = setKieSetName(specApply, index, unsetNames, usedNames)
-			serverSet := &specApply.Objects.Servers[index]
-			usedNames[serverSet.Name] = true
-			// add any missing webhook types by default
-			addWebhookTypes(serverSet.Build)
-			// carry over existing secrets/passwords from applied server config
-			retainAppliedPwds(serverSet, statusServer)
-			// create webhook secrets where none exist
-			if serverSet.Build != nil {
-				for whIndex := range serverSet.Build.Webhooks {
-					if serverSet.Build.Webhooks[whIndex].Secret == "" {
-						serverSet.Build.Webhooks[whIndex].Secret = string(shared.GeneratePassword(8))
-					}
-				}
-			}
-		}
+	if len(specApply.CommonConfig.AdminUser) == 0 {
+		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
 	}
+	if len(specApply.Objects.Servers) == 0 {
+		specApply.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
+	}
+	setKieSetNames(specApply)
+	for index := range specApply.Objects.Servers {
+		addWebhookTypes(specApply.Objects.Servers[index].Build)
+		for _, statusServer := range cr.Status.Applied.Objects.Servers {
+			retainAppliedPwds(&specApply.Objects.Servers[index], statusServer)
+		}
+		addWebhookPwds(specApply.Objects.Servers[index].Build)
+	}
+	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
+	setPasswords(specApply, isTrialEnv)
 	cr.Status.Applied = *specApply
-	if len(cr.Status.Applied.Version) == 0 {
-		cr.Status.Applied.Version = constants.CurrentVersion
-	}
-	if len(cr.Status.Applied.CommonConfig.ApplicationName) == 0 {
-		cr.Status.Applied.CommonConfig.ApplicationName = cr.Name
-	}
-	if len(cr.Status.Applied.CommonConfig.AdminUser) == 0 {
-		cr.Status.Applied.CommonConfig.AdminUser = constants.DefaultAdminUser
-	}
-	if len(cr.Status.Applied.Objects.Servers) == 0 {
-		cr.Status.Applied.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
-	}
-	isTrialEnv := strings.HasSuffix(string(cr.Status.Applied.Environment), constants.TrialEnvSuffix)
-	setPasswords(cr, isTrialEnv)
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
@@ -979,24 +976,44 @@ func addWebhookTypes(buildObject *api.KieAppBuildObject) {
 
 func retainAppliedPwds(dst *api.KieServerSet, src api.KieServerSet) {
 	if dst.Name == src.Name {
-		if dst.Jms != nil && src.Jms != nil {
-			if dst.Jms.Username == "" && src.Jms.Username != "" {
-				dst.Jms.Username = src.Jms.Username
-			}
-			if dst.Jms.Password == "" && src.Jms.Password != "" {
-				dst.Jms.Password = src.Jms.Password
+		retainJMSPwds(dst.Jms, src.Jms)
+		retainWebhookSecrets(dst.Build, src.Build)
+	}
+}
+
+func retainJMSPwds(dstJms *api.KieAppJmsObject, srcJms *api.KieAppJmsObject) {
+	if dstJms == nil || srcJms == nil {
+		return
+	}
+	if dstJms.Username == "" {
+		dstJms.Username = srcJms.Username
+	}
+	if dstJms.Password == "" {
+		dstJms.Password = srcJms.Password
+	}
+}
+
+func retainWebhookSecrets(dstBuild *api.KieAppBuildObject, srcBuild *api.KieAppBuildObject) {
+	if dstBuild == nil || srcBuild == nil {
+		return
+	}
+	for whIndex := range dstBuild.Webhooks {
+		for _, srcWh := range srcBuild.Webhooks {
+			if dstBuild.Webhooks[whIndex].Type == srcWh.Type &&
+				dstBuild.Webhooks[whIndex].Secret == "" {
+				dstBuild.Webhooks[whIndex].Secret = srcWh.Secret
 			}
 		}
-		if dst.Build != nil && src.Build != nil {
-			for _, srcWh := range src.Build.Webhooks {
-				for whIndex := range dst.Build.Webhooks {
-					if dst.Build.Webhooks[whIndex].Type == srcWh.Type {
-						if dst.Build.Webhooks[whIndex].Secret == "" && srcWh.Secret != "" {
-							dst.Build.Webhooks[whIndex].Secret = srcWh.Secret
-						}
-					}
-				}
-			}
+	}
+}
+
+func addWebhookPwds(buildObject *api.KieAppBuildObject) {
+	if buildObject == nil {
+		return
+	}
+	for whIndex := range buildObject.Webhooks {
+		if buildObject.Webhooks[whIndex].Secret == "" {
+			buildObject.Webhooks[whIndex].Secret = string(shared.GeneratePassword(8))
 		}
 	}
 }
