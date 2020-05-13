@@ -1,0 +1,32 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-external-db
+  annotations:
+    consoleName: snippet-server-external-db
+    consoleTitle: Configure External DB for Servers
+    consoleDesc: Use this snippet to configure external db for servers
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - name: test-oracle
+        database:
+          type: external
+          externalConfig:
+            driver: oracle
+            dialect: org.hibernate.dialect.OracleDialect
+            username: orauser
+            password: orapwd
+            jdbcURL: jdbc:oracle:thin:@oracleHostName:1521:orcl
+      - name: test-mysql
+        database:
+          type: external
+          externalConfig:
+            driver: mysql
+            dialect: org.hibernate.dialect.MySQL5Dialect
+            host: mysql.example.com
+            port: "3306"
+            name: rhpam1
+            username: otheruser
+            password: otherpwd

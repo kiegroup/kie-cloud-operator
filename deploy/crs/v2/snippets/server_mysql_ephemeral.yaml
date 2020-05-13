@@ -1,0 +1,14 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-mysqldb-ephemeral
+  annotations:
+    consoleName: snippet-server-mysqldb-ephemeral
+    consoleTitle: Configure Mysql Ephemeral DB for Servers
+    consoleDesc: Use this snippet to configure mysql ephemeral db for servers
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - database:
+          type: mysql

@@ -1,0 +1,10 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhdm-authoring
+  annotations:
+    consoleName: rhdm-authoring
+    consoleTitle: DM Authoring
+    consoleDesc: Deploys a DM Authoring environment
+spec:
+  environment: rhdm-authoring

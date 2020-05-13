@@ -36,9 +36,6 @@ func init() {
 				log.Warn("OpenShift version could not be determined.")
 			}
 		}
-		if semver.Compare(reconciler.OcpVersion, "v4.3") >= 0 || reconciler.OcpVersion == "" {
-			kieapp.CreateConsoleYAMLSamples(&reconciler)
-		}
 		return kieapp.Add(mgr, &reconciler)
 	}
 	AddToManagerFuncs = []func(manager.Manager) error{addManager}

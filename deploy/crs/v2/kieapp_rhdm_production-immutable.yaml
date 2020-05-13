@@ -1,0 +1,19 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhdm-production-immutable
+  annotations:
+    consoleName: rhdm-production-immutable
+    consoleTitle: DM Production Immutable
+    consoleDesc: Deploys a DM Production Immutable environment
+spec:
+  environment: rhdm-production-immutable
+  objects:
+    servers:
+      - build:
+          kieServerContainerDeployment: rhdm-kieserver-hellorules=org.openshift.quickstarts:rhdm-kieserver-hellorules:1.5.0-SNAPSHOT
+          gitSource:
+            uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
+            reference: master
+            contextDir: quickstarts/hello-rules/hellorules
+

@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: jvm-config
+  annotations:
+    consoleName: snippet-jvm-config
+    consoleTitle: Add JVM opts
+    consoleDesc: Use this snippet to configure jvm opts
+    consoleSnippet: true
+spec:
+  objects:
+    console:
+      jvm:
+        javaOptsAppend: "-Dthing=console"
+        javaMaxMemRatio: 80
+        javaInitialMemRatio: 40
+    servers:
+      - jvm:
+          javaOptsAppend: "-Dthing=server"
+          javaMaxMemRatio: 80
+          javaInitialMemRatio: 40

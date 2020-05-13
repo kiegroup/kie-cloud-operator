@@ -65,6 +65,9 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		} else {
 			log.Error("Can't properly create ConfigMaps. ", err)
 		}
+		if err = reconciler.createConsoleYAMLSamples(); err != nil {
+			log.Error(err)
+		}
 	}
 
 	// Fetch the KieApp instance

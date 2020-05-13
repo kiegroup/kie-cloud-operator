@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-h2
+  annotations:
+    consoleName: snippet-server-h2
+    consoleTitle: Configure H2 DB for Servers
+    consoleDesc: Use this snippet to configure h2 db for servers
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - deployments: 2
+        database:
+          type: h2
+          size: 30Gi
+      - deployments: 1
+        database:
+          type: h2
+          size: 30Gi
+          storageClassName: gold
