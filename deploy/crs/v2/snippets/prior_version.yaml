@@ -1,0 +1,11 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  annotations:
+    consoleDesc: Use this snippet to deploy a prior product version
+    consoleName: snippet-prior-version
+    consoleSnippet: "true"
+    consoleTitle: Prior Product Version
+  name: prior-version
+spec:
+  version: 7.7.1

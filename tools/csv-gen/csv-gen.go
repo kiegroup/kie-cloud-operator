@@ -429,6 +429,38 @@ func main() {
 		}
 		util.MarshallObject(packagedata, pwr)
 		pwr.Flush()
+
+		// create prior-version snippet yaml sample
+		versionSnippet := &api.KieApp{}
+		versionSnippet.Name = "prior-version"
+		versionSnippet.SetAnnotations(map[string]string{
+			"consoleName":    "snippet-" + versionSnippet.Name,
+			"consoleTitle":   "Prior Product Version",
+			"consoleDesc":    "Use this snippet to deploy a prior product version",
+			"consoleSnippet": "true",
+		})
+		versionSnippet.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
+		jsonByte, err := json.Marshal(versionSnippet)
+		if err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "metadata.creationTimestamp"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "status"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "spec"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion1)); err != nil {
+			log.Error(err)
+		}
+		var snippetObj interface{}
+		if err = json.Unmarshal(jsonByte, &snippetObj); err != nil {
+			log.Error(err)
+		}
+		createFile("deploy/crs/"+api.SchemeGroupVersion.Version+"/snippets/prior_version.yaml", snippetObj)
 	}
 }
 
