@@ -11,6 +11,7 @@ import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
@@ -179,4 +180,41 @@ func snippets(t *testing.T, file, yamlStr string) string {
 		return string(yamlByte)
 	}
 	return yamlStr
+}
+
+func TestJvmCrd(t *testing.T) {
+	crdYaml, _ := packr.New("deploy/crds", "../../../../deploy/crds").FindString("kieapp." + api.SchemeGroupVersion.Version + ".crd.yaml")
+	crdJson, _ := yaml.YAMLToJSON([]byte(crdYaml))
+	path := "spec.versions.#(name==" + api.SchemeGroupVersion.Version + ").schema.openAPIV3Schema.properties.spec.properties.objects.properties.servers.items.properties.jvm.properties"
+	jvm := gjson.Get(string(crdJson), path)
+
+	testString(t, "javaOptsAppend", jvm)
+	testInteger(t, "javaMaxMemRatio", jvm)
+	testInteger(t, "javaInitialMemRatio", jvm)
+	testInteger(t, "javaMaxInitialMem", jvm)
+	testBoolean(t, "javaDiagnostics", jvm)
+	testBoolean(t, "javaDebug", jvm)
+	testInteger(t, "javaDebugPort", jvm)
+	testInteger(t, "gcMinHeapFreeRatio", jvm)
+	testInteger(t, "gcMaxHeapFreeRatio", jvm)
+	testInteger(t, "gcTimeRatio", jvm)
+	testInteger(t, "gcAdaptiveSizePolicyWeight", jvm)
+	testInteger(t, "gcMaxMetaspaceSize", jvm)
+	testString(t, "gcContainerOptions", jvm)
+}
+
+func testInteger(t *testing.T, name string, jvm gjson.Result) {
+	assert.NotEmpty(t, jvm.Get(name+".description"))
+	assert.Equal(t, "integer", jvm.Get(name+".type").String())
+	assert.Equal(t, "int32", jvm.Get(name+".format").String())
+}
+
+func testString(t *testing.T, name string, jvm gjson.Result) {
+	assert.NotEmpty(t, jvm.Get(name+".description"))
+	assert.Equal(t, "string", jvm.Get(name+".type").String())
+}
+
+func testBoolean(t *testing.T, name string, jvm gjson.Result) {
+	assert.NotEmpty(t, jvm.Get(name+".description"))
+	assert.Equal(t, "boolean", jvm.Get(name+".type").String())
 }
