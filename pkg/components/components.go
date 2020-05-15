@@ -187,6 +187,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 					"configmaps",
 					"pods",
 					"services",
+					"services/finalizers",
 					"serviceaccounts",
 					"persistentvolumeclaims",
 					"secrets",
