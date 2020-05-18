@@ -9,6 +9,7 @@ rules:
   - configmaps
   - pods
   - services
+  - services/finalizers
   - serviceaccounts
   - persistentvolumeclaims
   - secrets

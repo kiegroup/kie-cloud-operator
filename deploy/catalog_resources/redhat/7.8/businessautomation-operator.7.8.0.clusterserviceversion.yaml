@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.0
-    createdAt: "2020-05-13 10:25:14"
+    createdAt: "2020-05-15 15:05:43"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -192,7 +192,7 @@ spec:
                 - name: MYSQL_PROXY_IMAGE_7.8.0
                   value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.8.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:3711a4a27cac087be0934aeb39afe395ac314b76d26198b31a5a5a2aa4e39beb
                 - name: DATAGRID_IMAGE_7.8.0
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:3375ec169d274278da56d1401c5c1285f7d2812ea0bde2ac9ad9652b69f80893
                 - name: BROKER_IMAGE_7.8.0
@@ -218,7 +218,7 @@ spec:
                 - name: MYSQL_PROXY_IMAGE_7.7.1
                   value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.1
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:3711a4a27cac087be0934aeb39afe395ac314b76d26198b31a5a5a2aa4e39beb
                 - name: DATAGRID_IMAGE_7.7.1
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:3375ec169d274278da56d1401c5c1285f7d2812ea0bde2ac9ad9652b69f80893
                 - name: BROKER_IMAGE_7.7.1
@@ -244,7 +244,7 @@ spec:
                 - name: MYSQL_PROXY_IMAGE_7.7.0
                   value: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
                 - name: POSTGRESQL_PROXY_IMAGE_7.7.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:3711a4a27cac087be0934aeb39afe395ac314b76d26198b31a5a5a2aa4e39beb
                 - name: DATAGRID_IMAGE_7.7.0
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
                 - name: BROKER_IMAGE_7.7.0
@@ -274,6 +274,7 @@ spec:
           - configmaps
           - pods
           - services
+          - services/finalizers
           - serviceaccounts
           - persistentvolumeclaims
           - secrets
@@ -504,7 +505,7 @@ spec:
     name: ose-cli
   - image: registry.redhat.io/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
     name: mysql-57-rhel7
-  - image: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:8c459a1c790cb81503b16a1bfb296dc2306cbb9e51f24194e8a730416296b006
+  - image: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:3711a4a27cac087be0934aeb39afe395ac314b76d26198b31a5a5a2aa4e39beb
     name: postgresql-10-rhel7
   - image: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift@sha256:cfd8c4ac1c495b766dd3ff1a85c35afe092858f8f65b52a5b044811719482236
     name: datagrid73-openshift
