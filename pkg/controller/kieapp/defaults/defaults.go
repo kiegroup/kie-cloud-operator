@@ -944,16 +944,29 @@ func SetDefaults(cr *api.KieApp) {
 		specApply.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
 	}
 	setKieSetNames(specApply)
+	setJvmDefault(specApply.Objects.Console.Jvm)
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
 		for _, statusServer := range cr.Status.Applied.Objects.Servers {
 			retainAppliedPwds(&specApply.Objects.Servers[index], statusServer)
 		}
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
+		setJvmDefault(specApply.Objects.Servers[index].Jvm)
 	}
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
 	setPasswords(specApply, isTrialEnv)
 	cr.Status.Applied = *specApply
+}
+
+func setJvmDefault(jvm *api.JvmObject) {
+	if jvm != nil {
+		if jvm.JavaMaxMemRatio == nil {
+			jvm.JavaMaxMemRatio = Pint32(80)
+		}
+		if jvm.JavaInitialMemRatio == nil {
+			jvm.JavaInitialMemRatio = Pint32(25)
+		}
+	}
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
