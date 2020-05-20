@@ -23,6 +23,20 @@ var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
+	// ProductName used for metering labels
+	ProductName = "process-automation"
+	// LabelRHproductName used as metering label
+	LabelRHproductName = "com.redhat.product-name"
+	// LabelRHproductVersion used as metering label
+	LabelRHproductVersion = "com.redhat.product-version"
+	// LabelRHcomponentName used as metering label
+	LabelRHcomponentName = "com.redhat.component-name"
+	// LabelRHcomponentVersion used as metering label
+	LabelRHcomponentVersion = "com.redhat.component-version"
+	// LabelRHcomponentType used as metering label
+	LabelRHcomponentType = "com.redhat.component-type"
+	// LabelRHcompany used as metering label
+	LabelRHcompany = "com.redhat.company"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
