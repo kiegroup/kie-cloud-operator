@@ -677,7 +677,7 @@ func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.E
 func createJvmTestObject() *api.JvmObject {
 	jvmObject := api.JvmObject{
 		JavaOptsAppend:             "-Dsome.property=foo",
-		JavaMaxMemRatio:            Pint32(50),
+		JavaMaxMemRatio:            Pint32(80),
 		JavaInitialMemRatio:        Pint32(25),
 		JavaMaxInitialMem:          Pint32(4096),
 		JavaDiagnostics:            Pbool(true),
@@ -700,7 +700,7 @@ func testJvmEnv(t *testing.T, envs []corev1.EnvVar) {
 			assert.Equal(t, "-Dsome.property=foo", env.Value)
 
 		case "JAVA_MAX_MEM_RATIO":
-			assert.Equal(t, "50", env.Value)
+			assert.Equal(t, "80", env.Value)
 
 		case "JAVA_INITIAL_MEM_RATIO":
 			assert.Equal(t, "25", env.Value)
@@ -4385,4 +4385,78 @@ func TestMergeDBDeployment(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestJvmDefaultConf(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmDefaultServers(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func testDefaultJvm(t *testing.T, envs []corev1.EnvVar) {
+	ratioPresent := false
+	initialRatio := false
+	for _, env := range envs {
+		switch e := env.Name; e {
+		case "JAVA_MAX_MEM_RATIO":
+			ratioPresent = true
+			assert.Equal(t, "80", env.Value)
+		case "JAVA_INITIAL_MEM_RATIO":
+			initialRatio = true
+			assert.Equal(t, "25", env.Value)
+		}
+	}
+	assert.True(t, ratioPresent)
+	assert.True(t, initialRatio)
+}
+
+func createJvmTestObjectWithoutJavaMaxMemRatio() *api.JvmObject {
+	jvmObject := api.JvmObject{
+		JavaOptsAppend:             "-Dsome.property=foo",
+		JavaMaxInitialMem:          Pint32(4096),
+		JavaDiagnostics:            Pbool(true),
+		JavaDebug:                  Pbool(true),
+		JavaDebugPort:              Pint32(8787),
+		GcMinHeapFreeRatio:         Pint32(20),
+		GcMaxHeapFreeRatio:         Pint32(40),
+		GcTimeRatio:                Pint32(4),
+		GcAdaptiveSizePolicyWeight: Pint32(90),
+		GcMaxMetaspaceSize:         Pint32(100),
+		GcContainerOptions:         "-XX:+UseG1GC",
+	}
+	return &jvmObject
 }
