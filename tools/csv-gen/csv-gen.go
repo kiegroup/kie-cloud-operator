@@ -326,11 +326,9 @@ func main() {
 
 		// add ancillary images to relatedImages
 		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
-		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
-		for _, ocpVersion := range constants.SupportedOcpVersions {
-			if strings.Split(ocpVersion, ".")[0] == "4" {
-				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
-			}
+		sort.Sort(sort.Reverse(sort.StringSlice(constants.Ocp4Versions)))
+		for _, ocpVersion := range constants.Ocp4Versions {
+			relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
 		}
 		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
