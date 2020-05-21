@@ -18,9 +18,9 @@ const (
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
-// SupportedOcpVersions - Supported OpenShift minor versions
-// var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1", "3.11"}
-var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1"}
+// Ocp4Versions - OpenShift minor versions used for image curation
+//var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// RhpamPrefix RHPAM prefix

@@ -7,8 +7,6 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -27,9 +25,6 @@ func init() {
 		if info.IsOpenShift() {
 			mappedVersion := openshift.MapKnownVersion(info)
 			if mappedVersion.Version != "" {
-				if _, ok := shared.Find(constants.SupportedOcpVersions, mappedVersion.Version); !ok {
-					log.Warn("OpenShift version not supported.")
-				}
 				reconciler.OcpVersion = semver.MajorMinor("v" + mappedVersion.Version)
 				log.Info(fmt.Sprintf("OpenShift Version: %s", reconciler.OcpVersion))
 			} else {
