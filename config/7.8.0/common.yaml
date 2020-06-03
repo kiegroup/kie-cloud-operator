@@ -254,8 +254,10 @@ console:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
+                  #[[if not .Console.Simplified]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/kie/data"
+                  #[[end]]
                   #[[if .Auth.RoleMapper.From]]
                   - name: "[[.Constants.RoleMapperVolume]]"
                     mountPath: "[[.Auth.RoleMapper.MountPath]]"
@@ -270,9 +272,11 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
+              #[[if not .Console.Simplified]]
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
+              #[[end]]
               #[[if .Auth.RoleMapper.From]]
               - name: "[[.Constants.RoleMapperVolume]]"
               #[[if eq .Auth.RoleMapper.From.Kind "ConfigMap"]]
@@ -305,6 +309,7 @@ console:
                   claimName: "[[.Console.GitHooks.From.Name]]"
               #[[end]]
               #[[end]]
+  #[[if not .Console.Simplified]]
   persistentVolumeClaims:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
@@ -317,6 +322,7 @@ console:
         resources:
           requests:
             storage: "64Mi"
+  #[[end]]
   services:
     - spec:
         ports:

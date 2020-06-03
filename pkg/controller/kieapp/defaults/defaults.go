@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -293,7 +294,20 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	if cr.Status.Applied.Objects.Console.Jvm != nil {
 		template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
 	}
+	// Simplified mode configuration
+	if enabled, err := strconv.ParseBool(getSpecEnv(cr.Spec.Objects.Console.Env, "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED")); err == nil {
+		template.Simplified = enabled
+	}
 	return template
+}
+
+func getSpecEnv(envs []corev1.EnvVar, name string) string {
+	for _, env := range envs {
+		if env.Name == name {
+			return env.Value
+		}
+	}
+	return ""
 }
 
 func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {

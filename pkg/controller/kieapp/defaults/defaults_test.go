@@ -4460,3 +4460,46 @@ func createJvmTestObjectWithoutJavaMaxMemRatio() *api.JvmObject {
 	}
 	return &jvmObject
 }
+
+func TestSimplifiedMonitoringSwitch(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED",
+								Value: "true",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	env = ConsolidateObjects(env, cr)
+	spec := env.Console.DeploymentConfigs[0].Spec.Template.Spec
+	assert.Equal(t, "true", getEnvVariable(spec.Containers[0], "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED"), "Simplified monitoring should be enabled!")
+
+	for _, volumeMounts := range spec.Containers[0].VolumeMounts {
+		if volumeMounts.MountPath == "/opt/kie/data" {
+			assert.FailNow(t, "Should not have volume mount for '/opt/kie/data'!")
+		}
+	}
+
+	for _, volume := range spec.Volumes {
+		if strings.Contains(volume.Name, "-pvol") {
+			assert.FailNow(t, "Should not have volume configuration for PVC!")
+		}
+	}
+
+	assert.Nil(t, env.Console.PersistentVolumeClaims, "Should not have PVC!")
+}
