@@ -440,6 +440,7 @@ type ConsoleTemplate struct {
 	GitHooks         GitHooksVolume `json:"gitHooks,omitempty"`
 	Jvm              JvmObject      `json:"jvm,omitempty"`
 	StorageClassName string         `json:"storageClassName,omitempty"`
+	Simplified       bool           `json:"simplifed"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
