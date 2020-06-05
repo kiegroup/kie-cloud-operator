@@ -51,7 +51,7 @@ processMigration:
                 readinessProbe:
                   failureThreshold: 36
                   httpGet:
-                    path: /rest/health
+                    path: /health
                     port: 8080
                     scheme: HTTP
                   initialDelaySeconds: 30
@@ -61,7 +61,7 @@ processMigration:
                 livenessProbe:
                   failureThreshold: 3
                   httpGet:
-                    path: /rest/health
+                    path: /health
                     port: 8080
                     scheme: HTTP
                   initialDelaySeconds: 180
