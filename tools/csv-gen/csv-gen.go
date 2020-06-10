@@ -333,6 +333,7 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.MySQL80ImageURL, constants.MySQL80Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)

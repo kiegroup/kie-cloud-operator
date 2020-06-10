@@ -24,7 +24,7 @@ spec:
           type: external
           externalConfig:
             driver: mysql
-            dialect: org.hibernate.dialect.MySQL5Dialect
+            dialect: org.hibernate.dialect.MySQL8Dialect
             host: mysql.example.com
             port: "3306"
             name: rhpam1

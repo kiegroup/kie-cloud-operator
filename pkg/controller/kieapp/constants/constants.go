@@ -114,6 +114,8 @@ const (
 	MySQLVar         = "MYSQL_PROXY_IMAGE_"
 	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
 	MySQL57Component = "rh-mysql57-container"
+	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
+	MySQL80Component = "rh-mysql80-container"
 
 	OseCliVar          = "OSE_CLI_IMAGE_"
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
@@ -220,8 +222,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridImageTag:    Datagrid73ImageTag15,
 		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL57ImageURL,
-		MySQLComponent:      MySQL57Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
