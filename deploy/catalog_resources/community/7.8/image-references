@@ -140,6 +140,10 @@ spec:
     name: rh-mysql57-container
   - from:
       kind: DockerImage
+      name: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+    name: rh-mysql80-container
+  - from:
+      kind: DockerImage
       name: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
     name: rh-postgresql10-container
   - from:

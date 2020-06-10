@@ -1426,7 +1426,7 @@
                               "required": true,
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.dialect",
                               "description": "Database Hibernate Dialect.",
-                              "default": "org.hibernate.dialect.MySQL57Dialect"
+                              "default": "org.hibernate.dialect.MySQL8Dialect"
                             },
                             {
                               "label": "Name",

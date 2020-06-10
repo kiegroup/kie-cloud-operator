@@ -472,7 +472,7 @@ spec:
                                     description: Driver name to use. For example, mysql
                                   dialect:
                                     type: string
-                                    description: Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL57Dialect
+                                    description: Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL8Dialect
                                   name:
                                     type: string
                                     description: Database Name. For example, rhpam
