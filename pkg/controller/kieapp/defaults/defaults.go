@@ -114,7 +114,39 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	if err != nil {
 		return api.Environment{}, err
 	}
+	setProductLabels(cr, &mergedEnv)
 	return mergedEnv, nil
+}
+
+func setProductLabels(cr *api.KieApp, env *api.Environment) {
+	setObjectLabels(cr, &env.Console, "business-central")
+	for index := range env.Servers {
+		setObjectLabels(cr, &env.Servers[index], "kie-server")
+	}
+	setObjectLabels(cr, &env.SmartRouter, "smart-router")
+	setObjectLabels(cr, &env.ProcessMigration, "process-migration")
+}
+
+func setObjectLabels(cr *api.KieApp, object *api.CustomObject, component string) {
+	for index, obj := range object.DeploymentConfigs {
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+	}
+	for index, obj := range object.StatefulSets {
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+	}
+}
+
+func setLabels(cr *api.KieApp, labels map[string]string, component string) map[string]string {
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	labels[constants.LabelRHproductName] = constants.ProductName
+	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
+	labels[constants.LabelRHcomponentName] = component
+	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
+	labels[constants.LabelRHcomponentType] = "application"
+	labels[constants.LabelRHcompany] = "redhat"
+	return labels
 }
 
 func mergeDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {

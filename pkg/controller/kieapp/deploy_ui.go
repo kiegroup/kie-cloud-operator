@@ -53,6 +53,31 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersion, operator)
 	service := getService(namespace, reconciler.OcpVersion)
 	route := getRoute(namespace)
+	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
+	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
+		existing := &corev1.ConfigMap{}
+		new := getCaConfigMap(namespace)
+		new.SetOwnerReferences(operator.GetOwnerReferences())
+		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
+			if errors.IsNotFound(err) {
+				log.Info("Creating ConfigMap ", new.Name)
+				if err := reconciler.Service.Create(context.TODO(), new); err != nil {
+					log.Error("failed to create configmap", err)
+				}
+			} else {
+				log.Error("failed to get configmap", err)
+			}
+		} else {
+			if !reflect.DeepEqual(existing.Labels, new.Labels) {
+				existing.Labels = new.Labels
+				existing.SetOwnerReferences(operator.GetOwnerReferences())
+				log.Info("Updating ConfigMap ", existing.Name)
+				if err := reconciler.Service.Update(context.TODO(), existing); err != nil {
+					log.Error("failed to update configmap", err)
+				}
+			}
+		}
+	}
 	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
 	deployed, err := loadCounterparts(reconciler, namespace, requested)
 	if err != nil {
@@ -62,12 +87,6 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
 	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
-	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
-	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
-		if _, err = writer.AddResources([]resource.KubernetesResource{getConfigMap(namespace)}); err != nil {
-			log.Warnf("Got error applying changes %v", err)
-		}
-	}
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
 		if !delta.HasChanges() {
@@ -347,7 +366,7 @@ func getRoute(namespace string) *routev1.Route {
 	}
 }
 
-func getConfigMap(namespace string) *corev1.ConfigMap {
+func getCaConfigMap(namespace string) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app": operatorName,
 		"config.openshift.io/inject-trusted-cabundle": "true",

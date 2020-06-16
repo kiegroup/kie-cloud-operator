@@ -1716,6 +1716,68 @@ func TestServersDefaultNameMixed(t *testing.T) {
 
 }
 
+func TestSetProductLabels(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Deployments: Pint(1)},
+					{Deployments: Pint(1)},
+				},
+				SmartRouter:      &api.SmartRouterObject{},
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.Equal(t, constants.CurrentVersion, cr.Status.Applied.Version)
+	testObjectLabels(t, cr, env)
+
+	cr.Spec.Version = constants.PriorVersion1
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.Equal(t, constants.PriorVersion1, cr.Status.Applied.Version)
+	testObjectLabels(t, cr, env)
+}
+
+func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
+	assert.NotNil(t, cr.Spec.Objects.Console)
+	assert.Len(t, cr.Spec.Objects.Servers, 2)
+	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
+	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
+
+	checkObjectLabels(t, cr, env.Console, "business-central")
+	for _, server := range env.Servers {
+		checkObjectLabels(t, cr, server, "kie-server")
+	}
+	checkObjectLabels(t, cr, env.SmartRouter, "smart-router")
+	checkObjectLabels(t, cr, env.ProcessMigration, "process-migration")
+}
+
+func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+	for _, dc := range object.DeploymentConfigs {
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version)
+	}
+	for _, ss := range object.StatefulSets {
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version)
+	}
+}
+
+func checkLabels(t *testing.T, labels map[string]string, component, version string) {
+	assert.NotNil(t, labels)
+	assert.Equal(t, constants.ProductName, labels[constants.LabelRHproductName])
+	assert.Equal(t, version, labels[constants.LabelRHproductVersion])
+	assert.Equal(t, component, labels[constants.LabelRHcomponentName])
+	assert.Equal(t, version, labels[constants.LabelRHcomponentVersion])
+	assert.Equal(t, "application", labels[constants.LabelRHcomponentType])
+	assert.Equal(t, "redhat", labels[constants.LabelRHcompany])
+}
+
 func TestImageRegistry(t *testing.T) {
 	registry1 := "registry1.test.com"
 	os.Setenv("REGISTRY", registry1)
