@@ -1118,26 +1118,40 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	var processMigrationEnv api.Environment
 	if deployProcessMigration(cr) {
-		yamlBytes, err := loadYaml(service, "pim/process-migration.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
+		processMigrationEnv, err := loadProcessMigrationFromFile("pim/process-migration.yaml", service, cr, envTemplate)
 		if err != nil {
 			return api.Environment{}, err
 		}
-		err = yaml.Unmarshal(yamlBytes, &processMigrationEnv)
-		if err != nil {
-			return api.Environment{}, err
-		}
-
 		env.ProcessMigration = mergeCustomObject(env.ProcessMigration, processMigrationEnv.ProcessMigration)
-
 		env, err = mergeProcessMigrationDB(service, cr, env, envTemplate)
 		if err != nil {
 			return api.Environment{}, nil
+		}
+		if api.RhpamTrial == cr.Spec.Environment {
+			pimEnv, err := loadProcessMigrationFromFile("pim/process-migration-trial.yaml", service, cr, envTemplate)
+			if err != nil {
+				return api.Environment{}, nil
+			}
+			env.ProcessMigration = mergeCustomObject(env.ProcessMigration, pimEnv.ProcessMigration)
 		}
 	} else {
 		processMigrationEnv.ProcessMigration.Omit = true
 	}
 
 	return env, nil
+}
+
+func loadProcessMigrationFromFile(filename string, service kubernetes.PlatformService, cr *api.KieApp, envTemplate api.EnvTemplate) (api.Environment, error) {
+	var pimEnv api.Environment
+	yamlBytes, err := loadYaml(service, filename, cr.Status.Applied.Version, cr.Namespace, envTemplate)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	err = yaml.Unmarshal(yamlBytes, &pimEnv)
+	if err != nil {
+		return api.Environment{}, err
+	}
+	return pimEnv, nil
 }
 
 func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {

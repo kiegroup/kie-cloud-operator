@@ -3866,6 +3866,43 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 	}
 }
 
+func TestProcessMigrationRoutes(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	assert.Equal(t, 1, len(env.ProcessMigration.Routes))
+	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
+	assert.NotNil(t, env.ProcessMigration.Routes[0].Spec.TLS)
+
+	cr = &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ = GetEnvironment(cr, test.MockService())
+	assert.Equal(t, 2, len(env.ProcessMigration.Routes))
+	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
+	assert.NotNil(t, env.ProcessMigration.Routes[0].Spec.TLS)
+	assert.Equal(t, "test-process-migration-http", env.ProcessMigration.Routes[1].ObjectMeta.Name)
+	assert.Nil(t, env.ProcessMigration.Routes[1].Spec.TLS)
+}
+
 func TestMergeProcessMigrationDB(t *testing.T) {
 	type args struct {
 		service     kubernetes.PlatformService
