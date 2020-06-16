@@ -90,6 +90,8 @@ const (
 	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
 	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
 	GitHooksVolume = "githooks-volume"
+	// GitHooksSSHSecret Name of the mounted volume name when GitHooks SSH Secret reference is set
+	GitHooksSSHSecret = "githooks-ssh-volume"
 	// RoleMapperVolume Name of the mounted volume name when RoleMapper reference is set
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
@@ -326,6 +328,7 @@ var TemplateConstants = api.TemplateConstants{
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
 	RoleMapperVolume:     RoleMapperVolume,
 	GitHooksVolume:       GitHooksVolume,
+	GitHooksSSHSecret:    GitHooksSSHSecret,
 }
 
 // DebugTrue - used to enable debug logs in objects
