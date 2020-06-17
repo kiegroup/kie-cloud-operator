@@ -113,7 +113,7 @@ processMigration:
         annotations:
           description: Process Migration web server's port.
   routes:
-    - id: "[[.ApplicationName]]-process-migration-http"
+    - id: "[[.ApplicationName]]-process-migration-https"
       metadata:
         name: "[[.ApplicationName]]-process-migration"
         labels:
