@@ -259,6 +259,7 @@ type WebhookSecret struct {
 type GitHooksVolume struct {
 	MountPath string                  `json:"mountPath,omitempty"`
 	From      *corev1.ObjectReference `json:"from,omitempty"`
+	SSHSecret string                  `json:"sshSecret,omitempty"`
 }
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
@@ -425,6 +426,7 @@ type TemplateConstants struct {
 	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
 	RoleMapperVolume     string `json:"roleMapperVolume"`
 	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
+	GitHooksSSHSecret    string `json:"gitHooksSSHSecret,omitempty"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates

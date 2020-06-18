@@ -182,6 +182,9 @@ spec:
                           type: object
                           description: GitHooks configuration object
                           properties:
+                            sshSecret:
+                              type: string
+                              description: Secret to use for ssh key and known hosts file.
                             mountPath:
                               type: string
                               description: Absolute path where the gitHooks folder will be mounted.

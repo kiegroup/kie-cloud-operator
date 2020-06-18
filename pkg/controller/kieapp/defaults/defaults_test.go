@@ -3167,7 +3167,9 @@ func TestStorageClassName(t *testing.T) {
 }
 
 func TestGitHooks(t *testing.T) {
-	var defaultMode int32 = 420
+	var defaultMode int32 = 0770
+	var knownHosts int32 = 0660
+	var idRsa int32 = 0440
 	tests := []struct {
 		name                string
 		gitHooks            *api.GitHooksVolume
@@ -3237,7 +3239,8 @@ func TestGitHooks(t *testing.T) {
 			Name: constants.GitHooksVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: "test-secret",
+					SecretName:  "test-secret",
+					DefaultMode: &defaultMode,
 				},
 			},
 		},
@@ -3261,6 +3264,41 @@ func TestGitHooks(t *testing.T) {
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 					ClaimName: "test-pvc",
+				},
+			},
+		},
+		expectedPath: "/some/path",
+	}, {
+		name: "SSH Secret for GitHooks are configured",
+		gitHooks: &api.GitHooksVolume{
+			MountPath: "/some/path",
+			From: &corev1.ObjectReference{
+				Kind: "PersistentVolumeClaim",
+				Name: "test-pvc",
+			},
+			SSHSecret: "test-ssh-secret",
+		},
+		expectedVolumeMount: &corev1.VolumeMount{
+			Name:      constants.GitHooksSSHSecret,
+			MountPath: "/home/jboss/.ssh",
+		},
+		expectedVolume: &corev1.Volume{
+			Name: constants.GitHooksSSHSecret,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "test-ssh-secret",
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "id_rsa",
+							Path: "id_rsa",
+							Mode: &idRsa,
+						},
+						{
+							Key:  "known_hosts",
+							Path: "known_hosts",
+							Mode: &knownHosts,
+						},
+					},
 				},
 			},
 		},

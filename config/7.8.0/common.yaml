@@ -268,6 +268,10 @@ console:
                     mountPath: "[[.Console.GitHooks.MountPath]]"
                     readOnly: true
                   #[[end]]
+                  #[[if ne .Console.GitHooks.SSHSecret ""]]
+                  - name: "[[.Constants.GitHooksSSHSecret]]"
+                    mountPath: "/home/jboss/.ssh"
+                  #[[end]]
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
@@ -298,15 +302,28 @@ console:
               #[[if eq .Console.GitHooks.From.Kind "ConfigMap"]]
                 configMap:
                   name: "[[.Console.GitHooks.From.Name]]"
-                  defaultMode: 420
+                  defaultMode: 0770
               #[[end]]
               #[[if eq .Console.GitHooks.From.Kind "Secret"]]
                 secret:
                   secretName: "[[.Console.GitHooks.From.Name]]"
+                  defaultMode: 0770
               #[[end]]
               #[[if eq .Console.GitHooks.From.Kind "PersistentVolumeClaim"]]
                 persistentVolumeClaim:
                   claimName: "[[.Console.GitHooks.From.Name]]"
+              #[[end]]
+              #[[if ne .Console.GitHooks.SSHSecret ""]]
+              - name: "[[.Constants.GitHooksSSHSecret]]"
+                secret:
+                  secretName: "[[.Console.GitHooks.SSHSecret]]"
+                  items:
+                  - key: id_rsa
+                    path: id_rsa
+                    mode: 0440
+                  - key: known_hosts
+                    path: known_hosts
+                    mode: 0660
               #[[end]]
               #[[end]]
   #[[if not .Console.Simplified]]
