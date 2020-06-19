@@ -1291,6 +1291,11 @@ var sampleEnv = []corev1.EnvVar{
 var sampleResources = &corev1.ResourceRequirements{
 	Limits: map[corev1.ResourceName]resource.Quantity{
 		"memory": *resource.NewQuantity(1, "Mi"),
+		"cpu":    *resource.NewQuantity(500, "m"),
+	},
+	Requests: map[corev1.ResourceName]resource.Quantity{
+		"memory": *resource.NewQuantity(1, "Mi"),
+		"cpu":    *resource.NewQuantity(500, "m"),
 	},
 }
 
@@ -4639,4 +4644,101 @@ func TestSimplifiedMonitoringSwitch(t *testing.T) {
 	}
 
 	assert.Nil(t, env.Console.PersistentVolumeClaims, "Should not have PVC!")
+}
+
+func TestResourcesDefault(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{},
+				},
+
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{},
+				},
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{},
+					},
+				},
+			},
+		},
+	}
+	GetEnvironment(cr, test.MockService())
+	testReqAndLimit(t, cr, "1", "500m", "2", "1", "500m", "250m")
+}
+
+func TestResourcesOverrideServers(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{
+						Resources: sampleLimitAndRequestsResources,
+					},
+				},
+
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Resources: sampleLimitAndRequestsResources,
+					},
+				},
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							Resources: sampleLimitAndRequestsResources,
+						},
+					},
+				},
+			},
+		},
+	}
+	GetEnvironment(cr, test.MockService())
+	testReqAndLimit(t, cr, "200", "100", "200", "100", "200", "100")
+}
+
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string) {
+
+	assert.NotNil(t, cr.Status.Applied)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.Console.Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
+
+	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits["cpu"]
+	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
+
+	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests["cpu"]
+	assert.True(t, requestsCPUServer.String() == rCPUServer)
+
+	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits["cpu"]
+	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
+
+	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests["cpu"]
+	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
+
+	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits["cpu"]
+	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)
+
+	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests["cpu"]
+	assert.True(t, requestsCPUSmartRouter.String() == rCPUSmartRouter)
+}
+
+var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
+	Limits: map[corev1.ResourceName]resource.Quantity{
+		"cpu": *resource.NewQuantity(200, "m"),
+	},
+	Requests: map[corev1.ResourceName]resource.Quantity{
+		"cpu": *resource.NewQuantity(100, "m"),
+	},
 }
