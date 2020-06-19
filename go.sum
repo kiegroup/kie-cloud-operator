@@ -59,8 +59,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976 h1:eQoThFh4+/DCdTfYYVqMFGss5UTmyWsXn6a6CQjsRV4=
 github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976/go.mod h1:C1ZIfbcXaSyLzEjK55s2qWdnOo+mzhFLvzyreV3qmUY=
-github.com/RHsyseng/operator-utils v0.0.0-20200414154239-8ab0e9a7d0f7 h1:BiU/zj73Fx/F+YyTEKJ6I6p8BsaTl9jnrseddVo1rqg=
-github.com/RHsyseng/operator-utils v0.0.0-20200414154239-8ab0e9a7d0f7/go.mod h1:ZFQi9Pp9lp0+2rKqgESwj1MMEgHqPfsMm2JqOXEh+Ok=
+github.com/RHsyseng/operator-utils v0.0.0-20200618181624-f9029b6d28f3 h1:sDXcwQGK2/yBHDV/+0gtYSPz0lHJmHanhAKKZA3e+tA=
+github.com/RHsyseng/operator-utils v0.0.0-20200618181624-f9029b6d28f3/go.mod h1:ZFQi9Pp9lp0+2rKqgESwj1MMEgHqPfsMm2JqOXEh+Ok=
 github.com/Rican7/retry v0.1.0/go.mod h1:FgOROf8P5bebcC1DS0PdOQiqGUridaZvikzUmkFW6gg=
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
