@@ -117,7 +117,7 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 			getService(pod.Namespace, ocpVersion).Annotations,
 			"should use service.beta.openshift.io version of serving-cert-secret-name",
 		)
-		if _, ok := shared.Find(constants.SupportedOcpVersions, fmt.Sprintf("%s.%s", ocpMajor, ocpMinor)); ok {
+		if _, ok := shared.Find(constants.Ocp4Versions, fmt.Sprintf("%s.%s", ocpMajor, ocpMinor)); ok {
 			assert.Equal(t, constants.Oauth4ImageURL+":v"+fmt.Sprintf("%s.%s", ocpMajor, ocpMinor), pod.Spec.Containers[0].Image)
 		} else {
 			assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)

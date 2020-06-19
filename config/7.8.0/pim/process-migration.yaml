@@ -51,7 +51,7 @@ processMigration:
                 readinessProbe:
                   failureThreshold: 36
                   httpGet:
-                    path: /rest/health
+                    path: /health
                     port: 8080
                     scheme: HTTP
                   initialDelaySeconds: 30
@@ -61,7 +61,7 @@ processMigration:
                 livenessProbe:
                   failureThreshold: 3
                   httpGet:
-                    path: /rest/health
+                    path: /health
                     port: 8080
                     scheme: HTTP
                   initialDelaySeconds: 180
@@ -113,7 +113,7 @@ processMigration:
         annotations:
           description: Process Migration web server's port.
   routes:
-    - id: "[[.ApplicationName]]-process-migration-http"
+    - id: "[[.ApplicationName]]-process-migration-https"
       metadata:
         name: "[[.ApplicationName]]-process-migration"
         labels:

@@ -1,0 +1,14 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: common-config
+  annotations:
+    consoleName: snippet-common-config
+    consoleTitle: Add Common Configs
+    consoleDesc: Use this snippet to specify common configs
+    consoleSnippet: true
+spec:
+  commonConfig:
+    # By default is the cr.Name
+    applicationName: other
+    adminPassword: example

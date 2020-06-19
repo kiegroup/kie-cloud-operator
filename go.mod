@@ -25,7 +25,7 @@ require (
 	github.com/prometheus/common v0.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	github.com/tidwall/gjson v1.4.0 // indirect
+	github.com/tidwall/gjson v1.4.0
 	github.com/tidwall/sjson v1.0.4
 	golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee
 	k8s.io/api v0.17.2

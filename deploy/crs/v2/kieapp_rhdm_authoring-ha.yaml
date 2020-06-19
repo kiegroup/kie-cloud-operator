@@ -1,0 +1,10 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhdm-authoring-ha
+  annotations:
+    consoleName: rhdm-authoring-ha
+    consoleTitle: DM Authoring HA
+    consoleDesc: Deploys a DM Authoring HA environment
+spec:
+  environment: rhdm-authoring-ha

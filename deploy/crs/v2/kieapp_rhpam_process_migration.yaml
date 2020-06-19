@@ -1,0 +1,16 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-process-migration
+  annotations:
+    consoleName: rhpam-process-migration
+    consoleTitle: PAM PIM
+    consoleDesc: Deploys a PAM Process Instance Migration environment
+spec:
+  environment: rhpam-trial
+  objects:
+    processMigration:
+      database:
+        type: "postgresql"
+        size: 30Gi
+        storageClassName: gold

@@ -38,7 +38,7 @@ servers:
                     - name: RHPAM_DRIVER
                       value: "mariadb"
                     - name: KIE_SERVER_PERSISTENCE_DIALECT
-                      value: "org.hibernate.dialect.MySQL57Dialect"
+                      value: "org.hibernate.dialect.MySQL8Dialect"
                     - name: RHPAM_USERNAME
                       value: "rhpam"
                     - name: RHPAM_PASSWORD

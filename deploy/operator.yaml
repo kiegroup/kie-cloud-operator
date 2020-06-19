@@ -58,7 +58,7 @@ spec:
         - name: OSE_CLI_IMAGE_7.8.0
           value: registry.redhat.io/openshift3/ose-cli:v3.11
         - name: MYSQL_PROXY_IMAGE_7.8.0
-          value: registry.redhat.io/rhscl/mysql-57-rhel7:latest
+          value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
         - name: POSTGRESQL_PROXY_IMAGE_7.8.0
           value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
         - name: DATAGRID_IMAGE_7.8.0

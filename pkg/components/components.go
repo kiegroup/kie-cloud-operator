@@ -152,14 +152,12 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 		Name:  constants.OauthVar + "LATEST",
 		Value: constants.Oauth4ImageLatestURL,
 	})
-	sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
-	for _, ocpVersion := range constants.SupportedOcpVersions {
-		if strings.Split(ocpVersion, ".")[0] == "4" {
-			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-				Name:  constants.OauthVar + ocpVersion,
-				Value: constants.Oauth4ImageURL + ":v" + ocpVersion,
-			})
-		}
+	sort.Sort(sort.Reverse(sort.StringSlice(constants.Ocp4Versions)))
+	for _, ocpVersion := range constants.Ocp4Versions {
+		deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  constants.OauthVar + ocpVersion,
+			Value: constants.Oauth4ImageURL + ":v" + ocpVersion,
+		})
 	}
 	deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  constants.OauthVar + "3",
@@ -187,6 +185,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 					"configmaps",
 					"pods",
 					"services",
+					"services/finalizers",
 					"serviceaccounts",
 					"persistentvolumeclaims",
 					"secrets",

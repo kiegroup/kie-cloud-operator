@@ -326,15 +326,14 @@ func main() {
 
 		// add ancillary images to relatedImages
 		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
-		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedOcpVersions)))
-		for _, ocpVersion := range constants.SupportedOcpVersions {
-			if strings.Split(ocpVersion, ".")[0] == "4" {
-				relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
-			}
+		sort.Sort(sort.Reverse(sort.StringSlice(constants.Ocp4Versions)))
+		for _, ocpVersion := range constants.Ocp4Versions {
+			relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
 		}
 		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.MySQL80ImageURL, constants.MySQL80Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
@@ -429,6 +428,38 @@ func main() {
 		}
 		util.MarshallObject(packagedata, pwr)
 		pwr.Flush()
+
+		// create prior-version snippet yaml sample
+		versionSnippet := &api.KieApp{}
+		versionSnippet.Name = "prior-version"
+		versionSnippet.SetAnnotations(map[string]string{
+			"consoleName":    "snippet-" + versionSnippet.Name,
+			"consoleTitle":   "Prior Product Version",
+			"consoleDesc":    "Use this snippet to deploy a prior product version",
+			"consoleSnippet": "true",
+		})
+		versionSnippet.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
+		jsonByte, err := json.Marshal(versionSnippet)
+		if err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "metadata.creationTimestamp"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "status"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "spec"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion1)); err != nil {
+			log.Error(err)
+		}
+		var snippetObj interface{}
+		if err = json.Unmarshal(jsonByte, &snippetObj); err != nil {
+			log.Error(err)
+		}
+		createFile("deploy/crs/"+api.SchemeGroupVersion.Version+"/snippets/prior_version.yaml", snippetObj)
 	}
 }
 

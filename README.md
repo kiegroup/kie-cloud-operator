@@ -59,7 +59,7 @@ It will take a few minutes for the operator to become visible under the _Operato
 Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, use the console to `Create KieApp` or create one manually as seen below.
 
 ```bash
-$ oc create -f deploy/crs/kieapp_rhpam_trial.yaml
+$ oc create -f deploy/crs/v2/kieapp_rhpam_trial.yaml
 kieapp.app.kiegroup.org/rhpam-trial created
 ```
 

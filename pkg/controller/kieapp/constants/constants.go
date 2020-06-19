@@ -18,11 +18,25 @@ const (
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
-// SupportedOcpVersions - Supported OpenShift minor versions
-// var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1", "3.11"}
-var SupportedOcpVersions = []string{"4.4", "4.3", "4.2", "4.1"}
+// Ocp4Versions - OpenShift minor versions used for image curation
+//var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
+	// ProductName used for metering labels
+	ProductName = "process-automation"
+	// LabelRHproductName used as metering label
+	LabelRHproductName = "com.redhat.product-name"
+	// LabelRHproductVersion used as metering label
+	LabelRHproductVersion = "com.redhat.product-version"
+	// LabelRHcomponentName used as metering label
+	LabelRHcomponentName = "com.redhat.component-name"
+	// LabelRHcomponentVersion used as metering label
+	LabelRHcomponentVersion = "com.redhat.component-version"
+	// LabelRHcomponentType used as metering label
+	LabelRHcomponentType = "com.redhat.component-type"
+	// LabelRHcompany used as metering label
+	LabelRHcompany = "com.redhat.company"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
@@ -76,6 +90,8 @@ const (
 	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
 	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
 	GitHooksVolume = "githooks-volume"
+	// GitHooksSSHSecret Name of the mounted volume name when GitHooks SSH Secret reference is set
+	GitHooksSSHSecret = "githooks-ssh-volume"
 	// RoleMapperVolume Name of the mounted volume name when RoleMapper reference is set
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
@@ -114,6 +130,8 @@ const (
 	MySQLVar         = "MYSQL_PROXY_IMAGE_"
 	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
 	MySQL57Component = "rh-mysql57-container"
+	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
+	MySQL80Component = "rh-mysql80-container"
 
 	OseCliVar          = "OSE_CLI_IMAGE_"
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
@@ -220,8 +238,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridImageTag:    Datagrid73ImageTag15,
 		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL57ImageURL,
-		MySQLComponent:      MySQL57Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
@@ -310,6 +328,7 @@ var TemplateConstants = api.TemplateConstants{
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
 	RoleMapperVolume:     RoleMapperVolume,
 	GitHooksVolume:       GitHooksVolume,
+	GitHooksSSHSecret:    GitHooksSSHSecret,
 }
 
 // DebugTrue - used to enable debug logs in objects

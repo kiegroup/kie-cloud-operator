@@ -1,0 +1,10 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-authoring
+  annotations:
+    consoleName: rhpam-authoring
+    consoleTitle: PAM Authoring
+    consoleDesc: Deploys a PAM Authoring environment
+spec:
+  environment: rhpam-authoring
