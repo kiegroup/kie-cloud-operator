@@ -565,7 +565,8 @@
                   "label": "CPU request",
                   "type": "text",
                   "jsonPath": "$.spec.objects.console.resources.requests.cpu",
-                  "description": "Minimum processing power requested by the container, default is 1000m"
+                  "description": "Minimum processing power requested by the container",
+                  "default": "500m"
                 },
                 {
                   "label": "Memory limit",
@@ -578,7 +579,8 @@
                   "label": "CPU limit",
                   "type": "text",
                   "jsonPath": "$.spec.objects.console.resources.limits.cpu",
-                  "description": "Maximum processing power granted to the container, default is 2000m"
+                  "description": "Maximum processing power granted to the container",
+                  "default": "500m"
                 }
               ]
             },
@@ -981,7 +983,8 @@
                       "label": "CPU request",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].resources.requests.cpu",
-                      "description": "Minimum processing power requested by the container, default is 500m"
+                      "default": "500m",
+                      "description": "Minimum processing power requested by the container"
                     },
                     {
                       "label": "Memory limit",
@@ -994,7 +997,8 @@
                       "label": "CPU limit",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].resources.limits.cpu",
-                      "description": "Maximum processing power granted to the container, default is 1000m"
+                      "default": "500m",
+                      "description": "Maximum processing power granted to the container"
                     }
                   ]
                 },
@@ -1600,7 +1604,8 @@
                       "label": "CPU request",
                       "type": "text",
                       "jsonPath": "$.spec.objects.smartRouter.resources.requests.cpu",
-                      "description": "Minimum processing power requested by the container, default is 250m"
+                      "default": "500m",
+                      "description": "Minimum processing power requested by the container"
                     },
                     {
                       "label": "Memory limit",
@@ -1613,7 +1618,8 @@
                       "label": "CPU limit",
                       "type": "text",
                       "jsonPath": "$.spec.objects.smartRouter.resources.limits.cpu",
-                      "description": "Maximum processing power granted to the container, default is 500m"
+                      "default": "500m",
+                      "description": "Maximum processing power granted to the container"
                     }
                   ]
                 }
