@@ -158,14 +158,6 @@ const (
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
-
-	//Resources Limits
-	ConsoleCPULimit        = "2000m"
-	ConsoleCPURequests     = "1000m"
-	ServersCPULimit        = "1000m"
-	ServersCPURequests     = "500m"
-	SmartRouterCPULimit    = "500m"
-	SmartRouterCPURequests = "250m"
 )
 
 var Images = []ImageEnv{
