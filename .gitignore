@@ -6,6 +6,8 @@ pkg/controller/kieapp/defaults/packrd
 pkg/ui/packrd
 *-packr.go
 *.tar.gz
+# cekit exception(s)
+!modules/builder/kie-cloud-operator.tar.gz
 
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Emacs ###
