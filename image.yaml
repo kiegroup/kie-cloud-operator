@@ -2,7 +2,7 @@
   name: "builder"
   description: "Golang builder image"
   version: "7.8.1"
-  from: "rhel8-go-toolset:1.12.8-released"
+  from: "rhel8-go-toolset:1.13.4-released"
   modules:
     repositories:
       - name: builder
