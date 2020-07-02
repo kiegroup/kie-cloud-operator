@@ -74,6 +74,10 @@ const (
 	KeystoreSecret = "%s-app-secret"
 	// KeystoreVolumeSuffix Suffix for the keystore volumes and volumeMounts name
 	KeystoreVolumeSuffix = "keystore-volume"
+	// KeystoreAlias used when creating entry in Keystore
+	KeystoreAlias = "jboss"
+	// KeystoreName used when creating Secret
+	KeystoreName = "keystore.jks"
 	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size

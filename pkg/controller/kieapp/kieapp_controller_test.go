@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +28,145 @@ import (
 )
 
 func TestGenerateSecret(t *testing.T) {
+	scheme, err := api.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+	reconciler := Reconciler{
+		Service: mockService,
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Deployments: defaults.Pint(3)},
+				},
+			},
+		},
+	}
+	env, err := defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
+
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+
+	consoleSecret := env.Console.Secrets[0]
+	serverSecret := env.Servers[0].Secrets[0]
+	consoleRoute := cr.Status.ConsoleHost
+	secretName := fmt.Sprintf(constants.KeystoreSecret, env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, secretName, serverSecret.Name)
+	for _, volume := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+		if volume.Secret != nil {
+			assert.Equal(t, secretName, volume.Secret.SecretName)
+		}
+	}
+
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+	consoleTestSecret := corev1.Secret{}
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: consoleSecret.Name, Namespace: consoleSecret.Namespace}, &consoleTestSecret)
+	assert.Nil(t, err)
+
+	consoleCN := reconciler.setConsoleHost(cr, env, getRequestedRoutes(env, cr))
+	assert.Equal(t, consoleRoute, "http://"+consoleCN)
+	assert.False(t, isValidKeyStoreSecret(corev1.Secret{}, consoleCN, []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.False(t, isValidKeyStoreSecret(consoleTestSecret, "blah", []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.False(t, isValidKeyStoreSecret(consoleTestSecret, consoleCN, []byte("wrongPwd")))
+	assert.True(t, isValidKeyStoreSecret(consoleTestSecret, consoleCN, []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.Equal(t, consoleSecret.DeepCopy(), consoleTestSecret.DeepCopy())
+
+	secret := reconciler.generateKeystoreSecret(
+		fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
+		consoleCN,
+		cr,
+	)
+	assert.Equal(t, consoleSecret, secret)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+
+	// change app name which should change commonname and keystore secret
+	currentRoute := cr.Status.ConsoleHost
+	cr.Spec.CommonConfig.ApplicationName = "changed"
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.NotEqual(t, currentRoute, cr.Status.ConsoleHost)
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
+	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	consoleSecret = env.Console.Secrets[0]
+	serverSecret = env.Servers[0].Secrets[0]
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+
+	// change keystore password which should change commonname and keystore secret
+	oldPassword := cr.Status.Applied.CommonConfig.KeyStorePassword
+	cr.Spec.CommonConfig.KeyStorePassword = "changed"
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	assert.NotEqual(t, oldPassword, cr.Status.Applied.CommonConfig.KeyStorePassword)
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
+	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	consoleSecret = env.Console.Secrets[0]
+	serverSecret = env.Servers[0].Secrets[0]
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+}
+
+func TestGenerateSecrets(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
