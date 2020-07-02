@@ -1,12 +1,10 @@
 package shared
 
 import (
-	"bytes"
-	"crypto/x509"
 	"testing"
 
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	keystore "github.com/pavel-v-chernykh/keystore-go"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -60,20 +58,9 @@ func TestGetEnvVar(t *testing.T) {
 func TestGenerateKeystore(t *testing.T) {
 	password := GeneratePassword(8)
 	assert.EqualValues(t, 8, len(password))
-
 	commonName := "test-https"
-	keyBytes := GenerateKeystore(commonName, password)
-	keyStore, err := keystore.Decode(bytes.NewReader(keyBytes), password)
-	assert.Nil(t, err)
-
-	derKey := keyStore[constants.KeystoreAlias].(*keystore.PrivateKeyEntry).PrivKey
-	_, err = x509.ParsePKCS8PrivateKey(derKey)
-	assert.Nil(t, err)
-
-	cert := keyStore[constants.KeystoreAlias].(*keystore.PrivateKeyEntry).CertChain[0].Content
-	certificate, err := x509.ParseCertificate(cert)
-	assert.Nil(t, err)
-	assert.Equal(t, commonName, certificate.Subject.CommonName)
+	keyBytes := GenerateKeystore(commonName, constants.KeystoreAlias, "test", password)
+	assert.True(t, kieapp.IsValidKeyStore(commonName, password, keyBytes))
 }
 
 func TestEnvVarCheck(t *testing.T) {

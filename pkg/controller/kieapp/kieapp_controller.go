@@ -39,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -137,12 +138,8 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	//With route hostnames now available, set remaining environment configuration:
-	env, err = reconciler.setEnvironmentProperties(instance, env, deployedRoutes)
-	if err != nil {
-		// requeue if secret request throws an error
-		// we shouldn't reconcile the deployment with an incorrect or missing keystore secret
-		return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, err
-	}
+	env = reconciler.setEnvironmentProperties(instance, env, deployedRoutes)
+
 	//Create a list of objects that should be deployed
 	requestedResources := reconciler.getKubernetesResources(instance, env)
 	for index := range requestedResources {
@@ -286,17 +283,35 @@ func getComparator() compare.MapComparator {
 		return defaultBCComparator(deployed, requested)
 	})
 
+	secretType := reflect.TypeOf(corev1.Secret{})
+	defaultSecretComparator := resourceComparator.GetComparator(secretType)
+	resourceComparator.SetComparator(secretType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+		secret1 := deployed.(*corev1.Secret).DeepCopy()
+		secret2 := requested.(*corev1.Secret).DeepCopy()
+		/*
+			for key := range secret1.Data {
+				secret1.Data[key] = []byte{}
+			}
+			for key := range secret2.Data {
+				secret2.Data[key] = []byte{}
+			}
+		*/
+		return defaultSecretComparator(secret1, secret2)
+	})
+
 	configMapType := reflect.TypeOf(corev1.ConfigMap{})
 	resourceComparator.SetComparator(configMapType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
 		configMap1 := deployed.(*corev1.ConfigMap)
 		configMap2 := requested.(*corev1.ConfigMap)
 		var pairs [][2]interface{}
-		pairs = append(pairs, [2]interface{}{configMap1.Name, configMap2.Name})
-		pairs = append(pairs, [2]interface{}{configMap1.Namespace, configMap2.Namespace})
-		pairs = append(pairs, [2]interface{}{configMap1.Labels, configMap2.Labels})
-		pairs = append(pairs, [2]interface{}{configMap1.Annotations, configMap2.Annotations})
-		pairs = append(pairs, [2]interface{}{configMap1.Data, configMap2.Data})
-		pairs = append(pairs, [2]interface{}{configMap1.BinaryData, configMap2.BinaryData})
+		if configMap1.Labels["config.openshift.io/inject-trusted-cabundle"] != "true" {
+			pairs = append(pairs, [2]interface{}{configMap1.Name, configMap2.Name})
+			pairs = append(pairs, [2]interface{}{configMap1.Namespace, configMap2.Namespace})
+			pairs = append(pairs, [2]interface{}{configMap1.Labels, configMap2.Labels})
+			pairs = append(pairs, [2]interface{}{configMap1.Annotations, configMap2.Annotations})
+			pairs = append(pairs, [2]interface{}{configMap1.Data, configMap2.Data})
+			pairs = append(pairs, [2]interface{}{configMap1.BinaryData, configMap2.BinaryData})
+		}
 		equal := compare.EqualPairs(pairs)
 		if !equal {
 			log.Info("Resources are not equal", "deployed", deployed, "requested", requested)
@@ -506,20 +521,22 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 	return deployedRoutes, nil
 }
 
-func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (api.Environment, error) {
+func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) api.Environment {
+	caConfigMap := &corev1.ConfigMap{}
+	if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: cr.Name + "-kieapp-ca-bundle", Namespace: cr.Namespace}, caConfigMap); err != nil {
+		log.Error("failed to get configmap", err)
+	}
 	// console keystore generation
 	if !env.Console.Omit {
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" {
-			secret, err := reconciler.generateKeystoreSecret(
+			secret := generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 				consoleCN,
+				caConfigMap.Data,
 				cr,
 			)
-			if err != nil {
-				return api.Environment{}, err
-			}
 			env.Console.Secrets = append(env.Console.Secrets, secret)
 		}
 	}
@@ -543,14 +560,12 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
 		if serverSet.KeystoreSecret == "" {
-			secret, err := reconciler.generateKeystoreSecret(
+			secret := generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
+				caConfigMap.Data,
 				cr,
 			)
-			if err != nil {
-				return api.Environment{}, err
-			}
 			server.Secrets = append(server.Secrets, secret)
 		}
 		env.Servers[i] = server
@@ -572,18 +587,16 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 
 		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
 		if cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
-			secret, err := reconciler.generateKeystoreSecret(
+			secret := generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-")),
 				smartCN,
+				caConfigMap.Data,
 				cr,
 			)
-			if err != nil {
-				return api.Environment{}, err
-			}
 			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, secret)
 		}
 	}
-	return defaults.ConsolidateObjects(env, cr), nil
+	return defaults.ConsolidateObjects(env, cr)
 }
 
 func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (consoleCN string) {
@@ -637,55 +650,48 @@ func filterOmittedObjects(objects []api.CustomObject) []api.CustomObject {
 	return objs
 }
 
-func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) (secret corev1.Secret, err error) {
-	keyStorePassword := []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)
-	existingSecret := corev1.Secret{}
-	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
-	if err != nil && !errors.IsNotFound(err) {
-		return secret, err
-	}
-	if isValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword) {
-		secret = existingSecret
-	} else {
-		secret = corev1.Secret{
-			Type: corev1.SecretTypeOpaque,
-			ObjectMeta: metav1.ObjectMeta{
-				Name: secretName,
-				Labels: map[string]string{
-					"app":         cr.Status.Applied.CommonConfig.ApplicationName,
-					"application": cr.Status.Applied.CommonConfig.ApplicationName,
-				},
+func generateKeystoreSecret(secretName, keystoreCN string, data map[string]string, cr *api.KieApp) corev1.Secret {
+	keystoreByte := shared.GenerateKeystore(keystoreCN, "jboss", data["ca-bundle.crt"], []byte(cr.Status.Applied.CommonConfig.KeyStorePassword))
+	return corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+			Labels: map[string]string{
+				"app":         cr.Status.Applied.CommonConfig.ApplicationName,
+				"application": cr.Status.Applied.CommonConfig.ApplicationName,
 			},
-			Data: map[string][]byte{
-				constants.KeystoreName: shared.GenerateKeystore(keystoreCN, keyStorePassword),
-			},
-		}
-		secret.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
+		},
+		Data: map[string][]byte{
+			"keystore.jks": keystoreByte,
+		},
 	}
-	return secret, nil
 }
 
 func isValidKeyStoreSecret(secret corev1.Secret, keystoreCN string, keyStorePassword []byte) bool {
 	if secret.Data[constants.KeystoreName] != nil {
-		b := bytes.NewReader(secret.Data[constants.KeystoreName])
-		existingKeyStore, err := keystore.Decode(b, keyStorePassword)
-		if err == nil {
-			entryJSON, err := json.Marshal(existingKeyStore[constants.KeystoreAlias])
+		return IsValidKeyStore(keystoreCN, keyStorePassword, secret.Data[constants.KeystoreName])
+	}
+	return false
+}
+
+func IsValidKeyStore(keystoreCN string, keyStorePassword, keyStoreData []byte) bool {
+	existingKeyStore, err := keystore.Decode(bytes.NewReader(keyStoreData, keyStorePassword)
+	if err == nil {
+		entryJSON, err := json.Marshal(existingKeyStore[constants.KeystoreAlias])
+		if err != nil {
+			log.Error(err)
+		}
+		keyEntry := keystore.PrivateKeyEntry{}
+		if err = json.Unmarshal(entryJSON, &keyEntry); err != nil {
+			log.Error(err)
+		}
+		for _, certEntry := range keyEntry.CertChain {
+			cert, err := x509.ParseCertificate(certEntry.Content)
 			if err != nil {
 				log.Error(err)
 			}
-			keyEntry := keystore.PrivateKeyEntry{}
-			if err = json.Unmarshal(entryJSON, &keyEntry); err != nil {
-				log.Error(err)
-			}
-			for _, certEntry := range keyEntry.CertChain {
-				cert, err := x509.ParseCertificate(certEntry.Content)
-				if err != nil {
-					log.Error(err)
-				}
-				if cert.Subject.CommonName == keystoreCN {
-					return true
-				}
+			if cert.Subject.CommonName == keystoreCN {
+				return true
 			}
 		}
 	}
@@ -1056,6 +1062,35 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 		},
 	}
 	return consoleLink
+}
+
+func (reconciler *Reconciler) createCaConfigMap(name, namespace string, owner resource.KubernetesResource) {
+	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
+	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
+		existing := &corev1.ConfigMap{}
+		new := getCaConfigMap(name, namespace)
+		if err := controllerutil.SetControllerReference(owner, new, reconciler.Service.GetScheme()); err != nil {
+			log.Error("failed to set ownerRefs", err)
+		}
+		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
+			if errors.IsNotFound(err) {
+				log.Info("Creating ConfigMap ", new.Name)
+				if err := reconciler.Service.Create(context.TODO(), new); err != nil {
+					log.Error("failed to create configmap", err)
+				}
+			} else {
+				log.Error("failed to get configmap", err)
+			}
+		} else {
+			if !reflect.DeepEqual(existing.Labels, new.Labels) {
+				existing.Labels = new.Labels
+				log.Info("Updating ConfigMap ", existing.Name)
+				if err := reconciler.Service.Update(context.TODO(), existing); err != nil {
+					log.Error("failed to update configmap", err)
+				}
+			}
+		}
+	}
 }
 
 func getConsoleLinkName(cr *api.KieApp) string {

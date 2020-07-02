@@ -13,13 +13,8 @@ require (
 	github.com/google/go-cmp v0.5.0
 	github.com/google/uuid v1.1.1
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
-<<<<<<< HEAD
 	github.com/imdario/mergo v0.3.9
 	github.com/openshift/api v0.0.0-20200526144822-34f54f12813a
-=======
-	github.com/imdario/mergo v0.3.8
-	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
->>>>>>> 0acab22e... golang 1.13
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/api v0.3.8
 	github.com/operator-framework/operator-lifecycle-manager v3.11.0+incompatible

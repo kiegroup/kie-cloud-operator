@@ -92,7 +92,7 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 		}
 	}
 	ocpVersion := semver.MajorMinor("v" + version)
-	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersion, operator)
+	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersion, operatorName+"-trusted-cabundle", operator)
 	caBundlePath := "--openshift-ca=/etc/pki/ca-trust/extracted/crt/ca-bundle.crt"
 	if ocpMajor == "3" {
 		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)

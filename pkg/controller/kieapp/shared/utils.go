@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"math/big"
 	"math/rand"
 	"time"
@@ -20,8 +21,11 @@ import (
 )
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
-func GenerateKeystore(commonName string, password []byte) []byte {
-	cert, derPK, err := genCert(commonName)
+func GenerateKeystore(commonName, alias, caBundle string, password []byte) []byte {
+	cert, derPK, err := genCert(commonName, caBundle)
+	if caBundle != "" {
+
+	}
 	if err != nil {
 		log.Error("Error generating certificate. ", err)
 	}
@@ -49,9 +53,7 @@ func GenerateKeystore(commonName string, password []byte) []byte {
 	return b.Bytes()
 }
 
-// ????????????????
-// any way to use openshift's CA for signing instead ??
-func genCert(commonName string) (cert []byte, derPK []byte, err error) {
+func genCert(commonName string, caBundle string) (cert []byte, derPK []byte, err error) {
 	sAndI := pkix.Name{
 		CommonName: commonName,
 		//OrganizationalUnit: []string{"Engineering"},
@@ -80,6 +82,13 @@ func genCert(commonName string) (cert []byte, derPK []byte, err error) {
 		// BasicConstraintsValid: true,
 		// ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		// KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+	}
+	if caBundle != "" {
+		caNew := &x509.Certificate{}
+		if err := json.Unmarshal([]byte(caBundle), caNew); err != nil {
+			log.Error("unmarshal of ca failed", err)
+		}
+		ca = caNew
 	}
 
 	priv, err := rsa.GenerateKey(crand.Reader, 2048)
