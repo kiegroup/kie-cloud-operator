@@ -1,6 +1,5 @@
 schema_version: 1
 
-name: builder
-version: "1.0"
+name: kie-cloud-operator
 execute:
   - script: install
