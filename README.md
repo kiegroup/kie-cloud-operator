@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- go v1.12.x
+- go v1.13.x
 - operator-sdk v0.12.0
 
 ## Build
