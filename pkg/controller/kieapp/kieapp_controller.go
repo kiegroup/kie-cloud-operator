@@ -1,7 +1,10 @@
 package kieapp
 
 import (
+	"bytes"
 	"context"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -26,6 +29,7 @@ import (
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	"github.com/pavel-v-chernykh/keystore-go"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -275,20 +279,6 @@ func getComparator() compare.MapComparator {
 		return defaultBCComparator(deployed, requested)
 	})
 
-	secretType := reflect.TypeOf(corev1.Secret{})
-	defaultSecretComparator := resourceComparator.GetComparator(secretType)
-	resourceComparator.SetComparator(secretType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
-		secret1 := deployed.(*corev1.Secret)
-		secret2 := requested.(*corev1.Secret).DeepCopy()
-		for key := range secret1.Data {
-			secret1.Data[key] = []byte{}
-		}
-		for key := range secret2.Data {
-			secret2.Data[key] = []byte{}
-		}
-		return defaultSecretComparator(secret1, secret2)
-	})
-
 	configMapType := reflect.TypeOf(corev1.ConfigMap{})
 	resourceComparator.SetComparator(configMapType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
 		configMap1 := deployed.(*corev1.ConfigMap)
@@ -516,7 +506,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" {
-			env.Console.Secrets = append(env.Console.Secrets, generateKeystoreSecret(
+			env.Console.Secrets = append(env.Console.Secrets, reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 				consoleCN,
 				cr,
@@ -543,7 +533,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
 		if serverSet.KeystoreSecret == "" {
-			server.Secrets = append(server.Secrets, generateKeystoreSecret(
+			server.Secrets = append(server.Secrets, reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
 				cr,
@@ -568,7 +558,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 
 		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
 		if cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
-			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, generateKeystoreSecret(
+			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-")),
 				smartCN,
 				cr,
@@ -629,20 +619,59 @@ func filterOmittedObjects(objects []api.CustomObject) []api.CustomObject {
 	return objs
 }
 
-func generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) corev1.Secret {
-	return corev1.Secret{
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: secretName,
-			Labels: map[string]string{
-				"app":         cr.Status.Applied.CommonConfig.ApplicationName,
-				"application": cr.Status.Applied.CommonConfig.ApplicationName,
-			},
-		},
-		Data: map[string][]byte{
-			"keystore.jks": shared.GenerateKeystore(keystoreCN, "jboss", []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)),
-		},
+func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) (secret corev1.Secret) {
+	keyStorePassword := []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)
+	existingSecret := corev1.Secret{}
+	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
+	if err != nil && !errors.IsNotFound(err) {
+		log.Error(err)
 	}
+	if isValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword) {
+		secret = existingSecret
+	} else {
+		secret = corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: secretName,
+				Labels: map[string]string{
+					"app":         cr.Status.Applied.CommonConfig.ApplicationName,
+					"application": cr.Status.Applied.CommonConfig.ApplicationName,
+				},
+			},
+			Data: map[string][]byte{
+				constants.KeystoreName: shared.GenerateKeystore(keystoreCN, keyStorePassword),
+			},
+		}
+		secret.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
+	}
+	return secret
+}
+
+func isValidKeyStoreSecret(secret corev1.Secret, keystoreCN string, keyStorePassword []byte) bool {
+	if secret.Data[constants.KeystoreName] != nil {
+		b := bytes.NewReader(secret.Data[constants.KeystoreName])
+		existingKeyStore, err := keystore.Decode(b, keyStorePassword)
+		if err == nil {
+			entryJSON, err := json.Marshal(existingKeyStore[constants.KeystoreAlias])
+			if err != nil {
+				log.Error(err)
+			}
+			keyEntry := keystore.PrivateKeyEntry{}
+			if err = json.Unmarshal(entryJSON, &keyEntry); err != nil {
+				log.Error(err)
+			}
+			for _, certEntry := range keyEntry.CertChain {
+				cert, err := x509.ParseCertificate(certEntry.Content)
+				if err != nil {
+					log.Error(err)
+				}
+				if cert.Subject.CommonName == keystoreCN {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // getCustomObjectResources returns all kubernetes resources that need to be created for the given CustomObject
