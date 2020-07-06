@@ -253,8 +253,10 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 		c.MavenRepo = envConstants.App.MavenRepo
 	}
 	if versionConstants, found := constants.VersionConstants[cr.Status.Applied.Version]; found {
+		c.BrokerImageContext = versionConstants.BrokerImageContext
 		c.BrokerImage = versionConstants.BrokerImage
 		c.BrokerImageTag = versionConstants.BrokerImageTag
+		c.DatagridImageContext = versionConstants.DatagridImageContext
 		c.DatagridImage = versionConstants.DatagridImage
 		c.DatagridImageTag = versionConstants.DatagridImageTag
 
@@ -305,7 +307,8 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		template.ImageURL = val
 		template.OmitImageStream = true
 	}
-	template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
+	template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
+
 	if cr.Status.Applied.Objects.Console.Image != "" {
 		template.Image = cr.Status.Applied.Objects.Console.Image
 		template.ImageURL = template.Image + ":" + template.ImageTag
@@ -314,6 +317,11 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	if cr.Status.Applied.Objects.Console.ImageTag != "" {
 		template.ImageTag = cr.Status.Applied.Objects.Console.ImageTag
 		template.ImageURL = template.Image + ":" + template.ImageTag
+		template.OmitImageStream = false
+	}
+	if cr.Status.Applied.Objects.Console.ImageContext != "" {
+		template.ImageContext = cr.Status.Applied.Objects.Console.ImageContext
+		template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 		template.OmitImageStream = false
 	}
 	if cr.Status.Applied.Objects.Console.GitHooks != nil {
@@ -371,7 +379,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.ImageURL = val
 			template.OmitImageStream = true
 		}
-		template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
+		template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
 
 		if cr.Status.Applied.Objects.SmartRouter.Image != "" {
 			template.Image = cr.Status.Applied.Objects.SmartRouter.Image
@@ -381,6 +389,11 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		if cr.Status.Applied.Objects.SmartRouter.ImageTag != "" {
 			template.ImageTag = cr.Status.Applied.Objects.SmartRouter.ImageTag
 			template.ImageURL = template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.SmartRouter.ImageContext != "" {
+			template.ImageContext = cr.Status.Applied.Objects.SmartRouter.ImageContext
+			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
 	}
@@ -682,7 +695,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		imageURL = val
 		omitImageTrigger = true
 	}
-	image, imageTag, _ := GetImage(imageURL)
+	image, imageTag, imageContext := GetImage(imageURL)
 
 	if serverSet.Image != "" {
 		image = serverSet.Image
@@ -694,12 +707,25 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		imageURL = image + ":" + imageTag
 		omitImageTrigger = false
 	}
+	if serverSet.ImageContext != "" {
+		imageContext = serverSet.ImageContext
+		imageURL = imageContext + "/" + image + ":" + imageTag
+		omitImageTrigger = false
+	}
 
 	return corev1.ObjectReference{
 		Kind:      "ImageStreamTag",
-		Name:      image + ":" + imageTag,
+		Name:      getName(imageContext, image, imageTag),
 		Namespace: constants.ImageStreamNamespace,
 	}, omitImageTrigger, imageURL
+}
+
+func getName(imageContext string, image string, imageTag string) string {
+	if imageContext != "" {
+		return imageContext + "/" + image + ":" + imageTag
+	} else {
+		return image + ":" + imageTag
+	}
 }
 
 func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseObject) (*api.DatabaseObject, error) {
@@ -1085,7 +1111,8 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.ImageURL = val
 			processMigrationTemplate.OmitImageStream = true
 		}
-		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, _ = GetImage(processMigrationTemplate.ImageURL)
+		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, processMigrationTemplate.ImageContext = GetImage(processMigrationTemplate.ImageURL)
+
 		if cr.Status.Applied.Objects.ProcessMigration.Image != "" {
 			processMigrationTemplate.Image = cr.Status.Applied.Objects.ProcessMigration.Image
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
@@ -1094,6 +1121,11 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 		if cr.Status.Applied.Objects.ProcessMigration.ImageTag != "" {
 			processMigrationTemplate.ImageTag = cr.Status.Applied.Objects.ProcessMigration.ImageTag
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
+			processMigrationTemplate.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.ProcessMigration.ImageContext != "" {
+			processMigrationTemplate.ImageContext = cr.Status.Applied.Objects.ProcessMigration.ImageContext
+			processMigrationTemplate.ImageURL = processMigrationTemplate.ImageContext + "/" + processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag
 			processMigrationTemplate.OmitImageStream = false
 		}
 		for _, sc := range serversConfig {

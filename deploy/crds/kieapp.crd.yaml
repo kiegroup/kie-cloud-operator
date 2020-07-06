@@ -117,6 +117,9 @@ spec:
                       type: object
                       description: Configuration of the RHPAM workbench
                       properties:
+                        imageContext:
+                          type: string
+                          description: The context to use for console.
                         image:
                           type: string
                           description: The image to use for console.
@@ -271,6 +274,9 @@ spec:
                           id:
                             type: string
                             description: Server ID
+                          imageContext:
+                            type: string
+                            description: The context to use for server.
                           image:
                             type: string
                             description: The image to use for server.
@@ -637,6 +643,9 @@ spec:
                       type: object
                       description: Configuration of the RHPAM smart router
                       properties:
+                        imageContext:
+                          type: string
+                          description: The context to use for smart router.
                         image:
                           type: string
                           description: The image to use for smart router.
@@ -694,6 +703,9 @@ spec:
                       type: object
                       description: Configuration of the RHPAM Process Instance Migration
                       properties:
+                        imageContext:
+                          type: string
+                          description: The imageContext to use for Process Instance Migration.
                         image:
                           type: string
                           description: The image to use for Process Instance Migration.

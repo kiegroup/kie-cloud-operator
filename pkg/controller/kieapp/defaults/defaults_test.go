@@ -3644,6 +3644,7 @@ func TestDeployProcessMigration(t *testing.T) {
 }
 
 func TestGetProcessMigrationTemplate(t *testing.T) {
+	label := "-process-migration"
 	type args struct {
 		cr            *api.KieApp
 		serversConfig []api.ServerTemplate
@@ -3726,9 +3727,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    constants.RhpamPrefix + "-process-migration" + constants.RhelVersion,
+				Image:    constants.RhpamPrefix + label + constants.RhelVersion,
 				ImageTag: constants.CurrentVersion,
-				ImageURL: constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + constants.CurrentVersion,
+				ImageURL: constants.RhpamPrefix + label + constants.RhelVersion + ":" + constants.CurrentVersion,
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -4639,4 +4640,207 @@ func TestSimplifiedMonitoringSwitch(t *testing.T) {
 	}
 
 	assert.Nil(t, env.Console.PersistentVolumeClaims, "Should not have PVC!")
+}
+
+func TestSmartRouterDefaultConf(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouterEmpty(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultSmartRouter(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext)
+}
+
+func createSmartRouterEmpty() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject:     api.KieAppObject{},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func testDefaultSmartRouter(t *testing.T, image string, version string, context string) {
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-smartrouter"+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+"-smartrouter"+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestSmartRouterWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouter(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultSmartRouter(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext)
+}
+
+func createSmartRouter() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject: api.KieAppObject{
+			ImageContext: "rhpam-42",
+		},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func TestConsoleDefault(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testConsole(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext)
+}
+
+func TestConsoleWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-41",
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testConsole(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext)
+}
+
+func testConsole(t *testing.T, image string, version string, context string) {
+	label := "-businesscentral"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestServersDefault(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testServers(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext)
+}
+
+func TestServersWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							ImageContext: "rhpam-42",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testServers(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext)
+}
+
+func testServers(t *testing.T, image string, version string, context string) {
+	label := "-kieserver"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestProcessMigrationDefault(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testProcessMigration(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext)
+}
+
+func TestProcessMigrationWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					ImageContext: "rhpam-43",
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testProcessMigration(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext)
+}
+
+func testProcessMigration(t *testing.T, image string, version string, context string) {
+	label := "-process-migration"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
 }

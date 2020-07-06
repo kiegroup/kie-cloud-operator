@@ -189,6 +189,7 @@ type KieAppObject struct {
 	Replicas         *int32                       `json:"replicas,omitempty"`
 	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
 	KeystoreSecret   string                       `json:"keystoreSecret,omitempty"`
+	ImageContext     string                       `json:"imageContext,omitempty"`
 	Image            string                       `json:"image,omitempty"`
 	ImageTag         string                       `json:"imageTag,omitempty"`
 	StorageClassName string                       `json:"storageClassName,omitempty"`
@@ -416,8 +417,10 @@ type TemplateConstants struct {
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
 	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
+	BrokerImageContext   string `json:"brokerImageContext"`
 	BrokerImage          string `json:"brokerImage"`
 	BrokerImageTag       string `json:"brokerImageTag"`
+	DatagridImageContext string `json:"datagridImageContext"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
 	MySQLImageURL        string `json:"mySQLImageURL"`
@@ -435,6 +438,7 @@ type ConsoleTemplate struct {
 	SSOAuthClient    SSOAuthClient  `json:"ssoAuthClient,omitempty"`
 	Name             string         `json:"name,omitempty"`
 	Replicas         int32          `json:"replicas,omitempty"`
+	ImageContext     string         `json:"imageContext,omitempty"`
 	Image            string         `json:"image,omitempty"`
 	ImageTag         string         `json:"imageTag,omitempty"`
 	ImageURL         string         `json:"imageURL,omitempty"`
@@ -478,6 +482,7 @@ type SmartRouterTemplate struct {
 	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
+	ImageContext     string `json:"imageContext,omitempty"`
 	Image            string `json:"image,omitempty"`
 	ImageTag         string `json:"imageTag,omitempty"`
 	ImageURL         string `json:"imageURL,omitempty"`
@@ -526,21 +531,23 @@ type CommonConfig struct {
 
 // VersionConfigs ...
 type VersionConfigs struct {
-	APIVersion          string `json:"apiVersion,omitempty"`
-	OseCliImageURL      string `json:"oseCliImageURL,omitempty"`
-	OseCliComponent     string `json:"oseCliComponent,omitempty"`
-	BrokerImage         string `json:"brokerImage,omitempty"`
-	BrokerImageTag      string `json:"brokerImageTag,omitempty"`
-	BrokerImageURL      string `json:"brokerImageURL,omitempty"`
-	BrokerComponent     string `json:"brokerComponent,omitempty"`
-	DatagridImage       string `json:"datagridImage,omitempty"`
-	DatagridImageTag    string `json:"datagridImageTag,omitempty"`
-	DatagridImageURL    string `json:"datagridImageURL,omitempty"`
-	DatagridComponent   string `json:"datagridComponent,omitempty"`
-	MySQLImageURL       string `json:"mySQLImageURL,omitempty"`
-	MySQLComponent      string `json:"mySQLComponent,omitempty"`
-	PostgreSQLImageURL  string `json:"postgreSQLImageURL,omitempty"`
-	PostgreSQLComponent string `json:"postgreSQLComponent,omitempty"`
+	APIVersion           string `json:"apiVersion,omitempty"`
+	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
+	OseCliComponent      string `json:"oseCliComponent,omitempty"`
+	BrokerImageContext   string `json:"brokerImageContext,omitempty"`
+	BrokerImage          string `json:"brokerImage,omitempty"`
+	BrokerImageTag       string `json:"brokerImageTag,omitempty"`
+	BrokerImageURL       string `json:"brokerImageURL,omitempty"`
+	BrokerComponent      string `json:"brokerComponent,omitempty"`
+	DatagridImageContext string `json:"datagridImageContext,omitempty"`
+	DatagridImage        string `json:"datagridImage,omitempty"`
+	DatagridImageTag     string `json:"datagridImageTag,omitempty"`
+	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
+	DatagridComponent    string `json:"datagridComponent,omitempty"`
+	MySQLImageURL        string `json:"mySQLImageURL,omitempty"`
+	MySQLComponent       string `json:"mySQLComponent,omitempty"`
+	PostgreSQLImageURL   string `json:"postgreSQLImageURL,omitempty"`
+	PostgreSQLComponent  string `json:"postgreSQLComponent,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template
@@ -558,14 +565,16 @@ type RoleMapperTemplate struct {
 
 // ProcessMigrationObject
 type ProcessMigrationObject struct {
-	Image    string                         `json:"image,omitempty"`
-	ImageTag string                         `json:"imageTag,omitempty"`
-	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	ImageContext string                         `json:"imageContext,omitempty"`
+	Image        string                         `json:"image,omitempty"`
+	ImageTag     string                         `json:"imageTag,omitempty"`
+	Database     ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
 
 // ProcessMigrationTemplate
 type ProcessMigrationTemplate struct {
 	OmitImageStream  bool                           `json:"omitImageStream"`
+	ImageContext     string                         `json:"imageContext,omitempty"`
 	Image            string                         `json:"image,omitempty"`
 	ImageTag         string                         `json:"imageTag,omitempty"`
 	ImageURL         string                         `json:"imageURL,omitempty"`
