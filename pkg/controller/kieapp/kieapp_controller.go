@@ -625,6 +625,7 @@ func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN stri
 	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
 	if err != nil && !errors.IsNotFound(err) {
 		log.Error(err)
+		return corev1.Secret{}
 	}
 	if isValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword) {
 		secret = existingSecret
