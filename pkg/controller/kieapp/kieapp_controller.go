@@ -512,7 +512,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
 		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" {
-			env.Console.Secrets = append(env.Console.Secrets, reconciler.generateKeystoreSecret(
+			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 				consoleCN,
 				cr,
@@ -543,7 +543,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
 		if serverSet.KeystoreSecret == "" {
-			server.Secrets = append(server.Secrets, reconciler.generateKeystoreSecret(
+			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
 				cr,
@@ -572,7 +572,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 
 		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
 		if cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
-			env.SmartRouter.Secrets = append(env.SmartRouter.Secrets, reconciler.generateKeystoreSecret(
+			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-")),
 				smartCN,
 				cr,
@@ -637,12 +637,12 @@ func filterOmittedObjects(objects []api.CustomObject) []api.CustomObject {
 	return objs
 }
 
-func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) (secret corev1.Secret) {
+func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) (secret corev1.Secret, err error) {
 	keyStorePassword := []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)
 	existingSecret := corev1.Secret{}
-	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
 	if err != nil && !errors.IsNotFound(err) {
-		log.Error(err)
+		return secret, err
 	}
 	if isValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword) {
 		secret = existingSecret
@@ -662,7 +662,7 @@ func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN stri
 		}
 		secret.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
 	}
-	return secret
+	return secret, nil
 }
 
 func isValidKeyStoreSecret(secret corev1.Secret, keystoreCN string, keyStorePassword []byte) bool {
