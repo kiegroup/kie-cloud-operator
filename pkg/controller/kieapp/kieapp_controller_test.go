@@ -55,7 +55,8 @@ func TestGenerateSecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
 
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
 
@@ -86,18 +87,20 @@ func TestGenerateSecret(t *testing.T) {
 	assert.True(t, isValidKeyStoreSecret(consoleTestSecret, consoleCN, []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
 	assert.Equal(t, consoleSecret.DeepCopy(), consoleTestSecret.DeepCopy())
 
-	secret := reconciler.generateKeystoreSecret(
+	secret, err := reconciler.generateKeystoreSecret(
 		fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 		consoleCN,
 		cr,
 	)
+	assert.Nil(t, err)
 	assert.Equal(t, consoleSecret, secret)
 
 	// secrets should be identical between reconciles since nothing has changed in CR
 	env = api.Environment{}
 	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error getting a new environment")
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
 	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
 
@@ -107,7 +110,8 @@ func TestGenerateSecret(t *testing.T) {
 	env = api.Environment{}
 	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error getting a new environment")
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.NotEqual(t, currentRoute, cr.Status.ConsoleHost)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -129,7 +133,8 @@ func TestGenerateSecret(t *testing.T) {
 	env = api.Environment{}
 	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error getting a new environment")
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
 	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
 
@@ -140,7 +145,8 @@ func TestGenerateSecret(t *testing.T) {
 	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.NotEqual(t, oldPassword, cr.Status.Applied.CommonConfig.KeyStorePassword)
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
 	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
@@ -161,7 +167,8 @@ func TestGenerateSecret(t *testing.T) {
 	env = api.Environment{}
 	env, err = defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error getting a new environment")
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
 	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
 }
@@ -198,7 +205,8 @@ func TestGenerateSecrets(t *testing.T) {
 	reconciler := Reconciler{
 		Service: mockService,
 	}
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -293,7 +301,8 @@ func TestConsoleHost(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	reconciler := &Reconciler{Service: mockService}
-	reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	_, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "status.ConsoleHost should be URL from the resulting workbench route host")
 }
 
