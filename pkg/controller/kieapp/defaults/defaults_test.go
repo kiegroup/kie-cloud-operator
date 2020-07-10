@@ -4704,7 +4704,7 @@ func createSmartRouter() *api.SmartRouterObject {
 	return &smartRouter
 }
 
-func TestConsoleDefault(t *testing.T) {
+func TestConsoleDefaultImage(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4751,7 +4751,7 @@ func testConsole(t *testing.T, image string, version string, context string) {
 	}
 }
 
-func TestServersDefault(t *testing.T) {
+func TestServersDefaultImage(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4800,7 +4800,7 @@ func testServers(t *testing.T, image string, version string, context string) {
 	}
 }
 
-func TestProcessMigrationDefault(t *testing.T) {
+func TestProcessMigrationDefaultImage(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
