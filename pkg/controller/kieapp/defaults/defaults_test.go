@@ -4524,7 +4524,7 @@ func TestMergeDBDeployment(t *testing.T) {
 	}
 }
 
-func TestJvmDefaultConf(t *testing.T) {
+func TestJvmDefaultConsole(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4536,6 +4536,23 @@ func TestJvmDefaultConf(t *testing.T) {
 				Console: api.ConsoleObject{
 					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
 				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptyConsole(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
 			},
 		},
 	}
@@ -4557,6 +4574,23 @@ func TestJvmDefaultServers(t *testing.T) {
 						Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
 					},
 				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptyServer(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
 			},
 		},
 	}
