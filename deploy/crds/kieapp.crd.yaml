@@ -1152,7 +1152,7 @@ spec:
                               description: Keystore secret name
                             from:
                               type: object
-                              description: Image definition to use for all the servers
+                              description: External Database configuration is not fully supported for PIM Image.
                               required:
                                 - kind
                                 - name
