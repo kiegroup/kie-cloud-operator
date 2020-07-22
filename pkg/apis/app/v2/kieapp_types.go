@@ -1,37 +1,28 @@
 package v2
 
 import (
-	"context"
-
-	"github.com/RHsyseng/operator-utils/pkg/olm"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // KieAppSpec defines the desired state of KieApp
 type KieAppSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// KIE environment type to deploy (prod, authoring, trial, etc)
-	Environment   EnvironmentType  `json:"environment,omitempty"`
-	ImageRegistry *KieAppRegistry  `json:"imageRegistry,omitempty"`
-	Objects       KieAppObjects    `json:"objects,omitempty"`
-	CommonConfig  CommonConfig     `json:"commonConfig,omitempty"`
-	Auth          KieAppAuthObject `json:"auth,omitempty"`
-	Upgrades      KieAppUpgrades   `json:"upgrades,omitempty"`
-	Version       string           `json:"version,omitempty"`
+	Environment   EnvironmentType   `json:"environment,omitempty"`
+	ImageRegistry *KieAppRegistry   `json:"imageRegistry,omitempty"`
+	Objects       KieAppObjects     `json:"objects,omitempty"`
+	CommonConfig  CommonConfig      `json:"commonConfig,omitempty"`
+	Auth          *KieAppAuthObject `json:"auth,omitempty"`
+	Upgrades      KieAppUpgrades    `json:"upgrades,omitempty"`
+	UseImageTags  bool              `json:"useImageTags,omitempty"`
+	Version       string            `json:"version,omitempty"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -68,16 +59,18 @@ type EnvironmentConstants struct {
 
 // AppConstants data type to store application deployment constants
 type AppConstants struct {
-	Product   string `json:"name,omitempty"`
-	Prefix    string `json:"prefix,omitempty"`
-	ImageName string `json:"imageName,omitempty"`
-	MavenRepo string `json:"mavenRepo,omitempty"`
+	Product      string `json:"name,omitempty"`
+	Prefix       string `json:"prefix,omitempty"`
+	ImageName    string `json:"imageName,omitempty"`
+	ImageVar     string `json:"imageVar,omitempty"`
+	MavenRepo    string `json:"mavenRepo,omitempty"`
+	FriendlyName string `json:"friendlyName,omitempty"`
 }
 
 // KieAppRegistry defines the registry that should be used for rhpam images
 type KieAppRegistry struct {
 	Registry string `json:"registry,omitempty"` // Registry to use, can also be set w/ "REGISTRY" env variable
-	Insecure bool   `json:"insecure"`           // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
+	Insecure bool   `json:"insecure,omitempty"` // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -110,12 +103,14 @@ type KieAppObjects struct {
 	Servers []KieServerSet `json:"servers,omitempty"`
 	// SmartRouter container configs
 	SmartRouter *SmartRouterObject `json:"smartRouter,omitempty"`
+	// ProcessMigration
+	ProcessMigration *ProcessMigrationObject `json:"processMigration,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
 type KieAppUpgrades struct {
-	Enabled bool `json:"enabled"`
-	Minor   bool `json:"minor"`
+	Enabled bool `json:"enabled,omitempty"`
+	Minor   bool `json:"minor,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
@@ -129,6 +124,7 @@ type KieServerSet struct {
 	KieAppObject `json:",inline"`
 	Database     *DatabaseObject  `json:"database,omitempty"`
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm          *JvmObject       `json:"jvm,omitempty"`
 }
 
 // ConsoleObject Console deployment object
@@ -136,8 +132,10 @@ type ConsoleObject struct {
 	KieAppObject `json:",inline"`
 	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
 	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
+// SmartRouterObject deployment object
 type SmartRouterObject struct {
 	KieAppObject     `json:",inline"`
 	Protocol         string `json:"protocol,omitempty"`
@@ -168,21 +166,41 @@ type KieAppJmsObject struct {
 	AMQEnableSSL          bool   `json:"amqEnableSSL,omitempty"` // flag will be set to true if all AMQ SSL parameters are correctly set.
 }
 
+// JvmObject JVM specification to be used by the KieApp
+type JvmObject struct {
+	JavaOptsAppend             string `json:"javaOptsAppend,omitempty"`
+	JavaMaxMemRatio            *int32 `json:"javaMaxMemRatio,omitempty"`
+	JavaInitialMemRatio        *int32 `json:"javaInitialMemRatio,omitempty"`
+	JavaMaxInitialMem          *int32 `json:"javaMaxInitialMem,omitempty"`
+	JavaDiagnostics            *bool  `json:"javaDiagnostics,omitempty"`
+	JavaDebug                  *bool  `json:"javaDebug,omitempty"`
+	JavaDebugPort              *int32 `json:"javaDebugPort,omitempty"`
+	GcMinHeapFreeRatio         *int32 `json:"gcMinHeapFreeRatio,omitempty"`
+	GcMaxHeapFreeRatio         *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
+	GcTimeRatio                *int32 `json:"gcTimeRatio,omitempty"`
+	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
+	GcMaxMetaspaceSize         *int32 `json:"gcMaxMetaspaceSize,omitempty"`
+	GcContainerOptions         string `json:"gcContainerOptions,omitempty"`
+}
+
 // KieAppObject Generic object definition
 type KieAppObject struct {
-	Env            []corev1.EnvVar             `json:"env,omitempty"`
-	Replicas       *int32                      `json:"replicas,omitempty"`
-	Resources      corev1.ResourceRequirements `json:"resources"`
-	KeystoreSecret string                      `json:"keystoreSecret,omitempty"`
-	Image          string                      `json:"image,omitempty"`
-	ImageTag       string                      `json:"imageTag,omitempty"`
+	Env              []corev1.EnvVar              `json:"env,omitempty"`
+	Replicas         *int32                       `json:"replicas,omitempty"`
+	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
+	KeystoreSecret   string                       `json:"keystoreSecret,omitempty"`
+	Image            string                       `json:"image,omitempty"`
+	ImageTag         string                       `json:"imageTag,omitempty"`
+	StorageClassName string                       `json:"storageClassName,omitempty"`
 }
 
 type Environment struct {
-	Console     CustomObject   `json:"console,omitempty"`
-	SmartRouter CustomObject   `json:"smartRouter,omitempty"`
-	Servers     []CustomObject `json:"servers,omitempty"`
-	Others      []CustomObject `json:"others,omitempty"`
+	Console          CustomObject   `json:"console,omitempty"`
+	SmartRouter      CustomObject   `json:"smartRouter,omitempty"`
+	Servers          []CustomObject `json:"servers,omitempty"`
+	ProcessMigration CustomObject   `json:"processMigration,omitempty"`
+	Databases        []CustomObject `json:"databases,omitempty"`
+	Others           []CustomObject `json:"others,omitempty"`
 }
 
 type CustomObject struct {
@@ -198,16 +216,20 @@ type CustomObject struct {
 	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
 	Services               []corev1.Service               `json:"services,omitempty"`
 	Routes                 []routev1.Route                `json:"routes,omitempty"`
+	ConfigMaps             []corev1.ConfigMap             `json:"configMaps,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
-	KieServerContainerDeployment string                  `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                    GitSource               `json:"gitSource,omitempty"`
-	MavenMirrorURL               string                  `json:"mavenMirrorURL,omitempty"`
-	ArtifactDir                  string                  `json:"artifactDir,omitempty"`
-	Webhooks                     []WebhookSecret         `json:"webhooks,omitempty"`
-	From                         *corev1.ObjectReference `json:"from,omitempty"`
+	KieServerContainerDeployment     string                  `json:"kieServerContainerDeployment,omitempty"`
+	GitSource                        GitSource               `json:"gitSource,omitempty"`
+	MavenMirrorURL                   string                  `json:"mavenMirrorURL,omitempty"`
+	ArtifactDir                      string                  `json:"artifactDir,omitempty"`
+	Webhooks                         []WebhookSecret         `json:"webhooks,omitempty"`
+	From                             *corev1.ObjectReference `json:"from,omitempty"`
+	ExtensionImageStreamTag          string                  `json:"extensionImageStreamTag,omitempty"`
+	ExtensionImageStreamTagNamespace string                  `json:"extensionImageStreamTagNamespace,omitempty"`
+	ExtensionImageInstallDir         string                  `json:"extensionImageInstallDir,omitempty"`
 }
 
 // GitSource Git coordinates to locate the source code to build
@@ -237,14 +259,14 @@ type WebhookSecret struct {
 type GitHooksVolume struct {
 	MountPath string                  `json:"mountPath,omitempty"`
 	From      *corev1.ObjectReference `json:"from,omitempty"`
+	SSHSecret string                  `json:"sshSecret,omitempty"`
 }
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
-	ExternalOnly bool                  `json:"externalOnly,omitempty"`
-	SSO          *SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP         *LDAPAuthConfig       `json:"ldap,omitempty"`
-	RoleMapper   *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
+	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
+	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
+	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 // SSOAuthConfig Authentication configuration for SSO
@@ -326,20 +348,28 @@ const (
 // DatabaseObject Defines how a KieServer will manage and create a new Database
 // or connect to an existing one
 type DatabaseObject struct {
-	Type           DatabaseType            `json:"type,omitempty"`
-	Size           string                  `json:"size,omitempty"`
-	ExternalConfig *ExternalDatabaseObject `json:"externalConfig,omitempty"`
+	InternalDatabaseObject `json:",inline"`
+	ExternalConfig         *ExternalDatabaseObject `json:"externalConfig,omitempty"`
 }
 
-// ExternalDatabaseObject configuration definition of an external database
-type ExternalDatabaseObject struct {
+// ProcessMigrationDatabaseObject Defines how a Process Migration server will manage
+// and create a new Database or connect to an existing one
+type ProcessMigrationDatabaseObject struct {
+	InternalDatabaseObject `json:",inline"`
+	ExternalConfig         *CommonExternalDatabaseObject `json:"externalConfig,omitempty"`
+}
+
+// InternalDatabaseObject Defines how a KieServer will manage and create a new Database
+type InternalDatabaseObject struct {
+	Type             DatabaseType `json:"type,omitempty"`
+	Size             string       `json:"size,omitempty"`
+	StorageClassName string       `json:"storageClassName,omitempty"`
+}
+
+// CommonExternalDatabaseObject common configuration definition of an external database
+type CommonExternalDatabaseObject struct {
 	Driver                     string `json:"driver,omitempty"`
-	Dialect                    string `json:"dialect,omitempty"`
-	Name                       string `json:"name,omitempty"`
-	Host                       string `json:"host,omitempty"`
-	Port                       string `json:"port,omitempty"`
 	JdbcURL                    string `json:"jdbcURL,omitempty"`
-	NonXA                      string `json:"nonXA,omitempty"`
 	Username                   string `json:"username,omitempty"`
 	Password                   string `json:"password,omitempty"`
 	MinPoolSize                string `json:"minPoolSize,omitempty"`
@@ -350,18 +380,30 @@ type ExternalDatabaseObject struct {
 	BackgroundValidationMillis string `json:"backgroundValidationMillis,omitempty"`
 }
 
+// ExternalDatabaseObject configuration definition of an external database
+type ExternalDatabaseObject struct {
+	Dialect                      string `json:"dialect,omitempty"`
+	Name                         string `json:"name,omitempty"`
+	Host                         string `json:"host,omitempty"`
+	Port                         string `json:"port,omitempty"`
+	NonXA                        string `json:"nonXA,omitempty"`
+	CommonExternalDatabaseObject `json:",inline"`
+}
+
 type OpenShiftObject interface {
 	metav1.Object
 	runtime.Object
 }
 
 type EnvTemplate struct {
-	*CommonConfig `json:",inline"`
-	Console       ConsoleTemplate     `json:"console,omitempty"`
-	Servers       []ServerTemplate    `json:"servers,omitempty"`
-	SmartRouter   SmartRouterTemplate `json:"smartRouter,omitempty"`
-	Auth          AuthTemplate        `json:"auth,omitempty"`
-	Constants     TemplateConstants   `json:"constants,omitempty"`
+	*CommonConfig    `json:",inline"`
+	Console          ConsoleTemplate          `json:"console,omitempty"`
+	Servers          []ServerTemplate         `json:"servers,omitempty"`
+	SmartRouter      SmartRouterTemplate      `json:"smartRouter,omitempty"`
+	Auth             AuthTemplate             `json:"auth,omitempty"`
+	ProcessMigration ProcessMigrationTemplate `json:"processMigration,omitempty"`
+	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
+	Constants        TemplateConstants        `json:"constants,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -373,47 +415,73 @@ type TemplateConstants struct {
 	MavenRepo            string `json:"mavenRepo,omitempty"`
 	KeystoreVolumeSuffix string `json:"keystoreVolumeSuffix"`
 	DatabaseVolumeSuffix string `json:"databaseVolumeSuffix"`
+	OseCliImageURL       string `json:"oseCliImageURL,omitempty"`
 	BrokerImage          string `json:"brokerImage"`
 	BrokerImageTag       string `json:"brokerImageTag"`
 	DatagridImage        string `json:"datagridImage"`
 	DatagridImageTag     string `json:"datagridImageTag"`
+	MySQLImageURL        string `json:"mySQLImageURL"`
+	PostgreSQLImageURL   string `json:"postgreSQLImageURL"`
+	BrokerImageURL       string `json:"brokerImageURL,omitempty"`
+	DatagridImageURL     string `json:"datagridImageURL,omitempty"`
 	RoleMapperVolume     string `json:"roleMapperVolume"`
 	GitHooksVolume       string `json:"gitHooksVolume,omitempty"`
+	GitHooksSSHSecret    string `json:"gitHooksSSHSecret,omitempty"`
 }
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	SSOAuthClient  SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name           string         `json:"name,omitempty"`
-	Replicas       int32          `json:"replicas,omitempty"`
-	Image          string         `json:"image,omitempty"`
-	ImageTag       string         `json:"imageTag,omitempty"`
-	KeystoreSecret string         `json:"keystoreSecret,omitempty"`
-	GitHooks       GitHooksVolume `json:"gitHooks,omitempty"`
+	OmitImageStream  bool           `json:"omitImageStream"`
+	SSOAuthClient    SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name             string         `json:"name,omitempty"`
+	Replicas         int32          `json:"replicas,omitempty"`
+	Image            string         `json:"image,omitempty"`
+	ImageTag         string         `json:"imageTag,omitempty"`
+	ImageURL         string         `json:"imageURL,omitempty"`
+	KeystoreSecret   string         `json:"keystoreSecret,omitempty"`
+	GitHooks         GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm              JvmObject      `json:"jvm,omitempty"`
+	StorageClassName string         `json:"storageClassName,omitempty"`
+	Simplified       bool           `json:"simplifed"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	KieName        string                 `json:"kieName,omitempty"`
-	KieServerID    string                 `json:"kieServerID,omitempty"`
-	Replicas       int32                  `json:"replicas,omitempty"`
-	SSOAuthClient  SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From           corev1.ObjectReference `json:"from,omitempty"`
-	Build          BuildTemplate          `json:"build,omitempty"`
-	KeystoreSecret string                 `json:"keystoreSecret,omitempty"`
-	Database       DatabaseObject         `json:"database,omitempty"`
-	Jms            KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter    SmartRouterObject      `json:"smartRouter,omitempty"`
+	OmitImageStream  bool                   `json:"omitImageStream"`
+	KieName          string                 `json:"kieName,omitempty"`
+	KieServerID      string                 `json:"kieServerID,omitempty"`
+	Replicas         int32                  `json:"replicas,omitempty"`
+	SSOAuthClient    SSOAuthClient          `json:"ssoAuthClient,omitempty"`
+	From             corev1.ObjectReference `json:"from,omitempty"`
+	ImageURL         string                 `json:"imageURL,omitempty"`
+	Build            BuildTemplate          `json:"build,omitempty"`
+	KeystoreSecret   string                 `json:"keystoreSecret,omitempty"`
+	Database         DatabaseObject         `json:"database,omitempty"`
+	Jms              KieAppJmsObject        `json:"jms,omitempty"`
+	SmartRouter      SmartRouterObject      `json:"smartRouter,omitempty"`
+	Jvm              JvmObject              `json:"jvm,omitempty"`
+	StorageClassName string                 `json:"storageClassName,omitempty"`
+}
+
+// DatabaseTemplate contains all the variables used in the yaml templates
+type DatabaseTemplate struct {
+	InternalDatabaseObject `json:",inline"`
+	ServerName             string `json:"serverName,omitempty"`
+	Username               string `json:"username,omitempty"`
+	DatabaseName           string `json:"databaseName,omitempty"`
 }
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
+	OmitImageStream  bool   `json:"omitImageStream"`
 	Replicas         int32  `json:"replicas,omitempty"`
 	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
 	Protocol         string `json:"protocol,omitempty"`
 	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
 	Image            string `json:"image,omitempty"`
 	ImageTag         string `json:"imageTag,omitempty"`
+	ImageURL         string `json:"imageURL,omitempty"`
+	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -438,38 +506,48 @@ type BuildTemplate struct {
 	KieServerContainerDeployment string                 `json:"kieServerContainerDeployment,omitempty"`
 	MavenMirrorURL               string                 `json:"mavenMirrorURL,omitempty"`
 	ArtifactDir                  string                 `json:"artifactDir,omitempty"`
+	// Extension image configuration which provides custom jdbc drivers to be used
+	// by KieServer.
+	ExtensionImageStreamTag          string `json:"extensionImageStreamTag,omitempty"`
+	ExtensionImageStreamTagNamespace string `json:"extensionImageStreamTagNamespace,omitempty"`
+	ExtensionImageInstallDir         string `json:"extensionImageInstallDir,omitempty"`
 }
 
 // CommonConfig variables used in the templates
 type CommonConfig struct {
 	ApplicationName    string `json:"applicationName,omitempty"`
-	ImageTag           string `json:"imageTag,omitempty"`
 	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
 	AdminUser          string `json:"adminUser,omitempty"`
 	AdminPassword      string `json:"adminPassword,omitempty"`
 	DBPassword         string `json:"dbPassword,omitempty"`
 	AMQPassword        string `json:"amqPassword,omitempty"`
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
-	ControllerPassword string `json:"controllerPassword,omitempty"`
-	ServerPassword     string `json:"serverPassword,omitempty"`
-	MavenPassword      string `json:"mavenPassword,omitempty"`
 }
 
 // VersionConfigs ...
 type VersionConfigs struct {
-	APIVersion       string `json:"apiVersion,omitempty"`
-	BrokerImage      string `json:"brokerImage,omitempty"`
-	BrokerImageTag   string `json:"brokerImageTag,omitempty"`
-	DatagridImage    string `json:"datagridImage,omitempty"`
-	DatagridImageTag string `json:"datagridImageTag,omitempty"`
+	APIVersion          string `json:"apiVersion,omitempty"`
+	OseCliImageURL      string `json:"oseCliImageURL,omitempty"`
+	OseCliComponent     string `json:"oseCliComponent,omitempty"`
+	BrokerImage         string `json:"brokerImage,omitempty"`
+	BrokerImageTag      string `json:"brokerImageTag,omitempty"`
+	BrokerImageURL      string `json:"brokerImageURL,omitempty"`
+	BrokerComponent     string `json:"brokerComponent,omitempty"`
+	DatagridImage       string `json:"datagridImage,omitempty"`
+	DatagridImageTag    string `json:"datagridImageTag,omitempty"`
+	DatagridImageURL    string `json:"datagridImageURL,omitempty"`
+	DatagridComponent   string `json:"datagridComponent,omitempty"`
+	MySQLImageURL       string `json:"mySQLImageURL,omitempty"`
+	MySQLComponent      string `json:"mySQLComponent,omitempty"`
+	PostgreSQLImageURL  string `json:"postgreSQLImageURL,omitempty"`
+	PostgreSQLComponent string `json:"postgreSQLComponent,omitempty"`
 }
 
 // AuthTemplate Authentication definition used in the template
 type AuthTemplate struct {
-	ExternalOnly bool               `json:"externalOnly,omitempty"`
-	SSO          SSOAuthConfig      `json:"sso,omitempty"`
-	LDAP         LDAPAuthConfig     `json:"ldap,omitempty"`
-	RoleMapper   RoleMapperTemplate `json:"roleMapper,omitempty"`
+	SSO        SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
 }
 
 // RoleMapperTemplate RoleMapper definition used in the template
@@ -478,62 +556,28 @@ type RoleMapperTemplate struct {
 	RoleMapperAuthConfig `json:",inline"`
 }
 
-// ConditionType - type of condition
-type ConditionType string
-
-const (
-	// DeployedConditionType - the kieapp is deployed
-	DeployedConditionType ConditionType = "Deployed"
-	// ProvisioningConditionType - the kieapp is being provisioned
-	ProvisioningConditionType ConditionType = "Provisioning"
-	// FailedConditionType - the kieapp is in a failed state
-	FailedConditionType ConditionType = "Failed"
-)
-
-// ReasonType - type of reason
-type ReasonType string
-
-const (
-	// DeploymentFailedReason - Unable to deploy the application
-	DeploymentFailedReason ReasonType = "DeploymentFailed"
-	// ConfigurationErrorReason - An invalid configuration caused an error
-	ConfigurationErrorReason ReasonType = "ConfigurationError"
-	// MissingDependenciesReason - Dependencies does not exist or cannot be found
-	MissingDependenciesReason ReasonType = "MissingDependencies"
-	// UnknownReason - Unable to determine the error
-	UnknownReason ReasonType = "Unknown"
-)
-
-// Condition - The condition for the kie-cloud-operator
-type Condition struct {
-	Type               ConditionType          `json:"type"`
-	Status             corev1.ConditionStatus `json:"status"`
-	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
-	Reason             ReasonType             `json:"reason,omitempty"`
-	Message            string                 `json:"message,omitempty"`
+// ProcessMigrationObject
+type ProcessMigrationObject struct {
+	Image    string                         `json:"image,omitempty"`
+	ImageTag string                         `json:"imageTag,omitempty"`
+	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
 
-// KieAppStatus - The status for custom resources managed by the operator-sdk.
-type KieAppStatus struct {
-	Conditions  []Condition          `json:"conditions"`
-	ConsoleHost string               `json:"consoleHost,omitempty"`
-	Deployments olm.DeploymentStatus `json:"deployments"`
-	Phase       ConditionType        `json:"phase,omitempty"`
+// ProcessMigrationTemplate
+type ProcessMigrationTemplate struct {
+	OmitImageStream  bool                           `json:"omitImageStream"`
+	Image            string                         `json:"image,omitempty"`
+	ImageTag         string                         `json:"imageTag,omitempty"`
+	ImageURL         string                         `json:"imageURL,omitempty"`
+	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
+	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
 
-// PlatformService ...
-type PlatformService interface {
-	Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error
-	Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) error
-	Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
-	List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error
-	Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error
-	Patch(ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) error
-	DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) error
-	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
-	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
-	GetScheme() *runtime.Scheme
-	IsMockService() bool
+// KieServerClient
+type KieServerClient struct {
+	Host     string `json:"host,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 func init() {

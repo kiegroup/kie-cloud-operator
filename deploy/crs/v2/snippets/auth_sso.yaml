@@ -1,0 +1,32 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-sso
+  annotations:
+    consoleName: snippet-rhpam-sso
+    consoleTitle: Configure SSO
+    consoleDesc: Use this snippet to configure sso opts
+    consoleSnippet: true
+spec:
+  auth:
+    sso:
+      url: https://rh-sso.example.com
+      realm: rhpam
+      adminUser: admin
+      adminPassword: secret
+  objects:
+    console:
+      ssoClient:
+        name: rhpam-console
+        secret: somePwd
+    servers:
+      - name: kieserver-one
+        deployments: 2
+        ssoClient:
+          name: kieserver-one
+          secret: otherPwd
+          hostnameHTTPS: kieserver-one.example.com
+      - name: kieserver-two
+        ssoClient:
+          name: kieserver-two
+          secret: yetOtherPwd

@@ -1,0 +1,11 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: use-imagetags
+  annotations:
+    consoleName: snippet-use-imagetags
+    consoleTitle: Use Tags instead of SHA for Images
+    consoleDesc: Use this snippet to force use of image tags
+    consoleSnippet: true
+spec:
+  useImageTags: true

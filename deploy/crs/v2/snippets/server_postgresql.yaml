@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-postgresql
+  annotations:
+    consoleName: snippet-server-postgresql
+    consoleTitle: Configure PostgreSQL DB for Servers
+    consoleDesc: Use this snippet to configure postgresql db for servers
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - deployments: 2
+        database:
+          type: postgresql
+          size: 30Gi
+      - deployments: 1
+        database:
+          type: postgresql
+          size: 30Gi
+          storageClassName: gold

@@ -4,14 +4,20 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/google/uuid"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	consolev1 "github.com/openshift/api/console/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,9 +28,156 @@ import (
 )
 
 func TestGenerateSecret(t *testing.T) {
+	scheme, err := api.SchemeBuilder.Build()
+	assert.Nil(t, err, "Failed to get scheme")
+	mockService := test.MockService()
+	mockService.GetSchemeFunc = func() *runtime.Scheme {
+		return scheme
+	}
+	reconciler := Reconciler{
+		Service: mockService,
+	}
+
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Deployments: defaults.Pint(3)},
+				},
+			},
+		},
+	}
+	env, err := defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
+
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+
+	consoleSecret := env.Console.Secrets[0]
+	serverSecret := env.Servers[0].Secrets[0]
+	consoleRoute := cr.Status.ConsoleHost
+	secretName := fmt.Sprintf(constants.KeystoreSecret, env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, secretName, serverSecret.Name)
+	for _, volume := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+		if volume.Secret != nil {
+			assert.Equal(t, secretName, volume.Secret.SecretName)
+		}
+	}
+
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+	consoleTestSecret := corev1.Secret{}
+	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: consoleSecret.Name, Namespace: consoleSecret.Namespace}, &consoleTestSecret)
+	assert.Nil(t, err)
+
+	consoleCN := reconciler.setConsoleHost(cr, env, getRequestedRoutes(env, cr))
+	assert.Equal(t, consoleRoute, "http://"+consoleCN)
+	assert.False(t, isValidKeyStoreSecret(corev1.Secret{}, consoleCN, []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.False(t, isValidKeyStoreSecret(consoleTestSecret, "blah", []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.False(t, isValidKeyStoreSecret(consoleTestSecret, consoleCN, []byte("wrongPwd")))
+	assert.True(t, isValidKeyStoreSecret(consoleTestSecret, consoleCN, []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)))
+	assert.Equal(t, consoleSecret.DeepCopy(), consoleTestSecret.DeepCopy())
+
+	secret, err := reconciler.generateKeystoreSecret(
+		fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
+		consoleCN,
+		cr,
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, consoleSecret, secret)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+
+	// change app name which should change commonname and keystore secret
+	currentRoute := cr.Status.ConsoleHost
+	cr.Spec.CommonConfig.ApplicationName = "changed"
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.NotEqual(t, currentRoute, cr.Status.ConsoleHost)
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
+	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	consoleSecret = env.Console.Secrets[0]
+	serverSecret = env.Servers[0].Secrets[0]
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+
+	// change keystore password which should change commonname and keystore secret
+	oldPassword := cr.Status.Applied.CommonConfig.KeyStorePassword
+	cr.Spec.CommonConfig.KeyStorePassword = "changed"
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	assert.NotEqual(t, oldPassword, cr.Status.Applied.CommonConfig.KeyStorePassword)
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
+	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	consoleSecret = env.Console.Secrets[0]
+	serverSecret = env.Servers[0].Secrets[0]
+	err = reconciler.Service.Create(context.TODO(), &consoleSecret)
+	assert.Nil(t, err)
+	err = reconciler.Service.Create(context.TODO(), &serverSecret)
+	assert.Nil(t, err)
+
+	// secrets should be identical between reconciles since nothing has changed in CR
+	env = api.Environment{}
+	env, err = defaults.GetEnvironment(cr, mockService)
+	assert.Nil(t, err, "Error getting a new environment")
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+}
+
+func TestGenerateSecrets(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
@@ -52,7 +205,8 @@ func TestGenerateSecret(t *testing.T) {
 	reconciler := Reconciler{
 		Service: mockService,
 	}
-	env = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
@@ -69,7 +223,8 @@ func TestGenerateSecret(t *testing.T) {
 func TestSpecifySecret(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
@@ -111,17 +266,17 @@ func TestSpecifySecret(t *testing.T) {
 	assert.Len(t, env.SmartRouter.Secrets, 0, "Zero secrets should be generated for the smartrouter")
 	for _, volume := range env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
-			assert.Equal(t, cr.Spec.Objects.Console.KeystoreSecret, volume.Secret.SecretName)
+			assert.Equal(t, cr.Status.Applied.Objects.Console.KeystoreSecret, volume.Secret.SecretName)
 		}
 	}
 	for _, volume := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
-			assert.Equal(t, cr.Spec.Objects.Servers[0].KeystoreSecret, volume.Secret.SecretName)
+			assert.Equal(t, cr.Status.Applied.Objects.Servers[0].KeystoreSecret, volume.Secret.SecretName)
 		}
 	}
 	for _, volume := range env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
-			assert.Equal(t, cr.Spec.Objects.SmartRouter.KeystoreSecret, volume.Secret.SecretName)
+			assert.Equal(t, cr.Status.Applied.Objects.SmartRouter.KeystoreSecret, volume.Secret.SecretName)
 		}
 	}
 }
@@ -129,7 +284,8 @@ func TestSpecifySecret(t *testing.T) {
 func TestConsoleHost(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
+			Name:      "test",
+			Namespace: "testns",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
@@ -145,8 +301,9 @@ func TestConsoleHost(t *testing.T) {
 	env, err := defaults.GetEnvironment(cr, mockService)
 	assert.Nil(t, err, "Error creating a new environment")
 	reconciler := &Reconciler{Service: mockService}
-	reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
-	assert.Equal(t, fmt.Sprintf("http://%s", cr.Spec.CommonConfig.ApplicationName), cr.Status.ConsoleHost, "spec.commonConfig.consoleHost should be URL from the resulting workbench route host")
+	_, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr))
+	assert.Nil(t, err)
+	assert.Equal(t, fmt.Sprintf("http://%s", cr.Name), cr.Status.ConsoleHost, "status.ConsoleHost should be URL from the resulting workbench route host")
 }
 
 func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
@@ -165,7 +322,7 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 				Kind: "Service",
 			},
 		},
-		errMsg: "Unsupported Kind: Service",
+		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -225,7 +382,7 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
-			Auth:        api.KieAppAuthObject{},
+			Auth:        &api.KieAppAuthObject{},
 		},
 	}
 	scheme, err := api.SchemeBuilder.Build()
@@ -244,6 +401,8 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 			return fmt.Errorf("Mock: Not found")
 		}
 		cr.Spec.Auth.RoleMapper = test.roleMapper
+		_, err = defaults.GetEnvironment(cr, reconciler.Service)
+		assert.NotNil(t, err)
 		err = reconciler.verifyExternalReferences(cr)
 		if test.errMsg == "" {
 			assert.Nil(t, err, "%s: Expected nil found [%s]", test.name, err)
@@ -272,7 +431,7 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 				Kind: "Service",
 			},
 		},
-		errMsg: "Unsupported Kind: Service",
+		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		gitHooks: &api.GitHooksVolume{
@@ -353,6 +512,7 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 			return fmt.Errorf("Mock: Not found")
 		}
 		cr.Spec.Objects.Console.GitHooks = test.gitHooks
+		defaults.SetDefaults(cr)
 		err = reconciler.verifyExternalReferences(cr)
 		if test.errMsg == "" {
 			assert.Nil(t, err, "%s: Expected nil found [%s]", test.name, err)
@@ -383,13 +543,13 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
@@ -410,13 +570,13 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Spec.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
 }
 
 func TestCreateTagVersionImageStreams(t *testing.T) {
@@ -437,13 +597,13 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage, constants.VersionConstants[cr.Spec.Version].DatagridImageTag), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), isTag.Tag.From.Name)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
@@ -464,14 +624,14 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Spec.Version].DatagridImage), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Spec.Version].DatagridImage), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), metav1.GetOptions{})
 	assert.Nil(t, err)
 	fmt.Print(isTag)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Spec.Version].DatagridImage), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), isTag.Tag.From.Name)
 }
 
 func TestStatusDeploymentsProgression(t *testing.T) {
@@ -490,9 +650,11 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 
 	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
+	assert.Nil(t, err)
 
 	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
+	assert.Nil(t, err)
 
 	cr = reloadCR(t, service, crNamespacedName)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
@@ -545,6 +707,106 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
 }
 
+func TestConsoleLinkCreation(t *testing.T) {
+	crNamespacedName := getNamespacedName("testns", "cr")
+	cr := getInstance(crNamespacedName)
+	cr.Spec = api.KieAppSpec{
+		Environment: api.RhpamAuthoring,
+	}
+	service := test.MockService()
+	err := service.Create(context.TODO(), cr)
+	assert.Nil(t, err)
+	reconciler := Reconciler{Service: service}
+	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
+
+	// Simulate server setting the host
+	bcRoute := &routev1.Route{}
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), bcRoute)
+	bcRoute.Spec.Host = "example"
+	reconciler.Service.Update(context.TODO(), bcRoute)
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
+	assert.Nil(t, err)
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
+	assert.Nil(t, err)
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
+
+	//Let's now assume console pod is starting
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				if dc.Name == "cr-rhpamcentr" {
+					dc.Status.Replicas = 1
+				}
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
+
+	//Let's now assume both pods have started
+	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		err := service.Client.List(ctx, list, opts...)
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
+			for index := range list.(*oappsv1.DeploymentConfigList).Items {
+				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
+				dc.Status.Replicas = 1
+				dc.Status.ReadyReplicas = 1
+			}
+		}
+		return err
+	}
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment should be created but requeued for status updates")
+
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
+	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
+	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
+	assert.Len(t, cr.Status.Deployments.Ready, 2, "Expect 2 deployment to be ready")
+
+	consoleLink := &consolev1.ConsoleLink{}
+	reconciler.Service.Get(context.TODO(), getNamespacedName("", getConsoleLinkName(cr)), consoleLink)
+	assert.Equal(t, "cr: Business Central", consoleLink.Spec.Text)
+	assert.Equal(t, "https://example", consoleLink.Spec.Href)
+	assert.Equal(t, "testns-link-cr", consoleLink.GetName())
+	assert.Len(t, consoleLink.Spec.NamespaceDashboard.Namespaces, 1)
+	assert.Contains(t, consoleLink.Spec.NamespaceDashboard.Namespaces, "testns")
+
+	//Delete kieapp
+	deletionTimestamp := metav1.Now()
+	cr.SetDeletionTimestamp(&deletionTimestamp)
+	err = service.Update(context.TODO(), cr)
+	assert.Nil(t, err)
+
+	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	cr = reloadCR(t, service, crNamespacedName)
+	assert.Len(t, cr.GetFinalizers(), 0)
+	consoleLink = &consolev1.ConsoleLink{}
+	err = reconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
+	assert.Error(t, err, "ConsoleLink must have been removed by the Finalizer")
+}
+
 func getNamespacedName(namespace string, name string) types.NamespacedName {
 	return types.NamespacedName{
 		Name:      name,
@@ -564,7 +826,393 @@ func getInstance(namespacedName types.NamespacedName) *api.KieApp {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      namespacedName.Name,
 			Namespace: namespacedName.Namespace,
+			UID:       types.UID(uuid.New().String()),
 		},
 	}
 	return cr
+}
+
+func TestGetComparatorConfigMap(t *testing.T) {
+	comparator := getComparator()
+
+	type args struct {
+		deployed  map[reflect.Type][]resource.KubernetesResource
+		requested map[reflect.Type][]resource.KubernetesResource
+	}
+	tests := []struct {
+		name string
+		args args
+		want compare.ResourceDelta
+	}{
+		{
+			"NoChange",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{},
+		},
+		{
+			"Add",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Added: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"Removed",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{},
+			},
+			compare.ResourceDelta{
+				Removed: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedData",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test1",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test1",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedBinaryData",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't', '1'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't', '1'},
+						},
+					},
+				},
+			},
+		},
+		{
+			"UpdatedLabels",
+			args{
+				deployed: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+				requested: map[reflect.Type][]resource.KubernetesResource{
+					reflect.TypeOf(corev1.ConfigMap{}): {
+						&corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "test",
+								Labels: map[string]string{
+									"test": "test1",
+								},
+								Annotations: map[string]string{
+									"test": "test",
+								},
+							},
+							Data: map[string]string{
+								"test": "test",
+							},
+							BinaryData: map[string][]byte{
+								"test": {'t', 'e', 's', 't'},
+							},
+						},
+					},
+				},
+			},
+			compare.ResourceDelta{
+				Updated: []resource.KubernetesResource{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "test",
+							Labels: map[string]string{
+								"test": "test1",
+							},
+							Annotations: map[string]string{
+								"test": "test",
+							},
+						},
+						Data: map[string]string{
+							"test": "test",
+						},
+						BinaryData: map[string][]byte{
+							"test": {'t', 'e', 's', 't'},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, ok := comparator.Compare(tt.args.deployed, tt.args.requested)[reflect.TypeOf(corev1.ConfigMap{})]; !ok || !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getComparator_ConfigMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

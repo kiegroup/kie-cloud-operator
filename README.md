@@ -4,8 +4,8 @@
 
 ## Requirements
 
-- go v1.12+
-- operator-sdk v0.11.0
+- go v1.13.x
+- operator-sdk v0.12.0
 
 ## Build
 
@@ -29,7 +29,7 @@ Push the operator bundle to your quay application repository as follows:
 
 ```bash
 REGISTRY_NS=<registry namespace in quay.io>
-operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator $(go run getversion.go -operator) "basic XXXXXXXXX"
+operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator $(go run getversion.go) "basic XXXXXXXXX"
 ```
 
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
@@ -59,7 +59,7 @@ It will take a few minutes for the operator to become visible under the _Operato
 Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, use the console to `Create KieApp` or create one manually as seen below.
 
 ```bash
-$ oc create -f deploy/crs/kieapp_rhpam_trial.yaml
+$ oc create -f deploy/crs/v2/kieapp_rhpam_trial.yaml
 kieapp.app.kiegroup.org/rhpam-trial created
 ```
 
@@ -161,7 +161,7 @@ spec:
 
 ## Build rhel-based image for release
 
-Requires `cekit` v3.1+ and `rhpkg` -
+Requires `cekit` v3.2+ and `rhpkg` -
 
 ```bash
 # local build
@@ -170,4 +170,14 @@ make rhel
 make rhel-scratch
 # release candidate
 make rhel-release
+```
+
+CSV Generation
+
+```bash
+make csv
+
+# OR
+# w/ sha lookup/replacement against registry.redhat.io && registry.stage.redhat.io
+DIGESTS=true PROD_USER_TOKEN="<username>:<password>" STAGE_USER_TOKEN="<username>:<password>" make csv
 ```

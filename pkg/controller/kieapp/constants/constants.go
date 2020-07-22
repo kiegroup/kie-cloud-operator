@@ -3,21 +3,40 @@ package constants
 import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.7.0"
-	// LastMicroVersion product version supported
-	LastMicroVersion = "7.5.1"
-	// LastMinorVersion product version supported
-	LastMinorVersion = "7.6.0"
+	CurrentVersion = "7.8.1"
+	// PriorVersion1 product version supported
+	PriorVersion1 = "7.8.0"
+	// PriorVersion2 product version supported
+	PriorVersion2 = "7.7.1"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, LastMicroVersion, LastMinorVersion}
+var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
+
+// Ocp4Versions - OpenShift minor versions used for image curation
+//var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
 
 const (
+	// ProductName used for metering labels
+	ProductName = "process-automation"
+	// LabelRHproductName used as metering label
+	LabelRHproductName = "com.redhat.product-name"
+	// LabelRHproductVersion used as metering label
+	LabelRHproductVersion = "com.redhat.product-version"
+	// LabelRHcomponentName used as metering label
+	LabelRHcomponentName = "com.redhat.component-name"
+	// LabelRHcomponentVersion used as metering label
+	LabelRHcomponentVersion = "com.redhat.component-version"
+	// LabelRHcomponentType used as metering label
+	LabelRHcomponentType = "com.redhat.component-type"
+	// LabelRHcompany used as metering label
+	LabelRHcompany = "com.redhat.company"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
@@ -55,10 +74,16 @@ const (
 	KeystoreSecret = "%s-app-secret"
 	// KeystoreVolumeSuffix Suffix for the keystore volumes and volumeMounts name
 	KeystoreVolumeSuffix = "keystore-volume"
+	// KeystoreAlias used when creating entry in Keystore
+	KeystoreAlias = "jboss"
+	// KeystoreName used when creating Secret
+	KeystoreName = "keystore.jks"
 	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
 	DefaultDatabaseSize = "1Gi"
+	// DefaultExtensionImageInstallDir Default Extension Install Dir for JDBC drivers
+	DefaultExtensionImageInstallDir = "/extensions"
 	// ConsoleLinkName is how the link will be titled in an installed CSV within the marketplace
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
@@ -69,40 +94,196 @@ const (
 	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
 	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
 	GitHooksVolume = "githooks-volume"
+	// GitHooksSSHSecret Name of the mounted volume name when GitHooks SSH Secret reference is set
+	GitHooksSSHSecret = "githooks-ssh-volume"
 	// RoleMapperVolume Name of the mounted volume name when RoleMapper reference is set
 	RoleMapperVolume = "rolemapper-volume"
 	// RoleMapperDefaultDir Default path for the rolemapping properties file
 	RoleMapperDefaultDir = "/opt/eap/standalone/configuration/rolemapping"
+	// DefaultKieServerDatabaseName Default database name for Kie Server
+	DefaultKieServerDatabaseName = "rhpam7"
+	// DefaultKieServerDatabaseUsername Default database username for Kie Server
+	DefaultKieServerDatabaseUsername = "rhpam"
+	// DefaultProcessMigrationDatabaseType Default database type for Process Migration
+	DefaultProcessMigrationDatabaseType = api.DatabaseH2
+	// DefaultProcessMigrationDatabaseName Default database name for Process Migration
+	DefaultProcessMigrationDatabaseName = "pimdb"
+	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
+	DefaultProcessMigrationDatabaseUsername = "pim"
+
+	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
+	DmDecisionCentralVar   = "DM_DC_IMAGE_"
+	DmControllerVar        = "DM_CONTROLLER_IMAGE_"
+	PamKieImageVar         = "PAM_KIESERVER_IMAGE_"
+	PamControllerVar       = "PAM_CONTROLLER_IMAGE_"
+	PamBusinessCentralVar  = "PAM_BC_IMAGE_"
+	PamBCMonitoringVar     = "PAM_BC_MONITORING_IMAGE_"
+	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
+
+	OauthVar             = "OAUTH_PROXY_IMAGE_"
+	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
+	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
+	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
+	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
+
+	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
+	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
+	PostgreSQL10Component = "rh-postgresql10-container"
+
+	MySQLVar         = "MYSQL_PROXY_IMAGE_"
+	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
+	MySQL57Component = "rh-mysql57-container"
+	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
+	MySQL80Component = "rh-mysql80-container"
+
+	OseCliVar          = "OSE_CLI_IMAGE_"
+	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
+	OseCli311Component = "openshift-enterprise-cli-container"
+
+	BrokerComponent  = "amq-broker-openshift-container"
+	BrokerVar        = "BROKER_IMAGE_"
+	BrokerImage      = "amq-broker"
+	Broker75ImageTag = "7.5"
+	Broker75ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
+
+	Broker76ImageTag = "7.6"
+	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
+
+	DatagridVar         = "DATAGRID_IMAGE_"
+	Datagrid73Image     = "datagrid73-openshift"
+	Datagrid73ImageTag  = "1.3"
+	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
+	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
+
+	Datagrid73ImageTag15 = "1.5"
+	Datagrid73ImageURL15 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag15
+
+	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
+	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
+	RhelVersion = "-rhel8"
 )
+
+var Images = []ImageEnv{
+	{
+		Var:       DmKieImageVar,
+		Component: "rhdm-7-kieserver-rhel8-container",
+		Registry:  DmContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       DmControllerVar,
+		Component: "rhdm-7-controller-rhel8-container",
+		Registry:  DmContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       DmDecisionCentralVar,
+		Component: "rhdm-7-decisioncentral-rhel8-container",
+		Registry:  DmContext + "decisioncentral" + RhelVersion,
+	},
+	{
+		Var:       PamKieImageVar,
+		Component: "rhpam-7-kieserver-rhel8-container",
+		Registry:  PamContext + "kieserver" + RhelVersion,
+	},
+	{
+		Var:       PamControllerVar,
+		Component: "rhpam-7-controller-rhel8-container",
+		Registry:  PamContext + "controller" + RhelVersion,
+	},
+	{
+		Var:       PamBusinessCentralVar,
+		Component: "rhpam-7-businesscentral-rhel8-container",
+		Registry:  PamContext + "businesscentral" + RhelVersion,
+	},
+	{
+		Var:       PamBCMonitoringVar,
+		Component: "rhpam-7-businesscentral-monitoring-rhel8-container",
+		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
+	},
+	{
+		Var:       PamSmartRouterVar,
+		Component: "rhpam-7-smartrouter-rhel8-container",
+		Registry:  PamContext + "smartrouter" + RhelVersion,
+	},
+	{
+		Var:       PamProcessMigrationVar,
+		Component: "rhpam-7-process-migration-rhel8-container",
+		Registry:  PamContext + "process-migration" + RhelVersion,
+	},
+}
+
+type ImageEnv struct {
+	Var       string
+	Component string
+	Registry  string
+}
+type ImageRef struct {
+	metav1.TypeMeta `json:",inline"`
+	Spec            ImageRefSpec `json:"spec"`
+}
+type ImageRefSpec struct {
+	Tags []ImageRefTag `json:"tags"`
+}
+type ImageRefTag struct {
+	Name string                  `json:"name"`
+	From *corev1.ObjectReference `json:"from"`
+}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker76ImageTag,
+		BrokerImageURL:      Broker76ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	LastMicroVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.4",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.2",
+	PriorVersion1: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker76ImageTag,
+		BrokerImageURL:      Broker76ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	LastMinorVersion: {
-		APIVersion:       api.SchemeGroupVersion.Version,
-		BrokerImage:      "amq-broker",
-		BrokerImageTag:   "7.5",
-		DatagridImage:    "datagrid73-openshift",
-		DatagridImageTag: "1.3",
+	PriorVersion2: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli311ImageURL,
+		OseCliComponent:     OseCli311Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker75ImageTag,
+		BrokerImageURL:      Broker75ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag15,
+		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL57ImageURL,
+		MySQLComponent:      MySQL57Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
 	},
 }
 
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", MavenRepo: "RHPAMCENTR"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", MavenRepo: "RHPAMCENTR"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", MavenRepo: "RHDMCENTR"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -126,11 +307,11 @@ var replicasAuthoringHA = api.ReplicaConstants{
 }
 
 // DefaultDatabaseConfig defines the default Database to use for each environment
-var databaseRhpamAuthoring = &api.DatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}
-var databaseRhpamAuthoringHA = &api.DatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}
-var databaseRhpamProduction = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamProductionImmutable = &api.DatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}
-var databaseRhpamTrial = &api.DatabaseObject{Type: api.DatabaseH2, Size: ""}
+var databaseRhpamAuthoring = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}}
+var databaseRhpamAuthoringHA = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProduction = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamProductionImmutable = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabasePostgreSQL, Size: DefaultDatabaseSize}}
+var databaseRhpamTrial = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: ""}}
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
@@ -151,6 +332,7 @@ var TemplateConstants = api.TemplateConstants{
 	DatabaseVolumeSuffix: DatabaseVolumeSuffix,
 	RoleMapperVolume:     RoleMapperVolume,
 	GitHooksVolume:       GitHooksVolume,
+	GitHooksSSHSecret:    GitHooksSSHSecret,
 }
 
 // DebugTrue - used to enable debug logs in objects

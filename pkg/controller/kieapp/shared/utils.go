@@ -7,19 +7,20 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"math/big"
 	"math/rand"
 	"time"
 
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/pavel-v-chernykh/keystore-go"
 	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
-func GenerateKeystore(commonName, alias string, password []byte) []byte {
+func GenerateKeystore(commonName string, password []byte) []byte {
 	cert, derPK, err := genCert(commonName)
 	if err != nil {
 		log.Error("Error generating certificate. ", err)
@@ -27,7 +28,7 @@ func GenerateKeystore(commonName, alias string, password []byte) []byte {
 
 	var chain []keystore.Certificate
 	keyStore := keystore.KeyStore{
-		alias: &keystore.PrivateKeyEntry{
+		constants.KeystoreAlias: &keystore.PrivateKeyEntry{
 			Entry: keystore.Entry{
 				CreationDate: time.Now(),
 			},
@@ -174,4 +175,13 @@ func GetNamespacedName(object metav1.Object) types.NamespacedName {
 		Name:      object.GetName(),
 		Namespace: object.GetNamespace(),
 	}
+}
+
+func Find(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
 }

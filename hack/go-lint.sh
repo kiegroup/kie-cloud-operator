@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source ./hack/go-mod-env.sh
+
 dirs=(cmd pkg version)
 for dir in "${dirs[@]}"
 do

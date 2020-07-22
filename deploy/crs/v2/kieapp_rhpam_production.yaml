@@ -1,0 +1,10 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-production
+  annotations:
+    consoleName: rhpam-production
+    consoleTitle: PAM Production
+    consoleDesc: Deploys a PAM Production environment
+spec:
+  environment: rhpam-production

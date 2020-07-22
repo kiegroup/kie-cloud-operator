@@ -86,7 +86,7 @@ func TestConfigureHostname(t *testing.T) {
 	}
 	cr := &api.KieApp{
 		Spec: api.KieAppSpec{
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com",
 					Realm: "therealm",
@@ -119,7 +119,7 @@ func TestAuthMultipleType(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO:  &api.SSOAuthConfig{},
 				LDAP: &api.LDAPAuthConfig{},
 			},
@@ -136,7 +136,7 @@ func TestAuthOnlyRoleMapper(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				RoleMapper: &api.RoleMapperAuthConfig{},
 			},
 		},
@@ -165,107 +165,13 @@ func TestAuthSSOEmptyConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{},
 			},
 		},
 	}
 	_, err := GetEnvironment(cr, test.MockService())
 	assert.EqualError(t, err, "neither url nor realm can be empty")
-}
-
-func TestExternalOnlyDefaultConfig(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: "rhpam-trial",
-			CommonConfig: api.CommonConfig{
-				AdminUser:     "testUser",
-				AdminPassword: "testPwd",
-			},
-			Auth: api.KieAppAuthObject{
-				SSO: &api.SSOAuthConfig{
-					URL:   "https://sso.example.com:8080",
-					Realm: "rhpam-test",
-				},
-			},
-			Version: "7.7.0",
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-
-	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "false"}
-
-	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-	for i := range env.Servers {
-		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-	}
-}
-
-func TestExternalOnlyConfig(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: "rhpam-trial",
-			CommonConfig: api.CommonConfig{
-				AdminUser:     "testUser",
-				AdminPassword: "testPwd",
-			},
-			Auth: api.KieAppAuthObject{
-				ExternalOnly: true,
-				SSO: &api.SSOAuthConfig{
-					URL:   "https://sso.example.com:8080",
-					Realm: "rhpam-test",
-				},
-			},
-			Version: "7.7.0",
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-
-	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "true"}
-
-	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-	for i := range env.Servers {
-		assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-	}
-}
-
-func TestExternalOnlyConfigOldVersions(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: "rhpam-trial",
-			CommonConfig: api.CommonConfig{
-				AdminUser:     "testUser",
-				AdminPassword: "testPwd",
-			},
-			Auth: api.KieAppAuthObject{
-				SSO: &api.SSOAuthConfig{
-					URL:   "https://sso.example.com:8080",
-					Realm: "rhpam-test",
-				},
-			},
-			Version: "7.6.0",
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-
-	expectedEnv := corev1.EnvVar{Name: "EXTERNAL_AUTH_ONLY", Value: "false"}
-
-	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
-	for i := range env.Servers {
-		assert.NotContains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
-	}
 }
 
 func TestAuthSSOConfig(t *testing.T) {
@@ -275,7 +181,7 @@ func TestAuthSSOConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
@@ -324,7 +230,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				SSO: &api.SSOAuthConfig{
 					URL:   "https://sso.example.com:8080",
 					Realm: "rhpam-test",
@@ -416,7 +322,7 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: "rhpam-trial",
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{},
 			},
 		},
@@ -437,7 +343,7 @@ func TestAuthLDAPConfig(t *testing.T) {
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",
@@ -597,7 +503,7 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 					{Deployments: Pint(2)},
 				},
 			},
-			Auth: api.KieAppAuthObject{
+			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
 					URL:    "ldaps://ldap.example.com",
 					BindDN: "cn=admin,dc=example,dc=com",

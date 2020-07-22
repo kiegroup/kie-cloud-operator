@@ -1,0 +1,21 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: storage-class-name
+  annotations:
+    consoleName: snippet-storage-class-name
+    consoleTitle: Specify Storage Class Name
+    consoleDesc: Use this snippet to configure storage class name
+    consoleSnippet: true
+spec:
+  objects:
+    console:
+      storageClassName: fast
+    servers:
+      - deployments: 1
+        database:
+          type: mysql
+          size: 30Gi
+          storageClassName: gold
+    smartRouter:
+      storageClassName: slow

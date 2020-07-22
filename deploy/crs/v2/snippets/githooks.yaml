@@ -1,0 +1,18 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: githooks
+  annotations:
+    consoleName: snippet-githooks
+    consoleTitle: Configure Githooks
+    consoleDesc: Use this snippet to configure githooks
+    consoleSnippet: true
+spec:
+  objects:
+    console:
+      gitHooks:
+        mountPath: /githooks
+        from:
+          kind: PersistentVolumeClaim
+          name: githooks-pvc
+        sshSecret: ssh-secret
