@@ -830,7 +830,7 @@ servers:
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck
-                      port: 8080
+                      port: 8081
                       scheme: HTTP
                     initialDelaySeconds: 180
                     timeoutSeconds: 2

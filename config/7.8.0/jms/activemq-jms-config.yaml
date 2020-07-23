@@ -13,7 +13,7 @@ servers:
               - name: "[[.KieName]]"
                 env:
                   # JMS config BEGIN
-                  - name: KIE_SERVER_EXECUTOR_JMS
+                  - name: KIE_SERVER_EXECUTOR_JMS_TEST
                     value: "[[.Jms.Executor]]"
                   - name: KIE_SERVER_EXECUTOR_JMS_TRANSACTED
                     value: "[[.Jms.ExecutorTransacted]]"

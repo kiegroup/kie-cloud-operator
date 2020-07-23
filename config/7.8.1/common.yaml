@@ -13,7 +13,7 @@ console:
           #[[if not .Console.OmitImageStream]]
           - type: ImageChange
             imageChangeParams:
-              automatic: true
+              automatic: false
               containerNames:
                 - "[[.ApplicationName]]-[[.Console.Name]]"
               from:
