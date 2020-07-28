@@ -6,6 +6,9 @@ console:
           app: "[[.ApplicationName]]"
           application: "[[.ApplicationName]]"
       spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:
@@ -142,6 +145,9 @@ others:
             - metadata:
                 name: srv-data
               spec:
+                # [[ if ne .Console.StorageClassName "" ]]
+                storageClassName: "[[.Console.StorageClassName]]"
+                # [[ end ]]
                 accessModes:
                   - ReadWriteOnce
                 resources:
@@ -256,6 +262,9 @@ others:
             - metadata:
                 name: "[[.ApplicationName]]-amq-pvol"
               spec:
+                # [[ if ne .Console.StorageClassName "" ]]
+                storageClassName: "[[.Console.StorageClassName]]"
+                # [[ end ]]
                 accessModes:
                   - ReadWriteOnce
                 resources:
