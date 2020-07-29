@@ -3609,25 +3609,6 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 			false,
 		},
 		{
-			"ProcessMigration_UnsupportedVersion",
-			args{
-				&api.KieApp{
-					Spec: api.KieAppSpec{
-						Environment: api.RhpamTrial,
-						Objects: api.KieAppObjects{
-							ProcessMigration: &api.ProcessMigrationObject{},
-						},
-						Version: "7.7.1",
-					},
-				},
-				[]api.ServerTemplate{
-					{KieName: "kieserver1"},
-				},
-			},
-			nil,
-			false,
-		},
-		{
 			"ProcessMigration_Empty",
 			args{
 				&api.KieApp{
