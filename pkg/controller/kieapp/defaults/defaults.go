@@ -1039,7 +1039,7 @@ func checkJvmOnServer(server *api.KieServerSet) {
 		server.Jvm = &api.JvmObject{}
 	}
 }
-    
+
 func setResourcesDefault(kieObject *v2.KieAppObject, limits string, requests string) {
 	if kieObject.Resources != nil {
 		if kieObject.Resources.Limits == nil {
