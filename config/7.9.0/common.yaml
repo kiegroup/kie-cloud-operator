@@ -254,8 +254,10 @@ console:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
+                  #[[if not .Console.Simplified]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/kie/data"
+                  #[[end]]
                   #[[if .Auth.RoleMapper.From]]
                   - name: "[[.Constants.RoleMapperVolume]]"
                     mountPath: "[[.Auth.RoleMapper.MountPath]]"
@@ -266,13 +268,19 @@ console:
                     mountPath: "[[.Console.GitHooks.MountPath]]"
                     readOnly: true
                   #[[end]]
+                  #[[if ne .Console.GitHooks.SSHSecret ""]]
+                  - name: "[[.Constants.GitHooksSSHSecret]]"
+                    mountPath: "/home/jboss/.ssh"
+                  #[[end]]
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
+              #[[if not .Console.Simplified]]
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-[[.Console.Name]]-claim"
+              #[[end]]
               #[[if .Auth.RoleMapper.From]]
               - name: "[[.Constants.RoleMapperVolume]]"
               #[[if eq .Auth.RoleMapper.From.Kind "ConfigMap"]]
@@ -294,26 +302,44 @@ console:
               #[[if eq .Console.GitHooks.From.Kind "ConfigMap"]]
                 configMap:
                   name: "[[.Console.GitHooks.From.Name]]"
-                  defaultMode: 420
+                  defaultMode: 0770
               #[[end]]
               #[[if eq .Console.GitHooks.From.Kind "Secret"]]
                 secret:
                   secretName: "[[.Console.GitHooks.From.Name]]"
+                  defaultMode: 0770
               #[[end]]
               #[[if eq .Console.GitHooks.From.Kind "PersistentVolumeClaim"]]
                 persistentVolumeClaim:
                   claimName: "[[.Console.GitHooks.From.Name]]"
               #[[end]]
+              #[[if ne .Console.GitHooks.SSHSecret ""]]
+              - name: "[[.Constants.GitHooksSSHSecret]]"
+                secret:
+                  secretName: "[[.Console.GitHooks.SSHSecret]]"
+                  items:
+                  - key: id_rsa
+                    path: id_rsa
+                    mode: 0440
+                  - key: known_hosts
+                    path: known_hosts
+                    mode: 0660
               #[[end]]
+              #[[end]]
+  #[[if not .Console.Simplified]]
   persistentVolumeClaims:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:
           requests:
             storage: "64Mi"
+  #[[end]]
   services:
     - spec:
         ports:
@@ -380,6 +406,9 @@ smartRouter:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
       spec:
+        # [[ if ne .SmartRouter.StorageClassName "" ]]
+        storageClassName: "[[.SmartRouter.StorageClassName]]"
+        # [[ end ]]
         accessModes:
           - ReadWriteMany
         resources:

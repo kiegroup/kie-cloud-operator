@@ -787,7 +787,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 
 	consoleLink := &consolev1.ConsoleLink{}
 	reconciler.Service.Get(context.TODO(), getNamespacedName("", getConsoleLinkName(cr)), consoleLink)
-	assert.Equal(t, "Business Central", consoleLink.Spec.Text)
+	assert.Equal(t, "cr: Business Central", consoleLink.Spec.Text)
 	assert.Equal(t, "https://example", consoleLink.Spec.Href)
 	assert.Equal(t, "testns-link-cr", consoleLink.GetName())
 	assert.Len(t, consoleLink.Spec.NamespaceDashboard.Namespaces, 1)

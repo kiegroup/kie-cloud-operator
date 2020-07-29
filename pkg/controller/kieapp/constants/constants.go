@@ -8,11 +8,11 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.8.1"
+	CurrentVersion = "7.9.0"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.8.0"
+	PriorVersion1 = "7.8.1"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.7.1"
+	PriorVersion2 = "7.8.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -162,6 +162,14 @@ const (
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
+
+	//Resources Limits
+	ConsoleCPULimit        = "2000m"
+	ConsoleCPURequests     = "1000m"
+	ServersCPULimit        = "1000m"
+	ServersCPURequests     = "500m"
+	SmartRouterCPULimit    = "500m"
+	SmartRouterCPURequests = "250m"
 )
 
 var Images = []ImageEnv{
@@ -268,14 +276,14 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker75ImageTag,
-		BrokerImageURL:      Broker75ImageURL,
+		BrokerImageTag:      Broker76ImageTag,
+		BrokerImageURL:      Broker76ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag15,
 		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL57ImageURL,
-		MySQLComponent:      MySQL57Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},

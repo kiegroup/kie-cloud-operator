@@ -17,12 +17,15 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	v2 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -1000,9 +1003,17 @@ func SetDefaults(cr *api.KieApp) {
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
 		setJvmDefault(specApply.Objects.Servers[index].Jvm)
+		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
 	setPasswords(specApply, isTrialEnv)
+
+	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
+
+	if specApply.Objects.SmartRouter != nil {
+		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
+	}
+
 	cr.Status.Applied = *specApply
 }
 
@@ -1026,6 +1037,33 @@ func checkJvmOnConsole(console *api.ConsoleObject) {
 func checkJvmOnServer(server *api.KieServerSet) {
 	if server.Jvm == nil {
 		server.Jvm = &api.JvmObject{}
+	}
+}
+    
+func setResourcesDefault(kieObject *v2.KieAppObject, limits string, requests string) {
+	if kieObject.Resources != nil {
+		if kieObject.Resources.Limits == nil {
+			kieObject.Resources.Limits = createResourceConstraint(limits)
+		}
+		if kieObject.Resources.Requests == nil {
+			kieObject.Resources.Requests = createResourceConstraint(requests)
+		}
+	} else {
+		kieObject.Resources = createResourceWithLimitsAndRequests(limits, requests)
+	}
+}
+
+func createResourceWithLimitsAndRequests(limits string, requests string) *corev1.ResourceRequirements {
+	var resources = new(corev1.ResourceRequirements)
+	resources.Limits = createResourceConstraint(limits)
+	resources.Requests = createResourceConstraint(requests)
+	return resources
+}
+
+func createResourceConstraint(constraint string) v1.ResourceList {
+	item, _ := resource.ParseQuantity(constraint)
+	return corev1.ResourceList{
+		"cpu": item,
 	}
 }
 

@@ -565,8 +565,7 @@
                   "label": "CPU request",
                   "type": "text",
                   "jsonPath": "$.spec.objects.console.resources.requests.cpu",
-                  "description": "Minimum processing power requested by the container",
-                  "default": "500m"
+                  "description": "Minimum processing power requested by the container, default is 1000m"
                 },
                 {
                   "label": "Memory limit",
@@ -579,8 +578,7 @@
                   "label": "CPU limit",
                   "type": "text",
                   "jsonPath": "$.spec.objects.console.resources.limits.cpu",
-                  "description": "Maximum processing power granted to the container",
-                  "default": "500m"
+                  "description": "Maximum processing power granted to the container, default is 2000m"
                 }
               ]
             },
@@ -983,8 +981,7 @@
                       "label": "CPU request",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].resources.requests.cpu",
-                      "default": "500m",
-                      "description": "Minimum processing power requested by the container"
+                      "description": "Minimum processing power requested by the container, default is 500m"
                     },
                     {
                       "label": "Memory limit",
@@ -997,8 +994,7 @@
                       "label": "CPU limit",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].resources.limits.cpu",
-                      "default": "500m",
-                      "description": "Maximum processing power granted to the container"
+                      "description": "Maximum processing power granted to the container, default is 1000m"
                     }
                   ]
                 },
@@ -1604,8 +1600,7 @@
                       "label": "CPU request",
                       "type": "text",
                       "jsonPath": "$.spec.objects.smartRouter.resources.requests.cpu",
-                      "default": "500m",
-                      "description": "Minimum processing power requested by the container"
+                      "description": "Minimum processing power requested by the container, default is 250m"
                     },
                     {
                       "label": "Memory limit",
@@ -1618,8 +1613,7 @@
                       "label": "CPU limit",
                       "type": "text",
                       "jsonPath": "$.spec.objects.smartRouter.resources.limits.cpu",
-                      "default": "500m",
-                      "description": "Maximum processing power granted to the container"
+                      "description": "Maximum processing power granted to the container, default is 500m"
                     }
                   ]
                 }
@@ -1663,6 +1657,12 @@
                       "required": false,
                       "jsonPath": "$.spec.objects.processMigration.database.type",
                       "originalJsonPath": "$.spec.objects.processMigration.database.type",
+                      "options": [
+                         { "value": "", "label": "Select" },
+                         { "value": "mysql", "label": "mysql" },
+                         { "value": "postgresql", "label": "postgresql" },
+                         { "value": "h2", "label": "h2" }
+                        ],
                       "fields": [
                         {
                           "label": "Size",
@@ -1677,83 +1677,6 @@
                           "jsonPath": "$.spec.objects.processMigration.database.storageClassName",
                           "default": "100Gi",
                           "description": "The storageClassName to use for database pvc's."
-                        },
-                        {
-                          "label": "External database",
-                          "type": "fieldGroup",
-                          "required": true,
-                          "jsonPath": "$.spec.objects.processMigration.database.externalConfig",
-                          "displayWhen": "external",
-                          "visible": false,
-                          "fields": [
-                            {
-                              "label": "Driver",
-                              "type": "text",
-                              "required": true,
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.driver",
-                              "description": "Driver name to use. For example, mysql."
-                            },
-    
-                            {
-                              "label": "Jdbc URL",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.jdbcURL",
-                              "description": "Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam",
-                              "default": "jdbc:mysql://127.0.0.1:3306/rhpam",
-                              "required": true
-                            },
-                            {
-                              "label": "User name",
-                              "type": "text",
-                              "required": true,
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.username",
-                              "description": "External database username."
-                            },
-                            {
-                              "label": "Password",
-                              "type": "password",
-                              "required": true,
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.password",
-                              "description": "External database password."
-                            },
-                            {
-                              "label": "Mininimum connection pool size",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.minPoolSize",
-                              "description": "Sets xa-pool/min-pool-size for the configured datasource."
-                            },
-                            {
-                              "label": "Maximum connection pool size",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.minPoolSize",
-                              "description": "Sets xa-pool/max-pool-size for the configured datasource."
-                            },
-                            {
-                              "label": "Valid connection checker class",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.connectionChecker",
-                              "description": "An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid."
-                            },
-                            {
-                              "label": "Exception sorter class",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.exceptionSorter",
-                              "description": "An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred."
-                            },
-                            {
-                              "label": "Background validation",
-                              "type": "checkbox",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.backgroundValidation",
-                              "default": "false",
-                              "description": "Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used."
-                            },
-                            {
-                              "label": "Background validation interval (milliseconds)",
-                              "type": "text",
-                              "jsonPath": "$.spec.objects.processMigration.database.externalConfig.backgroundValidationMillis",
-                              "description": "Defines the interval for the background-validation check for the jdbc connections."
-                            }
-                          ]
                         }
                       ]
                     }

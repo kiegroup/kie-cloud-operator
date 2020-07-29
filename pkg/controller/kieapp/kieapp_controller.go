@@ -1046,7 +1046,7 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 		Spec: consolev1.ConsoleLinkSpec{
 			Link: consolev1.Link{
 				Href: cr.Status.ConsoleHost,
-				Text: constants.EnvironmentConstants[cr.Status.Applied.Environment].App.FriendlyName,
+				Text: getConsoleLinkFriendlyName(cr),
 			},
 			Location: consolev1.NamespaceDashboard,
 			NamespaceDashboard: &consolev1.NamespaceDashboardSpec{
@@ -1059,4 +1059,8 @@ func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.Ku
 
 func getConsoleLinkName(cr *api.KieApp) string {
 	return fmt.Sprintf("%s-link-%s", cr.Namespace, cr.Name)
+}
+
+func getConsoleLinkFriendlyName(cr *api.KieApp) string {
+	return fmt.Sprintf("%s: %s", cr.Name, constants.EnvironmentConstants[cr.Status.Applied.Environment].App.FriendlyName)
 }
