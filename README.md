@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- go v1.12.x
+- go v1.13.x
 - operator-sdk v0.12.0
 
 ## Build
@@ -161,7 +161,7 @@ spec:
 
 ## Build rhel-based image for release
 
-Requires `cekit` v3.6+ and `rhpkg` -
+Requires `cekit` v3.7+ and `rhpkg` -
 
 ```bash
 # local build

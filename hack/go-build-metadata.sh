@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source ./hack/go-mod-env.sh
-CFLAGS="docker"
+CFLAGS="docker --no-squash"
 
 ./hack/go-csv.sh
 

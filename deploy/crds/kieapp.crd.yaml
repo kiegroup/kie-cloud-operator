@@ -731,7 +731,7 @@ spec:
                               description: The storageClassName to use for database pvc's.
                             externalConfig:
                               type: object
-                              description: External Database configuration
+                              description: External Database configuration is not fully supported for PIM Image.
                               required:
                                 - driver
                                 - username

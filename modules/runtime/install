@@ -1,7 +1,5 @@
 #!/bin/sh
 
-mv /tmp/artifacts/* /usr/local/bin/
-
 OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
 UI_PATH=/usr/local/bin/console-cr-form
 

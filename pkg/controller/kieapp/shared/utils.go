@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/pavel-v-chernykh/keystore-go"
 	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
@@ -19,7 +20,7 @@ import (
 )
 
 // GenerateKeystore returns a Java Keystore with a self-signed certificate
-func GenerateKeystore(commonName, alias string, password []byte) []byte {
+func GenerateKeystore(commonName string, password []byte) []byte {
 	cert, derPK, err := genCert(commonName)
 	if err != nil {
 		log.Error("Error generating certificate. ", err)
@@ -27,7 +28,7 @@ func GenerateKeystore(commonName, alias string, password []byte) []byte {
 
 	var chain []keystore.Certificate
 	keyStore := keystore.KeyStore{
-		alias: &keystore.PrivateKeyEntry{
+		constants.KeystoreAlias: &keystore.PrivateKeyEntry{
 			Entry: keystore.Entry{
 				CreationDate: time.Now(),
 			},

@@ -42,6 +42,10 @@ vet:
 test:
 	./hack/go-test.sh
 
+.PHONY: check-configs
+check-configs:
+	./hack/go-configs.sh
+
 .PHONY: lint
 lint:
 	# Temporarily disabled
@@ -54,7 +58,15 @@ build:
 
 .PHONY: meta
 meta:
+	LOCAL=true ./hack/go-build-metadata.sh
+
+.PHONY: meta-scratch
+meta-scratch:
 	./hack/go-build-metadata.sh
+
+.PHONY: meta-release
+meta-release:
+	./hack/go-build-metadata.sh release
 
 .PHONY: rhel
 rhel:
@@ -81,6 +93,7 @@ clean:
 		pkg/controller/kieapp/packrd \
 		pkg/ui/ui-packr.go \
 		pkg/ui/packrd \
+		modules/builder/kie-cloud-operator.tar.gz \
 		target/
 
 # test/ci-go: test/sanity test/unit test/subcommand test/e2e/go
