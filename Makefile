@@ -58,7 +58,15 @@ build:
 
 .PHONY: meta
 meta:
+	LOCAL=true ./hack/go-build-metadata.sh
+
+.PHONY: meta-scratch
+meta-scratch:
 	./hack/go-build-metadata.sh
+
+.PHONY: meta-release
+meta-release:
+	./hack/go-build-metadata.sh release
 
 .PHONY: rhel
 rhel:
