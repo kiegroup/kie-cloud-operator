@@ -705,7 +705,7 @@ spec:
                       properties:
                         imageContext:
                           type: string
-                          description: The imageContext to use for Process Instance Migration.
+                          description: The image context to use for Process Instance Migration.
                         image:
                           type: string
                           description: The image to use for Process Instance Migration.
