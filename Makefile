@@ -42,6 +42,10 @@ vet:
 test:
 	./hack/go-test.sh
 
+.PHONY: check-configs
+check-configs:
+	./hack/go-configs.sh
+
 .PHONY: lint
 lint:
 	# Temporarily disabled
