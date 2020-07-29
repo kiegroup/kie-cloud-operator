@@ -1,5 +1,6 @@
 schema_version: 1
 
 name: catalog_resources
+version: "1.0"
 execute:
   - script: install

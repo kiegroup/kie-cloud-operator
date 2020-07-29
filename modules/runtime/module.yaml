@@ -1,0 +1,15 @@
+schema_version: 1
+
+name: runtime
+version: "1.0"
+
+artifacts:
+  - name: kie-cloud-operator
+    image: builder
+    path: /usr/local/bin/kie-cloud-operator
+  - name: console-cr-form
+    image: builder
+    path: /usr/local/bin/console-cr-form
+
+execute:
+  - script: install

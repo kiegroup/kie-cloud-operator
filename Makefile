@@ -85,6 +85,7 @@ clean:
 		pkg/controller/kieapp/packrd \
 		pkg/ui/ui-packr.go \
 		pkg/ui/packrd \
+		modules/builder/kie-cloud-operator.tar.gz \
 		target/
 
 # test/ci-go: test/sanity test/unit test/subcommand test/e2e/go
