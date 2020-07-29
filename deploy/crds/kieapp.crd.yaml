@@ -119,7 +119,7 @@ spec:
                       properties:
                         imageContext:
                           type: string
-                          description: The context to use for console.
+                          description: The image context to use for console.
                         image:
                           type: string
                           description: The image to use for console.
@@ -276,7 +276,7 @@ spec:
                             description: Server ID
                           imageContext:
                             type: string
-                            description: The context to use for server.
+                            description: The image context to use for server.
                           image:
                             type: string
                             description: The image to use for server.
@@ -645,7 +645,7 @@ spec:
                       properties:
                         imageContext:
                           type: string
-                          description: The context to use for smart router.
+                          description: The image context to use for smart router.
                         image:
                           type: string
                           description: The image to use for smart router.
