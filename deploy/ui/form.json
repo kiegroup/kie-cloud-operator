@@ -459,7 +459,7 @@
           "label": "Console",
           "fields": [
             {
-              "label": "imageContext",
+              "label": "ImageContext",
               "required": false,
               "jsonPath": "$.spec.objects.console.imageContext",
               "description": "The image context to use for console.",
@@ -785,7 +785,7 @@
                   "description": "The name to use for this KIE Server."
                 },
                 {
-                  "label": "imageContext",
+                  "label": "ImageContext",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].imageContext",
                   "description": "The image context to use for server.",
@@ -1695,7 +1695,7 @@
               "max": 1,
               "fields": [
                 {
-                  "label": "imageContext",
+                  "label": "ImageContext",
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.imageContext",
                   "description": "The image context to use for Process Instance Migration.",
