@@ -995,6 +995,7 @@ func SetDefaults(cr *api.KieApp) {
 	setKieSetNames(specApply)
 	checkJvmOnConsole(&specApply.Objects.Console)
 	setJvmDefault(specApply.Objects.Console.Jvm)
+	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
 		for _, statusServer := range cr.Status.Applied.Objects.Servers {
@@ -1005,15 +1006,12 @@ func SetDefaults(cr *api.KieApp) {
 		setJvmDefault(specApply.Objects.Servers[index].Jvm)
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
-	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
-	setPasswords(specApply, isTrialEnv)
-
-	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
-
 	if specApply.Objects.SmartRouter != nil {
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
 	}
 
+	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
+	setPasswords(specApply, isTrialEnv)
 	cr.Status.Applied = *specApply
 }
 
