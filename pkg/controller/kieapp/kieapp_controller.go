@@ -47,6 +47,7 @@ var log = logs.GetLogger("kieapp.controller")
 // Reconciler reconciles a KieApp object
 type Reconciler struct {
 	Service    kubernetes.PlatformService
+	Status     client.StatusWriter
 	OcpVersion string
 }
 
@@ -163,11 +164,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if hasUpdates && status.SetProvisioning(instance) {
-		return reconciler.UpdateObj(instance)
-	} else if !hasUpdates {
-		log.Debug("Reconcile loop did not find any resource changes to apply")
-	}
 
 	// Check the KieServer ConfigMaps for necessary changes
 	reconciler.checkKieServerConfigMap(instance, env)
@@ -187,27 +183,37 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	// Update CR if needed
-	if reconciler.hasSpecChanges(instance, cachedInstance) {
-		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
-		}
-		return reconcile.Result{Requeue: true}, nil
-	}
-	if reconciler.hasStatusChanges(instance, cachedInstance) {
-		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
-		}
-		return reconcile.Result{Requeue: true}, nil
-	}
-	if status.SetDeployed(instance) {
-		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
-		}
-		return reconcile.Result{Requeue: true}, nil
-	}
+	// Update CR Status if needed
+	return reconciler.checkStatus(instance, cachedInstance, hasUpdates)
+}
 
-	return reconcile.Result{}, nil
+func (reconciler *Reconciler) checkStatus(instance, cachedInstance *api.KieApp, hasUpdates bool) (reconcile.Result, error) {
+	var update bool
+	if hasUpdates || reconciler.hasSpecChanges(instance, cachedInstance) {
+		if status.SetProvisioning(instance) {
+			update = true
+		}
+	} else if status.SetDeployed(instance) {
+		update = true
+	}
+	return reconciler.updateStatus(instance, cachedInstance, update)
+}
+
+func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp, update bool) (reconcile.Result, error) {
+	if update && reconciler.hasStatusChanges(instance, cachedInstance) &&
+		instance.ResourceVersion == cachedInstance.ResourceVersion {
+		if err := reconciler.Status.Update(context.TODO(), instance); err != nil {
+			println("")
+			println("ERROR OCCURS DURING status update")
+			println(err.Error())
+			println("")
+			return reconcile.Result{}, err
+		}
+		println("")
+		println("SUCCESSFUL status update")
+		println("")
+	}
+	return reconcile.Result{Requeue: update}, nil
 }
 
 func (reconciler *Reconciler) reconcileResources(instance *api.KieApp, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
@@ -395,7 +401,7 @@ func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) boo
 
 func (reconciler *Reconciler) setFailedStatus(instance *api.KieApp, reason api.ReasonType, err error) {
 	status.SetFailed(instance, reason, err)
-	_, updateError := reconciler.UpdateObj(instance)
+	updateError := reconciler.Status.Update(context.TODO(), instance)
 	if updateError != nil {
 		log.Warn("Unable to update object after receiving failed status. ", err)
 	}

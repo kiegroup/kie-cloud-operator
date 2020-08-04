@@ -15,22 +15,24 @@ spec:
     - name: v2
       served: true
       storage: true
+      subresources:
+        status: {}
       additionalPrinterColumns:
         - name: Version
           type: string
           description: The version of the application deployment
-          JSONPath: .status.version
+          jsonPath: .status.version
         - name: Environment
           type: string
           description: The name of the environment used as a baseline
-          JSONPath: .spec.environment
+          jsonPath: .spec.environment
         - name: Status
           type: string
           description: The status of the KieApp deployment
-          JSONPath: .status.phase
+          jsonPath: .status.phase
         - name: Age
           type: date
-          JSONPath: .metadata.creationTimestamp
+          jsonPath: .metadata.creationTimestamp
       schema:
         openAPIV3Schema:
           type: object

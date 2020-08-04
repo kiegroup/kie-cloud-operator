@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -23,6 +24,7 @@ var log = logs.GetLogger("kieapp.test")
 
 type MockPlatformService struct {
 	Client              clientv1.Client
+	Status              clientv1.StatusWriter
 	scheme              *runtime.Scheme
 	CreateFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error
 	DeleteFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOption) error
@@ -102,6 +104,7 @@ func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
 	mockImageStreamTag := &MockImageStreamTag{}
 	return &MockPlatformService{
 		Client: client,
+		Status: client.Status(),
 		scheme: scheme,
 		CreateFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
 			return client.Create(ctx, obj, opts...)

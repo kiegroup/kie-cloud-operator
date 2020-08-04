@@ -17,7 +17,7 @@ func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
 	addManager := func(mgr manager.Manager) error {
 		k8sService := kubernetes.GetInstance(mgr)
-		reconciler := kieapp.Reconciler{Service: &k8sService}
+		reconciler := kieapp.Reconciler{Service: &k8sService, Status: mgr.GetClient().Status()}
 		info, err := openshift.GetPlatformInfo(mgr.GetConfig())
 		if err != nil {
 			log.Error(err)

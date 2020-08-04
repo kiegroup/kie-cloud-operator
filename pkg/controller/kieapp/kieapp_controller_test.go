@@ -643,7 +643,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	service := test.MockService()
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
-	reconciler := Reconciler{Service: service}
+	reconciler := Reconciler{Service: service, Status: service.Status}
 	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
@@ -657,6 +657,7 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	assert.Nil(t, err)
 
 	cr = reloadCR(t, service, crNamespacedName)
+	assert.NotEmpty(t, cr.Status.Conditions)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
 
@@ -716,7 +717,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	service := test.MockService()
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
-	reconciler := Reconciler{Service: service}
+	reconciler := Reconciler{Service: service, Status: service.Status}
 	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
