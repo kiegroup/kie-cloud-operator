@@ -20,5 +20,6 @@ type PlatformService interface {
 	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
 	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
 	GetScheme() *runtime.Scheme
+	Status() client.StatusWriter
 	IsMockService() bool
 }

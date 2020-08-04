@@ -4,40 +4,42 @@ go 1.13
 
 require (
 	github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
-	github.com/RHsyseng/operator-utils v0.0.0-20200618181624-f9029b6d28f3
+	github.com/RHsyseng/operator-utils v0.0.0-20200811204138-48b5b595439a
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/coreos/prometheus-operator v0.35.1
+	github.com/coreos/prometheus-operator v0.41.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
-	github.com/go-openapi/spec v0.19.6
+	github.com/go-openapi/spec v0.19.9
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/google/go-cmp v0.3.1
+	github.com/google/go-cmp v0.5.0
 	github.com/google/uuid v1.1.1
-	github.com/gophercloud/gophercloud v0.6.0 // indirect
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
-	github.com/imdario/mergo v0.3.8
-	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
+	github.com/imdario/mergo v0.3.9
+	github.com/openshift/api v0.0.0-20200526144822-34f54f12813a
 	github.com/openshift/client-go v3.9.0+incompatible
-	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20191115003340-16619cd27fa5
-	github.com/operator-framework/operator-sdk v0.0.0-00010101000000-000000000000
+	github.com/operator-framework/api v0.3.8
+	github.com/operator-framework/operator-lifecycle-manager v3.11.0+incompatible
+	github.com/operator-framework/operator-sdk v0.19.2
 	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.7.0
+	github.com/prometheus/common v0.10.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/gjson v1.4.0
 	github.com/tidwall/sjson v1.0.4
-	golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee
-	k8s.io/api v0.17.2
-	k8s.io/apiextensions-apiserver v0.17.2-0.20200115000228-b5a272542936
-	k8s.io/apimachinery v0.17.3-beta.0
+	golang.org/x/mod v0.2.0
+	k8s.io/api v0.18.6
+	k8s.io/apiextensions-apiserver v0.18.6
+	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v12.0.0+incompatible
-	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/controller-runtime v0.6.2
 )
 
 replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible // Required by OLM
+
 	// Pin RHsyseng library versions
 	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
-	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200618181624-f9029b6d28f3
+	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200811204138-48b5b595439a
 
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1
@@ -45,36 +47,20 @@ replace (
 	// Versions after v0.3.7 change behaviour
 	github.com/imdario/mergo => github.com/imdario/mergo v0.3.7
 
-	//Openshift release-4.3
-	github.com/openshift/api => github.com/openshift/api v0.0.0-20200205145930-e9d93e317dd1
-	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20191125132246-f6563a70e19a
+	// Openshift release-4.5
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20200526144822-34f54f12813a
+	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
 
-	//Operator Framework v0.14.1
-	github.com/operator-framework/operator-lifecycle-manager => github.com/operator-framework/operator-lifecycle-manager v0.0.0-20200204235824-a0b8e7fd7a0e
-	github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.14.1
+	// Operator Framework v0.19.2
+	github.com/operator-framework/api => github.com/operator-framework/api v0.3.11
+	github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.19.2
 
-	// Pinned to kubernetes-1.16.2
-	k8s.io/api => k8s.io/api v0.0.0-20191016110408-35e52d86657a
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
-	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
-	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20191016112112-5190913f932d
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20191016114015-74ad18325ed5
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20191016111102-bec269661e48
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.0.0-20191016115326-20453efc2458
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.0.0-20191016115129-c07a134afb42
-	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20191004115455-8e001e5d1894
-	k8s.io/component-base => k8s.io/component-base v0.0.0-20191016111319-039242c015a9
-	k8s.io/cri-api => k8s.io/cri-api v0.0.0-20190828162817-608eb1dad4ac
-	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.0.0-20191016115521-756ffa5af0bd
-	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.0.0-20191016112429-9587704a8ad4
-	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.0.0-20191016114939-2b2b218dc1df
-	k8s.io/kube-proxy => k8s.io/kube-proxy v0.0.0-20191016114407-2e83b6f20229
-	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.0.0-20191016114748-65049c67a58b
-	k8s.io/kubectl => k8s.io/kubectl v0.0.0-20191016120415-2ed914427d51
-	k8s.io/kubelet => k8s.io/kubelet v0.0.0-20191016114556-7841ed97f1b2
-	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20191016115753-cf0698c3a16b
-	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
-	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
+	// Pinned to kubernetes-1.18.2
+	k8s.io/api => k8s.io/api v0.18.2
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.2
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.2
+	k8s.io/client-go => k8s.io/client-go v0.18.2 // Required by prometheus-operator
+	k8s.io/kubernetes => k8s.io/kubernetes v0.18.2
 
 	// others
 	modernc.org/cc => gitlab.com/cznic/cc v1.0.0

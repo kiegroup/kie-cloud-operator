@@ -19,8 +19,7 @@ const (
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-//var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
-var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// ProductName used for metering labels
@@ -164,9 +163,9 @@ const (
 	RhelVersion = "-rhel8"
 
 	//Resources Limits
-	ConsoleCPULimit        = "2000m"
-	ConsoleCPURequests     = "1000m"
-	ServersCPULimit        = "1000m"
+	ConsoleCPULimit        = "2"
+	ConsoleCPURequests     = "1"
+	ServersCPULimit        = "1"
 	ServersCPURequests     = "500m"
 	SmartRouterCPULimit    = "500m"
 	SmartRouterCPURequests = "250m"

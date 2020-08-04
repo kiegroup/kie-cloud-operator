@@ -255,6 +255,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"kieapps",
+					"kieapps/status",
 					"kieapps/finalizers",
 				},
 				Verbs: Verbs,

@@ -25,8 +25,8 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
-	olmversion "github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version"
+	csvversion "github.com/operator-framework/api/pkg/lib/version"
+	csvv1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/tidwall/sjson"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -39,7 +39,7 @@ var log = logs.GetLogger("csv.generator")
 var (
 	rh              = "Red Hat"
 	maturity        = "stable"
-	major, minor, _ = defaults.MajorMinorMicro(constants.CurrentVersion)
+	major, minor, _ = defaults.GetMajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
 			Name:         "kiecloud",
@@ -106,24 +106,16 @@ func main() {
 		operatorName := csv.Name + "-operator"
 		templateStruct := &csvv1.ClusterServiceVersion{}
 		templateStruct.SetGroupVersionKind(csvv1.SchemeGroupVersion.WithKind("ClusterServiceVersion"))
-		csvStruct := &csvv1.ClusterServiceVersion{}
-		strategySpec := &csvStrategySpec{}
-		json.Unmarshal(csvStruct.Spec.InstallStrategy.StrategySpecRaw, strategySpec)
-
-		templateStrategySpec := &csvStrategySpec{}
+		templateStrategySpec := csvv1.StrategyDetailsDeployment{}
 		deployment := components.GetDeployment(csv.OperatorName, csv.Registry, csv.Context, csv.ImageName, csv.Tag, "Always")
-		templateStrategySpec.Deployments = append(templateStrategySpec.Deployments, []csvDeployments{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
+		templateStrategySpec.DeploymentSpecs = append(templateStrategySpec.DeploymentSpecs, []csvv1.StrategyDeploymentSpec{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
 		role := components.GetRole(csv.OperatorName)
-		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
+		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvv1.StrategyDeploymentPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
 		clusterRole := components.GetClusterRole(csv.OperatorName)
-		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
-		// Re-serialize deployments and permissions into csv strategy.
-		updatedStrat, err := json.Marshal(templateStrategySpec)
-		if err != nil {
-			panic(err)
-		}
-		templateStruct.Spec.InstallStrategy.StrategySpecRaw = updatedStrat
+		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvv1.StrategyDeploymentPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
+		templateStruct.Spec.InstallStrategy.StrategySpec = templateStrategySpec
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
+
 		csvVersionedName := operatorName + "." + version.Version
 		templateStruct.Name = csvVersionedName
 		templateStruct.Namespace = "placeholder"
@@ -150,9 +142,9 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		var opVersion olmversion.OperatorVersion
-		opVersion.Version = semver.MustParse(version.Version)
-		templateStruct.Spec.Version = opVersion
+		csvVersion := csvversion.OperatorVersion{}
+		csvVersion.Version = semver.MustParse(version.Version)
+		templateStruct.Spec.Version = csvVersion
 		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
@@ -289,7 +281,7 @@ func main() {
 			},
 		}
 
-		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+		opMajor, opMinor, _ := defaults.GetMajorMinorMicro(version.Version)
 		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
 
 		if csv.OperatorName == "kie-cloud-operator" {

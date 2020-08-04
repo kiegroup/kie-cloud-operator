@@ -1,9 +1,0 @@
-apiVersion: app.kiegroup.org/v1
-kind: KieApp
-metadata:
-  name: image-registry
-spec:
-  environment: rhpam-trial
-  imageRegistry:
-    insecure: true
-    registry: registry.example.com:5000

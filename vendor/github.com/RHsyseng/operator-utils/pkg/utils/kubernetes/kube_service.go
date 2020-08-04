@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -73,6 +74,10 @@ func (service *KubernetesPlatformService) ImageStreamTags(namespace string) imag
 
 func (service *KubernetesPlatformService) GetScheme() *runtime.Scheme {
 	return service.scheme
+}
+
+func (service *KubernetesPlatformService) Status() clientv1.StatusWriter {
+	return service.client.Status()
 }
 
 func (service *KubernetesPlatformService) IsMockService() bool {

@@ -107,8 +107,8 @@ func TestCompleteCRD(t *testing.T) {
 	schema := getSchema(t, api.SchemeGroupVersion.Version)
 	missingEntries := schema.GetMissingEntries(&api.KieApp{})
 	for _, missing := range missingEntries {
-		if strings.HasPrefix(missing.Path, "/status") {
-			//Not using subresources, so status is not expected to appear in CRD
+		if strings.HasPrefix(missing.Path, "/status/conditions/lastTransitionTime") {
+			// ...
 		} else if strings.Contains(missing.Path, "/env/valueFrom/") {
 			//The valueFrom is not expected to be used and is not fully defined TODO: verify
 		} else if strings.HasSuffix(missing.Path, "/from/uid") {

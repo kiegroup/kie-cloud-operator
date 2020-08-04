@@ -77,6 +77,7 @@ type KieAppRegistry struct {
 
 // KieApp is the Schema for the kieapps API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:path=kieapps,scope=Namespaced
 type KieApp struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -41,8 +41,8 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		return api.Environment{}, err
 	}
 	// handle upgrade logic from here
-	cMajor, _, _ := MajorMinorMicro(cr.Status.Applied.Version)
-	lMajor, _, _ := MajorMinorMicro(constants.CurrentVersion)
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	lMajor, _, _ := GetMajorMinorMicro(constants.CurrentVersion)
 	minorVersion := GetMinorImageVersion(cr.Status.Applied.Version)
 	latestMinorVersion := GetMinorImageVersion(constants.CurrentVersion)
 	if (micro && minorVersion == latestMinorVersion) ||
@@ -250,7 +250,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 
 func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Micro = MajorMinorMicro(cr.Status.Applied.Version)
+	c.Major, c.Minor, c.Micro = GetMajorMinorMicro(cr.Status.Applied.Version)
 	if envConstants, found := constants.EnvironmentConstants[cr.Status.Applied.Environment]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
@@ -298,14 +298,17 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 	template.Name = envConstants.App.Prefix
-	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 	template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 	if template.KeystoreSecret == "" {
 		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
 	}
 	template.StorageClassName = cr.Status.Applied.Objects.Console.StorageClassName
-	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
-		template.ImageURL = val
+	if !cr.Status.Applied.UseImageTags {
+		if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists {
+			template.ImageURL = val
+		}
 		template.OmitImageStream = true
 	}
 	template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
@@ -369,9 +372,12 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		}
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
-		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
-		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
-			template.ImageURL = val
+		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+		template.ImageURL = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-" + cMajor + "/" + constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		if !cr.Status.Applied.UseImageTags {
+			if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists {
+				template.ImageURL = val
+			}
 			template.OmitImageStream = true
 		}
 		template.Image, template.ImageTag, _ = GetImage(template.ImageURL)
@@ -680,9 +686,12 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
 	}
 
-	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
-	if val, exists := os.LookupEnv(envVar); exists && !cr.Status.Applied.UseImageTags && !forBuild {
-		imageURL = val
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	imageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	if !cr.Status.Applied.UseImageTags && !forBuild {
+		if val, exists := os.LookupEnv(envVar); exists {
+			imageURL = val
+		}
 		omitImageTrigger = true
 	}
 	image, imageTag, _ := GetImage(imageURL)
@@ -995,6 +1004,7 @@ func SetDefaults(cr *api.KieApp) {
 	setKieSetNames(specApply)
 	checkJvmOnConsole(&specApply.Objects.Console)
 	setJvmDefault(specApply.Objects.Console.Jvm)
+	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
 		for _, statusServer := range cr.Status.Applied.Objects.Servers {
@@ -1005,15 +1015,12 @@ func SetDefaults(cr *api.KieApp) {
 		setJvmDefault(specApply.Objects.Servers[index].Jvm)
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
-	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
-	setPasswords(specApply, isTrialEnv)
-
-	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
-
 	if specApply.Objects.SmartRouter != nil {
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
 	}
 
+	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
+	setPasswords(specApply, isTrialEnv)
 	cr.Status.Applied = *specApply
 }
 

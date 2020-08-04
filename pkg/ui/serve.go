@@ -3,6 +3,7 @@ package ui
 //go:generate go run -mod=vendor ../controller/kieapp/defaults/.packr/packr.go
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 
@@ -59,7 +60,7 @@ func apply(cr string) error {
 		return err
 	}
 	kieApp.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
-	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do().Into(kieApp)
+	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do(context.TODO()).Into(kieApp)
 	if err != nil {
 		log.Debug("Failed to create KIE app", err)
 		return err

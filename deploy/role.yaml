@@ -109,6 +109,7 @@ rules:
   - app.kiegroup.org
   resources:
   - kieapps
+  - kieapps/status
   - kieapps/finalizers
   verbs:
   - create
