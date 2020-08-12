@@ -27,7 +27,7 @@ import (
 )
 
 func TestUpdateLink(t *testing.T) {
-	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+	opMajor, opMinor, _ := defaults.GetMajorMinorMicro(version.Version)
 	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
@@ -39,7 +39,7 @@ func TestUpdateLink(t *testing.T) {
 }
 
 func TestUpdateExistingLink(t *testing.T) {
-	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
+	opMajor, opMinor, _ := defaults.GetMajorMinorMicro(version.Version)
 	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")

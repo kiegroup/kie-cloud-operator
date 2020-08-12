@@ -7,9 +7,8 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.9.0
-    createdAt: "2020-07-29 11:42:22"
-    description: Deploys and manages Red Hat Process Automation Manager and Red Hat
-      Decision Manager environments.
+    createdAt: "2020-08-10 12:22:25"
+    description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat
     tectonic-visibility: ocs
@@ -60,20 +59,17 @@ spec:
         name: ""
         version: v1
       specDescriptors:
-      - description: Set true to enable automatic micro version product upgrades,
-          it is disabled by default.
+      - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
         displayName: Enable Upgrades
         path: upgrades.enabled
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Set true to enable automatic minor product version upgrades,
-          it is disabled by default. Requires spec.upgrades.enabled to be true.
+      - description: Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
         displayName: Include minor version upgrades
         path: upgrades.minor
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: Set true to enable image tags, disabled by default. This will
-          leverage image tags instead of the image digests.
+      - description: Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
         displayName: Use Image Tags
         path: useImageTags
         x-descriptors:
@@ -255,6 +251,8 @@ spec:
                   value: registry.redhat.io/amq7/amq-broker:7.6
                 - name: OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+                - name: OAUTH_PROXY_IMAGE_4.5
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
                 - name: OAUTH_PROXY_IMAGE_4.4
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
                 - name: OAUTH_PROXY_IMAGE_4.3
@@ -378,6 +376,7 @@ spec:
           - app.kiegroup.org
           resources:
           - kieapps
+          - kieapps/status
           - kieapps/finalizers
           verbs:
           - create
@@ -498,6 +497,8 @@ spec:
   - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
     name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+    name: ose-oauth-proxy
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
     name: ose-oauth-proxy
   - image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
     name: ose-oauth-proxy

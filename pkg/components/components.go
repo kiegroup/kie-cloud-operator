@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -18,7 +17,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -257,6 +255,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"kieapps",
+					"kieapps/status",
 					"kieapps/finalizers",
 				},
 				Verbs: Verbs,
@@ -306,66 +305,6 @@ func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
 					"delete",
 				},
 			},
-		},
-	}
-}
-
-func GetCrd() *extv1beta1.CustomResourceDefinition {
-	plural := "kieapps"
-	crd := &extv1beta1.CustomResourceDefinition{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: extv1beta1.SchemeGroupVersion.String(),
-			Kind:       "CustomResourceDefinition",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: plural + "." + api.SchemeGroupVersion.Group,
-		},
-		Spec: extv1beta1.CustomResourceDefinitionSpec{
-			Scope: "Namespaced",
-			Group: api.SchemeGroupVersion.Group,
-			Versions: []extv1beta1.CustomResourceDefinitionVersion{
-				{
-					Name:    api.SchemeGroupVersion.Version,
-					Served:  true,
-					Storage: true,
-					Schema:  &extv1beta1.CustomResourceValidation{OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{}},
-				},
-				{
-					Name:    v1.SchemeGroupVersion.Version,
-					Served:  true,
-					Storage: false,
-					Schema:  &extv1beta1.CustomResourceValidation{OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{}},
-				},
-			},
-			Names: extv1beta1.CustomResourceDefinitionNames{
-				Plural:   "kieapps",
-				ListKind: "KieAppList",
-				Singular: "kieapp",
-				Kind:     "KieApp",
-			},
-			AdditionalPrinterColumns: []extv1beta1.CustomResourceColumnDefinition{
-				{Name: "Age", Type: "date", JSONPath: ".metadata.creationTimestamp"},
-				{Name: "Phase", Type: "string", JSONPath: ".status.phase"},
-			},
-			Subresources: &extv1beta1.CustomResourceSubresources{
-				Status: &extv1beta1.CustomResourceSubresourceStatus{},
-			},
-		},
-	}
-	return crd
-}
-
-func GetCR() *api.KieApp {
-	return &api.KieApp{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: api.SchemeGroupVersion.String(),
-			Kind:       "KieApp",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
 		},
 	}
 }

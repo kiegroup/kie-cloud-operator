@@ -120,6 +120,10 @@ spec:
     name: golang-github-openshift-oauth-proxy-container
   - from:
       kind: DockerImage
+      name: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
+    name: golang-github-openshift-oauth-proxy-container
+  - from:
+      kind: DockerImage
       name: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
     name: golang-github-openshift-oauth-proxy-container
   - from:
