@@ -4627,30 +4627,30 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 	assert.NotNil(t, cr.Status.Applied.Objects.Console.Resources)
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 
-	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits["cpu"]
+	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
 
-	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests["cpu"]
+	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUServer.String() == rCPUServer)
 
-	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits["cpu"]
+	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
 
-	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests["cpu"]
+	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
 
-	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits["cpu"]
+	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)
 
-	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests["cpu"]
+	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUSmartRouter.String() == rCPUSmartRouter)
 }
 
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
-	Limits: map[corev1.ResourceName]resource.Quantity{
-		"cpu": *resource.NewQuantity(200, "m"),
+	Limits: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
 	},
-	Requests: map[corev1.ResourceName]resource.Quantity{
-		"cpu": *resource.NewQuantity(100, "m"),
+	Requests: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
 	},
 }

@@ -182,10 +182,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	// Update CR Spec if needed
-	if reconciler.hasSpecChanges(instance, cachedInstance) {
-		return reconciler.updateStatus(instance, cachedInstance, true)
-	}
 	// Update CR Status if needed
 	return reconciler.checkStatus(instance, cachedInstance, hasUpdates)
 }
@@ -201,12 +197,14 @@ func (reconciler *Reconciler) checkStatus(instance, cachedInstance *api.KieApp, 
 }
 
 func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp, requeue bool) (reconcile.Result, error) {
-	if instance.ResourceVersion == cachedInstance.ResourceVersion {
-		if err := reconciler.Service.Status().Update(context.TODO(), instance); err != nil {
-			return reconcile.Result{}, err
+	if reconciler.hasStatusChanges(instance, cachedInstance) {
+		if instance.ResourceVersion == cachedInstance.ResourceVersion {
+			if err := reconciler.Service.Status().Update(context.TODO(), instance); err != nil {
+				return reconcile.Result{}, err
+			}
+		} else {
+			return reconcile.Result{Requeue: true}, nil
 		}
-	} else {
-		return reconcile.Result{Requeue: true}, nil
 	}
 	return reconcile.Result{Requeue: requeue}, nil
 }
@@ -361,33 +359,16 @@ func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.Ku
 	return requestedRoutes
 }
 
-func (reconciler *Reconciler) hasSpecChanges(instance, cached *api.KieApp) bool {
-	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
-		return true
-	}
-	if len(instance.Spec.Objects.Servers) > 0 {
-		if len(instance.Spec.Objects.Servers) != len(cached.Spec.Objects.Servers) {
-			return true
-		}
-		for i := range instance.Spec.Objects.Servers {
-			if !reflect.DeepEqual(instance.Spec.Objects.Servers[i], cached.Spec.Objects.Servers[i]) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) bool {
-	if !reflect.DeepEqual(instance.Status, cached.Status) {
+func (reconciler *Reconciler) hasStatusChanges(instance, cachedInstance *api.KieApp) bool {
+	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) {
 		return true
 	}
 	if len(instance.Status.Applied.Objects.Servers) > 0 {
-		if len(instance.Status.Applied.Objects.Servers) != len(cached.Status.Applied.Objects.Servers) {
+		if len(instance.Status.Applied.Objects.Servers) != len(cachedInstance.Status.Applied.Objects.Servers) {
 			return true
 		}
 		for i := range instance.Status.Applied.Objects.Servers {
-			if !reflect.DeepEqual(instance.Status.Applied.Objects.Servers[i], cached.Status.Applied.Objects.Servers[i]) {
+			if !reflect.DeepEqual(instance.Status.Applied.Objects.Servers[i], cachedInstance.Status.Applied.Objects.Servers[i]) {
 				return true
 			}
 		}
