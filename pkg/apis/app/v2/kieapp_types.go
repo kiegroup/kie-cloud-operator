@@ -27,6 +27,8 @@ type KieAppSpec struct {
 	Upgrades KieAppUpgrades `json:"upgrades,omitempty"`
 	// Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
 	UseImageTags bool `json:"useImageTags,omitempty"`
+	// Set true to use Openshift's CA bundle as a truststore, instead of java's cacert.
+	UseOpenshiftCA bool `json:"useOpenshiftCA,omitempty"`
 	// The version of the application deployment.
 	Version      string            `json:"version,omitempty"`
 	CommonConfig CommonConfig      `json:"commonConfig,omitempty"`
@@ -157,7 +159,8 @@ type SmartRouterObject struct {
 	// Smart Router protocol, if no value is provided, http is the default protocol.
 	Protocol string `json:"protocol,omitempty"`
 	// If enabled, Business Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
-	UseExternalRoute bool `json:"useExternalRoute,omitempty"`
+	UseExternalRoute bool       `json:"useExternalRoute,omitempty"`
+	Jvm              *JvmObject `json:"jvm,omitempty"`
 }
 
 // KieAppJmsObject messaging specification to be used by the KieApp
@@ -599,6 +602,7 @@ type EnvTemplate struct {
 	Dashbuilder      DashbuilderTemplate      `json:"dashbuilder,omitempty"`
 	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
 	Constants        TemplateConstants        `json:"constants,omitempty"`
+	UseOpenshiftCA   bool                     `json:"useOpenshiftCA,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -762,16 +766,17 @@ type DatabaseTemplate struct {
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
-	OmitImageStream  bool   `json:"omitImageStream"`
-	Replicas         int32  `json:"replicas,omitempty"`
-	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
-	Protocol         string `json:"protocol,omitempty"`
-	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
-	ImageContext     string `json:"imageContext,omitempty"`
-	Image            string `json:"image,omitempty"`
-	ImageTag         string `json:"imageTag,omitempty"`
-	ImageURL         string `json:"imageURL,omitempty"`
-	StorageClassName string `json:"storageClassName,omitempty"`
+	OmitImageStream  bool      `json:"omitImageStream"`
+	Replicas         int32     `json:"replicas,omitempty"`
+	KeystoreSecret   string    `json:"keystoreSecret,omitempty"`
+	Protocol         string    `json:"protocol,omitempty"`
+	UseExternalRoute bool      `json:"useExternalRoute,omitempty"`
+	ImageContext     string    `json:"imageContext,omitempty"`
+	Image            string    `json:"image,omitempty"`
+	ImageTag         string    `json:"imageTag,omitempty"`
+	ImageURL         string    `json:"imageURL,omitempty"`
+	StorageClassName string    `json:"storageClassName,omitempty"`
+	Jvm              JvmObject `json:"jvm,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type

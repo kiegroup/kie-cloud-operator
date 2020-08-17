@@ -120,6 +120,16 @@ const (
 	KeystoreAlias = "jboss"
 	// KeystoreName used when creating Secret
 	KeystoreName = "keystore.jks"
+	// TruststoreSecret is the default format for truststore secret names
+	TruststoreSecret = "-truststore"
+	// TruststoreName used when creating Secret
+	TruststoreName = "truststore.jks"
+	// TruststorePath used when mounting Secret
+	TruststorePath = "/etc/openshift-truststore-volume"
+	// TruststorePwd used when creating Secret
+	TruststorePwd = "changeit"
+	// CaBundleKey ...
+	CaBundleKey = "ca-bundle.crt"
 	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size

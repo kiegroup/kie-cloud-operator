@@ -2053,6 +2053,121 @@ func TestKieAppDefaults(t *testing.T) {
 	assert.Len(t, cr.Status.Applied.Objects.Servers, 1)
 }
 
+func TestOpenshiftCA(t *testing.T) {
+	smartOptsAppend := "testing"
+	dashOptsAppend := "-Djavax.net.ssl.trustStoreType=jks"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Jvm: &api.JvmObject{
+						JavaOptsAppend: dashOptsAppend,
+					},
+				},
+				SmartRouter: &api.SmartRouterObject{
+					Jvm: &api.JvmObject{
+						JavaOptsAppend: smartOptsAppend,
+					},
+				},
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
+	assert.False(t, cr.Status.Applied.UseOpenshiftCA)
+	assert.False(t, IsOcpCA(cr))
+	assert.Empty(t, env.Others[0].ConfigMaps)
+	trustVolMnt := corev1.VolumeMount{
+		Name:      cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+		MountPath: constants.TruststorePath,
+		ReadOnly:  true,
+	}
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	trustVol := corev1.Volume{
+		Name: cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+			},
+		},
+	}
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+
+	cr.Spec.UseOpenshiftCA = true
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.True(t, cr.Status.Applied.UseOpenshiftCA)
+	assert.True(t, IsOcpCA(cr))
+	assert.Len(t, env.Others[0].ConfigMaps, 1)
+	// Truststore volumes are mounted
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Console.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Jvm)
+
+	for _, caOption := range caOptsAppend {
+		assert.Contains(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend, caOption)
+	}
+	assert.NotEqual(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Contains(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend, smartOptsAppend)
+	assert.NotEqual(t, dashOptsAppend, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
+	assert.Contains(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend, dashOptsAppend)
+	envVar := corev1.EnvVar{
+		Name:  "JAVA_OPTS_APPEND",
+		Value: strings.Join(caOptsAppend, " "),
+	}
+	smartRouterVar := corev1.EnvVar{
+		Name:  "JAVA_OPTS_APPEND",
+		Value: strings.Join(append([]string{smartOptsAppend}, caOptsAppend...), " "),
+	}
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, smartRouterVar)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+
+	cr.Spec.Version = "7.10.1"
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
+	assert.False(t, IsOcpCA(cr))
+	assert.Equal(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Empty(t, env.Others[0].ConfigMaps)
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+
+	assert.Empty(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Empty(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend)
+}
 func TestMergeTrialAndCommonConfig(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4980,6 +5095,42 @@ func TestJvmEmptyConsole(t *testing.T) {
 	}
 	env, _ := GetEnvironment(cr, test.MockService())
 	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmDefaultSmartRouter(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptySmartRouter(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestJvmDefaultServers(t *testing.T) {
