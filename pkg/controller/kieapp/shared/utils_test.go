@@ -2,11 +2,11 @@ package shared
 
 import (
 	"bytes"
-	"crypto/x509"
+	"io/ioutil"
 	"testing"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	keystore "github.com/pavel-v-chernykh/keystore-go"
+	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -59,21 +59,61 @@ func TestGetEnvVar(t *testing.T) {
 
 func TestGenerateKeystore(t *testing.T) {
 	password := GeneratePassword(8)
-	assert.EqualValues(t, 8, len(password))
+	assert.Len(t, password, 8)
 
 	commonName := "test-https"
-	keyBytes := GenerateKeystore(commonName, password)
-	keyStore, err := keystore.Decode(bytes.NewReader(keyBytes), password)
+	keyBytes, err := GenerateKeystore(commonName, password)
+	assert.Nil(t, err)
+	ok, err := IsValidKeyStore(commonName, password, keyBytes)
+	assert.True(t, ok)
+	assert.Nil(t, err)
+}
+
+func TestGenerateTruststore(t *testing.T) {
+	caBundle, err := ioutil.ReadFile("test-" + constants.CaBundleKey)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, caBundle)
+
+	trust1, err := createTruststoreObject(caBundle)
+	assert.Nil(t, err)
+	certChainLen := 129
+	assert.Len(t, trust1.Aliases(), certChainLen)
+
+	trustBytes, err := GenerateTruststore(caBundle)
 	assert.Nil(t, err)
 
-	derKey := keyStore[constants.KeystoreAlias].(*keystore.PrivateKeyEntry).PrivKey
-	_, err = x509.ParsePKCS8PrivateKey(derKey)
+	existingtTrustStore := keystore.New(keystore.WithOrderedAliases())
+	err = existingtTrustStore.Load(bytes.NewReader(trustBytes), []byte(constants.TruststorePwd))
+	assert.Nil(t, err)
+	assert.Len(t, existingtTrustStore.Aliases(), certChainLen)
+
+	ok, err := IsValidTruststore(caBundle, trustBytes)
+	assert.True(t, ok)
+	assert.Nil(t, err)
+}
+
+func TestTruststoreInvalid(t *testing.T) {
+	caBundle, err := ioutil.ReadFile("test-" + constants.CaBundleKey)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, caBundle)
+
+	trust1, err := createTruststoreObject(caBundle)
+	assert.Nil(t, err)
+	certChainLen := 129
+	assert.Len(t, trust1.Aliases(), certChainLen)
+
+	emptyCa := []byte{}
+	trustBytes1, err := GenerateTruststore(caBundle)
+	assert.Nil(t, err)
+	ok, err := IsValidTruststore(emptyCa, trustBytes1)
+	assert.False(t, ok)
 	assert.Nil(t, err)
 
-	cert := keyStore[constants.KeystoreAlias].(*keystore.PrivateKeyEntry).CertChain[0].Content
-	certificate, err := x509.ParseCertificate(cert)
+	trustBytes2, err := GenerateTruststore(emptyCa)
 	assert.Nil(t, err)
-	assert.Equal(t, commonName, certificate.Subject.CommonName)
+	ok, err = IsValidTruststore(caBundle, trustBytes2)
+	assert.False(t, ok)
+	assert.Nil(t, err)
 }
 
 func TestEnvVarCheck(t *testing.T) {

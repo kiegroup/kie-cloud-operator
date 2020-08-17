@@ -269,6 +269,11 @@ console:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
+                  #[[if .UseOpenshiftCA]]
+                  - name: "[[.ApplicationName]]-truststore"
+                    mountPath: "/etc/openshift-truststore-volume"
+                    readOnly: true
+                  #[[end]]
                   #[[if not .Console.Simplified]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                     mountPath: "/opt/kie/data"
@@ -291,6 +296,11 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
+              #[[if .UseOpenshiftCA]]
+              - name: "[[.ApplicationName]]-truststore"
+                secret:
+                  secretName: "[[.ApplicationName]]-truststore"
+              #[[end]]
               #[[if not .Console.Simplified]]
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
@@ -500,12 +510,71 @@ smartRouter:
                     value: "/opt/[[.Constants.Product]]-smartrouter/data"
                   - name: KIE_SERVER_ROUTER_CONFIG_WATCHER_ENABLED
                     value: "true"
+                  ## Jvm config BEGIN
+                  #[[if .SmartRouter.Jvm.JavaOptsAppend]]
+                  - name: JAVA_OPTS_APPEND
+                    value: "[[.SmartRouter.Jvm.JavaOptsAppend]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaMaxMemRatio]]
+                  - name: JAVA_MAX_MEM_RATIO
+                    value: "[[.SmartRouter.Jvm.JavaMaxMemRatio]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaInitialMemRatio]]
+                  - name: JAVA_INITIAL_MEM_RATIO
+                    value: "[[.SmartRouter.Jvm.JavaInitialMemRatio]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaMaxInitialMem]]
+                  - name: JAVA_MAX_INITIAL_MEM
+                    value: "[[.SmartRouter.Jvm.JavaMaxInitialMem]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaDiagnostics]]
+                  - name: JAVA_DIAGNOSTICS
+                    value: "[[.SmartRouter.Jvm.JavaDiagnostics]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaDebug]]
+                  - name: JAVA_DEBUG
+                    value: "[[.SmartRouter.Jvm.JavaDebug]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.JavaDebugPort]]
+                  - name: JAVA_DEBUG_PORT
+                    value: "[[.SmartRouter.Jvm.JavaDebugPort]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcMinHeapFreeRatio]]
+                  - name: GC_MIN_HEAP_FREE_RATIO
+                    value: "[[.SmartRouter.Jvm.GcMinHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcMaxHeapFreeRatio]]
+                  - name: GC_MAX_HEAP_FREE_RATIO
+                    value: "[[.SmartRouter.Jvm.GcMaxHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcTimeRatio]]
+                  - name: GC_TIME_RATIO
+                    value: "[[.SmartRouter.Jvm.GcTimeRatio]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcAdaptiveSizePolicyWeight]]
+                  - name: GC_ADAPTIVE_SIZE_POLICY_WEIGHT
+                    value: "[[.SmartRouter.Jvm.GcAdaptiveSizePolicyWeight]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcMaxMetaspaceSize]]
+                  - name: GC_MAX_METASPACE_SIZE
+                    value: "[[.SmartRouter.Jvm.GcMaxMetaspaceSize]]"
+                  #[[end]]
+                  #[[if .SmartRouter.Jvm.GcContainerOptions]]
+                  - name: GC_CONTAINER_OPTIONS
+                    value: "[[.SmartRouter.Jvm.GcContainerOptions]]"
+                  #[[end]]
+                  ## Jvm config END
                 volumeMounts:
                   - name: "[[.ApplicationName]]-smartrouter"
                     mountPath: "/opt/[[.Constants.Product]]-smartrouter/data"
                   - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
+                  #[[if .UseOpenshiftCA]]
+                  - name: "[[.ApplicationName]]-truststore"
+                    mountPath: "/etc/openshift-truststore-volume"
+                    readOnly: true
+                  #[[end]]
             volumes:
               - name: "[[.ApplicationName]]-smartrouter"
                 persistentVolumeClaim:
@@ -513,6 +582,11 @@ smartRouter:
               - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                 secret:
                   secretName: "[[.SmartRouter.KeystoreSecret]]"
+              #[[if .UseOpenshiftCA]]
+              - name: "[[.ApplicationName]]-truststore"
+                secret:
+                  secretName: "[[.ApplicationName]]-truststore"
+              #[[end]]
   services:
     - spec:
         ports:
@@ -865,6 +939,11 @@ servers:
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
+                    #[[if $.UseOpenshiftCA]]
+                    - name: "[[$.ApplicationName]]-truststore"
+                      mountPath: "/etc/openshift-truststore-volume"
+                      readOnly: true
+                    #[[end]]
                     #[[if $.Auth.RoleMapper.From]]
                     - name: "[[$.Constants.RoleMapperVolume]]"
                       mountPath: "[[$.Auth.RoleMapper.MountPath]]"
@@ -874,6 +953,11 @@ servers:
                 - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
+                #[[if $.UseOpenshiftCA]]
+                - name: "[[$.ApplicationName]]-truststore"
+                  secret:
+                    secretName: "[[$.ApplicationName]]-truststore"
+                #[[end]]
                 #[[if $.Auth.RoleMapper.From]]
                 - name: "[[$.Constants.RoleMapperVolume]]"
                 #[[if eq $.Auth.RoleMapper.From.Kind "ConfigMap"]]
@@ -1005,4 +1089,13 @@ others:
         roleRef:
           kind: Role
           name: "[[.ApplicationName]]-[[.Constants.Product]]svc-edit"
+
+    #[[if .UseOpenshiftCA]]
+    configMaps:
+      - metadata:
+          name: "[[.ApplicationName]]-kieapp-ca-bundle"
+          labels:
+            app: "[[.ApplicationName]]"
+            "config.openshift.io/inject-trusted-cabundle": "true"
+    #[[end]]
 # Other required resources END

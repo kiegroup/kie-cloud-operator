@@ -16,7 +16,7 @@ require (
 	github.com/openshift/client-go v0.0.0-00010101000000-000000000000
 	github.com/operator-framework/api v0.3.12
 	github.com/operator-framework/operator-sdk v0.19.2
-	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
+	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.42.1
 	github.com/prometheus/common v0.10.0

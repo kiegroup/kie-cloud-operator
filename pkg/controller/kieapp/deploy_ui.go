@@ -31,7 +31,8 @@ import (
 )
 
 var consoleName = "console-cr-form"
-var operatorName string
+var operatorName = os.Getenv(constants.OpNameEnv)
+var caConfigMapName = operatorName + "-trusted-cabundle"
 
 func shouldDeployConsole() bool {
 	shouldDeploy := os.Getenv(constants.OpUIEnv)
@@ -46,7 +47,6 @@ func shouldDeployConsole() bool {
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	log.Debugf("Checking operator-ui deployment")
 	namespace := os.Getenv(constants.NameSpaceEnv)
-	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
@@ -59,7 +59,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
 		existing := &corev1.ConfigMap{}
 		new := getCaConfigMap(namespace)
-		controllerutil.SetOwnerReference(operator, new, scheme)
+		new.SetOwnerReferences(operator.GetOwnerReferences())
 		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("Creating ConfigMap ", new.Name)
@@ -279,7 +279,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
 	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 		caVolume := corev1.Volume{
-			Name: operatorName + "-trusted-cabundle",
+			Name: caConfigMapName,
 		}
 		caVolume.ConfigMap = &corev1.ConfigMapVolumeSource{
 			Items: []corev1.KeyToPath{{Key: "ca-bundle.crt", Path: "ca-bundle.crt"}},
@@ -356,7 +356,7 @@ func getCaConfigMap(namespace string) *corev1.ConfigMap {
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      operatorName + "-trusted-cabundle",
+			Name:      caConfigMapName,
 			Namespace: namespace,
 			Labels:    labels,
 		},

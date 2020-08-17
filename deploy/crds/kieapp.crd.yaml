@@ -2065,6 +2065,105 @@ spec:
                         description: The image tag to use e.g. 7.9.0, this param is
                           optional for custom image.
                         type: string
+                      jvm:
+                        description: JvmObject JVM specification to be used by the
+                          KieApp
+                        properties:
+                          gcAdaptiveSizePolicyWeight:
+                            description: The weighting given to the current GC time
+                              versus previous GC times  when determining the new heap
+                              size. e.g. '90'
+                            format: int32
+                            type: integer
+                          gcContainerOptions:
+                            description: Specify Java GC to use. The value of this
+                              variable should contain the necessary JRE command-line
+                              options to specify the required GC, which will override
+                              the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
+                            type: string
+                          gcMaxHeapFreeRatio:
+                            description: Maximum percentage of heap free after GC
+                              to avoid shrinking. e.g. '40'
+                            format: int32
+                            type: integer
+                          gcMaxMetaspaceSize:
+                            description: The maximum metaspace size in Mega bytes
+                              unit e.g. 400
+                            format: int32
+                            type: integer
+                          gcMinHeapFreeRatio:
+                            description: Minimum percentage of heap free after GC
+                              to avoid expansion. e.g. '20'
+                            format: int32
+                            type: integer
+                          gcTimeRatio:
+                            description: Specifies the ratio of the time spent outside
+                              the garbage collection (for example, the time spent
+                              for application execution) to the time spent in the
+                              garbage collection, it's desirable that not more than
+                              1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means
+                              spent 20% on gc.
+                            format: int32
+                            type: integer
+                          javaDebug:
+                            description: If set remote debugging will be switched
+                              on. Disabled by default. e.g. 'true'
+                            type: boolean
+                          javaDebugPort:
+                            description: Port used for remote debugging. Defaults
+                              to 5005. e.g. '8787'
+                            format: int32
+                            type: integer
+                          javaDiagnostics:
+                            description: Set this to get some diagnostics information
+                              to standard output when things are happening. Disabled
+                              by default. e.g. 'true'
+                            type: boolean
+                          javaInitialMemRatio:
+                            description: Is used when no '-Xms' option is given in
+                              JAVA_OPTS. This is used to calculate a default initial
+                              heap memory based on the maximum heap memory. If used
+                              in a container without any memory constraints for the
+                              container then this option has no effect. If there is
+                              a memory constraint then '-Xms' is set to a ratio of
+                              the '-Xmx' memory as set here. The default is '25' which
+                              means 25% of the '-Xmx' is used as the initial heap
+                              size. You can skip this mechanism by setting this value
+                              to '0' in which case no '-Xms' option is added. e.g.
+                              '25'
+                            format: int32
+                            type: integer
+                          javaMaxInitialMem:
+                            description: Is used when no '-Xms' option is given in
+                              JAVA_OPTS. This is used to calculate the maximum value
+                              of the initial heap memory. If used in a container without
+                              any memory constraints for the container then this option
+                              has no effect. If there is a memory constraint then
+                              '-Xms' is limited to the value set here. The default
+                              is 4096Mb which means the calculated value of '-Xms'
+                              never will be greater than 4096Mb. The value of this
+                              variable is expressed in MB. e.g. '4096'
+                            format: int32
+                            type: integer
+                          javaMaxMemRatio:
+                            description: Is used when no '-Xmx' option is given in
+                              JAVA_OPTS. This is used to calculate a default maximal
+                              heap memory based on a containers restriction. If used
+                              in a container without any memory constraints for the
+                              container then this option has no effect. If there is
+                              a memory constraint then '-Xmx' is set to a ratio of
+                              the container available memory as set here. The default
+                              is '50' which means 50% of the available memory is used
+                              as an upper boundary. You can skip this mechanism by
+                              setting this value to '0' in which case no '-Xmx' option
+                              is added.
+                            format: int32
+                            type: integer
+                          javaOptsAppend:
+                            description: User specified Java options to be appended
+                              to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                            type: string
+                        type: object
                       keystoreSecret:
                         description: Keystore secret name
                         type: string
@@ -2134,6 +2233,10 @@ spec:
               useImageTags:
                 description: Set true to enable image tags, disabled by default. This
                   will leverage image tags instead of the image digests.
+                type: boolean
+              useOpenshiftCA:
+                description: Set true to use Openshift's CA bundle as a truststore,
+                  instead of java's cacert.
                 type: boolean
               version:
                 description: The version of the application deployment.
@@ -4219,6 +4322,106 @@ spec:
                             description: The image tag to use e.g. 7.9.0, this param
                               is optional for custom image.
                             type: string
+                          jvm:
+                            description: JvmObject JVM specification to be used by
+                              the KieApp
+                            properties:
+                              gcAdaptiveSizePolicyWeight:
+                                description: The weighting given to the current GC
+                                  time versus previous GC times  when determining
+                                  the new heap size. e.g. '90'
+                                format: int32
+                                type: integer
+                              gcContainerOptions:
+                                description: Specify Java GC to use. The value of
+                                  this variable should contain the necessary JRE command-line
+                                  options to specify the required GC, which will override
+                                  the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
+                                type: string
+                              gcMaxHeapFreeRatio:
+                                description: Maximum percentage of heap free after
+                                  GC to avoid shrinking. e.g. '40'
+                                format: int32
+                                type: integer
+                              gcMaxMetaspaceSize:
+                                description: The maximum metaspace size in Mega bytes
+                                  unit e.g. 400
+                                format: int32
+                                type: integer
+                              gcMinHeapFreeRatio:
+                                description: Minimum percentage of heap free after
+                                  GC to avoid expansion. e.g. '20'
+                                format: int32
+                                type: integer
+                              gcTimeRatio:
+                                description: Specifies the ratio of the time spent
+                                  outside the garbage collection (for example, the
+                                  time spent for application execution) to the time
+                                  spent in the garbage collection, it's desirable
+                                  that not more than 1 / (1 + n) e.g. 99 and means
+                                  1% spent on gc, 4 means spent 20% on gc.
+                                format: int32
+                                type: integer
+                              javaDebug:
+                                description: If set remote debugging will be switched
+                                  on. Disabled by default. e.g. 'true'
+                                type: boolean
+                              javaDebugPort:
+                                description: Port used for remote debugging. Defaults
+                                  to 5005. e.g. '8787'
+                                format: int32
+                                type: integer
+                              javaDiagnostics:
+                                description: Set this to get some diagnostics information
+                                  to standard output when things are happening. Disabled
+                                  by default. e.g. 'true'
+                                type: boolean
+                              javaInitialMemRatio:
+                                description: Is used when no '-Xms' option is given
+                                  in JAVA_OPTS. This is used to calculate a default
+                                  initial heap memory based on the maximum heap memory.
+                                  If used in a container without any memory constraints
+                                  for the container then this option has no effect.
+                                  If there is a memory constraint then '-Xms' is set
+                                  to a ratio of the '-Xmx' memory as set here. The
+                                  default is '25' which means 25% of the '-Xmx' is
+                                  used as the initial heap size. You can skip this
+                                  mechanism by setting this value to '0' in which
+                                  case no '-Xms' option is added. e.g. '25'
+                                format: int32
+                                type: integer
+                              javaMaxInitialMem:
+                                description: Is used when no '-Xms' option is given
+                                  in JAVA_OPTS. This is used to calculate the maximum
+                                  value of the initial heap memory. If used in a container
+                                  without any memory constraints for the container
+                                  then this option has no effect. If there is a memory
+                                  constraint then '-Xms' is limited to the value set
+                                  here. The default is 4096Mb which means the calculated
+                                  value of '-Xms' never will be greater than 4096Mb.
+                                  The value of this variable is expressed in MB. e.g.
+                                  '4096'
+                                format: int32
+                                type: integer
+                              javaMaxMemRatio:
+                                description: Is used when no '-Xmx' option is given
+                                  in JAVA_OPTS. This is used to calculate a default
+                                  maximal heap memory based on a containers restriction.
+                                  If used in a container without any memory constraints
+                                  for the container then this option has no effect.
+                                  If there is a memory constraint then '-Xmx' is set
+                                  to a ratio of the container available memory as
+                                  set here. The default is '50' which means 50% of
+                                  the available memory is used as an upper boundary.
+                                  You can skip this mechanism by setting this value
+                                  to '0' in which case no '-Xmx' option is added.
+                                format: int32
+                                type: integer
+                              javaOptsAppend:
+                                description: User specified Java options to be appended
+                                  to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                                type: string
+                            type: object
                           keystoreSecret:
                             description: Keystore secret name
                             type: string
@@ -4288,6 +4491,10 @@ spec:
                   useImageTags:
                     description: Set true to enable image tags, disabled by default.
                       This will leverage image tags instead of the image digests.
+                    type: boolean
+                  useOpenshiftCA:
+                    description: Set true to use Openshift's CA bundle as a truststore,
+                      instead of java's cacert.
                     type: boolean
                   version:
                     description: The version of the application deployment.

@@ -29,7 +29,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var log = logs.GetLogger("kieapp.defaults")
+var (
+	log          = logs.GetLogger("kieapp.defaults")
+	caOptsAppend = []string{
+		"-Djavax.net.ssl.trustStoreType=jks",
+		"-Djavax.net.ssl.trustStore=" + constants.TruststorePath + "/" + constants.TruststoreName,
+		"-Djavax.net.ssl.trustStorePassword=" + constants.TruststorePwd,
+	}
+)
 
 // GetEnvironment returns an Environment from merging the common config and the config
 // related to the environment set in the KieApp definition
@@ -287,7 +294,6 @@ func findCustomObjectByName(template api.CustomObject, objects []api.CustomObjec
 }
 
 func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
-
 	SetDefaults(cr)
 	serversConfig, err := getServersConfig(cr)
 	if err != nil {
@@ -298,6 +304,9 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		Servers:     serversConfig,
 		SmartRouter: getSmartRouterTemplate(cr),
 		Constants:   *getTemplateConstants(cr),
+	}
+	if IsOcpCA(cr) {
+		envTemplate.UseOpenshiftCA = cr.Status.Applied.UseOpenshiftCA
 	}
 
 	dashbuilderTemplate, err := getDashbuilderTemplate(cr, serversConfig, &envTemplate.Console)
@@ -428,6 +437,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		}
 
 		// JVM configuration
+		cr.Status.Applied.Objects.Console.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.Console.Jvm)
 		if cr.Status.Applied.Objects.Console.Jvm != nil {
 			template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
 		}
@@ -490,6 +500,7 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		applyDashbuilderConfig(dashbuilderTemplate, *cr, serversConfig, console)
 
 		// JVM configuration
+		cr.Status.Applied.Objects.Dashbuilder.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.Dashbuilder.Jvm)
 		if cr.Status.Applied.Objects.Dashbuilder.Jvm != nil {
 			dashbuilderTemplate.Jvm = *cr.Status.Applied.Objects.Dashbuilder.Jvm.DeepCopy()
 		}
@@ -585,6 +596,11 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
+		// JVM configuration
+		cr.Status.Applied.Objects.SmartRouter.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.SmartRouter.Jvm)
+		if cr.Status.Applied.Objects.SmartRouter.Jvm != nil {
+			template.Jvm = *cr.Status.Applied.Objects.SmartRouter.Jvm.DeepCopy()
+		}
 	}
 	return template
 }
@@ -640,6 +656,21 @@ func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
 		return serverSets
 	}
 	return newSets
+}
+
+func setCAJavaAppend(cr *api.KieApp, jvm *api.JvmObject) *api.JvmObject {
+	if IsOcpCA(cr) {
+		if jvm == nil {
+			jvm = &api.JvmObject{}
+		}
+		for _, caOption := range caOptsAppend {
+			if !strings.Contains(jvm.JavaOptsAppend, caOption) {
+				jvm.JavaOptsAppend = strings.Join([]string{jvm.JavaOptsAppend, caOption}, " ")
+			}
+		}
+		jvm.JavaOptsAppend = strings.TrimSpace(jvm.JavaOptsAppend)
+	}
+	return jvm
 }
 
 // Returns the templates to use depending on whether the spec was defined with a common configuration
@@ -731,17 +762,17 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.Jms = *jmsConfig
 			}
 
-			instanceTemplate := template.DeepCopy()
-			if instanceTemplate.KeystoreSecret == "" {
-				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
+			if template.KeystoreSecret == "" {
+				template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, template.KieName)
 			}
 
 			// JVM configuration
+			serverSet.Jvm = setCAJavaAppend(cr, serverSet.Jvm)
 			if serverSet.Jvm != nil {
-				instanceTemplate.Jvm = *serverSet.Jvm.DeepCopy()
+				template.Jvm = *serverSet.Jvm.DeepCopy()
 			}
 
-			servers = append(servers, *instanceTemplate)
+			servers = append(servers, template)
 		}
 
 	}
@@ -1271,6 +1302,7 @@ func SetDefaults(cr *api.KieApp) {
 	}
 
 	if specApply.Objects.SmartRouter != nil {
+		checkJvmOnSmartRouter(specApply.Objects.SmartRouter)
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterLimits, constants.SmartRouterRequests)
 	}
 
@@ -1303,6 +1335,13 @@ func checkJvmOnDashbuilder(dashbuilder *api.DashbuilderObject) {
 		dashbuilder.Jvm = &api.JvmObject{}
 	}
 	setJvmDefault(dashbuilder.Jvm)
+}
+
+func checkJvmOnSmartRouter(smartrouter *api.SmartRouterObject) {
+	if smartrouter.Jvm == nil {
+		smartrouter.Jvm = &api.JvmObject{}
+	}
+	setJvmDefault(smartrouter.Jvm)
 }
 
 func checkJvmOnServer(server *api.KieServerSet) {
@@ -1601,6 +1640,10 @@ func isGE78(cr *api.KieApp) bool {
 
 func isGE710(cr *api.KieApp) bool {
 	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.10") >= 0
+}
+
+func IsOcpCA(cr *api.KieApp) bool {
+	return cr.Status.Applied.UseOpenshiftCA && semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.11") >= 0
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,
