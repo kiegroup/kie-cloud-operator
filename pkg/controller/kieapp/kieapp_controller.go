@@ -327,7 +327,7 @@ func (reconciler *Reconciler) verifyExternalReferences(cr *api.KieApp) error {
 	return err
 }
 
-func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *corev1.ObjectReference) error {
+func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *api.ObjRef) error {
 	if ref == nil {
 		return nil
 	}

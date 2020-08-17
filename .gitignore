@@ -6,6 +6,7 @@ pkg/controller/kieapp/defaults/packrd
 pkg/ui/packrd
 *-packr.go
 *.tar.gz
+deploy/crds/app.kiegroup.org_kieapps_crd.yaml
 # cekit exception(s)
 !modules/builder/kie-cloud-operator.tar.gz
 

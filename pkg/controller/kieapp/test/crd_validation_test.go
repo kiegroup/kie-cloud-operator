@@ -111,16 +111,6 @@ func TestCompleteCRD(t *testing.T) {
 			// ...
 		} else if strings.Contains(missing.Path, "/env/valueFrom/") {
 			//The valueFrom is not expected to be used and is not fully defined TODO: verify
-		} else if strings.HasSuffix(missing.Path, "/from/uid") {
-			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
-		} else if strings.HasSuffix(missing.Path, "/from/namespace") {
-			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
-		} else if strings.HasSuffix(missing.Path, "/from/apiVersion") {
-			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
-		} else if strings.HasSuffix(missing.Path, "/from/resourceVersion") {
-			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
-		} else if strings.HasSuffix(missing.Path, "/from/fieldPath") {
-			//The ObjectReference in From is not expected to be used and is not fully defined TODO: verify
 		} else {
 			assert.Fail(t, "Discrepancy between CRD and Struct", "Missing or incorrect schema validation at %v, expected type %v", missing.Path, missing.Type)
 		}

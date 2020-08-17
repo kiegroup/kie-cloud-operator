@@ -778,16 +778,18 @@ func TestExtensionImageBuildConfiguration(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "mssql",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-									BackgroundValidation: "true",
-									MinPoolSize:          "10",
-									MaxPoolSize:          "10",
-									Username:             "sqlserverUser",
-									Password:             "sqlserverPwd",
-									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mssql",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+										BackgroundValidation: "true",
+										MinPoolSize:          "10",
+										MaxPoolSize:          "10",
+										Username:             "sqlserverUser",
+										Password:             "sqlserverPwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
@@ -830,16 +832,18 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "mssql",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-									BackgroundValidation: "true",
-									MinPoolSize:          "10",
-									MaxPoolSize:          "10",
-									Username:             "sqlserverUser",
-									Password:             "sqlserverPwd",
-									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mssql",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+										BackgroundValidation: "true",
+										MinPoolSize:          "10",
+										MaxPoolSize:          "10",
+										Username:             "sqlserverUser",
+										Password:             "sqlserverPwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
@@ -917,10 +921,12 @@ func TestBuildConfiguration(t *testing.T) {
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
-							Kind:      "ImageStreamTag",
-							Name:      "test",
-							Namespace: "other-ns",
+						From: &api.ImageObjRef{
+							Kind: "ImageStreamTag",
+							ObjectReference: api.ObjectReference{
+								Name:      "test",
+								Namespace: "other-ns",
+							},
 						},
 					},
 				},
@@ -2023,15 +2029,19 @@ func TestSetKieServerFrom(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Name: "one",
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: helloRules,
+							ObjectReference: api.ObjectReference{
+								Name: helloRules,
+							},
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: byeRules,
+							ObjectReference: api.ObjectReference{
+								Name: byeRules,
+							},
 						},
 					},
 				},
@@ -2057,15 +2067,19 @@ func TestSetKieServerFromBuild(t *testing.T) {
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: helloRules,
+							ObjectReference: api.ObjectReference{
+								Name: helloRules,
+							},
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: byeRules,
+							ObjectReference: api.ObjectReference{
+								Name: byeRules,
+							},
 						},
 						Build: &api.KieAppBuildObject{},
 					},
@@ -2105,10 +2119,12 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 									Secret: "s3cr3t",
 								},
 							},
-							From: &corev1.ObjectReference{
-								Kind:      "ImageStreamTag",
-								Name:      "custom-kieserver",
-								Namespace: "",
+							From: &api.ImageObjRef{
+								Kind: "ImageStreamTag",
+								ObjectReference: api.ObjectReference{
+									Name:      "custom-kieserver",
+									Namespace: "",
+								},
 							},
 						},
 					},
@@ -2224,14 +2240,16 @@ func TestDatabaseExternal(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "oracle",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
-									BackgroundValidation: "false",
-									Username:             "oracleUser",
-									Password:             "oraclePwd",
-									JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "oracle",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "oracleUser",
+										Password:             "oraclePwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.Oracle10gDialect",
 							},
@@ -3069,9 +3087,11 @@ func TestGitHooks(t *testing.T) {
 	}, {
 		name: "ConfigMap GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
-				Name: "test-cm",
+				ObjectReference: api.ObjectReference{
+					Name: "test-cm",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3095,9 +3115,11 @@ func TestGitHooks(t *testing.T) {
 		name: "Secret GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "Secret",
-				Name: "test-secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test-secret",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3119,9 +3141,11 @@ func TestGitHooks(t *testing.T) {
 		name: "PersistentVolumeClaim GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
-				Name: "test-pvc",
+				ObjectReference: api.ObjectReference{
+					Name: "test-pvc",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3142,9 +3166,11 @@ func TestGitHooks(t *testing.T) {
 		name: "SSH Secret for GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
-				Name: "test-pvc",
+				ObjectReference: api.ObjectReference{
+					Name: "test-pvc",
+				},
 			},
 			SSHSecret: "test-ssh-secret",
 		},
@@ -3678,17 +3704,19 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
 									},
-									ExternalConfig: &api.CommonExternalDatabaseObject{
-										Driver:                     "mariadb",
-										JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
-										Username:                   "pim",
-										Password:                   "pim",
-										MinPoolSize:                "10",
-										MaxPoolSize:                "10",
-										ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
-										ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
-										BackgroundValidation:       "true",
-										BackgroundValidationMillis: "150000",
+									ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+										JdbcURL: "jdbc:mariadb://hello-mariadb:3306/pimdb",
+										CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+											Driver:                     "mariadb",
+											Username:                   "pim",
+											Password:                   "pim",
+											MinPoolSize:                "10",
+											MaxPoolSize:                "10",
+											ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+											ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+											BackgroundValidation:       "true",
+											BackgroundValidationMillis: "150000",
+										},
 									},
 								},
 							},
@@ -3724,17 +3752,19 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					InternalDatabaseObject: api.InternalDatabaseObject{
 						Type: api.DatabaseExternal,
 					},
-					ExternalConfig: &api.CommonExternalDatabaseObject{
-						Driver:                     "mariadb",
-						JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
-						Username:                   "pim",
-						Password:                   "pim",
-						MinPoolSize:                "10",
-						MaxPoolSize:                "10",
-						ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
-						ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
-						BackgroundValidation:       "true",
-						BackgroundValidationMillis: "150000",
+					ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+						JdbcURL: "jdbc:mariadb://hello-mariadb:3306/pimdb",
+						CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+							Driver:                     "mariadb",
+							Username:                   "pim",
+							Password:                   "pim",
+							MinPoolSize:                "10",
+							MaxPoolSize:                "10",
+							ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+							ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+							BackgroundValidation:       "true",
+							BackgroundValidationMillis: "150000",
+						},
 					},
 				},
 			},
@@ -3828,11 +3858,13 @@ func TestMergeProcessMigrationDB(t *testing.T) {
 							InternalDatabaseObject: api.InternalDatabaseObject{
 								Type: api.DatabaseExternal,
 							},
-							ExternalConfig: &api.CommonExternalDatabaseObject{
-								Driver:   "mariadb",
-								JdbcURL:  "jdbc:mariadb://test-process-migration-mysql:3306/pimdb",
-								Username: "pim",
-								Password: "pim",
+							ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+								JdbcURL: "jdbc:mariadb://test-process-migration-mysql:3306/pimdb",
+								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+									Driver:   "mariadb",
+									Username: "pim",
+									Password: "pim",
+								},
 							},
 						},
 					},
@@ -4178,7 +4210,7 @@ func TestGetDatabaseDeploymentTemplate(t *testing.T) {
 						InternalDatabaseObject: api.InternalDatabaseObject{
 							Type: api.DatabaseExternal,
 						},
-						ExternalConfig: &api.CommonExternalDatabaseObject{},
+						ExternalConfig: &api.CommonExtDBObjectRequiredURL{},
 					},
 				},
 			},
