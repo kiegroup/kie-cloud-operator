@@ -7,8 +7,9 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.9.0
-    createdAt: "2020-08-10 12:22:25"
+    createdAt: "2020-08-18 08:45:47"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat
     tectonic-visibility: ocs
