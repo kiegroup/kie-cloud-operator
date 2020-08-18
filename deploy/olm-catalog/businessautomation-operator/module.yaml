@@ -1,0 +1,4 @@
+schema_version: 1
+
+name: olm-catalog
+version: "1.0"

@@ -56,17 +56,21 @@ lint:
 build:
 	./hack/go-build.sh
 
-.PHONY: meta
-meta:
-	LOCAL=true ./hack/go-build-metadata.sh
+.PHONY: bundle
+bundle:
+	LOCAL=true ./hack/go-build-bundle.sh
 
-.PHONY: meta-scratch
-meta-scratch:
-	./hack/go-build-metadata.sh
+.PHONY: bundle-scratch
+bundle-scratch:
+	./hack/go-build-bundle.sh
 
-.PHONY: meta-release
-meta-release:
-	./hack/go-build-metadata.sh release
+.PHONY: bundle-release
+bundle-release:
+	./hack/go-build-bundle.sh release
+
+.PHONY: bundle-upstream
+bundle-upstream:
+	UPSTREAM=true ./hack/go-build-bundle.sh
 
 .PHONY: rhel
 rhel:

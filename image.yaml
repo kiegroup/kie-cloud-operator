@@ -1,8 +1,8 @@
 - schema_version: 1
   name: "builder"
   description: "Golang builder image"
-  version: "7.9.0"
-  from: "rhel8-go-toolset:1.13.4-released"
+  version: ""
+  from: "registry.redhat.io/ubi8/go-toolset:1.13.4"
   modules:
     repositories:
       - name: builder
@@ -19,19 +19,19 @@
 - schema_version: 1
   name: "rhpam-7/rhpam-rhel8-operator"
   description: "Red Hat Business Automation Operator"
-  version: "7.9.0"
-  from: "ubi8-minimal:8-released"
+  version: ""
+  from: "registry.redhat.io/ubi8-minimal"
   labels:
-    - name: "maintainer"
-      value: "bsig-cloud@redhat.com"
-    - name: "com.redhat.component"
-      value: "rhpam-7-rhel8-operator-container"
-    - name: "io.k8s.description"
-      value: "Operator for deploying RHPAM & RHDM"
-    - name: "io.k8s.display-name"
-      value: "Red Hat Business Automation Operator"
-    - name: "io.openshift.tags"
-      value: "rhpam,rhdm,operator"
+    - name: maintainer
+      value: bsig-cloud@redhat.com
+    - name: com.redhat.component
+      value: rhpam-7-rhel8-operator-container
+    - name: io.k8s.description
+      value: Operator for deploying RHPAM & RHDM
+    - name: io.k8s.display-name
+      value: Red Hat Business Automation Operator
+    - name: io.openshift.tags
+      value: rhpam,rhdm,operator
   modules:
     repositories:
       - name: runtime

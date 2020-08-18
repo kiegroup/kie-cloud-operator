@@ -2882,6 +2882,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 	// test useImageTags = true
 	cr.Spec.UseImageTags = true
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
 	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting imagetag in CR overrides env vars
