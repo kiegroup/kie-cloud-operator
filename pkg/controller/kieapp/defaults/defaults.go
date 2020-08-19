@@ -17,14 +17,12 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	v2 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -1007,7 +1005,6 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	setKieSetNames(specApply)
 	checkJvmOnConsole(&specApply.Objects.Console)
-	setJvmDefault(specApply.Objects.Console.Jvm)
 	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
@@ -1016,7 +1013,6 @@ func SetDefaults(cr *api.KieApp) {
 		}
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
-		setJvmDefault(specApply.Objects.Servers[index].Jvm)
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
 	if specApply.Objects.SmartRouter != nil {
@@ -1043,39 +1039,40 @@ func checkJvmOnConsole(console *api.ConsoleObject) {
 	if console.Jvm == nil {
 		console.Jvm = &api.JvmObject{}
 	}
+	setJvmDefault(console.Jvm)
 }
 
 func checkJvmOnServer(server *api.KieServerSet) {
 	if server.Jvm == nil {
 		server.Jvm = &api.JvmObject{}
 	}
+	setJvmDefault(server.Jvm)
 }
 
-func setResourcesDefault(kieObject *v2.KieAppObject, limits string, requests string) {
-	if kieObject.Resources != nil {
-		if kieObject.Resources.Limits == nil {
-			kieObject.Resources.Limits = createResourceConstraint(limits)
-		}
-		if kieObject.Resources.Requests == nil {
-			kieObject.Resources.Requests = createResourceConstraint(requests)
-		}
-	} else {
-		kieObject.Resources = createResourceWithLimitsAndRequests(limits, requests)
+func setResourcesDefault(kieObject *api.KieAppObject, limits, requests string) {
+	if kieObject.Resources == nil {
+		kieObject.Resources = &corev1.ResourceRequirements{}
+	}
+	if kieObject.Resources.Limits == nil {
+		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits)}
+	}
+	if kieObject.Resources.Requests == nil {
+		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests)}
+	}
+	if kieObject.Resources.Limits.Cpu() == nil {
+		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits))
+	}
+	if kieObject.Resources.Requests.Cpu() == nil {
+		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests))
 	}
 }
 
-func createResourceWithLimitsAndRequests(limits string, requests string) *corev1.ResourceRequirements {
-	var resources = new(corev1.ResourceRequirements)
-	resources.Limits = createResourceConstraint(limits)
-	resources.Requests = createResourceConstraint(requests)
-	return resources
-}
-
-func createResourceConstraint(constraint string) v1.ResourceList {
-	item, _ := resource.ParseQuantity(constraint)
-	return corev1.ResourceList{
-		"cpu": item,
+func createResourceQuantity(constraint string) resource.Quantity {
+	item, err := resource.ParseQuantity(constraint)
+	if err != nil {
+		log.Error(err)
 	}
+	return item
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
