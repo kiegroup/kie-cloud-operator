@@ -10,19 +10,27 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // KieAppSpec defines the desired state of KieApp
 type KieAppSpec struct {
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Environment   EnvironmentType   `json:"environment,omitempty"`
-	ImageRegistry *KieAppRegistry   `json:"imageRegistry,omitempty"`
-	Objects       KieAppObjects     `json:"objects,omitempty"`
-	CommonConfig  CommonConfig      `json:"commonConfig,omitempty"`
-	Auth          *KieAppAuthObject `json:"auth,omitempty"`
-	Upgrades      KieAppUpgrades    `json:"upgrades,omitempty"`
-	UseImageTags  bool              `json:"useImageTags,omitempty"`
-	Version       string            `json:"version,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum:=rhdm-authoring-ha;rhdm-authoring;rhdm-production-immutable;rhdm-trial;rhpam-authoring-ha;rhpam-authoring;rhpam-production-immutable;rhpam-production;rhpam-trial
+	// The name of the environment used as a baseline
+	Environment EnvironmentType `json:"environment"`
+	// If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
+	ImageRegistry *KieAppRegistry `json:"imageRegistry,omitempty"`
+	// Configuration of the RHPAM components
+	Objects KieAppObjects `json:"objects,omitempty"`
+	// Specify the level of product upgrade that should be allowed when an older product version is detected
+	Upgrades KieAppUpgrades `json:"upgrades,omitempty"`
+	// Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
+	UseImageTags bool `json:"useImageTags,omitempty"`
+	// The version of the application deployment.
+	Version      string            `json:"version,omitempty"`
+	CommonConfig CommonConfig      `json:"commonConfig,omitempty"`
+	Auth         *KieAppAuthObject `json:"auth,omitempty"`
 }
 
 // EnvironmentType describes a possible application environment
@@ -49,41 +57,30 @@ const (
 	RhdmProductionImmutable EnvironmentType = "rhdm-production-immutable"
 )
 
-// EnvironmentConstants stores both the App and Replica Constants for a given environment
-type EnvironmentConstants struct {
-	App      AppConstants     `json:"app,omitempty"`
-	Replica  ReplicaConstants `json:"replica,omitempty"`
-	Database *DatabaseObject  `json:"database,omitempty"`
-	Jms      *KieAppJmsObject `json:"jms,omitempty"`
-}
-
-// AppConstants data type to store application deployment constants
-type AppConstants struct {
-	Product      string `json:"name,omitempty"`
-	Prefix       string `json:"prefix,omitempty"`
-	ImageName    string `json:"imageName,omitempty"`
-	ImageVar     string `json:"imageVar,omitempty"`
-	MavenRepo    string `json:"mavenRepo,omitempty"`
-	FriendlyName string `json:"friendlyName,omitempty"`
-}
-
 // KieAppRegistry defines the registry that should be used for rhpam images
 type KieAppRegistry struct {
-	Registry string `json:"registry,omitempty"` // Registry to use, can also be set w/ "REGISTRY" env variable
-	Insecure bool   `json:"insecure,omitempty"` // Specify whether registry is insecure, can also be set w/ "INSECURE" env variable
+	// Image registry's base 'url:port'. e.g. registry.example.com:5000. Defaults to 'registry.redhat.io'.
+	Registry string `json:"registry,omitempty"`
+	// A flag used to indicate the specified registry is insecure. Defaults to 'false'.
+	Insecure bool `json:"insecure,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // KieApp is the Schema for the kieapps API
 // +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
 // +kubebuilder:resource:path=kieapps,scope=Namespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.version`,description="The version of the application deployment"
+// +kubebuilder:printcolumn:name="Environment",type=string,JSONPath=`.spec.environment`,description="The name of the environment used as a baseline"
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`,description="The status of the KieApp deployment"
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type KieApp struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   KieAppSpec   `json:"spec,omitempty"`
+	// +kubebuilder:validation:Required
+	Spec   KieAppSpec   `json:"spec"`
 	Status KieAppStatus `json:"status,omitempty"`
 }
 
@@ -98,37 +95,40 @@ type KieAppList struct {
 
 // KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
-	// Business Central container configs
 	Console ConsoleObject `json:"console,omitempty"`
-	// KIE Server configuration for individual sets
-	Servers []KieServerSet `json:"servers,omitempty"`
-	// SmartRouter container configs
-	SmartRouter *SmartRouterObject `json:"smartRouter,omitempty"`
-	// ProcessMigration
+	// Configuration of the each individual KIE server
+	Servers          []KieServerSet          `json:"servers,omitempty"`
+	SmartRouter      *SmartRouterObject      `json:"smartRouter,omitempty"`
 	ProcessMigration *ProcessMigrationObject `json:"processMigration,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
 type KieAppUpgrades struct {
+	// Set true to enable automatic micro version product upgrades, it is disabled by default.
 	Enabled bool `json:"enabled,omitempty"`
-	Minor   bool `json:"minor,omitempty"`
+	// Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
+	Minor bool `json:"minor,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1
 type KieServerSet struct {
-	Deployments  *int                    `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
-	Name         string                  `json:"name,omitempty"`
-	ID           string                  `json:"id,omitempty"`
-	From         *corev1.ObjectReference `json:"from,omitempty"`
-	Build        *KieAppBuildObject      `json:"build,omitempty"` // S2I Build configuration
-	SSOClient    *SSOAuthClient          `json:"ssoClient,omitempty"`
+	// +kubebuilder:validation:Format:=int
+	// Number of Server sets that will be deployed
+	Deployments *int `json:"deployments,omitempty"` // Number of KieServer DeploymentConfigs (defaults to 1)
+	// Server name
+	Name string `json:"name,omitempty"`
+	// Server ID
+	ID           string             `json:"id,omitempty"`
+	From         *ImageObjRef       `json:"from,omitempty"`
+	Build        *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
+	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
 	KieAppObject `json:",inline"`
 	Database     *DatabaseObject  `json:"database,omitempty"`
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
 }
 
-// ConsoleObject Console deployment object
+// ConsoleObject configuration of the RHPAM workbench
 type ConsoleObject struct {
 	KieAppObject `json:",inline"`
 	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
@@ -136,107 +136,136 @@ type ConsoleObject struct {
 	Jvm          *JvmObject      `json:"jvm,omitempty"`
 }
 
-// SmartRouterObject deployment object
+// SmartRouterObject configuration of the RHPAM smart router
 type SmartRouterObject struct {
-	KieAppObject     `json:",inline"`
-	Protocol         string `json:"protocol,omitempty"`
-	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
+	KieAppObject `json:",inline"`
+	// +kubebuilder:validation:Enum:=http;https
+	// Smart Router protocol, if no value is provided, http is the default protocol.
+	Protocol string `json:"protocol,omitempty"`
+	// If enabled, Busineses Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
+	UseExternalRoute bool `json:"useExternalRoute,omitempty"`
 }
 
 // KieAppJmsObject messaging specification to be used by the KieApp
 type KieAppJmsObject struct {
-	EnableIntegration     bool   `json:"enableIntegration,omitempty"`
-	Executor              *bool  `json:"executor,omitempty"`
-	ExecutorTransacted    bool   `json:"executorTransacted,omitempty"`
-	QueueRequest          string `json:"queueRequest,omitempty"`
-	QueueResponse         string `json:"queueResponse,omitempty"`
-	QueueExecutor         string `json:"queueExecutor,omitempty"`
-	EnableSignal          bool   `json:"enableSignal,omitempty"`
-	QueueSignal           string `json:"queueSignal,omitempty"`
-	EnableAudit           bool   `json:"enableAudit,omitempty"`
-	QueueAudit            string `json:"queueAudit,omitempty"`
-	AuditTransacted       *bool  `json:"auditTransacted,omitempty"`
-	Username              string `json:"username,omitempty"`
-	Password              string `json:"password,omitempty"`
-	AMQQueues             string `json:"amqQueues,omitempty"`     // It will receive the default value for the Executor, Request, Response, Signal and Audit queues.
-	AMQSecretName         string `json:"amqSecretName,omitempty"` // AMQ SSL parameters
-	AMQTruststoreName     string `json:"amqTruststoreName,omitempty"`
+	// +kubebuilder:validation:Required
+	// When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.
+	EnableIntegration bool `json:"enableIntegration"`
+	// Set false to disable the JMS executor, it is enabled by default.
+	Executor *bool `json:"executor,omitempty"`
+	// Enable transactions for JMS executor, disabled by default.
+	ExecutorTransacted bool `json:"executorTransacted,omitempty"`
+	// JNDI name of request queue for JMS, example queue/CUSTOM.KIE.SERVER.REQUEST, default is queue/KIE.SERVER.REQUEST.
+	QueueRequest string `json:"queueRequest,omitempty"`
+	// JNDI name of response queue for JMS, example queue/CUSTOM.KIE.SERVER.RESPONSE, default is queue/KIE.SERVER.RESPONSE.
+	QueueResponse string `json:"queueResponse,omitempty"`
+	// JNDI name of executor queue for JMS, example queue/CUSTOM.KIE.SERVER.EXECUTOR, default is queue/KIE.SERVER.EXECUTOR.
+	QueueExecutor string `json:"queueExecutor,omitempty"`
+	// Enable the Signal configuration through JMS. Default is false.
+	EnableSignal bool `json:"enableSignal,omitempty"`
+	// JNDI name of signal queue for JMS, example queue/CUSTOM.KIE.SERVER.SIGNAL, default is queue/KIE.SERVER.SIGNAL.
+	QueueSignal string `json:"queueSignal,omitempty"`
+	// Enable the Audit logging through JMS. Default is false.
+	EnableAudit bool `json:"enableAudit,omitempty"`
+	// JNDI name of audit logging queue for JMS, example queue/CUSTOM.KIE.SERVER.AUDIT, default is queue/KIE.SERVER.AUDIT.
+	QueueAudit string `json:"queueAudit,omitempty"`
+	// Determines if JMS session is transacted or not - default true.
+	AuditTransacted *bool `json:"auditTransacted,omitempty"`
+	// AMQ broker username to connect do the AMQ, generated if empty.
+	Username string `json:"username,omitempty"`
+	// AMQ broker password to connect do the AMQ, generated if empty.
+	Password string `json:"password,omitempty"`
+	// AMQ broker broker comma separated queues, if empty the values from default queues will be used.
+	AMQQueues string `json:"amqQueues,omitempty"` // It will receive the default value for the Executor, Request, Response, Signal and Audit queues.
+	// The name of a secret containing AMQ SSL related files.
+	AMQSecretName string `json:"amqSecretName,omitempty"` // AMQ SSL parameters
+	// The name of the AMQ SSL Trust Store file.
+	AMQTruststoreName string `json:"amqTruststoreName,omitempty"`
+	// The password for the AMQ Trust Store.
 	AMQTruststorePassword string `json:"amqTruststorePassword,omitempty"`
-	AMQKeystoreName       string `json:"amqKeystoreName,omitempty"`
-	AMQKeystorePassword   string `json:"amqKeystorePassword,omitempty"`
-	AMQEnableSSL          bool   `json:"amqEnableSSL,omitempty"` // flag will be set to true if all AMQ SSL parameters are correctly set.
+	// The name of the AMQ keystore file.
+	AMQKeystoreName string `json:"amqKeystoreName,omitempty"`
+	// The password for the AMQ keystore and certificate.
+	AMQKeystorePassword string `json:"amqKeystorePassword,omitempty"`
+	// Not intended to be set by the user, if will be set to true if all required SSL parameters are set.
+	AMQEnableSSL bool `json:"amqEnableSSL,omitempty"` // flag will be set to true if all AMQ SSL parameters are correctly set.
 }
 
 // JvmObject JVM specification to be used by the KieApp
 type JvmObject struct {
-	JavaOptsAppend             string `json:"javaOptsAppend,omitempty"`
-	JavaMaxMemRatio            *int32 `json:"javaMaxMemRatio,omitempty"`
-	JavaInitialMemRatio        *int32 `json:"javaInitialMemRatio,omitempty"`
-	JavaMaxInitialMem          *int32 `json:"javaMaxInitialMem,omitempty"`
-	JavaDiagnostics            *bool  `json:"javaDiagnostics,omitempty"`
-	JavaDebug                  *bool  `json:"javaDebug,omitempty"`
-	JavaDebugPort              *int32 `json:"javaDebugPort,omitempty"`
-	GcMinHeapFreeRatio         *int32 `json:"gcMinHeapFreeRatio,omitempty"`
-	GcMaxHeapFreeRatio         *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
-	GcTimeRatio                *int32 `json:"gcTimeRatio,omitempty"`
+	// User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+	JavaOptsAppend string `json:"javaOptsAppend,omitempty"`
+	// Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.
+	JavaMaxMemRatio *int32 `json:"javaMaxMemRatio,omitempty"`
+	// Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'
+	JavaInitialMemRatio *int32 `json:"javaInitialMemRatio,omitempty"`
+	// Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'
+	JavaMaxInitialMem *int32 `json:"javaMaxInitialMem,omitempty"`
+	// Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'
+	JavaDiagnostics *bool `json:"javaDiagnostics,omitempty"`
+	// If set remote debugging will be switched on. Disabled by default. e.g. 'true'
+	JavaDebug *bool `json:"javaDebug,omitempty"`
+	// Port used for remote debugging. Defaults to 5005. e.g. '8787'
+	JavaDebugPort *int32 `json:"javaDebugPort,omitempty"`
+	// Minimum percentage of heap free after GC to avoid expansion. e.g. '20'
+	GcMinHeapFreeRatio *int32 `json:"gcMinHeapFreeRatio,omitempty"`
+	// Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'
+	GcMaxHeapFreeRatio *int32 `json:"gcMaxHeapFreeRatio,omitempty"`
+	// Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.
+	GcTimeRatio *int32 `json:"gcTimeRatio,omitempty"`
+	// The weighting given to the current GC time versus previous GC times  when determining the new heap size. e.g. '90'
 	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
-	GcMaxMetaspaceSize         *int32 `json:"gcMaxMetaspaceSize,omitempty"`
-	GcContainerOptions         string `json:"gcContainerOptions,omitempty"`
+	// The maximum metaspace size unit, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+	GcMaxMetaspaceSize *int32 `json:"gcMaxMetaspaceSize,omitempty"`
+	// Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
+	GcContainerOptions string `json:"gcContainerOptions,omitempty"`
 }
 
-// KieAppObject Generic object definition
+// KieAppObject generic object definition
 type KieAppObject struct {
-	Env              []corev1.EnvVar              `json:"env,omitempty"`
-	Replicas         *int32                       `json:"replicas,omitempty"`
-	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
-	KeystoreSecret   string                       `json:"keystoreSecret,omitempty"`
-	Image            string                       `json:"image,omitempty"`
-	ImageTag         string                       `json:"imageTag,omitempty"`
-	StorageClassName string                       `json:"storageClassName,omitempty"`
-}
-
-type Environment struct {
-	Console          CustomObject   `json:"console,omitempty"`
-	SmartRouter      CustomObject   `json:"smartRouter,omitempty"`
-	Servers          []CustomObject `json:"servers,omitempty"`
-	ProcessMigration CustomObject   `json:"processMigration,omitempty"`
-	Databases        []CustomObject `json:"databases,omitempty"`
-	Others           []CustomObject `json:"others,omitempty"`
-}
-
-type CustomObject struct {
-	Omit                   bool                           `json:"omit,omitempty"`
-	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
-	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
-	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
-	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
-	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
-	DeploymentConfigs      []oappsv1.DeploymentConfig     `json:"deploymentConfigs,omitempty"`
-	StatefulSets           []appsv1.StatefulSet           `json:"statefulSets,omitempty"`
-	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
-	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
-	Services               []corev1.Service               `json:"services,omitempty"`
-	Routes                 []routev1.Route                `json:"routes,omitempty"`
-	ConfigMaps             []corev1.ConfigMap             `json:"configMaps,omitempty"`
+	Env []corev1.EnvVar `json:"env,omitempty"`
+	// Replicas to set for the DeploymentConfig
+	Replicas  *int32                       `json:"replicas,omitempty"`
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+	// Keystore secret name
+	KeystoreSecret string `json:"keystoreSecret,omitempty"`
+	// The image to use
+	Image string `json:"image,omitempty"`
+	// The image tag to use
+	ImageTag string `json:"imageTag,omitempty"`
+	// The storageClassName to use
+	StorageClassName string `json:"storageClassName,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
-	KieServerContainerDeployment     string                  `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                        GitSource               `json:"gitSource,omitempty"`
-	MavenMirrorURL                   string                  `json:"mavenMirrorURL,omitempty"`
-	ArtifactDir                      string                  `json:"artifactDir,omitempty"`
-	Webhooks                         []WebhookSecret         `json:"webhooks,omitempty"`
-	From                             *corev1.ObjectReference `json:"from,omitempty"`
-	ExtensionImageStreamTag          string                  `json:"extensionImageStreamTag,omitempty"`
-	ExtensionImageStreamTagNamespace string                  `json:"extensionImageStreamTagNamespace,omitempty"`
-	ExtensionImageInstallDir         string                  `json:"extensionImageInstallDir,omitempty"`
+	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
+	GitSource                    GitSource `json:"gitSource,omitempty"`
+	// Maven mirror to use for S2I builds
+	MavenMirrorURL string `json:"mavenMirrorURL,omitempty"`
+	// List of directories from which archives will be copied into the deployment folder. If unspecified, all archives in /target will be copied.
+	ArtifactDir string `json:"artifactDir,omitempty"`
+	// +kubebuilder:validation:MinItems:=1
+	Webhooks []WebhookSecret `json:"webhooks,omitempty"`
+	From     *ImageObjRef    `json:"from,omitempty"`
+	// ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0.
+	ExtensionImageStreamTag string `json:"extensionImageStreamTag,omitempty"`
+	// Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
+	ExtensionImageStreamTagNamespace string `json:"extensionImageStreamTagNamespace,omitempty"`
+	// Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).
+	ExtensionImageInstallDir string `json:"extensionImageInstallDir,omitempty"`
 }
 
 // GitSource Git coordinates to locate the source code to build
 type GitSource struct {
-	URI        string `json:"uri,omitempty"`
-	Reference  string `json:"reference,omitempty"`
+	// +kubebuilder:validation:Required
+	// Git URI for the s2i source
+	URI string `json:"uri"`
+	// +kubebuilder:validation:Required
+	// Branch to use in the git repository
+	Reference string `json:"reference"`
+	// Context/subdirectory where the code is located, relatively to repo root
 	ContextDir string `json:"contextDir,omitempty"`
 }
 
@@ -252,65 +281,109 @@ const (
 
 // WebhookSecret Secret to use for a given webhook
 type WebhookSecret struct {
-	Type   WebhookType `json:"type,omitempty"`
-	Secret string      `json:"secret,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum:=GitHub;Generic
+	Type WebhookType `json:"type"`
+	// +kubebuilder:validation:Required
+	Secret string `json:"secret"`
 }
 
 // GitHooksVolume GitHooks volume configuration
 type GitHooksVolume struct {
-	MountPath string                  `json:"mountPath,omitempty"`
-	From      *corev1.ObjectReference `json:"from,omitempty"`
-	SSHSecret string                  `json:"sshSecret,omitempty"`
+	// Absolute path where the gitHooks folder will be mounted.
+	MountPath string  `json:"mountPath,omitempty"`
+	From      *ObjRef `json:"from,omitempty"`
+	// Secret to use for ssh key and known hosts file.
+	SSHSecret string `json:"sshSecret,omitempty"`
 }
 
 // KieAppAuthObject Authentication specification to be used by the KieApp
 type KieAppAuthObject struct {
-	SSO        *SSOAuthConfig        `json:"sso,omitempty"`
-	LDAP       *LDAPAuthConfig       `json:"ldap,omitempty"`
+	SSO  *SSOAuthConfig  `json:"sso,omitempty"`
+	LDAP *LDAPAuthConfig `json:"ldap,omitempty"`
+	// When present, the RoleMapping Login Module will be configured.
 	RoleMapper *RoleMapperAuthConfig `json:"roleMapper,omitempty"`
 }
 
 // SSOAuthConfig Authentication configuration for SSO
 type SSOAuthConfig struct {
-	URL                      string `json:"url,omitempty"`
-	Realm                    string `json:"realm,omitempty"`
-	AdminUser                string `json:"adminUser,omitempty"`
-	AdminPassword            string `json:"adminPassword,omitempty"`
-	DisableSSLCertValidation bool   `json:"disableSSLCertValidation,omitempty"`
-	PrincipalAttribute       string `json:"principalAttribute,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// RH-SSO Realm Admin Password used to create the Client
+	AdminPassword string `json:"adminPassword,omitempty"`
+	// RH-SSO Realm Admin Username used to create the Client if it doesn't exist
+	AdminUser string `json:"adminUser,omitempty"`
+	// +kubebuilder:validation:Required
+	// RH-SSO URL
+	URL string `json:"url"`
+	// +kubebuilder:validation:Required
+	// RH-SSO Realm name
+	Realm string `json:"realm"`
+	// RH-SSO Disable SSL Certificate Validation
+	DisableSSLCertValidation bool `json:"disableSSLCertValidation,omitempty"`
+	// RH-SSO Principal Attribute to use as username
+	PrincipalAttribute string `json:"principalAttribute,omitempty"`
 }
 
 // SSOAuthClient Auth client to use for the SSO integration
 type SSOAuthClient struct {
-	Name          string `json:"name,omitempty"`
-	Secret        string `json:"secret,omitempty"`
-	HostnameHTTP  string `json:"hostnameHTTP,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// Client secret
+	Secret string `json:"secret,omitempty"`
+	// Client name
+	Name string `json:"name,omitempty"`
+	// Hostname to set as redirect URL
+	HostnameHTTP string `json:"hostnameHTTP,omitempty"`
+	// Secure hostname to set as redirect URL
 	HostnameHTTPS string `json:"hostnameHTTPS,omitempty"`
 }
 
 // LDAPAuthConfig Authentication configuration for LDAP
 type LDAPAuthConfig struct {
-	URL                            string          `json:"url,omitempty"`
-	BindDN                         string          `json:"bindDN,omitempty"`
-	BindCredential                 string          `json:"bindCredential,omitempty"`
-	JAASSecurityDomain             string          `json:"jaasSecurityDomain,omitempty"`
-	BaseCtxDN                      string          `json:"baseCtxDN,omitempty"`
-	BaseFilter                     string          `json:"baseFilter,omitempty"`
-	SearchScope                    SearchScopeType `json:"searchScope,omitempty"`
-	SearchTimeLimit                int32           `json:"searchTimeLimit,omitempty"`
-	DistinguishedNameAttribute     string          `json:"distinguishedNameAttribute,omitempty"`
-	ParseUsername                  bool            `json:"parseUsername,omitempty"`
-	UsernameBeginString            string          `json:"usernameBeginString,omitempty"`
-	UsernameEndString              string          `json:"usernameEndString,omitempty"`
-	RoleAttributeID                string          `json:"roleAttributeID,omitempty"`
-	RolesCtxDN                     string          `json:"rolesCtxDN,omitempty"`
-	RoleFilter                     string          `json:"roleFilter,omitempty"`
-	RoleRecursion                  int16           `json:"roleRecursion,omitempty"`
-	DefaultRole                    string          `json:"defaultRole,omitempty"`
-	RoleNameAttributeID            string          `json:"roleNameAttributeID,omitempty"`
-	ParseRoleNameFromDN            bool            `json:"parseRoleNameFromDN,omitempty"`
-	RoleAttributeIsDN              bool            `json:"roleAttributeIsDN,omitempty"`
-	ReferralUserAttributeIDToCheck string          `json:"referralUserAttributeIDToCheck,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// LDAP Credentials used for authentication
+	BindCredential string `json:"bindCredential,omitempty"`
+	// +kubebuilder:validation:Required
+	// LDAP Endpoint to connect for authentication
+	URL string `json:"url"`
+	// Bind DN used for authentication
+	BindDN string `json:"bindDN,omitempty"`
+	// The JMX ObjectName of the JaasSecurityDomain used to decrypt the password.
+	JAASSecurityDomain string `json:"jaasSecurityDomain,omitempty"`
+	// LDAP Base DN of the top-level context to begin the user search.
+	BaseCtxDN string `json:"baseCtxDN,omitempty"`
+	// DAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}).
+	BaseFilter string `json:"baseFilter,omitempty"`
+	// +kubebuilder:validation:Enum:=SUBTREE_SCOPE;OBJECT_SCOPE;ONELEVEL_SCOPE
+	SearchScope SearchScopeType `json:"searchScope,omitempty"`
+	// The timeout in milliseconds for user or role searches.
+	SearchTimeLimit int32 `json:"searchTimeLimit,omitempty"`
+	// The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used.
+	DistinguishedNameAttribute string `json:"distinguishedNameAttribute,omitempty"`
+	// A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString.
+	ParseUsername bool `json:"parseUsername,omitempty"`
+	// Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true.
+	UsernameBeginString string `json:"usernameBeginString,omitempty"`
+	// Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true.
+	UsernameEndString string `json:"usernameEndString,omitempty"`
+	// Name of the attribute containing the user roles.
+	RoleAttributeID string `json:"roleAttributeID,omitempty"`
+	// The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is.
+	RolesCtxDN string `json:"rolesCtxDN,omitempty"`
+	// A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1}).
+	RoleFilter string `json:"roleFilter,omitempty"`
+	// +kubebuilder:validation:Format:=int16
+	// The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0.
+	RoleRecursion int16 `json:"roleRecursion,omitempty"`
+	// A role included for all authenticated users
+	DefaultRole string `json:"defaultRole,omitempty"`
+	// Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute.
+	RoleNameAttributeID string `json:"roleNameAttributeID,omitempty"`
+	// A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries.
+	ParseRoleNameFromDN bool `json:"parseRoleNameFromDN,omitempty"`
+	// Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true.
+	RoleAttributeIsDN bool `json:"roleAttributeIsDN,omitempty"`
+	// If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
+	ReferralUserAttributeIDToCheck string `json:"referralUserAttributeIDToCheck,omitempty"`
 }
 
 // SearchScopeType Type used to define how the LDAP searches are performed
@@ -327,9 +400,10 @@ const (
 
 // RoleMapperAuthConfig Configuration for RoleMapper Authentication
 type RoleMapperAuthConfig struct {
-	RolesProperties string                  `json:"rolesProperties"`
-	ReplaceRole     bool                    `json:"replaceRole,omitempty"`
-	From            *corev1.ObjectReference `json:"from,omitempty"`
+	// +kubebuilder:validation:Required
+	RolesProperties string  `json:"rolesProperties"`
+	ReplaceRole     bool    `json:"replaceRole,omitempty"`
+	From            *ObjRef `json:"from,omitempty"`
 }
 
 // DatabaseType to define what kind of database will be used for the Kie Servers
@@ -357,38 +431,118 @@ type DatabaseObject struct {
 // and create a new Database or connect to an existing one
 type ProcessMigrationDatabaseObject struct {
 	InternalDatabaseObject `json:",inline"`
-	ExternalConfig         *CommonExternalDatabaseObject `json:"externalConfig,omitempty"`
+	ExternalConfig         *CommonExtDBObjectRequiredURL `json:"externalConfig,omitempty"`
 }
 
-// InternalDatabaseObject Defines how a KieServer will manage and create a new Database
+// InternalDatabaseObject Defines how a deployment will manage and create a new Database
 type InternalDatabaseObject struct {
-	Type             DatabaseType `json:"type,omitempty"`
-	Size             string       `json:"size,omitempty"`
-	StorageClassName string       `json:"storageClassName,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum:=mysql;postgresql;external;h2
+	// Database type to use
+	Type DatabaseType `json:"type"`
+	// Size of the PersistentVolumeClaim to create. For example, 100Gi
+	Size string `json:"size,omitempty"`
+	// The storageClassName to use for database pvc's.
+	StorageClassName string `json:"storageClassName,omitempty"`
+}
+
+// CommonExtDBObjectRequiredURL common configuration definition of an external database
+type CommonExtDBObjectRequiredURL struct {
+	// +kubebuilder:validation:Required
+	// Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
+	JdbcURL                      string `json:"jdbcURL"`
+	CommonExternalDatabaseObject `json:",inline"`
+}
+
+// CommonExtDBObjectURL common configuration definition of an external database
+type CommonExtDBObjectURL struct {
+	// Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
+	JdbcURL                      string `json:"jdbcURL,omitempty"`
+	CommonExternalDatabaseObject `json:",inline"`
 }
 
 // CommonExternalDatabaseObject common configuration definition of an external database
 type CommonExternalDatabaseObject struct {
-	Driver                     string `json:"driver,omitempty"`
-	JdbcURL                    string `json:"jdbcURL,omitempty"`
-	Username                   string `json:"username,omitempty"`
-	Password                   string `json:"password,omitempty"`
-	MinPoolSize                string `json:"minPoolSize,omitempty"`
-	MaxPoolSize                string `json:"maxPoolSize,omitempty"`
-	ConnectionChecker          string `json:"connectionChecker,omitempty"`
-	ExceptionSorter            string `json:"exceptionSorter,omitempty"`
-	BackgroundValidation       string `json:"backgroundValidation,omitempty"`
+	// +kubebuilder:validation:Required
+	// Driver name to use. For example, mysql
+	Driver string `json:"driver"`
+	// +kubebuilder:validation:Required
+	// External database username
+	Username string `json:"username"`
+	// +kubebuilder:validation:Required
+	// External database password
+	Password string `json:"password"`
+	// Sets xa-pool/min-pool-size for the configured datasource.
+	MinPoolSize string `json:"minPoolSize,omitempty"`
+	// Sets xa-pool/max-pool-size for the configured datasource.
+	MaxPoolSize string `json:"maxPoolSize,omitempty"`
+	// An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid.
+	ConnectionChecker string `json:"connectionChecker,omitempty"`
+	// An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred.
+	ExceptionSorter string `json:"exceptionSorter,omitempty"`
+	// Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used.
+	BackgroundValidation string `json:"backgroundValidation,omitempty"`
+	// Defines the interval for the background-validation check for the jdbc connections.
 	BackgroundValidationMillis string `json:"backgroundValidationMillis,omitempty"`
 }
 
 // ExternalDatabaseObject configuration definition of an external database
 type ExternalDatabaseObject struct {
-	Dialect                      string `json:"dialect,omitempty"`
-	Name                         string `json:"name,omitempty"`
-	Host                         string `json:"host,omitempty"`
-	Port                         string `json:"port,omitempty"`
-	NonXA                        string `json:"nonXA,omitempty"`
-	CommonExternalDatabaseObject `json:",inline"`
+	// +kubebuilder:validation:Required
+	// Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL8Dialect
+	Dialect string `json:"dialect"`
+	// Database Name. For example, rhpam
+	Name string `json:"name,omitempty"`
+	// Database Host. For example, mydb.example.com
+	Host string `json:"host,omitempty"`
+	// Database Port. For example, 3306
+	Port string `json:"port,omitempty"`
+	// Sets the datasources type. It can be XA or NONXA. For non XA set it to true. Default value is false.
+	NonXA                string `json:"nonXA,omitempty"`
+	CommonExtDBObjectURL `json:",inline"`
+}
+
+// EnvironmentConstants stores both the App and Replica Constants for a given environment
+type EnvironmentConstants struct {
+	App      AppConstants     `json:"app,omitempty"`
+	Replica  ReplicaConstants `json:"replica,omitempty"`
+	Database *DatabaseObject  `json:"database,omitempty"`
+	Jms      *KieAppJmsObject `json:"jms,omitempty"`
+}
+
+// AppConstants data type to store application deployment constants
+type AppConstants struct {
+	Product      string `json:"name,omitempty"`
+	Prefix       string `json:"prefix,omitempty"`
+	ImageName    string `json:"imageName,omitempty"`
+	ImageVar     string `json:"imageVar,omitempty"`
+	MavenRepo    string `json:"mavenRepo,omitempty"`
+	FriendlyName string `json:"friendlyName,omitempty"`
+}
+
+type Environment struct {
+	Console          CustomObject   `json:"console,omitempty"`
+	SmartRouter      CustomObject   `json:"smartRouter,omitempty"`
+	Servers          []CustomObject `json:"servers,omitempty"`
+	ProcessMigration CustomObject   `json:"processMigration,omitempty"`
+	Databases        []CustomObject `json:"databases,omitempty"`
+	Others           []CustomObject `json:"others,omitempty"`
+}
+
+type CustomObject struct {
+	Omit                   bool                           `json:"omit,omitempty"`
+	PersistentVolumeClaims []corev1.PersistentVolumeClaim `json:"persistentVolumeClaims,omitempty"`
+	ServiceAccounts        []corev1.ServiceAccount        `json:"serviceAccounts,omitempty"`
+	Secrets                []corev1.Secret                `json:"secrets,omitempty"`
+	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
+	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
+	DeploymentConfigs      []oappsv1.DeploymentConfig     `json:"deploymentConfigs,omitempty"`
+	StatefulSets           []appsv1.StatefulSet           `json:"statefulSets,omitempty"`
+	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
+	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`
+	Services               []corev1.Service               `json:"services,omitempty"`
+	Routes                 []routev1.Route                `json:"routes,omitempty"`
+	ConfigMaps             []corev1.ConfigMap             `json:"configMaps,omitempty"`
 }
 
 type OpenShiftObject interface {
@@ -448,20 +602,20 @@ type ConsoleTemplate struct {
 
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
-	OmitImageStream  bool                   `json:"omitImageStream"`
-	KieName          string                 `json:"kieName,omitempty"`
-	KieServerID      string                 `json:"kieServerID,omitempty"`
-	Replicas         int32                  `json:"replicas,omitempty"`
-	SSOAuthClient    SSOAuthClient          `json:"ssoAuthClient,omitempty"`
-	From             corev1.ObjectReference `json:"from,omitempty"`
-	ImageURL         string                 `json:"imageURL,omitempty"`
-	Build            BuildTemplate          `json:"build,omitempty"`
-	KeystoreSecret   string                 `json:"keystoreSecret,omitempty"`
-	Database         DatabaseObject         `json:"database,omitempty"`
-	Jms              KieAppJmsObject        `json:"jms,omitempty"`
-	SmartRouter      SmartRouterObject      `json:"smartRouter,omitempty"`
-	Jvm              JvmObject              `json:"jvm,omitempty"`
-	StorageClassName string                 `json:"storageClassName,omitempty"`
+	OmitImageStream  bool              `json:"omitImageStream"`
+	KieName          string            `json:"kieName,omitempty"`
+	KieServerID      string            `json:"kieServerID,omitempty"`
+	Replicas         int32             `json:"replicas,omitempty"`
+	SSOAuthClient    SSOAuthClient     `json:"ssoAuthClient,omitempty"`
+	From             ImageObjRef       `json:"from,omitempty"`
+	ImageURL         string            `json:"imageURL,omitempty"`
+	Build            BuildTemplate     `json:"build,omitempty"`
+	KeystoreSecret   string            `json:"keystoreSecret,omitempty"`
+	Database         DatabaseObject    `json:"database,omitempty"`
+	Jms              KieAppJmsObject   `json:"jms,omitempty"`
+	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
+	Jvm              JvmObject         `json:"jvm,omitempty"`
+	StorageClassName string            `json:"storageClassName,omitempty"`
 }
 
 // DatabaseTemplate contains all the variables used in the yaml templates
@@ -500,13 +654,13 @@ type Replicas struct {
 
 // BuildTemplate build variables used in the templates
 type BuildTemplate struct {
-	From                         corev1.ObjectReference `json:"from,omitempty"`
-	GitSource                    GitSource              `json:"gitSource,omitempty"`
-	GitHubWebhookSecret          string                 `json:"githubWebhookSecret,omitempty"`
-	GenericWebhookSecret         string                 `json:"genericWebhookSecret,omitempty"`
-	KieServerContainerDeployment string                 `json:"kieServerContainerDeployment,omitempty"`
-	MavenMirrorURL               string                 `json:"mavenMirrorURL,omitempty"`
-	ArtifactDir                  string                 `json:"artifactDir,omitempty"`
+	From                         ImageObjRef `json:"from,omitempty"`
+	GitSource                    GitSource   `json:"gitSource,omitempty"`
+	GitHubWebhookSecret          string      `json:"githubWebhookSecret,omitempty"`
+	GenericWebhookSecret         string      `json:"genericWebhookSecret,omitempty"`
+	KieServerContainerDeployment string      `json:"kieServerContainerDeployment,omitempty"`
+	MavenMirrorURL               string      `json:"mavenMirrorURL,omitempty"`
+	ArtifactDir                  string      `json:"artifactDir,omitempty"`
 	// Extension image configuration which provides custom jdbc drivers to be used
 	// by KieServer.
 	ExtensionImageStreamTag          string `json:"extensionImageStreamTag,omitempty"`
@@ -516,12 +670,19 @@ type BuildTemplate struct {
 
 // CommonConfig variables used in the templates
 type CommonConfig struct {
-	ApplicationName    string `json:"applicationName,omitempty"`
-	KeyStorePassword   string `json:"keyStorePassword,omitempty"`
-	AdminUser          string `json:"adminUser,omitempty"`
-	AdminPassword      string `json:"adminPassword,omitempty"`
-	DBPassword         string `json:"dbPassword,omitempty"`
-	AMQPassword        string `json:"amqPassword,omitempty"`
+	// The name of the application deployment.
+	ApplicationName string `json:"applicationName,omitempty"`
+	// The password to use for keystore generation.
+	KeyStorePassword string `json:"keyStorePassword,omitempty"`
+	// The user to use for the admin.
+	AdminUser string `json:"adminUser,omitempty"`
+	// The password to use for the adminUser.
+	AdminPassword string `json:"adminPassword,omitempty"`
+	// The password to use for databases.
+	DBPassword string `json:"dbPassword,omitempty"`
+	// The password to use for amq user.
+	AMQPassword string `json:"amqPassword,omitempty"`
+	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
 }
 
@@ -557,14 +718,16 @@ type RoleMapperTemplate struct {
 	RoleMapperAuthConfig `json:",inline"`
 }
 
-// ProcessMigrationObject
+// ProcessMigrationObject configuration of the RHPAM PIM
 type ProcessMigrationObject struct {
-	Image    string                         `json:"image,omitempty"`
+	// The image to use for Process Instance Migration
+	Image string `json:"image,omitempty"`
+	// The image tag to use for Process Instance Migration.
 	ImageTag string                         `json:"imageTag,omitempty"`
 	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
 
-// ProcessMigrationTemplate
+// ProcessMigrationTemplate ...
 type ProcessMigrationTemplate struct {
 	OmitImageStream  bool                           `json:"omitImageStream"`
 	Image            string                         `json:"image,omitempty"`
@@ -574,11 +737,65 @@ type ProcessMigrationTemplate struct {
 	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
 
-// KieServerClient
+// KieServerClient ...
 type KieServerClient struct {
 	Host     string `json:"host,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+}
+
+// ObjRef contains enough information to let you inspect or modify the referred object.
+type ObjRef struct {
+	// Kind of the referent.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum:=ConfigMap;Secret;PersistentVolumeClaim
+	Kind            string `json:"kind" protobuf:"bytes,1,opt,name=kind"`
+	ObjectReference `json:",inline"`
+}
+
+// ImageObjRef contains enough information to let you inspect or modify the referred object.
+type ImageObjRef struct {
+	// Kind of the referent.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum:=ImageStreamTag;DockerImage
+	Kind            string `json:"kind" protobuf:"bytes,1,opt,name=kind"`
+	ObjectReference `json:",inline"`
+}
+
+// ObjectReference contains enough information to let you inspect or modify the referred object.
+type ObjectReference struct {
+	// Namespace of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+	// +optional
+	Namespace string `json:"namespace,omitempty" protobuf:"bytes,2,opt,name=namespace"`
+	// Name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	// +kubebuilder:validation:Required
+	Name string `json:"name" protobuf:"bytes,3,opt,name=name"`
+	// UID of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+	// +optional
+	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uid,casttype=k8s.io/apimachinery/pkg/types.UID"`
+	// API version of the referent.
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,5,opt,name=apiVersion"`
+	// Specific resourceVersion to which this reference is made, if any.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+	// +optional
+	ResourceVersion string `json:"resourceVersion,omitempty" protobuf:"bytes,6,opt,name=resourceVersion"`
+
+	// If referring to a piece of an object instead of an entire object, this string
+	// should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+	// For example, if the object reference is to a container within a pod, this would take on a value like:
+	// "spec.containers{name}" (where "name" refers to the name of the container that triggered
+	// the event) or if no container name is specified "spec.containers[2]" (container with
+	// index 2 in this pod). This syntax is chosen only to have some well-defined way of
+	// referencing a part of an object.
+	// TODO: this design is not final and this field is subject to change in the future.
+	// +optional
+	FieldPath string `json:"fieldPath,omitempty" protobuf:"bytes,7,opt,name=fieldPath"`
 }
 
 func init() {

@@ -396,9 +396,11 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		name: "RoleMapper config from a ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
 			RolesProperties: "mapping.properties",
-			From: &corev1.ObjectReference{
-				Name: "test-cm",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test-cm",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -422,9 +424,11 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		name: "RoleMapper config from a Secret",
 		roleMapper: &api.RoleMapperAuthConfig{
 			RolesProperties: "mapping.properties",
-			From: &corev1.ObjectReference{
-				Name: "test-secret",
+			From: &api.ObjRef{
 				Kind: "Secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test-secret",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -445,9 +449,11 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		name: "RoleMapper config from a PersistentVolumeClaim",
 		roleMapper: &api.RoleMapperAuthConfig{
 			RolesProperties: "mapping.properties",
-			From: &corev1.ObjectReference{
-				Name: "test-pvc",
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
+				ObjectReference: api.ObjectReference{
+					Name: "test-pvc",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -468,9 +474,11 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 		name: "RoleMapper config is mounted on a different path",
 		roleMapper: &api.RoleMapperAuthConfig{
 			RolesProperties: "/other/path/mapping.properties",
-			From: &corev1.ObjectReference{
-				Name: "test-cm",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test-cm",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{

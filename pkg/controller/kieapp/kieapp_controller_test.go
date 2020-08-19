@@ -319,61 +319,75 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 	}, {
 		name: "Unsupported Kind: Service",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Service",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Not found Secret",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Not found PersistentVolumeClaim",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Found ConfigMap",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}, {
 		name: "Found Secret",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}, {
 		name: "Found PersistentVolumeClaim",
 		roleMapper: &api.RoleMapperAuthConfig{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}}
@@ -428,61 +442,75 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 	}, {
 		name: "Unsupported type",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Service",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "unsupported Kind: Service",
 	}, {
 		name: "Not found ConfigMap",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Not found Secret",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Not found PersistentVolumeClaim",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 		errMsg: "Mock: Not found",
 	}, {
 		name: "Found ConfigMap",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}, {
 		name: "Found Secret",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "Secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}, {
 		name: "Found PersistentVolumeClaim",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
-				Name: "test",
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
+				ObjectReference: api.ObjectReference{
+					Name: "test",
+				},
 			},
 		},
 	}}

@@ -485,10 +485,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				if *serverSet.Deployments > 1 {
 					return []api.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
 				}
-				template.From = corev1.ObjectReference{
-					Kind:      "ImageStreamTag",
-					Name:      fmt.Sprintf("%s:latest", serverSet.Name),
-					Namespace: "",
+				template.From = api.ImageObjRef{
+					Kind: "ImageStreamTag",
+					ObjectReference: api.ObjectReference{
+						Name:      fmt.Sprintf("%s:latest", serverSet.Name),
+						Namespace: "",
+					},
 				}
 			} else {
 				template.From, template.OmitImageStream, template.ImageURL = getDefaultKieServerImage(product, cr, serverSet, false)
@@ -677,7 +679,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from corev1.ObjectReference, omitImageTrigger bool, imageURL string) {
+func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from api.ImageObjRef, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
@@ -707,10 +709,12 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		omitImageTrigger = false
 	}
 
-	return corev1.ObjectReference{
-		Kind:      "ImageStreamTag",
-		Name:      image + ":" + imageTag,
-		Namespace: constants.ImageStreamNamespace,
+	return api.ImageObjRef{
+		Kind: "ImageStreamTag",
+		ObjectReference: api.ObjectReference{
+			Name:      image + ":" + imageTag,
+			Namespace: constants.ImageStreamNamespace,
+		},
 	}, omitImageTrigger, imageURL
 }
 
