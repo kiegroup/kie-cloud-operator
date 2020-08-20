@@ -151,8 +151,6 @@ const (
 
 	DatagridVar         = "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
-	Datagrid73ImageTag  = "1.3"
-	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
 	Datagrid73ImageTag15 = "1.5"
