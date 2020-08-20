@@ -64,7 +64,7 @@ spec:
         - name: DATAGRID_IMAGE_7.9.0
           value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
         - name: BROKER_IMAGE_7.9.0
-          value: registry.redhat.io/amq7/amq-broker:7.6
+          value: registry.redhat.io/amq7/amq-broker:7.7
         - name: DM_KIESERVER_IMAGE_7.8.1
           value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.8.1
         - name: DM_CONTROLLER_IMAGE_7.8.1
