@@ -168,6 +168,10 @@ spec:
     name: jboss-datagrid-7-datagrid73-openshift-container
   - from:
       kind: DockerImage
+      name: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+    name: jboss-datagrid-7-datagrid73-openshift-container
+  - from:
+      kind: DockerImage
       name: registry.redhat.io/amq7/amq-broker:7.5
     name: amq-broker-openshift-container
   - from:
