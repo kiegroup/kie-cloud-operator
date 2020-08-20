@@ -143,11 +143,11 @@ const (
 	BrokerComponent  = "amq-broker-openshift-container"
 	BrokerVar        = "BROKER_IMAGE_"
 	BrokerImage      = "amq-broker"
-	Broker75ImageTag = "7.5"
-	Broker75ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
-
 	Broker76ImageTag = "7.6"
 	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
+
+	Broker77ImageTag = "7.7"
+	Broker77ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker77ImageTag
 
 	DatagridVar         = "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
@@ -244,8 +244,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker76ImageTag,
-		BrokerImageURL:      Broker76ImageURL,
+		BrokerImageTag:      Broker77ImageTag,
+		BrokerImageURL:      Broker77ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag16,
 		DatagridImageURL:    Datagrid73ImageURL16,
