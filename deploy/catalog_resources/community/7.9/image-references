@@ -160,10 +160,6 @@ spec:
     name: rh-postgresql10-container
   - from:
       kind: DockerImage
-      name: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.3
-    name: jboss-datagrid-7-datagrid73-openshift-container
-  - from:
-      kind: DockerImage
       name: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
     name: jboss-datagrid-7-datagrid73-openshift-container
   - from:

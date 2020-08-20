@@ -328,7 +328,6 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.MySQL80ImageURL, constants.MySQL80Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL16, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Broker75ImageURL, constants.BrokerComponent, imageRef, relatedImages)
