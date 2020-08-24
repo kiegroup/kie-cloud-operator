@@ -1236,7 +1236,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -1265,7 +1265,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -1437,7 +1437,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -2164,7 +2164,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, cr.Status.Applied.Objects.Servers[0].Name+latestTag, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 
 	assert.Equal(t, "ImageStreamTag", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
-	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%v", cr.Status.Applied.Version), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+	assert.Equal(t, fmt.Sprintf("rhdm-7/rhdm-kieserver-rhel8:%v", cr.Status.Applied.Version), env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 	assert.Len(t, env.Servers[1].ImageStreams, 1)
 	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
@@ -4653,4 +4653,219 @@ var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
 	Requests: corev1.ResourceList{
 		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
 	},
+}
+
+func TestSmartRouterDefaultConf(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouterEmpty(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultSmartRouter(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext)
+}
+
+func createSmartRouterEmpty() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject: api.KieAppObject{
+			ImageContext: "rhpam-7",
+		},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func testDefaultSmartRouter(t *testing.T, image string, version string, context string) {
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-smartrouter"+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+"-smartrouter"+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestSmartRouterWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouter(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultSmartRouter(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext)
+}
+
+func createSmartRouter() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject: api.KieAppObject{
+			ImageContext: "rhpam-42",
+		},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func TestConsoleDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-7",
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testConsole(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext)
+}
+
+func TestConsoleWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-41",
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testConsole(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext)
+}
+
+func testConsole(t *testing.T, image string, version string, context string) {
+	label := "-businesscentral"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestServersDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							ImageContext: "rhpam-7",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testServers(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext)
+}
+
+func TestServersWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							ImageContext: "rhpam-42",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testServers(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext)
+}
+
+func testServers(t *testing.T, image string, version string, context string) {
+	label := "-kieserver"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
+}
+
+func TestProcessMigrationDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testProcessMigration(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext)
+}
+
+func TestProcessMigrationWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					ImageContext: "rhpam-43",
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testProcessMigration(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext)
+}
+
+func testProcessMigration(t *testing.T, image string, version string, context string) {
+	label := "-process-migration"
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.RhpamPrefix+label+constants.RhelVersion+":"+version, image)
+	}
 }

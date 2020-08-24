@@ -459,6 +459,27 @@
           "label": "Console",
           "fields": [
             {
+              "label": "ImageContext",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.imageContext",
+              "description": "The image context to use for console.",
+              "type": "text"
+            },
+            {
+              "label": "Image",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.image",
+              "description": "The image to use for console.",
+              "type": "text"
+            },
+            {
+              "label": "Image tag",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.imageTag",
+              "description": "The image tag to use for console.",
+              "type": "text"
+            },
+            {
               "label": "Keystore secret",
               "required": false,
               "jsonPath": "$.spec.objects.console.keystoreSecret",
@@ -762,6 +783,27 @@
                   "jsonPath": "$.spec.objects.servers[*].name",
                   "type": "text",
                   "description": "The name to use for this KIE Server."
+                },
+                {
+                  "label": "ImageContext",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].imageContext",
+                  "description": "The image context to use for server.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].image",
+                  "description": "The image to use for server.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image tag",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].imageTag",
+                  "description": "The image tag to use for server.",
+                  "type": "text"
                 },
                 {
                   "label": "Deployments",
@@ -1548,6 +1590,27 @@
                   "description": "The secret name within the Java keystore used for https encryption. Generated if empty."
                 },
                 {
+                  "label": "ImageContext",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.imageContext",
+                  "description": "The image context to use for smart router.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.image",
+                  "description": "The image to use for smart router.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image tag",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.imageTag",
+                  "description": "The image tag to use for smart router.",
+                  "type": "text"
+                },
+                {
                   "label": "Replicas",
                   "required": true,
                   "jsonPath": "$.spec.objects.smartRouter.replicas",
@@ -1631,6 +1694,13 @@
               "type": "object",
               "max": 1,
               "fields": [
+                {
+                  "label": "ImageContext",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.imageContext",
+                  "description": "The image context to use for Process Instance Migration.",
+                  "type": "text"
+                },
                 {
                   "label": "Image",
                   "required": false,

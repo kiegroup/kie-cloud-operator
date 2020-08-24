@@ -496,6 +496,9 @@ spec:
                       image:
                         description: The image to use
                         type: string
+                      imageContext:
+                        description: The image context to use
+                        type: string
                       imageTag:
                         description: The image tag to use
                         type: string
@@ -736,6 +739,10 @@ spec:
                         type: object
                       image:
                         description: The image to use for Process Instance Migration
+                        type: string
+                      imageContext:
+                        description: The image context to use for Process Instance
+                          Migration
                         type: string
                       imageTag:
                         description: The image tag to use for Process Instance Migration.
@@ -1122,6 +1129,9 @@ spec:
                         image:
                           description: The image to use
                           type: string
+                        imageContext:
+                          description: The image context to use
+                          type: string
                         imageTag:
                           description: The image tag to use
                           type: string
@@ -1488,6 +1498,9 @@ spec:
                         type: array
                       image:
                         description: The image to use
+                        type: string
+                      imageContext:
+                        description: The image context to use
                         type: string
                       imageTag:
                         description: The image tag to use
@@ -2037,6 +2050,9 @@ spec:
                           image:
                             description: The image to use
                             type: string
+                          imageContext:
+                            description: The image context to use
+                            type: string
                           imageTag:
                             description: The image tag to use
                             type: string
@@ -2279,6 +2295,10 @@ spec:
                             type: object
                           image:
                             description: The image to use for Process Instance Migration
+                            type: string
+                          imageContext:
+                            description: The image context to use for Process Instance
+                              Migration
                             type: string
                           imageTag:
                             description: The image tag to use for Process Instance
@@ -2681,6 +2701,9 @@ spec:
                             image:
                               description: The image to use
                               type: string
+                            imageContext:
+                              description: The image context to use
+                              type: string
                             imageTag:
                               description: The image tag to use
                               type: string
@@ -3059,6 +3082,9 @@ spec:
                             type: array
                           image:
                             description: The image to use
+                            type: string
+                          imageContext:
+                            description: The image context to use
                             type: string
                           imageTag:
                             description: The image tag to use
