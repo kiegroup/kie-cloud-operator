@@ -2,7 +2,6 @@ package apis
 
 import (
 	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	v1 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -17,7 +16,6 @@ func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
 		api.SchemeBuilder.AddToScheme,
-		v1.SchemeBuilder.AddToScheme,
 		rbacv1.AddToScheme,
 		oappsv1.Install,
 		routev1.Install,

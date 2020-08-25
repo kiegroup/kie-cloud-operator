@@ -2,6 +2,10 @@ package compare
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
+	"strings"
+
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -10,9 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
-	"sort"
-	"strings"
 )
 
 const (

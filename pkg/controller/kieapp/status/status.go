@@ -15,7 +15,8 @@ const maxBuffer = 30
 func SetProvisioning(cr *api.KieApp) bool {
 	log := log.With("kind", cr.Kind, "name", cr.Name, "namespace", cr.Namespace)
 	size := len(cr.Status.Conditions)
-	if size > 0 && cr.Status.Conditions[size-1].Type == api.ProvisioningConditionType {
+	if size > 0 && cr.Status.Conditions[size-1].Type == api.ProvisioningConditionType &&
+		cr.Status.Conditions[size-1].Version == cr.Status.Applied.Version {
 		log.Debug("Status: unchanged status [provisioning].")
 		return false
 	}
@@ -27,14 +28,15 @@ func SetProvisioning(cr *api.KieApp) bool {
 // SetDeployed - Updates the condition with the DeployedCondition and True status
 func SetDeployed(cr *api.KieApp) bool {
 	log := log.With("kind", cr.Kind, "name", cr.Name, "namespace", cr.Namespace)
-	cr.Status.Version = cr.Status.Applied.Version
 	size := len(cr.Status.Conditions)
-	if size > 0 && cr.Status.Conditions[size-1].Type == api.DeployedConditionType {
+	if size > 0 && cr.Status.Conditions[size-1].Type == api.DeployedConditionType &&
+		cr.Status.Conditions[size-1].Version == cr.Status.Applied.Version {
 		log.Debug("Status: unchanged status [deployed].")
 		return false
 	}
 	log.Debugf("Status: changed status [deployed].")
 	cr.Status.Conditions = addCondition(cr, api.Condition{Type: api.DeployedConditionType})
+	cr.Status.Version = cr.Status.Applied.Version
 	return true
 }
 

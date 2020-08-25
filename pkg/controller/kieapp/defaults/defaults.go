@@ -17,14 +17,12 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/imdario/mergo"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	v2 "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,8 +39,8 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		return api.Environment{}, err
 	}
 	// handle upgrade logic from here
-	cMajor, _, _ := MajorMinorMicro(cr.Status.Applied.Version)
-	lMajor, _, _ := MajorMinorMicro(constants.CurrentVersion)
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	lMajor, _, _ := GetMajorMinorMicro(constants.CurrentVersion)
 	minorVersion := GetMinorImageVersion(cr.Status.Applied.Version)
 	latestMinorVersion := GetMinorImageVersion(constants.CurrentVersion)
 	if (micro && minorVersion == latestMinorVersion) ||
@@ -250,7 +248,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 
 func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
-	c.Major, c.Minor, c.Micro = MajorMinorMicro(cr.Status.Applied.Version)
+	c.Major, c.Minor, c.Micro = GetMajorMinorMicro(cr.Status.Applied.Version)
 	if envConstants, found := constants.EnvironmentConstants[cr.Status.Applied.Environment]; found {
 		c.Product = envConstants.App.Product
 		c.MavenRepo = envConstants.App.MavenRepo
@@ -300,18 +298,20 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	}
 	template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 	template.Name = envConstants.App.Prefix
-	template.ImageURL = envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 	template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 	if template.KeystoreSecret == "" {
 		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
 	}
 	template.StorageClassName = cr.Status.Applied.Objects.Console.StorageClassName
-	if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
-		template.ImageURL = val
+	if !cr.Status.Applied.UseImageTags {
+		if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists {
+			template.ImageURL = val
+		}
 		template.OmitImageStream = true
 	}
 	template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
-
 	if cr.Status.Applied.Objects.Console.Image != "" {
 		template.Image = cr.Status.Applied.Objects.Console.Image
 		template.ImageURL = template.Image + ":" + template.ImageTag
@@ -377,9 +377,12 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		}
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
-		template.ImageURL = constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
-		if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
-			template.ImageURL = val
+		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+		template.ImageURL = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-" + cMajor + "/" + constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		if !cr.Status.Applied.UseImageTags {
+			if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists {
+				template.ImageURL = val
+			}
 			template.OmitImageStream = true
 		}
 		template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
@@ -492,10 +495,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				if *serverSet.Deployments > 1 {
 					return []api.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
 				}
-				template.From = corev1.ObjectReference{
-					Kind:      "ImageStreamTag",
-					Name:      fmt.Sprintf("%s:latest", serverSet.Name),
-					Namespace: "",
+				template.From = api.ImageObjRef{
+					Kind: "ImageStreamTag",
+					ObjectReference: api.ObjectReference{
+						Name:      fmt.Sprintf("%s:latest", serverSet.Name),
+						Namespace: "",
+					},
 				}
 			} else {
 				template.From, template.OmitImageStream, template.ImageURL = getDefaultKieServerImage(product, cr, serverSet, false)
@@ -684,7 +689,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 	return buildTemplate
 }
 
-func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from corev1.ObjectReference, omitImageTrigger bool, imageURL string) {
+func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from api.ImageObjRef, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
@@ -693,9 +698,12 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
 	}
 
-	imageURL = product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
-	if val, exists := os.LookupEnv(envVar); exists && !cr.Status.Applied.UseImageTags && !forBuild {
-		imageURL = val
+	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+	imageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	if !cr.Status.Applied.UseImageTags && !forBuild {
+		if val, exists := os.LookupEnv(envVar); exists {
+			imageURL = val
+		}
 		omitImageTrigger = true
 	}
 	image, imageTag, imageContext := GetImage(imageURL)
@@ -716,10 +724,12 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		omitImageTrigger = false
 	}
 
-	return corev1.ObjectReference{
-		Kind:      "ImageStreamTag",
-		Name:      getName(imageContext, image, imageTag),
-		Namespace: constants.ImageStreamNamespace,
+	return api.ImageObjRef{
+		Kind: "ImageStreamTag",
+		ObjectReference: api.ObjectReference{
+			Name:      getName(imageContext, image, imageTag),
+			Namespace: constants.ImageStreamNamespace,
+		},
 	}, omitImageTrigger, imageURL
 }
 
@@ -1020,7 +1030,7 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	setKieSetNames(specApply)
 	checkJvmOnConsole(&specApply.Objects.Console)
-	setJvmDefault(specApply.Objects.Console.Jvm)
+	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
 		for _, statusServer := range cr.Status.Applied.Objects.Servers {
@@ -1028,18 +1038,14 @@ func SetDefaults(cr *api.KieApp) {
 		}
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
-		setJvmDefault(specApply.Objects.Servers[index].Jvm)
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
-	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
-	setPasswords(specApply, isTrialEnv)
-
-	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
-
 	if specApply.Objects.SmartRouter != nil {
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
 	}
 
+	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
+	setPasswords(specApply, isTrialEnv)
 	cr.Status.Applied = *specApply
 }
 
@@ -1058,39 +1064,40 @@ func checkJvmOnConsole(console *api.ConsoleObject) {
 	if console.Jvm == nil {
 		console.Jvm = &api.JvmObject{}
 	}
+	setJvmDefault(console.Jvm)
 }
 
 func checkJvmOnServer(server *api.KieServerSet) {
 	if server.Jvm == nil {
 		server.Jvm = &api.JvmObject{}
 	}
+	setJvmDefault(server.Jvm)
 }
 
-func setResourcesDefault(kieObject *v2.KieAppObject, limits string, requests string) {
-	if kieObject.Resources != nil {
-		if kieObject.Resources.Limits == nil {
-			kieObject.Resources.Limits = createResourceConstraint(limits)
-		}
-		if kieObject.Resources.Requests == nil {
-			kieObject.Resources.Requests = createResourceConstraint(requests)
-		}
-	} else {
-		kieObject.Resources = createResourceWithLimitsAndRequests(limits, requests)
+func setResourcesDefault(kieObject *api.KieAppObject, limits, requests string) {
+	if kieObject.Resources == nil {
+		kieObject.Resources = &corev1.ResourceRequirements{}
+	}
+	if kieObject.Resources.Limits == nil {
+		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits)}
+	}
+	if kieObject.Resources.Requests == nil {
+		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests)}
+	}
+	if kieObject.Resources.Limits.Cpu() == nil {
+		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits))
+	}
+	if kieObject.Resources.Requests.Cpu() == nil {
+		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests))
 	}
 }
 
-func createResourceWithLimitsAndRequests(limits string, requests string) *corev1.ResourceRequirements {
-	var resources = new(corev1.ResourceRequirements)
-	resources.Limits = createResourceConstraint(limits)
-	resources.Requests = createResourceConstraint(requests)
-	return resources
-}
-
-func createResourceConstraint(constraint string) v1.ResourceList {
-	item, _ := resource.ParseQuantity(constraint)
-	return corev1.ResourceList{
-		"cpu": item,
+func createResourceQuantity(constraint string) resource.Quantity {
+	item, err := resource.ParseQuantity(constraint)
+	if err != nil {
+		log.Error(err)
 	}
+	return item
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
@@ -1164,7 +1171,6 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.OmitImageStream = true
 		}
 		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, processMigrationTemplate.ImageContext = GetImage(processMigrationTemplate.ImageURL)
-
 		if cr.Status.Applied.Objects.ProcessMigration.Image != "" {
 			processMigrationTemplate.Image = cr.Status.Applied.Objects.ProcessMigration.Image
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag

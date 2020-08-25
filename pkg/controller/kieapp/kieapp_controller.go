@@ -163,11 +163,6 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if hasUpdates && status.SetProvisioning(instance) {
-		return reconciler.UpdateObj(instance)
-	} else if !hasUpdates {
-		log.Debug("Reconcile loop did not find any resource changes to apply")
-	}
 
 	// Check the KieServer ConfigMaps for necessary changes
 	reconciler.checkKieServerConfigMap(instance, env)
@@ -187,27 +182,31 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	// Update CR if needed
-	if reconciler.hasSpecChanges(instance, cachedInstance) {
-		if status.SetProvisioning(instance) && instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
-		}
-		return reconcile.Result{Requeue: true}, nil
+	// Update CR Status if needed
+	return reconciler.checkStatus(instance, cachedInstance, hasUpdates)
+}
+
+func (reconciler *Reconciler) checkStatus(instance, cachedInstance *api.KieApp, hasUpdates bool) (reconcile.Result, error) {
+	var requeue bool
+	if hasUpdates {
+		requeue = status.SetProvisioning(instance)
+	} else {
+		requeue = status.SetDeployed(instance)
 	}
+	return reconciler.updateStatus(instance, cachedInstance, requeue)
+}
+
+func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp, requeue bool) (reconcile.Result, error) {
 	if reconciler.hasStatusChanges(instance, cachedInstance) {
 		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
+			if err := reconciler.Service.Status().Update(context.TODO(), instance); err != nil {
+				return reconcile.Result{}, err
+			}
+		} else {
+			return reconcile.Result{Requeue: true}, nil
 		}
-		return reconcile.Result{Requeue: true}, nil
 	}
-	if status.SetDeployed(instance) {
-		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			return reconciler.UpdateObj(instance)
-		}
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
+	return reconcile.Result{Requeue: requeue}, nil
 }
 
 func (reconciler *Reconciler) reconcileResources(instance *api.KieApp, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
@@ -248,7 +247,6 @@ func isNamespaced(resource resource.KubernetesResource) bool {
 
 func getComparator() compare.MapComparator {
 	resourceComparator := compare.DefaultComparator()
-
 	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
 	defaultDCComparator := resourceComparator.GetComparator(dcType)
 	resourceComparator.SetComparator(dcType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -260,9 +258,11 @@ func getComparator() compare.MapComparator {
 			}
 			trigger1 := dc1.Spec.Triggers[i]
 			trigger2 := dc2.Spec.Triggers[i]
-			if trigger1.ImageChangeParams != nil && trigger2.ImageChangeParams != nil && trigger2.ImageChangeParams.From.Namespace == "" {
-				//This value is generated based on image stream being found in current or openshift project:
-				trigger1.ImageChangeParams.From.Namespace = ""
+			if trigger2.ImageChangeParams != nil && trigger1.ImageChangeParams != nil {
+				if trigger2.ImageChangeParams.From.Namespace == "" {
+					//This value is generated based on image stream being found in current or openshift project:
+					trigger1.ImageChangeParams.From.Namespace = ""
+				}
 			}
 		}
 		return defaultDCComparator(deployed, requested)
@@ -325,7 +325,7 @@ func (reconciler *Reconciler) verifyExternalReferences(cr *api.KieApp) error {
 	return err
 }
 
-func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *corev1.ObjectReference) error {
+func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *api.ObjRef) error {
 	if ref == nil {
 		return nil
 	}
@@ -359,33 +359,16 @@ func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.Ku
 	return requestedRoutes
 }
 
-func (reconciler *Reconciler) hasSpecChanges(instance, cached *api.KieApp) bool {
-	if !reflect.DeepEqual(instance.Spec, cached.Spec) {
-		return true
-	}
-	if len(instance.Spec.Objects.Servers) > 0 {
-		if len(instance.Spec.Objects.Servers) != len(cached.Spec.Objects.Servers) {
-			return true
-		}
-		for i := range instance.Spec.Objects.Servers {
-			if !reflect.DeepEqual(instance.Spec.Objects.Servers[i], cached.Spec.Objects.Servers[i]) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) bool {
-	if !reflect.DeepEqual(instance.Status, cached.Status) {
+func (reconciler *Reconciler) hasStatusChanges(instance, cachedInstance *api.KieApp) bool {
+	if !reflect.DeepEqual(instance.Status, cachedInstance.Status) {
 		return true
 	}
 	if len(instance.Status.Applied.Objects.Servers) > 0 {
-		if len(instance.Status.Applied.Objects.Servers) != len(cached.Status.Applied.Objects.Servers) {
+		if len(instance.Status.Applied.Objects.Servers) != len(cachedInstance.Status.Applied.Objects.Servers) {
 			return true
 		}
 		for i := range instance.Status.Applied.Objects.Servers {
-			if !reflect.DeepEqual(instance.Status.Applied.Objects.Servers[i], cached.Status.Applied.Objects.Servers[i]) {
+			if !reflect.DeepEqual(instance.Status.Applied.Objects.Servers[i], cachedInstance.Status.Applied.Objects.Servers[i]) {
 				return true
 			}
 		}
@@ -395,8 +378,7 @@ func (reconciler *Reconciler) hasStatusChanges(instance, cached *api.KieApp) boo
 
 func (reconciler *Reconciler) setFailedStatus(instance *api.KieApp, reason api.ReasonType, err error) {
 	status.SetFailed(instance, reason, err)
-	_, updateError := reconciler.UpdateObj(instance)
-	if updateError != nil {
+	if updateError := reconciler.Service.Status().Update(context.TODO(), instance); updateError != nil {
 		log.Warn("Unable to update object after receiving failed status. ", err)
 	}
 }
@@ -409,7 +391,7 @@ func (reconciler *Reconciler) checkImageStreamTag(name, namespace string) bool {
 		result = append(result, "latest")
 	}
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
-	_, err := reconciler.Service.ImageStreamTags(namespace).Get(tagName, metav1.GetOptions{})
+	_, err := reconciler.Service.ImageStreamTags(namespace).Get(context.TODO(), tagName, metav1.GetOptions{})
 	if err != nil {
 		log.Debug("Object does not exist")
 		return false
@@ -426,7 +408,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	product := defaults.GetProduct(cr.Status.Applied.Environment)
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	imageName := tagName
-	major, _, _ := defaults.MajorMinorMicro(cr.Status.Applied.Version)
+	major, _, _ := defaults.GetMajorMinorMicro(cr.Status.Applied.Version)
 	regContext := fmt.Sprintf("%s-%s", product, major)
 
 	// default registry settings
@@ -481,7 +463,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	}
 	log := log.With("kind", isnew.GetObjectKind().GroupVersionKind().Kind, "name", isnew.Name, "from", isnew.Tag.From.Name, "namespace", isnew.Namespace)
 	log.Info("Creating")
-	_, err := reconciler.Service.ImageStreamTags(isnew.Namespace).Create(isnew)
+	_, err := reconciler.Service.ImageStreamTags(isnew.Namespace).Create(context.TODO(), isnew, metav1.CreateOptions{})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		log.Error("Issue creating object. ", err)
 		return err

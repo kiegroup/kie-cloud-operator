@@ -62,9 +62,9 @@ spec:
         - name: POSTGRESQL_PROXY_IMAGE_7.9.0
           value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
         - name: DATAGRID_IMAGE_7.9.0
-          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
+          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
         - name: BROKER_IMAGE_7.9.0
-          value: registry.redhat.io/amq7/amq-broker:7.6
+          value: registry.redhat.io/amq7/amq-broker:7.7
         - name: DM_KIESERVER_IMAGE_7.8.1
           value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.8.1
         - name: DM_CONTROLLER_IMAGE_7.8.1
@@ -123,6 +123,8 @@ spec:
           value: registry.redhat.io/amq7/amq-broker:7.6
         - name: OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+        - name: OAUTH_PROXY_IMAGE_4.5
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
         - name: OAUTH_PROXY_IMAGE_4.4
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
         - name: OAUTH_PROXY_IMAGE_4.3

@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -29,12 +30,12 @@ type MockPlatformService struct {
 	GetFunc             func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
 	ListFunc            func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error
 	UpdateFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error
-	UpdateStatusFunc    func(ctx context.Context, obj runtime.Object) error
 	PatchFunc           func(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error
 	DeleteAllOfFunc     func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error
 	GetCachedFunc       func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
 	ImageStreamTagsFunc func(namespace string) imagev1.ImageStreamTagInterface
 	GetSchemeFunc       func() *runtime.Scheme
+	StatusFunc          func() clientv1.StatusWriter
 }
 
 func MockService() *MockPlatformService {
@@ -124,9 +125,6 @@ func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
 		DeleteAllOfFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error {
 			return client.DeleteAllOf(ctx, obj, opts...)
 		},
-		UpdateStatusFunc: func(ctx context.Context, obj runtime.Object) error {
-			return client.Status().Update(ctx, obj)
-		},
 		GetCachedFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
 			return client.Get(ctx, key, obj)
 		},
@@ -135,6 +133,9 @@ func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
 		},
 		GetSchemeFunc: func() *runtime.Scheme {
 			return scheme
+		},
+		StatusFunc: func() clientv1.StatusWriter {
+			return client.Status()
 		},
 	}
 }
@@ -159,10 +160,6 @@ func (service *MockPlatformService) Update(ctx context.Context, obj runtime.Obje
 	return service.UpdateFunc(ctx, obj, opts...)
 }
 
-func (service *MockPlatformService) UpdateStatus(ctx context.Context, obj runtime.Object) error {
-	return service.UpdateStatusFunc(ctx, obj)
-}
-
 func (service *MockPlatformService) Patch(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
 	return service.PatchFunc(ctx, obj, patch, opts...)
 }
@@ -181,6 +178,10 @@ func (service *MockPlatformService) ImageStreamTags(namespace string) imagev1.Im
 
 func (service *MockPlatformService) GetScheme() *runtime.Scheme {
 	return service.GetSchemeFunc()
+}
+
+func (service *MockPlatformService) Status() clientv1.StatusWriter {
+	return service.StatusFunc()
 }
 
 func (service *MockPlatformService) IsMockService() bool {
