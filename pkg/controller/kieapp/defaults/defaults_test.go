@@ -28,13 +28,14 @@ import (
 )
 
 var (
-	bcmImage      = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
-	bcImage       = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
-	dcImage       = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
-	latestTag     = ":latest"
-	helloRules    = "hello-rules" + latestTag
-	byeRules      = "bye-rules" + latestTag
-	kieServerName = "test-kieserver"
+	bcmImage                         = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
+	bcImage                          = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
+	dcImage                          = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
+	latestTag                        = ":latest"
+	helloRules                       = "hello-rules" + latestTag
+	byeRules                         = "bye-rules" + latestTag
+	kieServerName                    = "test-kieserver"
+	imageContextAndTagRhpamKieserver = constants.RhpamPrefix + "-7/" + "rhpam-kieserver-rhel8:%s"
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -1236,7 +1237,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf(imageContextAndTagRhpamKieserver, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -1265,7 +1266,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(imageContextAndTagRhpamKieserver, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -1437,7 +1438,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam-7/rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(imageContextAndTagRhpamKieserver, cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -4675,7 +4676,7 @@ func TestSmartRouterDefaultConf(t *testing.T) {
 func createSmartRouterEmpty() *api.SmartRouterObject {
 	smartRouter := api.SmartRouterObject{
 		KieAppObject: api.KieAppObject{
-			ImageContext: "rhpam-7",
+			ImageContext: constants.RhpamPrefix + "-7/",
 		},
 		Protocol:         "",
 		UseExternalRoute: false,
@@ -4730,7 +4731,7 @@ func TestConsoleDefaultImage(t *testing.T) {
 			Objects: api.KieAppObjects{
 				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
-						ImageContext: "rhpam-7",
+						ImageContext: constants.RhpamPrefix + "-7/",
 					},
 				},
 			},
@@ -4782,7 +4783,7 @@ func TestServersDefaultImage(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						KieAppObject: api.KieAppObject{
-							ImageContext: "rhpam-7",
+							ImageContext: constants.RhpamPrefix + "-7/",
 						},
 					},
 				},
