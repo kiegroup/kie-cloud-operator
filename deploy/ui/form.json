@@ -231,7 +231,7 @@
                   "default": "ldap://myldap.example.com",
                   "required": true,
                   "jsonPath": "$.spec.auth.ldap.url",
-                  "description": "The ldap URL Endpoint for authentication"
+                  "description": "LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space."
                 },
                 {
                   "label": "BindDN",

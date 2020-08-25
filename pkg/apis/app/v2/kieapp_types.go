@@ -343,7 +343,7 @@ type LDAPAuthConfig struct {
 	// LDAP Credentials used for authentication
 	BindCredential string `json:"bindCredential,omitempty"`
 	// +kubebuilder:validation:Required
-	// LDAP Endpoint to connect for authentication
+	// LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space
 	URL string `json:"url"`
 	// Bind DN used for authentication
 	BindDN string `json:"bindDN,omitempty"`
