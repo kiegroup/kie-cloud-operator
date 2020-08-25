@@ -462,21 +462,21 @@
               "label": "Image Context",
               "required": false,
               "jsonPath": "$.spec.objects.console.imageContext",
-              "description": "The image context to use for console e.g. rhpam-7, this param is optional for custom image",
+              "description": "The image context to use for console e.g. rhpam-7, this param is optional for custom image.",
               "type": "text"
             },
             {
               "label": "Image",
               "required": false,
               "jsonPath": "$.spec.objects.console.image",
-              "description": "The image to use for console e.g. rhpam-businesscentral-rhel8, this param is optional for custom image",
+              "description": "The image to use for console e.g. rhpam-businesscentral-rhel8, this param is optional for custom image.",
               "type": "text"
             },
             {
               "label": "Image tag",
               "required": false,
               "jsonPath": "$.spec.objects.console.imageTag",
-              "description": "The image tag to use for console e.g. 7.9.0, this param is optional for custom image",
+              "description": "The image tag to use for console e.g. 7.9.0, this param is optional for custom image.",
               "type": "text"
             },
             {
@@ -788,21 +788,21 @@
                   "label": "Image Context",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].imageContext",
-                  "description": "The image context to use for server e.g. rhpam-7, this param is optional for custom image",
+                  "description": "The image context to use for server e.g. rhpam-7, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
                   "label": "Image",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].image",
-                  "description": "The image to use for server e.g. rhpam-kieserver-rhel8, this param is optional for custom image",
+                  "description": "The image to use for server e.g. rhpam-kieserver-rhel8, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
                   "label": "Image tag",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].imageTag",
-                  "description": "The image tag to use for server e.g. 7.9.0, this param is optional for custom image",
+                  "description": "The image tag to use for server e.g. 7.9.0, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
@@ -1592,7 +1592,7 @@
                 {
                   "label": "Image Context",
                   "required": false,
-                  "jsonPath": "$.spec.objects.smartRouter.imageContext e.g. rhpam-7, this param is optional for custom image",
+                  "jsonPath": "$.spec.objects.smartRouter.imageContext e.g. rhpam-7, this param is optional for custom image.",
                   "description": "The image context to use for smart router.",
                   "type": "text"
                 },
@@ -1600,14 +1600,14 @@
                   "label": "Image",
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.image",
-                  "description": "The image to use for smart router e.g. rhpam-smartrouter-rhel8, this param is optional for custom image",
+                  "description": "The image to use for smart router e.g. rhpam-smartrouter-rhel8, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
                   "label": "Image tag",
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.imageTag",
-                  "description": "The image tag to use for smart router e.g. 7.9.0, this param is optional for custom image",
+                  "description": "The image tag to use for smart router e.g. 7.9.0, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
@@ -1698,21 +1698,21 @@
                   "label": "Image Context",
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.imageContext",
-                  "description": "The image context to use for Process Instance Migration e.g. rhpam-7, this param is optional for custom image",
+                  "description": "The image context to use for Process Instance Migration e.g. rhpam-7, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
                   "label": "Image",
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.image",
-                  "description": "The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image",
+                  "description": "The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
                   "label": "Image tag",
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.imageTag",
-                  "description": "The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image",
+                  "description": "The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
