@@ -1592,8 +1592,8 @@
                 {
                   "label": "Image Context",
                   "required": false,
-                  "jsonPath": "$.spec.objects.smartRouter.imageContext e.g. rhpam-7, this param is optional for custom image.",
-                  "description": "The image context to use for smart router.",
+                  "jsonPath": "$.spec.objects.smartRouter.imageContext",
+                  "description": "The image context to use for smart router e.g. rhpam-7, this param is optional for custom image.",
                   "type": "text"
                 },
                 {
