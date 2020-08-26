@@ -163,7 +163,9 @@ spec:
                         format: int32
                         type: integer
                       url:
-                        description: LDAP Endpoint to connect for authentication
+                        description: LDAP endpoint to connect for authentication.
+                          For failover set two or more LDAP endpoints separated by
+                          space
                         type: string
                       usernameBeginString:
                         description: Defines the String which is to be removed from
@@ -1695,7 +1697,9 @@ spec:
                             format: int32
                             type: integer
                           url:
-                            description: LDAP Endpoint to connect for authentication
+                            description: LDAP endpoint to connect for authentication.
+                              For failover set two or more LDAP endpoints separated
+                              by space
                             type: string
                           usernameBeginString:
                             description: Defines the String which is to be removed
