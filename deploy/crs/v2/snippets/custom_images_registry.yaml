@@ -14,9 +14,11 @@ spec:
   objects:
     console:
       image: console-image
+      imageContext: test
       imageTag: "1.2"
     servers:
       - image: server-image
+        imageContext: test
         imageTag: "1.2"
       - image: server-image2
         imageTag: "1.1"
@@ -24,4 +26,5 @@ spec:
       image: router-image
     processMigration:
       image: pim-image
+      imageContext: test
       imageTag: "1.0"
