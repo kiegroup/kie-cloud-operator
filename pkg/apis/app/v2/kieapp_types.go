@@ -229,11 +229,11 @@ type KieAppObject struct {
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 	// Keystore secret name
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
-	// The image context to use
+	// The image context to use  e.g. rhpam-7, this param is optional for custom image.
 	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use
+	// The image to use e.g. rhpam-<app>-rhel8, this param is optional for custom image.
 	Image string `json:"image,omitempty"`
-	// The image tag to use
+	// The image tag to use e.g. 7.9.0, this param is optional for custom image.
 	ImageTag string `json:"imageTag,omitempty"`
 	// The storageClassName to use
 	StorageClassName string `json:"storageClassName,omitempty"`
@@ -728,11 +728,11 @@ type RoleMapperTemplate struct {
 
 // ProcessMigrationObject configuration of the RHPAM PIM
 type ProcessMigrationObject struct {
-	// The image context to use for Process Instance Migration
+	// The image context to use for Process Instance Migration  e.g. rhpam-7, this param is optional for custom image.
 	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use for Process Instance Migration
+	// The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image.
 	Image string `json:"image,omitempty"`
-	// The image tag to use for Process Instance Migration.
+	// The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.
 	ImageTag string                         `json:"imageTag,omitempty"`
 	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
 }
