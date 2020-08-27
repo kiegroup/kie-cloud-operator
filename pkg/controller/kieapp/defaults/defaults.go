@@ -727,18 +727,10 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 	return api.ImageObjRef{
 		Kind: "ImageStreamTag",
 		ObjectReference: api.ObjectReference{
-			Name:      getName(imageContext, image, imageTag),
+			Name:      image + ":" + imageTag,
 			Namespace: constants.ImageStreamNamespace,
 		},
 	}, omitImageTrigger, imageURL
-}
-
-func getName(imageContext string, image string, imageTag string) string {
-	if imageContext != "" {
-		return imageContext + "/" + image + ":" + imageTag
-	} else {
-		return image + ":" + imageTag
-	}
 }
 
 func getDatabaseConfig(environment api.EnvironmentType, database *api.DatabaseObject) (*api.DatabaseObject, error) {
@@ -1165,7 +1157,7 @@ func addWebhookPwds(buildObject *api.KieAppBuildObject) {
 func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate) (processMigrationTemplate *api.ProcessMigrationTemplate, err error) {
 	if deployProcessMigration(cr) {
 		processMigrationTemplate = &api.ProcessMigrationTemplate{}
-		processMigrationTemplate.ImageURL = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		processMigrationTemplate.ImageURL = constants.ProcessMigrationDefaultImageURL + ":" + cr.Status.Applied.Version
 		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 			processMigrationTemplate.ImageURL = val
 			processMigrationTemplate.OmitImageStream = true

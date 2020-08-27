@@ -109,6 +109,8 @@ const (
 	DefaultProcessMigrationDatabaseName = "pimdb"
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
+	// ProcessMigrationDefaultImageURL Process Migration Image
+	ProcessMigrationDefaultImageURL = PamContext + "process-migration" + RhelVersion
 
 	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = "DM_DC_IMAGE_"
@@ -216,7 +218,7 @@ var Images = []ImageEnv{
 	{
 		Var:       PamProcessMigrationVar,
 		Component: "rhpam-7-process-migration-rhel8-container",
-		Registry:  PamContext + "process-migration" + RhelVersion,
+		Registry:  ProcessMigrationDefaultImageURL,
 	},
 }
 

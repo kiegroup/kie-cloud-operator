@@ -400,7 +400,7 @@ func (reconciler *Reconciler) checkImageStreamTag(name, namespace string) bool {
 }
 
 // Create local ImageStreamTag
-func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.KieApp) error {
+func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, cr *api.KieApp) error {
 	result := strings.Split(tagRefName, ":")
 	if len(result) == 1 {
 		result = append(result, "latest")
@@ -410,6 +410,9 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName string, cr *api.Kie
 	imageName := tagName
 	major, _, _ := defaults.GetMajorMinorMicro(cr.Status.Applied.Version)
 	regContext := fmt.Sprintf("%s-%s", product, major)
+	if _, _, imageContext := defaults.GetImage(imageURL); imageContext != "" {
+		regContext = imageContext
+	}
 
 	// default registry settings
 	registry := &api.KieAppRegistry{
@@ -587,6 +590,7 @@ func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment
 func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Environment) []resource.KubernetesResource {
 	var resources []resource.KubernetesResource
 	objects := filterOmittedObjects(getCustomObjects(env))
+	objects = reconciler.imageStreams(cr, objects)
 	for _, obj := range objects {
 		resources = append(resources, reconciler.getCustomObjectResources(obj, cr)...)
 	}
@@ -595,6 +599,44 @@ func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Env
 		resources = append(resources, consoleLink)
 	}
 	return resources
+}
+
+func (reconciler *Reconciler) imageStreams(cr *api.KieApp, objects []api.CustomObject) []api.CustomObject {
+	for i, object := range objects {
+		// DC logic
+		if len(object.BuildConfigs) == 0 {
+			for index := range object.DeploymentConfigs {
+				for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
+					if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
+						for _, containerName := range trigger.ImageChangeParams.ContainerNames {
+							for _, container := range object.DeploymentConfigs[index].Spec.Template.Spec.Containers {
+								if container.Name == containerName {
+									objects[i].DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace, _ = reconciler.ensureImageStream(
+										trigger.ImageChangeParams.From.Name,
+										trigger.ImageChangeParams.From.Namespace,
+										container.Image,
+										cr,
+									)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		// BC logic
+		for index := range object.BuildConfigs {
+			if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
+				objects[i].BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, _ = reconciler.ensureImageStream(
+					object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Name,
+					object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace,
+					"",
+					cr,
+				)
+			}
+		}
+	}
+	return objects
 }
 
 func getCustomObjects(env api.Environment) []api.CustomObject {
@@ -701,17 +743,6 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 	}
 	for index := range object.DeploymentConfigs {
 		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.GroupVersion.WithKind("DeploymentConfig"))
-		if len(object.BuildConfigs) == 0 {
-			for ti, trigger := range object.DeploymentConfigs[index].Spec.Triggers {
-				if trigger.Type == oappsv1.DeploymentTriggerOnImageChange {
-					object.DeploymentConfigs[index].Spec.Triggers[ti].ImageChangeParams.From.Namespace, _ = reconciler.ensureImageStream(
-						trigger.ImageChangeParams.From.Name,
-						trigger.ImageChangeParams.From.Namespace,
-						cr,
-					)
-				}
-			}
-		}
 		allObjects = append(allObjects, &object.DeploymentConfigs[index])
 	}
 	for index := range object.Services {
@@ -732,12 +763,6 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 	}
 	for index := range object.BuildConfigs {
 		object.BuildConfigs[index].SetGroupVersionKind(buildv1.GroupVersion.WithKind("BuildConfig"))
-		if object.BuildConfigs[index].Spec.Strategy.Type == buildv1.SourceBuildStrategyType {
-			object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, _ = reconciler.ensureImageStream(
-				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Name,
-				object.BuildConfigs[index].Spec.Strategy.SourceStrategy.From.Namespace, cr,
-			)
-		}
 		allObjects = append(allObjects, &object.BuildConfigs[index])
 	}
 	for index := range object.ConfigMaps {
@@ -747,13 +772,13 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 	return allObjects
 }
 
-func (reconciler *Reconciler) ensureImageStream(name string, namespace string, cr *api.KieApp) (string, error) {
+func (reconciler *Reconciler) ensureImageStream(name, namespace, imageURL string, cr *api.KieApp) (string, error) {
 	if cr.Status.Applied.ImageRegistry != nil {
 		if reconciler.checkImageStreamTag(name, cr.Namespace) {
 			return cr.Namespace, nil
 		}
 		log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
-		err := reconciler.createLocalImageTag(name, cr)
+		err := reconciler.createLocalImageTag(name, imageURL, cr)
 		if err != nil {
 			log.Error(err)
 			return namespace, err
@@ -767,7 +792,7 @@ func (reconciler *Reconciler) ensureImageStream(name string, namespace string, c
 		return cr.Namespace, nil
 	} else {
 		log.Warnf("ImageStreamTag %s/%s doesn't exist.", namespace, name)
-		err := reconciler.createLocalImageTag(name, cr)
+		err := reconciler.createLocalImageTag(name, imageURL, cr)
 		if err != nil {
 			log.Error(err)
 			return namespace, err
