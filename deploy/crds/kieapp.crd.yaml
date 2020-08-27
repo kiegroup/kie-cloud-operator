@@ -496,10 +496,16 @@ spec:
                             type: string
                         type: object
                       image:
-                        description: The image to use
+                        description: The image to use e.g. rhpam-<app>-rhel8, this
+                          param is optional for custom image.
+                        type: string
+                      imageContext:
+                        description: The image context to use  e.g. rhpam-7, this
+                          param is optional for custom image.
                         type: string
                       imageTag:
-                        description: The image tag to use
+                        description: The image tag to use e.g. 7.9.0, this param is
+                          optional for custom image.
                         type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
@@ -738,9 +744,17 @@ spec:
                         type: object
                       image:
                         description: The image to use for Process Instance Migration
+                          e.g. rhpam-process-migration-rhel8, this param is optional
+                          for custom image.
+                        type: string
+                      imageContext:
+                        description: The image context to use for Process Instance
+                          Migration  e.g. rhpam-7, this param is optional for custom
+                          image.
                         type: string
                       imageTag:
-                        description: The image tag to use for Process Instance Migration.
+                        description: The image tag to use for Process Instance Migration
+                          e.g. 7.9.0, this param is optional for custom image.
                         type: string
                     type: object
                   servers:
@@ -1122,10 +1136,16 @@ spec:
                           description: Server ID
                           type: string
                         image:
-                          description: The image to use
+                          description: The image to use e.g. rhpam-<app>-rhel8, this
+                            param is optional for custom image.
+                          type: string
+                        imageContext:
+                          description: The image context to use  e.g. rhpam-7, this
+                            param is optional for custom image.
                           type: string
                         imageTag:
-                          description: The image tag to use
+                          description: The image tag to use e.g. 7.9.0, this param
+                            is optional for custom image.
                           type: string
                         jms:
                           description: KieAppJmsObject messaging specification to
@@ -1489,10 +1509,16 @@ spec:
                           type: object
                         type: array
                       image:
-                        description: The image to use
+                        description: The image to use e.g. rhpam-<app>-rhel8, this
+                          param is optional for custom image.
+                        type: string
+                      imageContext:
+                        description: The image context to use  e.g. rhpam-7, this
+                          param is optional for custom image.
                         type: string
                       imageTag:
-                        description: The image tag to use
+                        description: The image tag to use e.g. 7.9.0, this param is
+                          optional for custom image.
                         type: string
                       keystoreSecret:
                         description: Keystore secret name
@@ -2039,10 +2065,16 @@ spec:
                                 type: string
                             type: object
                           image:
-                            description: The image to use
+                            description: The image to use e.g. rhpam-<app>-rhel8,
+                              this param is optional for custom image.
+                            type: string
+                          imageContext:
+                            description: The image context to use  e.g. rhpam-7, this
+                              param is optional for custom image.
                             type: string
                           imageTag:
-                            description: The image tag to use
+                            description: The image tag to use e.g. 7.9.0, this param
+                              is optional for custom image.
                             type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
@@ -2283,10 +2315,18 @@ spec:
                             type: object
                           image:
                             description: The image to use for Process Instance Migration
+                              e.g. rhpam-process-migration-rhel8, this param is optional
+                              for custom image.
+                            type: string
+                          imageContext:
+                            description: The image context to use for Process Instance
+                              Migration  e.g. rhpam-7, this param is optional for
+                              custom image.
                             type: string
                           imageTag:
                             description: The image tag to use for Process Instance
-                              Migration.
+                              Migration e.g. 7.9.0, this param is optional for custom
+                              image.
                             type: string
                         type: object
                       servers:
@@ -2683,10 +2723,16 @@ spec:
                               description: Server ID
                               type: string
                             image:
-                              description: The image to use
+                              description: The image to use e.g. rhpam-<app>-rhel8,
+                                this param is optional for custom image.
+                              type: string
+                            imageContext:
+                              description: The image context to use  e.g. rhpam-7,
+                                this param is optional for custom image.
                               type: string
                             imageTag:
-                              description: The image tag to use
+                              description: The image tag to use e.g. 7.9.0, this param
+                                is optional for custom image.
                               type: string
                             jms:
                               description: KieAppJmsObject messaging specification
@@ -3062,10 +3108,16 @@ spec:
                               type: object
                             type: array
                           image:
-                            description: The image to use
+                            description: The image to use e.g. rhpam-<app>-rhel8,
+                              this param is optional for custom image.
+                            type: string
+                          imageContext:
+                            description: The image context to use  e.g. rhpam-7, this
+                              param is optional for custom image.
                             type: string
                           imageTag:
-                            description: The image tag to use
+                            description: The image tag to use e.g. 7.9.0, this param
+                              is optional for custom image.
                             type: string
                           keystoreSecret:
                             description: Keystore secret name

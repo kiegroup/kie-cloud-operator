@@ -28,13 +28,15 @@ import (
 )
 
 var (
-	bcmImage      = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
-	bcImage       = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
-	dcImage       = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
-	latestTag     = ":latest"
-	helloRules    = "hello-rules" + latestTag
-	byeRules      = "bye-rules" + latestTag
-	kieServerName = "test-kieserver"
+	bcmImage             = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
+	bcImage              = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
+	dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
+	latestTag            = ":latest"
+	helloRules           = "hello-rules" + latestTag
+	byeRules             = "bye-rules" + latestTag
+	kieServerName        = "test-kieserver"
+	rhpamKieserverAndTag = "rhpam-kieserver-rhel8:%s"
+	pimImage             = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -1236,7 +1238,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -1265,7 +1267,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -1437,7 +1439,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -3558,8 +3560,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type:             api.DatabaseMySQL,
@@ -3581,9 +3584,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    "test-pim-image",
-				ImageTag: "test-pim-image-tag",
-				ImageURL: "test-pim-image:test-pim-image-tag",
+				Image:        "test-pim-image",
+				ImageContext: "test-context",
+				ImageTag:     "test-pim-image-tag",
+				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -3622,9 +3626,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    constants.RhpamPrefix + "-process-migration" + constants.RhelVersion,
-				ImageTag: constants.CurrentVersion,
-				ImageURL: constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + constants.CurrentVersion,
+				Image:        pimImage,
+				ImageTag:     constants.CurrentVersion,
+				ImageContext: constants.RhpamPrefix + "-7",
+				ImageURL:     constants.ProcessMigrationDefaultImageURL + ":" + constants.CurrentVersion,
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -3667,8 +3672,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
@@ -3698,8 +3704,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
@@ -3733,9 +3740,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    "test-pim-image",
-				ImageTag: "test-pim-image-tag",
-				ImageURL: "test-pim-image:test-pim-image-tag",
+				Image:        "test-pim-image",
+				ImageTag:     "test-pim-image-tag",
+				ImageContext: "test-context",
+				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -4653,4 +4661,171 @@ var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
 	Requests: corev1.ResourceList{
 		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
 	},
+}
+
+func TestSmartRouterDefaultConf(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext, "smartrouter")
+}
+
+func TestSmartRouterWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouter(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext, "smartrouter")
+}
+
+func createSmartRouter() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject: api.KieAppObject{
+			ImageContext: "rhpam-42",
+		},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func TestConsoleDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext, "businesscentral")
+}
+
+func TestConsoleWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-41",
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext, "businesscentral")
+}
+
+func TestServersDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext, "kieserver")
+}
+
+func TestServersWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							ImageContext: "rhpam-42",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext, "kieserver")
+}
+
+func TestProcessMigrationDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext, "process-migration")
+}
+
+func TestProcessMigrationWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					ImageContext: "rhpam-43",
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext, "process-migration")
+}
+
+func testContext(t *testing.T, image, version, context, label string) {
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-"+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.PamContext+label+constants.RhelVersion+":"+version, image)
+	}
 }

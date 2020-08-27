@@ -563,6 +563,13 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "test",
+					},
+				},
+			},
 		},
 	}
 	mockSvc := test.MockService()
@@ -573,13 +580,19 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), cr)
+	image := fmt.Sprintf("rhpam-businesscentral-openshift:%s", cr.Status.Applied.Version)
+	imageURL := constants.ImageRegistry + "/" + cr.Spec.Objects.Console.ImageContext + "/" + image
+	err = reconciler.createLocalImageTag(image, imageURL, cr)
 	assert.Nil(t, err)
 
-	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
+	isTag, err := isTagMock.Get(context.TODO(), cr.Namespace+"/"+image, metav1.GetOptions{})
 	assert.Nil(t, err)
+
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
+	assert.Equal(t, imageURL, isTag.Tag.From.Name)
+	assert.Equal(t, image, isTag.Name)
+	assert.Equal(t, cr.Status.Applied.Version, isTag.Tag.Name)
+	assert.Equal(t, cr.Namespace, isTag.Namespace)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
@@ -600,7 +613,7 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), "", cr)
 	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
@@ -627,7 +640,7 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), "", cr)
 	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), metav1.GetOptions{})
@@ -654,7 +667,7 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), cr)
+	err = reconciler.createLocalImageTag(fmt.Sprintf("%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), "", cr)
 	assert.Nil(t, err)
 
 	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/%s:latest", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), metav1.GetOptions{})
