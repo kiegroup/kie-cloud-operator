@@ -272,24 +272,29 @@ spec:
                 properties:
                   adminPassword:
                     description: The password to use for the adminUser.
+                    format: password
                     type: string
                   adminUser:
                     description: The user to use for the admin.
                     type: string
                   amqClusterPassword:
                     description: The password to use for amq cluster user.
+                    format: password
                     type: string
                   amqPassword:
                     description: The password to use for amq user.
+                    format: password
                     type: string
                   applicationName:
                     description: The name of the application deployment.
                     type: string
                   dbPassword:
                     description: The password to use for databases.
+                    format: password
                     type: string
                   keyStorePassword:
                     description: The password to use for keystore generation.
+                    format: password
                     type: string
                 type: object
               environment:
@@ -713,6 +718,7 @@ spec:
                                 type: string
                               password:
                                 description: External database password
+                                format: password
                                 type: string
                               username:
                                 description: External database username
@@ -940,6 +946,7 @@ spec:
                                   type: string
                                 password:
                                   description: External database password
+                                  format: password
                                   type: string
                                 port:
                                   description: Database Port. For example, 3306
@@ -1161,6 +1168,7 @@ spec:
                               type: string
                             amqKeystorePassword:
                               description: The password for the AMQ keystore and certificate.
+                              format: password
                               type: string
                             amqQueues:
                               description: AMQ broker broker comma separated queues,
@@ -1175,6 +1183,7 @@ spec:
                               type: string
                             amqTruststorePassword:
                               description: The password for the AMQ Trust Store.
+                              format: password
                               type: string
                             auditTransacted:
                               description: Determines if JMS session is transacted
@@ -1204,6 +1213,7 @@ spec:
                             password:
                               description: AMQ broker password to connect do the AMQ,
                                 generated if empty.
+                              format: password
                               type: string
                             queueAudit:
                               description: JNDI name of audit logging queue for JMS,
@@ -1835,24 +1845,29 @@ spec:
                     properties:
                       adminPassword:
                         description: The password to use for the adminUser.
+                        format: password
                         type: string
                       adminUser:
                         description: The user to use for the admin.
                         type: string
                       amqClusterPassword:
                         description: The password to use for amq cluster user.
+                        format: password
                         type: string
                       amqPassword:
                         description: The password to use for amq user.
+                        format: password
                         type: string
                       applicationName:
                         description: The name of the application deployment.
                         type: string
                       dbPassword:
                         description: The password to use for databases.
+                        format: password
                         type: string
                       keyStorePassword:
                         description: The password to use for keystore generation.
+                        format: password
                         type: string
                     type: object
                   environment:
@@ -2284,6 +2299,7 @@ spec:
                                     type: string
                                   password:
                                     description: External database password
+                                    format: password
                                     type: string
                                   username:
                                     description: External database username
@@ -2521,6 +2537,7 @@ spec:
                                       type: string
                                     password:
                                       description: External database password
+                                      format: password
                                       type: string
                                     port:
                                       description: Database Port. For example, 3306
@@ -2749,6 +2766,7 @@ spec:
                                 amqKeystorePassword:
                                   description: The password for the AMQ keystore and
                                     certificate.
+                                  format: password
                                   type: string
                                 amqQueues:
                                   description: AMQ broker broker comma separated queues,
@@ -2765,6 +2783,7 @@ spec:
                                   type: string
                                 amqTruststorePassword:
                                   description: The password for the AMQ Trust Store.
+                                  format: password
                                   type: string
                                 auditTransacted:
                                   description: Determines if JMS session is transacted
@@ -2794,6 +2813,7 @@ spec:
                                 password:
                                   description: AMQ broker password to connect do the
                                     AMQ, generated if empty.
+                                  format: password
                                   type: string
                                 queueAudit:
                                   description: JNDI name of audit logging queue for

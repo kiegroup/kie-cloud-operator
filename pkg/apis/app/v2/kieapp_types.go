@@ -173,6 +173,7 @@ type KieAppJmsObject struct {
 	AuditTransacted *bool `json:"auditTransacted,omitempty"`
 	// AMQ broker username to connect do the AMQ, generated if empty.
 	Username string `json:"username,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// AMQ broker password to connect do the AMQ, generated if empty.
 	Password string `json:"password,omitempty"`
 	// AMQ broker broker comma separated queues, if empty the values from default queues will be used.
@@ -181,10 +182,12 @@ type KieAppJmsObject struct {
 	AMQSecretName string `json:"amqSecretName,omitempty"` // AMQ SSL parameters
 	// The name of the AMQ SSL Trust Store file.
 	AMQTruststoreName string `json:"amqTruststoreName,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password for the AMQ Trust Store.
 	AMQTruststorePassword string `json:"amqTruststorePassword,omitempty"`
 	// The name of the AMQ keystore file.
 	AMQKeystoreName string `json:"amqKeystoreName,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password for the AMQ keystore and certificate.
 	AMQKeystorePassword string `json:"amqKeystorePassword,omitempty"`
 	// Not intended to be set by the user, if will be set to true if all required SSL parameters are set.
@@ -472,6 +475,7 @@ type CommonExternalDatabaseObject struct {
 	// External database username
 	Username string `json:"username"`
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format:=password
 	// External database password
 	Password string `json:"password"`
 	// Sets xa-pool/min-pool-size for the configured datasource.
@@ -678,16 +682,21 @@ type BuildTemplate struct {
 type CommonConfig struct {
 	// The name of the application deployment.
 	ApplicationName string `json:"applicationName,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password to use for keystore generation.
 	KeyStorePassword string `json:"keyStorePassword,omitempty"`
 	// The user to use for the admin.
 	AdminUser string `json:"adminUser,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password to use for the adminUser.
 	AdminPassword string `json:"adminPassword,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password to use for databases.
 	DBPassword string `json:"dbPassword,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password to use for amq user.
 	AMQPassword string `json:"amqPassword,omitempty"`
+	// +kubebuilder:validation:Format:=password
 	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
 }
