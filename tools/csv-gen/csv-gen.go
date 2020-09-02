@@ -34,23 +34,25 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 var log = logs.GetLogger("csv.generator")
 
 var (
 	rh              = "Red Hat"
-	maturity        = "stable"
+	channel         = "stable"
 	major, minor, _ = defaults.GetMajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
-			Name:         "kiecloud",
-			DisplayName:  "Business Automation",
-			OperatorName: "kie-cloud-operator",
+			Name:         "businessautomation",
+			DisplayName:  "Business Automation (DEV)",
+			OperatorName: "business-automation-operator",
 			Registry:     "quay.io",
 			Context:      "kiegroup",
 			ImageName:    "kie-cloud-operator",
 			Tag:          version.Version,
+			Maturity:     "dev",
 		},
 		{
 			Name:         "businessautomation",
@@ -59,7 +61,8 @@ var (
 			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
-			Tag:          constants.CurrentVersion,
+			Tag:          version.Version,
+			Maturity:     channel,
 		},
 	}
 )
@@ -72,6 +75,7 @@ type csvSetting struct {
 	Context      string `json:"context"`
 	ImageName    string `json:"imageName"`
 	Tag          string `json:"tag"`
+	Maturity     string `json:"maturity"`
 }
 type csvPermissions struct {
 	ServiceAccountName string              `json:"serviceAccountName"`
@@ -111,7 +115,15 @@ func main() {
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
 
 		csvVersionedName := operatorName + "." + version.Version
+		random := rand.String(10)
+		csvVersion := csvversion.OperatorVersion{}
+		csvVersion.Version = semver.MustParse(version.Version)
+		if csv.Maturity != channel {
+			csvVersionedName = csvVersionedName + "-dev-" + random
+			csvVersion.Version.Build = []string{random}
+		}
 		templateStruct.Name = csvVersionedName
+		templateStruct.Spec.Version = csvVersion
 		templateStruct.Namespace = "placeholder"
 		descrip := "Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments."
 		repository := "https://github.com/kiegroup/kie-cloud-operator"
@@ -139,13 +151,10 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		csvVersion := csvversion.OperatorVersion{}
-		csvVersion.Version = semver.MustParse(version.Version)
-		templateStruct.Spec.Version = csvVersion
 		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
-		templateStruct.Spec.Maturity = maturity
+		templateStruct.Spec.Maturity = csv.Maturity
 		templateStruct.Spec.Maintainers = []csvv1.Maintainer{{Name: rh, Email: "bsig-cloud@redhat.com"}}
 		templateStruct.Spec.Provider = csvv1.AppLink{Name: rh}
 		templateStruct.Spec.Links = []csvv1.AppLink{
@@ -278,15 +287,16 @@ func main() {
 			},
 		}
 
-		csvFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/" + csvVersionedName + ".clusterserviceversion.yaml"
-
-		if csv.OperatorName == "kie-cloud-operator" {
+		bundleDir := "deploy/olm-catalog/prod/" + version.Version + "/"
+		if csv.Maturity != channel {
+			bundleDir = "deploy/olm-catalog/dev/" + version.Version + "/"
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
 			createFile(deployFile, deployment)
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
+		csvFile := bundleDir + "manifests/" + operatorName + "." + version.Version + ".clusterserviceversion.yaml"
 
 		// create image-references file for automated ART digest find/replace
 		imageRef := &constants.ImageRef{
@@ -361,7 +371,7 @@ func main() {
 				log.Error(err)
 			}
 		}
-		// imageFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/image-references"
+		// imageFile := bundleDir + "manifests/image-references"
 		// createFile(imageFile, imageRef)
 
 		var templateInterface interface{}
@@ -399,13 +409,13 @@ func main() {
 		// create symlink in manifests dir to crd file
 		crdFile := "kieapp.crd.yaml"
 		crdPath := "../../../../crds/"
-		crdSymLink := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/" + crdFile
+		crdSymLink := bundleDir + "manifests/" + crdFile
 		os.Symlink(crdPath+crdFile, crdSymLink)
 
 		annotationsdata := annotationsStruct{
 			Annotations: map[string]string{
-				"operators.operatorframework.io.bundle.channel.default.v1": "stable",
-				"operators.operatorframework.io.bundle.channels.v1":        "stable",
+				"operators.operatorframework.io.bundle.channel.default.v1": channel,
+				"operators.operatorframework.io.bundle.channels.v1":        channel,
 				"operators.operatorframework.io.bundle.manifests.v1":       "manifests/",
 				"operators.operatorframework.io.bundle.mediatype.v1":       "registry+v1",
 				"operators.operatorframework.io.bundle.metadata.v1":        "metadata/",
@@ -415,7 +425,7 @@ func main() {
 				"operators.operatorframework.io.metrics.project_layout":    "go",
 			},
 		}
-		annotationsFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "metadata/annotations.yaml"
+		annotationsFile := bundleDir + "metadata/annotations.yaml"
 		createFile(annotationsFile, &annotationsdata)
 
 		// create prior-version snippet yaml sample

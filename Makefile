@@ -68,9 +68,9 @@ bundle-scratch:
 bundle-release:
 	./hack/go-build-bundle.sh release
 
-.PHONY: bundle-upstream
-bundle-upstream:
-	UPSTREAM=true ./hack/go-build-bundle.sh
+.PHONY: bundle-dev
+bundle-dev:
+	DEV=true LOCAL=true ./hack/go-build-bundle.sh
 
 .PHONY: rhel
 rhel:

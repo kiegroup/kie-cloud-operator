@@ -7,17 +7,17 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.9.0
-    createdAt: "2020-09-14 11:44:27"
+    createdAt: "2020-09-17 14:51:02"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat
     tectonic-visibility: ocs
   labels:
-    operator-kiecloud: "true"
+    operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: kiecloud-operator.7.9.0
+  name: businessautomation-operator.7.9.0-dev-x9vcsqg4w8
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -112,7 +112,7 @@ spec:
      * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.
 
     [See more](https://www.redhat.com/en/products/process-automation).
-  displayName: Business Automation
+  displayName: Business Automation (DEV)
   icon:
   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjEuMTUgNzIxLjE1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2RkMzkyNjt9LmNscy0ye2ZpbGw6I2NjMzQyNzt9LmNscy0ze2ZpbGw6I2ZmZjt9LmNscy00e2ZpbGw6I2U1ZTVlNDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlByb2R1Y3RfSWNvbi1SZWRfSGF0LUF1dG9tYXRpb24tUkdCPC90aXRsZT48Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjM2MC41NyIgY3k9IjM2MC41NyIgcj0iMzU4LjU4Ii8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNjEzLjc4LDEwNy4wOSwxMDYuNzIsNjE0LjE2YzE0MC4xNCwxMzguNjIsMzY2LjExLDEzOC4xNiw1MDUuNjctMS40Uzc1Mi40LDI0Ny4yNCw2MTMuNzgsMTA3LjA5WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIzNzguOTcgMzI3LjQ4IDQ2MS43NyAxNTkuNTcgMjU5LjY3IDE1OS40OSAyNTkuNjcgNDEzLjEgMzA2Ljk3IDQxMy43OCAzOTMuMjcgMzI3LjQ3IDM3OC45NyAzMjcuNDgiLz48cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iMzU5LjYgNTc4LjA2IDQ4Mi41NSAzMjcuNDUgMzkzLjI3IDMyNy40NyAzMDYuOTcgNDEzLjc4IDM1OS42IDQxNC41MiAzNTkuNiA1NzguMDYiLz48L3N2Zz4=
     mediatype: image/svg+xml
@@ -130,14 +130,14 @@ spec:
           - create
           - update
           - delete
-        serviceAccountName: kie-cloud-operator
+        serviceAccountName: business-automation-operator
       deployments:
-      - name: kie-cloud-operator
+      - name: business-automation-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: kie-cloud-operator
+              name: business-automation-operator
           strategy:
             rollingUpdate:
               maxSurge: 1
@@ -146,7 +146,7 @@ spec:
           template:
             metadata:
               labels:
-                name: kie-cloud-operator
+                name: business-automation-operator
             spec:
               containers:
               - command:
@@ -268,9 +268,9 @@ spec:
                   value: registry.redhat.io/openshift3/oauth-proxy:latest
                 image: quay.io/kiegroup/kie-cloud-operator:7.9.0
                 imagePullPolicy: Always
-                name: kie-cloud-operator
+                name: business-automation-operator
                 resources: {}
-              serviceAccountName: kie-cloud-operator
+              serviceAccountName: business-automation-operator
       permissions:
       - rules:
         - apiGroups:
@@ -364,7 +364,9 @@ spec:
         - apiGroups:
           - image.openshift.io
           resources:
+          - images
           - imagestreams
+          - imagestreamimages
           - imagestreamtags
           verbs:
           - create
@@ -401,13 +403,14 @@ spec:
           - operators.coreos.com
           resources:
           - clusterserviceversions
+          - subscriptions
           verbs:
           - get
           - list
           - patch
           - update
           - watch
-        serviceAccountName: kie-cloud-operator
+        serviceAccountName: business-automation-operator
     strategy: deployment
   installModes:
   - supported: true
@@ -429,8 +432,8 @@ spec:
   - automation
   - operator
   labels:
-    alm-owner-kiecloud: kiecloud-operator
-    operated-by: kiecloud-operator.7.9.0
+    alm-owner-businessautomation: businessautomation-operator
+    operated-by: businessautomation-operator.7.9.0-dev-x9vcsqg4w8
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -439,7 +442,7 @@ spec:
   maintainers:
   - email: bsig-cloud@redhat.com
     name: Red Hat
-  maturity: stable
+  maturity: dev
   provider:
     name: Red Hat
   relatedImages:
@@ -529,9 +532,9 @@ spec:
     name: amq-broker
   - image: registry.redhat.io/amq7/amq-broker:7.7
     name: amq-broker
-  replaces: kiecloud-operator.7.8.1
+  replaces: businessautomation-operator.7.8.1
   selector:
     matchLabels:
-      alm-owner-kiecloud: kiecloud-operator
-      operated-by: kiecloud-operator.7.9.0
-  version: 7.9.0
+      alm-owner-businessautomation: businessautomation-operator
+      operated-by: businessautomation-operator.7.9.0-dev-x9vcsqg4w8
+  version: 7.9.0+x9vcsqg4w8
