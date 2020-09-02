@@ -3,11 +3,11 @@
 source ./hack/go-mod-env.sh
 
 REPO=https://github.com/kiegroup/kie-cloud-operator
-BRANCH=$(go run getversion.go)
+VERSION=$(go run getversion.go)
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
 TAR=modules/builder/${IMAGE}.tar.gz
-URL=${REPO}/archive/${BRANCH}.tar.gz
+URL=${REPO}/archive/${VERSION}.tar.gz
 CFLAGS="docker"
 
 if [[ -z ${CI} ]]; then
@@ -29,6 +29,7 @@ if [[ -z ${CI} ]]; then
         wget -q ${URL} -O ${TAR}
         echo ${CFLAGS}
         cekit --verbose --redhat build \
+           --overrides '{version: '${VERSION}'}' \
            ${CFLAGS}
         rm ${TAR}
     else
@@ -38,7 +39,7 @@ if [[ -z ${CI} ]]; then
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui
         echo
 
-        operator-sdk build --go-build-args -mod=vendor ${REGISTRY}/${IMAGE}:${BRANCH}
+        operator-sdk build --go-build-args -mod=vendor ${REGISTRY}/${IMAGE}:${VERSION}
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui

@@ -142,7 +142,7 @@ type SmartRouterObject struct {
 	// +kubebuilder:validation:Enum:=http;https
 	// Smart Router protocol, if no value is provided, http is the default protocol.
 	Protocol string `json:"protocol,omitempty"`
-	// If enabled, Busineses Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
+	// If enabled, Business Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
 	UseExternalRoute bool `json:"useExternalRoute,omitempty"`
 }
 

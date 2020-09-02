@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -27,6 +28,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	csvversion "github.com/operator-framework/api/pkg/lib/version"
 	csvv1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/tidwall/sjson"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,7 +47,6 @@ var (
 			Name:         "kiecloud",
 			DisplayName:  "Business Automation",
 			OperatorName: "kie-cloud-operator",
-			CsvDir:       "community",
 			Registry:     "quay.io",
 			Context:      "kiegroup",
 			ImageName:    "kie-cloud-operator",
@@ -55,7 +56,6 @@ var (
 			Name:         "businessautomation",
 			DisplayName:  "Business Automation",
 			OperatorName: "business-automation-operator",
-			CsvDir:       "redhat",
 			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
@@ -68,7 +68,6 @@ type csvSetting struct {
 	Name         string `json:"name"`
 	DisplayName  string `json:"displayName"`
 	OperatorName string `json:"operatorName"`
-	CsvDir       string `json:"csvDir"`
 	Registry     string `json:"repository"`
 	Context      string `json:"context"`
 	ImageName    string `json:"imageName"`
@@ -87,13 +86,8 @@ type csvStrategySpec struct {
 	ClusterPermissions []csvPermissions `json:"clusterPermissions"`
 	Deployments        []csvDeployments `json:"deployments"`
 }
-type channel struct {
-	Name       string `json:"name"`
-	CurrentCSV string `json:"currentCSV"`
-}
-type packageStruct struct {
-	PackageName string    `json:"packageName"`
-	Channels    []channel `json:"channels"`
+type annotationsStruct struct {
+	Annotations map[string]string `json:"annotations"`
 }
 type image struct {
 	Name  string `json:"name"`
@@ -139,7 +133,9 @@ func main() {
 		)
 		templateStruct.SetLabels(
 			map[string]string{
-				"operator-" + csv.Name: "true",
+				"operator-" + csv.Name:            "true",
+				"operatorframework.io/os.linux":   "supported",
+				"operatorframework.io/arch.amd64": "supported",
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
@@ -282,8 +278,7 @@ func main() {
 			},
 		}
 
-		opMajor, opMinor, _ := defaults.GetMajorMinorMicro(version.Version)
-		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
+		csvFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/" + csvVersionedName + ".clusterserviceversion.yaml"
 
 		if csv.OperatorName == "kie-cloud-operator" {
 			templateStruct.Annotations["certified"] = "false"
@@ -366,8 +361,8 @@ func main() {
 				log.Error(err)
 			}
 		}
-		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
-		createFile(imageFile, imageRef)
+		// imageFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/image-references"
+		// createFile(imageFile, imageRef)
 
 		var templateInterface interface{}
 		if len(relatedImages) > 0 {
@@ -401,26 +396,27 @@ func main() {
 		}
 		createFile(csvFile, &templateInterface)
 
-		packageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + csv.Name + ".package.yaml"
-		p, err := os.Create(packageFile)
-		defer p.Close()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		pwr := bufio.NewWriter(p)
-		pwr.WriteString("#! package-manifest: " + csvFile + "\n")
-		packagedata := packageStruct{
-			PackageName: operatorName,
-			Channels: []channel{
-				{
-					Name:       maturity,
-					CurrentCSV: csvVersionedName,
-				},
+		// create symlink in manifests dir to crd file
+		crdFile := "kieapp.crd.yaml"
+		crdPath := "../../../../crds/"
+		crdSymLink := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "manifests/" + crdFile
+		os.Symlink(crdPath+crdFile, crdSymLink)
+
+		annotationsdata := annotationsStruct{
+			Annotations: map[string]string{
+				"operators.operatorframework.io.bundle.channel.default.v1": "stable",
+				"operators.operatorframework.io.bundle.channels.v1":        "stable",
+				"operators.operatorframework.io.bundle.manifests.v1":       "manifests/",
+				"operators.operatorframework.io.bundle.mediatype.v1":       "registry+v1",
+				"operators.operatorframework.io.bundle.metadata.v1":        "metadata/",
+				"operators.operatorframework.io.bundle.package.v1":         operatorName,
+				"operators.operatorframework.io.metrics.builder":           "operator-sdk-" + sdkVersion.Version,
+				"operators.operatorframework.io.metrics.mediatype.v1":      "metrics+v1",
+				"operators.operatorframework.io.metrics.project_layout":    "go",
 			},
 		}
-		util.MarshallObject(packagedata, pwr)
-		pwr.Flush()
+		annotationsFile := "deploy/olm-catalog/" + operatorName + "/" + version.Version + "/" + "metadata/annotations.yaml"
+		createFile(annotationsFile, &annotationsdata)
 
 		// create prior-version snippet yaml sample
 		versionSnippet := &api.KieApp{}
@@ -539,8 +535,9 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func createFile(filepath string, obj interface{}) {
-	f, err := os.Create(filepath)
+func createFile(path string, obj interface{}) {
+	os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	f, err := os.Create(path)
 	defer f.Close()
 	if err != nil {
 		fmt.Println(err)

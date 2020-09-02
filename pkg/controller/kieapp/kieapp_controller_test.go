@@ -843,7 +843,8 @@ func TestConsoleLinkCreation(t *testing.T) {
 	err = service.Update(context.TODO(), cr)
 	assert.Nil(t, err)
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	_, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
 	cr = reloadCR(t, service, crNamespacedName)
 	assert.Len(t, cr.GetFinalizers(), 0)
 	consoleLink = &consolev1.ConsoleLink{}

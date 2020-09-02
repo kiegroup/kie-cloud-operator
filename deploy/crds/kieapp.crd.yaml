@@ -1566,7 +1566,7 @@ spec:
                         description: The storageClassName to use
                         type: string
                       useExternalRoute:
-                        description: If enabled, Busineses Central will use the external
+                        description: If enabled, Business Central will use the external
                           smartrouter route to communicate with it. Note that, valid
                           SSL certificates should be used.
                         type: boolean
@@ -3165,7 +3165,7 @@ spec:
                             description: The storageClassName to use
                             type: string
                           useExternalRoute:
-                            description: If enabled, Busineses Central will use the
+                            description: If enabled, Business Central will use the
                               external smartrouter route to communicate with it. Note
                               that, valid SSL certificates should be used.
                             type: boolean
