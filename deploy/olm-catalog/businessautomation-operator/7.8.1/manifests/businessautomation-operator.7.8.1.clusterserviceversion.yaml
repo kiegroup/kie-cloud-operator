@@ -16,6 +16,8 @@ metadata:
     tectonic-visibility: ocs
   labels:
     operator-businessautomation: "true"
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/os.linux: supported
   name: businessautomation-operator.7.8.1
   namespace: placeholder
 spec:

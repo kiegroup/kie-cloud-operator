@@ -35,11 +35,8 @@ labels:
   - name: com.redhat.delivery.operator.bundle
     value: "true"
   - name: com.redhat.openshift.versions
-  # change to this label for 7.9.0 release ONLY # value: v4.5,v4.6
-  # change to this label for 7.9.1+ releases # value: v4.6
-    value: v4.5
-  # - name: com.redhat.delivery.backport # remove this label for 7.9+ release   # ADD FOR 7.9.0 BUILD ONLY... DELETE AFTER
-  #   value: "true"
+    # change to this label for 7.9.1+ releases ?? # value: v4.6
+    value: v4.5,v4.6
 modules:
   repositories:
     - path: deploy/olm-catalog/businessautomation-operator

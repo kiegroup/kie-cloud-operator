@@ -6,8 +6,7 @@ echo
 echo Building operator bundle image:
 echo
 
-VERSION=7.8.1
-# VERSION=$(go run getversion.go)
+VERSION=$(go run getversion.go)
 
 if [[ ${UPSTREAM} != true ]]; then
     CFLAGS="docker --no-squash"
