@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kie-cloud-operator
+  name: business-automation-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: kie-cloud-operator
+      name: business-automation-operator
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        name: kie-cloud-operator
+        name: business-automation-operator
     spec:
       containers:
       - command:
@@ -137,6 +137,6 @@ spec:
           value: registry.redhat.io/openshift3/oauth-proxy:latest
         image: quay.io/kiegroup/kie-cloud-operator:7.9.0
         imagePullPolicy: Always
-        name: kie-cloud-operator
+        name: business-automation-operator
         resources: {}
-      serviceAccountName: kie-cloud-operator
+      serviceAccountName: business-automation-operator

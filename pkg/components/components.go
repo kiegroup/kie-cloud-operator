@@ -244,7 +244,9 @@ func GetRole(operatorName string) *rbacv1.Role {
 					oimagev1.SchemeGroupVersion.Group,
 				},
 				Resources: []string{
+					"images",
 					"imagestreams",
+					"imagestreamimages",
 					"imagestreamtags",
 				},
 				Verbs: Verbs,
@@ -271,7 +273,10 @@ func GetRole(operatorName string) *rbacv1.Role {
 				APIGroups: []string{
 					csvv1.SchemeGroupVersion.Group,
 				},
-				Resources: []string{"clusterserviceversions"},
+				Resources: []string{
+					"clusterserviceversions",
+					"subscriptions",
+				},
 				Verbs: []string{
 					"get",
 					"list",
