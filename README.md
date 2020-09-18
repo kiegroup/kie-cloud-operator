@@ -30,14 +30,15 @@ If pushing to another quay repository, replace _kiegroup_ with your username or 
 **Create your own index image**
 ```bash
 $ make bundle-dev
+USERNAME=tchughesiv
 VERSION=$(go run getversion.go)
-IMAGE=quay.io/tchughesiv/rhpam-operator-bundle
+IMAGE=quay.io/${USERNAME}/rhpam-operator-bundle
 BUNDLE=${IMAGE}:${VERSION}
 
 $ docker push ${BUNDLE}
 BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
 INDEX_VERSION=v4.5 # v4.6
-INDEX_IMAGE=quay.io/tchughesiv/ba-operator-index:${INDEX_VERSION}
+INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
 INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go --prior)
 INDEX_TO=${INDEX_IMAGE}_${VERSION}
 
