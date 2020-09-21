@@ -192,6 +192,17 @@ func GetRole(operatorName string) *rbacv1.Role {
 			},
 			{
 				APIGroups: []string{
+					"",
+				},
+				Resources: []string{
+					"bindings",
+					"endpoints",
+					"podtemplates",
+				},
+				Verbs: []string{"list"},
+			},
+			{
+				APIGroups: []string{
 					appsv1.SchemeGroupVersion.Group,
 				},
 				Resources: []string{
@@ -245,6 +256,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"images",
+					"imagetags",
 					"imagestreams",
 					"imagestreamimages",
 					"imagestreamtags",
@@ -266,8 +278,15 @@ func GetRole(operatorName string) *rbacv1.Role {
 				APIGroups: []string{
 					monv1.SchemeGroupVersion.Group,
 				},
-				Resources: []string{"servicemonitors"},
-				Verbs:     []string{"get", "create"},
+				Resources: []string{
+					"servicemonitors",
+					"prometheusrules",
+				},
+				Verbs: []string{
+					"get",
+					"create",
+					"list",
+				},
 			},
 			{
 				APIGroups: []string{

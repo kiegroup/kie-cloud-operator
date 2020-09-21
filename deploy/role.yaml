@@ -23,6 +23,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - bindings
+  - endpoints
+  - podtemplates
+  verbs:
+  - list
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -95,6 +103,7 @@ rules:
   - image.openshift.io
   resources:
   - images
+  - imagetags
   - imagestreams
   - imagestreamimages
   - imagestreamtags
@@ -126,9 +135,11 @@ rules:
   - monitoring.coreos.com
   resources:
   - servicemonitors
+  - prometheusrules
   verbs:
   - get
   - create
+  - list
 - apiGroups:
   - operators.coreos.com
   resources:
