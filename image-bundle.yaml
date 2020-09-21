@@ -35,8 +35,7 @@ labels:
   - name: com.redhat.delivery.operator.bundle
     value: "true"
   - name: com.redhat.openshift.versions
-    # change to this label for 7.9.1+ releases ?? # value: v4.6
-    value: v4.5,v4.6
+    value: v4.7
 modules:
   repositories:
     - path: deploy/olm-catalog/prod
