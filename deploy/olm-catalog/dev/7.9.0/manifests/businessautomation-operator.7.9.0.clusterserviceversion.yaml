@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.9.0
-    createdAt: "2020-09-21 10:22:45"
+    createdAt: "2020-09-22 11:50:50"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.9.0-dev-r78qgfp5pr
+  name: businessautomation-operator.7.9.0-dev-x7zlgfdt6r
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -62,16 +62,6 @@ spec:
         name: ""
         version: v1
       specDescriptors:
-      - description: The admin user for BC console.
-        displayName: Business/Decision Central Admin User (defaults to 'adminUser')
-        path: commonConfig.adminUser
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:password
-      - description: The admin password for BC console.
-        displayName: Business/Decision Central Admin Password (defaults to 'RedHat')
-        path: commonConfig.adminPassword
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:password
       - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
         displayName: Enable Upgrades
         path: upgrades.enabled
@@ -454,7 +444,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.9.0-dev-r78qgfp5pr
+    operated-by: businessautomation-operator.7.9.0-dev-x7zlgfdt6r
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -557,5 +547,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.9.0-dev-r78qgfp5pr
-  version: 7.9.0+r78qgfp5pr
+      operated-by: businessautomation-operator.7.9.0-dev-x7zlgfdt6r
+  version: 7.9.0+x7zlgfdt6r
