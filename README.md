@@ -135,7 +135,7 @@ Change log level at runtime w/ the `DEBUG` environment variable. e.g. -
 ```bash
 make mod
 make clean
-DEBUG="true" operator-sdk run local --watch-namespace<namespace>
+DEBUG="true" operator-sdk run local --watch-namespace <namespace>
 ```
 
 Also at runtime, change registry for rhpam ImageStreamTags -

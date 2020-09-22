@@ -18,7 +18,7 @@ console:
                 - "[[.ApplicationName]]-[[.Console.Name]]"
               from:
                 kind: ImageStreamTag
-                namespace: openshift
+                namespace: "openshift"
                 name: "[[.Console.Image]]:[[.Console.ImageTag]]"
           #[[end]]
           - type: ConfigChange

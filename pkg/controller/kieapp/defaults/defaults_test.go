@@ -150,7 +150,7 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 
 	pingService := getService(wbServices, "test-rhpamcentr-ping")
 	assert.NotNil(t, pingService, "Ping service not found")
-	assert.False(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -183,7 +183,7 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
 	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
