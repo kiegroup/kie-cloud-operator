@@ -234,18 +234,6 @@ func main() {
 				},
 				SpecDescriptors: []csvv1.SpecDescriptor{
 					{
-						Description:  "The admin user for BC console.",
-						DisplayName:  "Business/Decision Central Admin User (defaults to '" + constants.DefaultAdminUser + "')",
-						Path:         "commonConfig.adminUser",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:password"},
-					},
-					{
-						Description:  "The admin password for BC console.",
-						DisplayName:  "Business/Decision Central Admin Password (defaults to '" + constants.DefaultPassword + "')",
-						Path:         "commonConfig.adminPassword",
-						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:password"},
-					},
-					{
 						Description:  "Set true to enable automatic micro version product upgrades, it is disabled by default.",
 						DisplayName:  "Enable Upgrades",
 						Path:         "upgrades.enabled",
