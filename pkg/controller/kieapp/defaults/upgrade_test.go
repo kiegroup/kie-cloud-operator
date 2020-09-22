@@ -117,6 +117,21 @@ func TestCheckProductUpgrade(t *testing.T) {
 	assert.NotEmpty(t, diffs)
 	// assert.Empty(t, diffs)
 
+	// check upgrade against version in status section
+	cr.Status.Applied.Version = constants.PriorVersion2
+	cr.Spec.Version = ""
+	minor, micro, err = checkProductUpgrade(cr)
+	assert.Empty(t, cr.Spec.Version)
+	assert.Nil(t, err)
+	assert.True(t, minor)
+	assert.True(t, micro)
+	cr.Status.Applied.Version = constants.CurrentVersion
+	minor, micro, err = checkProductUpgrade(cr)
+	assert.Empty(t, cr.Spec.Version)
+	assert.Nil(t, err)
+	assert.False(t, minor)
+	assert.False(t, micro)
+
 	// Current version, no upgrades
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{

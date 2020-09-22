@@ -1002,11 +1002,14 @@ func SetDefaults(cr *api.KieApp) {
 			api.SchemeGroupVersion.Group: version.Version,
 		})
 	}
-	// retain ONLY generated passwords / usernames from status...
+	// retain certain items from status... e.g. version, usernames, passwords, etc
 	// everything else in status should be recreated with each reconcile.
 	specApply := cr.Spec.DeepCopy()
 	if len(specApply.Version) == 0 {
 		specApply.Version = constants.CurrentVersion
+		if len(cr.Status.Applied.Version) != 0 {
+			specApply.Version = cr.Status.Applied.Version
+		}
 	}
 	if err := mergo.Merge(&specApply.CommonConfig, cr.Status.Applied.CommonConfig); err != nil {
 		log.Error(err)
