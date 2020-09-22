@@ -21,8 +21,4 @@ console:
         resources:
           requests:
             storage: 1Gi
-  services:
-    - metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
-        annotations:
-          delete: "true"
+

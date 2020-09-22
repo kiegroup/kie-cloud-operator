@@ -20,12 +20,6 @@ console:
                     value: ""
                   - name: MAVEN_REPO_PASSWORD
                     value: ""
-                  - name: JGROUPS_PING_PROTOCOL
-                    value: ""
-                  - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: ""
-                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                    value: ""
   persistentVolumeClaims:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
@@ -38,8 +32,4 @@ console:
         resources:
           requests:
             storage: 1Gi
-  services:
-    - metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
-        annotations:
-          delete: "true"
+
