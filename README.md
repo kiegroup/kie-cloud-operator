@@ -65,52 +65,6 @@ spec:
 EOF
 ```
 
-**CRC setup for STAGE testing**
-```bash
-INDEX_VERSION=v4.5 # v4.6
-REGISTRY=registry-proxy.engineering.redhat.com
-INDEX_IMAGE=${REGISTRY}/rh-osbs/iib-pub-pending:${INDEX_VERSION}
-$ oc patch --type=merge --patch='{
-  "spec": {
-    "registrySources": {
-      "insecureRegistries": [
-        "'${REGISTRY}'"
-      ]
-    }
-  }
-}' image.config.openshift.io/cluster
-
-$ ssh -i ~/.crc/machines/crc/id_rsa -o StrictHostKeyChecking=no core@$(crc ip) << EOF
-  sudo echo " " | sudo tee -a /etc/containers/registries.conf
-  sudo echo "[[registry]]" | sudo tee -a /etc/containers/registries.conf
-  sudo echo "  location = \"${REGISTRY}\"" | sudo tee -a /etc/containers/registries.conf
-  sudo echo "  insecure = true" | sudo tee -a /etc/containers/registries.conf
-  sudo echo "  blocked = false" | sudo tee -a /etc/containers/registries.conf
-  sudo echo "  mirror-by-digest-only = false" | sudo tee -a /etc/containers/registries.conf
-  sudo echo "  prefix = \"\"" | sudo tee -a /etc/containers/registries.conf
-  sudo systemctl restart crio
-  sudo systemctl restart kubelet
-EOF
-
-$ oc apply -f - <<EOF
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: my-stage-catalog
-  namespace: openshift-marketplace
-spec:
-  displayName: "Stage Bundles"
-  publisher: "Red Hat"
-  sourceType: grpc
-  image: ${INDEX_IMAGE}
-  updateStrategy:
-    registryPoll:
-      interval: 45m
-EOF
-
-# $ for TAG in 1.2.0-5 1.2.1-3 1.3.0-3 1.4.0-3 1.4.1-3 7.8.0-3 7.8.1-2; do opm index add -c docker --bundles registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-operator-bundle:${TAG} --from-index ${INDEX_IMAGE} --tag ${INDEX_IMAGE}; docker push ${INDEX_IMAGE}; done
-```
-
 It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
 
 ### Trigger a KieApp deployment
