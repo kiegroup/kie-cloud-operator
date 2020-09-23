@@ -237,7 +237,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 				},
 			},
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					SSOClient: &api.SSOAuthClient{
 						Name:          "test-rhpamcentr-client",
 						Secret:        "supersecret",
