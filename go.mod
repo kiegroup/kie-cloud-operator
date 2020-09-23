@@ -15,8 +15,7 @@ require (
 	github.com/imdario/mergo v0.3.9
 	github.com/openshift/api v0.0.0-20200827090112-c05698d102cf
 	github.com/openshift/client-go v0.0.0-00010101000000-000000000000
-	github.com/operator-framework/api v0.3.8
-	github.com/operator-framework/operator-lifecycle-manager v3.11.0+incompatible
+	github.com/operator-framework/api v0.3.12
 	github.com/operator-framework/operator-sdk v0.19.2
 	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -51,7 +50,7 @@ replace (
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
 
 	// Operator Framework v0.19.2
-	github.com/operator-framework/api => github.com/operator-framework/api v0.3.11
+	github.com/operator-framework/api => github.com/operator-framework/api v0.3.12
 	github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.19.2
 
 	// Pinned to kubernetes-1.19.0

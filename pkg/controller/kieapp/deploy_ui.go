@@ -18,7 +18,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	routev1 "github.com/openshift/api/route/v1"
-	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var consoleName = "console-cr-form"
@@ -135,7 +136,7 @@ func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map
 }
 
 func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
-	var update bool
+	var patch bool
 	found := &routev1.Route{}
 	for i := 1; i < 60; i++ {
 		time.Sleep(time.Duration(100) * time.Millisecond)
@@ -154,26 +155,34 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 		log.Info("No ClusterServiceVersion found, likely because no such owner was set on the operator. This might be because the operator was not installed through OLM")
 		return
 	}
-	link := getConsoleLink(csv)
+	newCSV := csv.DeepCopy()
+	link := getConsoleLink(newCSV)
 	if link == nil || link.URL != url {
-		update = true
+		patch = true
 		if link == nil {
-			csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
+			newCSV.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, newCSV.Spec.Links...)
 		} else {
 			link.URL = url
 		}
 	}
 	if !strings.Contains(csv.Spec.Description, constants.ConsoleDescription) {
-		update = true
-		csv.Spec.Description = strings.Join([]string{csv.Spec.Description, constants.ConsoleDescription}, "\n\n")
+		patch = true
+		newCSV.Spec.Description = strings.Join([]string{newCSV.Spec.Description, constants.ConsoleDescription}, "\n\n")
 	}
-	if update {
-		log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
-		err := reconciler.Service.Update(context.TODO(), csv)
-		if err != nil {
-			log.Error("Failed to update CSV. ", err)
+	if patch {
+		log.Debugf("Patching ", csv.Name, " ", csv.Kind, ".")
+		if err := patchCSVObject(reconciler, csv, newCSV); err != nil {
+			log.Error("Failed to patch CSV. ", err)
 		}
 	}
+}
+
+func patchCSVObject(reconciler *Reconciler, cur, mod *operatorsv1alpha1.ClusterServiceVersion) error {
+	patch, err := client.MergeFrom(cur).Data(mod)
+	if err != nil || len(patch) == 0 || string(patch) == "{}" {
+		return err
+	}
+	return reconciler.Service.Patch(context.TODO(), cur, client.RawPatch(types.MergePatchType, patch))
 }
 
 func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1alpha1.AppLink {
