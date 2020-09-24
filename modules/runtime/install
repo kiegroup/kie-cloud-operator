@@ -1,0 +1,13 @@
+#!/bin/sh
+
+OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
+UI_PATH=/usr/local/bin/console-cr-form
+
+if [[ ! -f ${OPERATOR_PATH} ]] ; then
+    echo "${OPERATOR_PATH} does not exist, aborting."
+    exit 1
+fi
+if [[ ! -f ${UI_PATH} ]] ; then
+    echo "${UI_PATH} does not exist, aborting."
+    exit 1
+fi

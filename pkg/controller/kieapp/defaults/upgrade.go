@@ -40,12 +40,12 @@ func checkVersion(productVersion string) bool {
 
 // GetMinorImageVersion ...
 func GetMinorImageVersion(productVersion string) string {
-	major, minor, _ := MajorMinorMicro(productVersion)
+	major, minor, _ := GetMajorMinorMicro(productVersion)
 	return major + minor
 }
 
-// MajorMinorMicro ...
-func MajorMinorMicro(productVersion string) (major, minor, micro string) {
+// GetMajorMinorMicro ...
+func GetMajorMinorMicro(productVersion string) (major, minor, micro string) {
 	version := strings.Split(productVersion, ".")
 	for len(version) < 3 {
 		version = append(version, "0")

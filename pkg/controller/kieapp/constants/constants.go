@@ -8,19 +8,18 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.8.1"
+	CurrentVersion = "7.9.0"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.8.0"
+	PriorVersion1 = "7.8.1"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.7.1"
+	PriorVersion2 = "7.8.0"
 )
 
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-//var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
-var Ocp4Versions = []string{"4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// ProductName used for metering labels
@@ -110,6 +109,8 @@ const (
 	DefaultProcessMigrationDatabaseName = "pimdb"
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
+	// ProcessMigrationDefaultImageURL Process Migration Image
+	ProcessMigrationDefaultImageURL = PamContext + "process-migration" + RhelVersion
 
 	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = "DM_DC_IMAGE_"
@@ -144,24 +145,33 @@ const (
 	BrokerComponent  = "amq-broker-openshift-container"
 	BrokerVar        = "BROKER_IMAGE_"
 	BrokerImage      = "amq-broker"
-	Broker75ImageTag = "7.5"
-	Broker75ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker75ImageTag
-
 	Broker76ImageTag = "7.6"
 	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
 
+	Broker77ImageTag = "7.7"
+	Broker77ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker77ImageTag
+
 	DatagridVar         = "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
-	Datagrid73ImageTag  = "1.3"
-	Datagrid73ImageURL  = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
 	Datagrid73ImageTag15 = "1.5"
 	Datagrid73ImageURL15 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag15
 
+	Datagrid73ImageTag16 = "1.6"
+	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
+
 	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
+
+	//Resources Limits
+	ConsoleCPULimit        = "2"
+	ConsoleCPURequests     = "1"
+	ServersCPULimit        = "1"
+	ServersCPURequests     = "500m"
+	SmartRouterCPULimit    = "500m"
+	SmartRouterCPURequests = "250m"
 )
 
 var Images = []ImageEnv{
@@ -208,7 +218,7 @@ var Images = []ImageEnv{
 	{
 		Var:       PamProcessMigrationVar,
 		Component: "rhpam-7-process-migration-rhel8-container",
-		Registry:  PamContext + "process-migration" + RhelVersion,
+		Registry:  ProcessMigrationDefaultImageURL,
 	},
 }
 
@@ -236,11 +246,11 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker76ImageTag,
-		BrokerImageURL:      Broker76ImageURL,
+		BrokerImageTag:      Broker77ImageTag,
+		BrokerImageURL:      Broker77ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag15,
-		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
@@ -268,14 +278,14 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker75ImageTag,
-		BrokerImageURL:      Broker75ImageURL,
+		BrokerImageTag:      Broker76ImageTag,
+		BrokerImageURL:      Broker76ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag15,
 		DatagridImageURL:    Datagrid73ImageURL15,
 		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL57ImageURL,
-		MySQLComponent:      MySQL57Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},

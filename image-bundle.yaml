@@ -1,0 +1,45 @@
+schema_version: 1
+name: "rhpam-7/rhpam-operator-bundle"
+description: "Red Hat Business Automation Operator Bundle"
+version: ""
+from: "scratch"
+labels:
+  - name: maintainer
+    value: bsig-cloud@redhat.com
+  - name: com.redhat.component
+    value: rhpam-operator-bundle-container
+  - name: io.k8s.description
+    value: Operator Bundle for deploying RHPAM & RHDM
+  - name: io.k8s.display-name
+    value: Red Hat Business Automation Operator Bundle
+  - name: io.openshift.tags
+    value: rhpam,rhdm,operator
+  - name: operators.operatorframework.io.bundle.mediatype.v1
+    value: registry+v1
+  - name: operators.operatorframework.io.bundle.manifests.v1
+    value: manifests/
+  - name: operators.operatorframework.io.bundle.metadata.v1
+    value: metadata/
+  - name: operators.operatorframework.io.bundle.package.v1
+    value: businessautomation-operator
+  - name: operators.operatorframework.io.bundle.channels.v1
+    value: stable
+  - name: operators.operatorframework.io.bundle.channel.default.v1
+    value: stable
+  - name: operators.operatorframework.io.metrics.mediatype.v1
+    value: metrics+v1
+  - name: operators.operatorframework.io.metrics.builder
+    value: operator-sdk-v0.19.2
+  - name: operators.operatorframework.io.metrics.project_layout
+    value: go
+  - name: com.redhat.delivery.operator.bundle
+    value: "true"
+  - name: com.redhat.openshift.versions
+    # change to this label for 7.9.1+ releases ?? # value: v4.6
+    value: v4.5,v4.6
+modules:
+  repositories:
+    - path: deploy/olm-catalog/prod
+      name: olm-catalog
+  install:
+    - name: olm-catalog

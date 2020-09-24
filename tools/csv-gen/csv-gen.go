@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -25,41 +26,43 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
-	olmversion "github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version"
+	csvversion "github.com/operator-framework/api/pkg/lib/version"
+	csvv1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/tidwall/sjson"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 var log = logs.GetLogger("csv.generator")
 
 var (
 	rh              = "Red Hat"
-	maturity        = "stable"
-	major, minor, _ = defaults.MajorMinorMicro(constants.CurrentVersion)
+	channel         = "stable"
+	major, minor, _ = defaults.GetMajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
-			Name:         "kiecloud",
-			DisplayName:  "Business Automation",
-			OperatorName: "kie-cloud-operator",
-			CsvDir:       "community",
+			Name:         "businessautomation",
+			DisplayName:  "Business Automation (DEV)",
+			OperatorName: "business-automation-operator",
 			Registry:     "quay.io",
 			Context:      "kiegroup",
 			ImageName:    "kie-cloud-operator",
 			Tag:          version.Version,
+			Maturity:     "dev",
 		},
 		{
 			Name:         "businessautomation",
 			DisplayName:  "Business Automation",
 			OperatorName: "business-automation-operator",
-			CsvDir:       "redhat",
 			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
-			Tag:          constants.CurrentVersion,
+			Tag:          version.Version,
+			Maturity:     channel,
 		},
 	}
 )
@@ -68,11 +71,11 @@ type csvSetting struct {
 	Name         string `json:"name"`
 	DisplayName  string `json:"displayName"`
 	OperatorName string `json:"operatorName"`
-	CsvDir       string `json:"csvDir"`
 	Registry     string `json:"repository"`
 	Context      string `json:"context"`
 	ImageName    string `json:"imageName"`
 	Tag          string `json:"tag"`
+	Maturity     string `json:"maturity"`
 }
 type csvPermissions struct {
 	ServiceAccountName string              `json:"serviceAccountName"`
@@ -87,13 +90,8 @@ type csvStrategySpec struct {
 	ClusterPermissions []csvPermissions `json:"clusterPermissions"`
 	Deployments        []csvDeployments `json:"deployments"`
 }
-type channel struct {
-	Name       string `json:"name"`
-	CurrentCSV string `json:"currentCSV"`
-}
-type packageStruct struct {
-	PackageName string    `json:"packageName"`
-	Channels    []channel `json:"channels"`
+type annotationsStruct struct {
+	Annotations map[string]string `json:"annotations"`
 }
 type image struct {
 	Name  string `json:"name"`
@@ -106,26 +104,26 @@ func main() {
 		operatorName := csv.Name + "-operator"
 		templateStruct := &csvv1.ClusterServiceVersion{}
 		templateStruct.SetGroupVersionKind(csvv1.SchemeGroupVersion.WithKind("ClusterServiceVersion"))
-		csvStruct := &csvv1.ClusterServiceVersion{}
-		strategySpec := &csvStrategySpec{}
-		json.Unmarshal(csvStruct.Spec.InstallStrategy.StrategySpecRaw, strategySpec)
-
-		templateStrategySpec := &csvStrategySpec{}
+		templateStrategySpec := csvv1.StrategyDetailsDeployment{}
 		deployment := components.GetDeployment(csv.OperatorName, csv.Registry, csv.Context, csv.ImageName, csv.Tag, "Always")
-		templateStrategySpec.Deployments = append(templateStrategySpec.Deployments, []csvDeployments{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
+		templateStrategySpec.DeploymentSpecs = append(templateStrategySpec.DeploymentSpecs, []csvv1.StrategyDeploymentSpec{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
 		role := components.GetRole(csv.OperatorName)
-		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
+		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvv1.StrategyDeploymentPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
 		clusterRole := components.GetClusterRole(csv.OperatorName)
-		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
-		// Re-serialize deployments and permissions into csv strategy.
-		updatedStrat, err := json.Marshal(templateStrategySpec)
-		if err != nil {
-			panic(err)
-		}
-		templateStruct.Spec.InstallStrategy.StrategySpecRaw = updatedStrat
+		templateStrategySpec.ClusterPermissions = append(templateStrategySpec.ClusterPermissions, []csvv1.StrategyDeploymentPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: clusterRole.Rules}}...)
+		templateStruct.Spec.InstallStrategy.StrategySpec = templateStrategySpec
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
+
 		csvVersionedName := operatorName + "." + version.Version
+		random := rand.String(10)
+		csvVersion := csvversion.OperatorVersion{}
+		csvVersion.Version = semver.MustParse(version.Version)
+		if csv.Maturity != channel {
+			csvVersionedName = csvVersionedName + "-dev-" + random
+			csvVersion.Version.Build = []string{random}
+		}
 		templateStruct.Name = csvVersionedName
+		templateStruct.Spec.Version = csvVersion
 		templateStruct.Namespace = "placeholder"
 		descrip := "Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments."
 		repository := "https://github.com/kiegroup/kie-cloud-operator"
@@ -142,21 +140,21 @@ func main() {
 				"support":             rh,
 				"tectonic-visibility": "ocs",
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
+				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
 			},
 		)
 		templateStruct.SetLabels(
 			map[string]string{
-				"operator-" + csv.Name: "true",
+				"operator-" + csv.Name:            "true",
+				"operatorframework.io/os.linux":   "supported",
+				"operatorframework.io/arch.amd64": "supported",
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		var opVersion olmversion.OperatorVersion
-		opVersion.Version = semver.MustParse(version.Version)
-		templateStruct.Spec.Version = opVersion
 		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
-		templateStruct.Spec.Maturity = maturity
+		templateStruct.Spec.Maturity = csv.Maturity
 		templateStruct.Spec.Maintainers = []csvv1.Maintainer{{Name: rh, Email: "bsig-cloud@redhat.com"}}
 		templateStruct.Spec.Provider = csvv1.AppLink{Name: rh}
 		templateStruct.Spec.Links = []csvv1.AppLink{
@@ -289,16 +287,16 @@ func main() {
 			},
 		}
 
-		opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
-		csvFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + csvVersionedName + ".clusterserviceversion.yaml"
-
-		if csv.OperatorName == "kie-cloud-operator" {
+		bundleDir := "deploy/olm-catalog/prod/" + version.Version + "/"
+		if csv.Maturity != channel {
+			bundleDir = "deploy/olm-catalog/dev/" + version.Version + "/"
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
 			createFile(deployFile, deployment)
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
+		csvFile := bundleDir + "manifests/" + operatorName + "." + version.Version + ".clusterserviceversion.yaml"
 
 		// create image-references file for automated ART digest find/replace
 		imageRef := &constants.ImageRef{
@@ -335,10 +333,10 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.MySQL80ImageURL, constants.MySQL80Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Broker75ImageURL, constants.BrokerComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL16, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker77ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 
 		if logs.GetBoolEnv("DIGESTS") {
 			// use stage registry for current release image digest population
@@ -373,8 +371,8 @@ func main() {
 				log.Error(err)
 			}
 		}
-		imageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + opMajor + "." + opMinor + "/" + "image-references"
-		createFile(imageFile, imageRef)
+		// imageFile := bundleDir + "manifests/image-references"
+		// createFile(imageFile, imageRef)
 
 		var templateInterface interface{}
 		if len(relatedImages) > 0 {
@@ -408,26 +406,27 @@ func main() {
 		}
 		createFile(csvFile, &templateInterface)
 
-		packageFile := "deploy/catalog_resources/" + csv.CsvDir + "/" + csv.Name + ".package.yaml"
-		p, err := os.Create(packageFile)
-		defer p.Close()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		pwr := bufio.NewWriter(p)
-		pwr.WriteString("#! package-manifest: " + csvFile + "\n")
-		packagedata := packageStruct{
-			PackageName: operatorName,
-			Channels: []channel{
-				{
-					Name:       maturity,
-					CurrentCSV: csvVersionedName,
-				},
+		// create symlink in manifests dir to crd file
+		crdFile := "kieapp.crd.yaml"
+		crdPath := "../../../../crds/"
+		crdSymLink := bundleDir + "manifests/" + crdFile
+		os.Symlink(crdPath+crdFile, crdSymLink)
+
+		annotationsdata := annotationsStruct{
+			Annotations: map[string]string{
+				"operators.operatorframework.io.bundle.channel.default.v1": channel,
+				"operators.operatorframework.io.bundle.channels.v1":        channel,
+				"operators.operatorframework.io.bundle.manifests.v1":       "manifests/",
+				"operators.operatorframework.io.bundle.mediatype.v1":       "registry+v1",
+				"operators.operatorframework.io.bundle.metadata.v1":        "metadata/",
+				"operators.operatorframework.io.bundle.package.v1":         operatorName,
+				"operators.operatorframework.io.metrics.builder":           "operator-sdk-" + sdkVersion.Version,
+				"operators.operatorframework.io.metrics.mediatype.v1":      "metrics+v1",
+				"operators.operatorframework.io.metrics.project_layout":    "go",
 			},
 		}
-		util.MarshallObject(packagedata, pwr)
-		pwr.Flush()
+		annotationsFile := bundleDir + "metadata/annotations.yaml"
+		createFile(annotationsFile, &annotationsdata)
 
 		// create prior-version snippet yaml sample
 		versionSnippet := &api.KieApp{}
@@ -546,8 +545,9 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func createFile(filepath string, obj interface{}) {
-	f, err := os.Create(filepath)
+func createFile(path string, obj interface{}) {
+	os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	f, err := os.Create(path)
 	defer f.Close()
 	if err != nil {
 		fmt.Println(err)

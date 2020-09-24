@@ -10,7 +10,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
@@ -27,8 +26,7 @@ import (
 )
 
 func TestUpdateLink(t *testing.T) {
-	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
@@ -39,8 +37,7 @@ func TestUpdateLink(t *testing.T) {
 }
 
 func TestUpdateExistingLink(t *testing.T) {
-	opMajor, opMinor, _ := defaults.MajorMinorMicro(version.Version)
-	box := packr.New("CSV", "../../../deploy/catalog_resources/redhat/"+opMajor+"."+opMinor)
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
 	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}

@@ -56,9 +56,21 @@ lint:
 build:
 	./hack/go-build.sh
 
-.PHONY: meta
-meta:
-	./hack/go-build-metadata.sh
+.PHONY: bundle
+bundle:
+	LOCAL=true ./hack/go-build-bundle.sh
+
+.PHONY: bundle-scratch
+bundle-scratch:
+	./hack/go-build-bundle.sh
+
+.PHONY: bundle-release
+bundle-release:
+	./hack/go-build-bundle.sh release
+
+.PHONY: bundle-dev
+bundle-dev:
+	DEV=true LOCAL=true ./hack/go-build-bundle.sh
 
 .PHONY: rhel
 rhel:
@@ -85,6 +97,7 @@ clean:
 		pkg/controller/kieapp/packrd \
 		pkg/ui/ui-packr.go \
 		pkg/ui/packrd \
+		modules/builder/kie-cloud-operator.tar.gz \
 		target/
 
 # test/ci-go: test/sanity test/unit test/subcommand test/e2e/go

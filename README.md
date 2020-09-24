@@ -5,7 +5,7 @@
 ## Requirements
 
 - go v1.13.x
-- operator-sdk v0.12.0
+- operator-sdk v0.19.2
 
 ## Build
 
@@ -21,36 +21,95 @@ e.g.
 docker push quay.io/kiegroup/kie-cloud-operator:<version>
 ```
 
-## Deploy to OpenShift 4 using OLM
+## Deploy to OpenShift 4.5+ using OLM
 
 To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) instructions for Operator Courier to obtain an account token. This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
 
-Push the operator bundle to your quay application repository as follows:
-
-```bash
-REGISTRY_NS=<registry namespace in quay.io>
-operator-courier push deploy/catalog_resources/community ${REGISTRY_NS} kiecloud-operator $(go run getversion.go) "basic XXXXXXXXX"
-```
-
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
 
+**Create your own index image**
 ```bash
-oc create -f - <<EOF
-apiVersion: operators.coreos.com/v1
-kind: OperatorSource
+$ make bundle-dev
+USERNAME=tchughesiv
+VERSION=$(go run getversion.go)
+IMAGE=quay.io/${USERNAME}/rhpam-operator-bundle
+BUNDLE=${IMAGE}:${VERSION}
+
+$ docker push ${BUNDLE}
+BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
+INDEX_VERSION=v4.5 # v4.6
+INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
+INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go --prior)
+INDEX_TO=${INDEX_IMAGE}_${VERSION}
+
+$ opm index add -c docker --bundles ${BUNDLE_DIGEST} --from-index ${INDEX_FROM} --tag ${INDEX_TO}
+
+$ docker push ${INDEX_TO}
+
+# only run in dev env
+$ oc patch operatorhub.config.openshift.io/cluster -p='{"spec":{"disableAllDefaultSources":true}}' --type=merge
+$ oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
 metadata:
-  name: kiecloud-operators
+  name: my-catalog
   namespace: openshift-marketplace
 spec:
-  type: appregistry
-  endpoint: https://quay.io/cnr
-  registryNamespace: ${REGISTRY_NS}
-  displayName: "KIE Cloud Operators"
+  displayName: "Dev Bundles"
   publisher: "Red Hat"
+  sourceType: grpc
+  image: ${INDEX_TO}
+  updateStrategy:
+    registryPoll:
+      interval: 45m
 EOF
 ```
 
-Remember to replace _registryNamespace_ with your quay namespace. The name, display name and publisher of the operator are the only other attributes that may be modified.
+**CRC setup for STAGE testing**
+```bash
+INDEX_VERSION=v4.5 # v4.6
+REGISTRY=registry-proxy.engineering.redhat.com
+INDEX_IMAGE=${REGISTRY}/rh-osbs/iib-pub-pending:${INDEX_VERSION}
+$ oc patch --type=merge --patch='{
+  "spec": {
+    "registrySources": {
+      "insecureRegistries": [
+        "'${REGISTRY}'"
+      ]
+    }
+  }
+}' image.config.openshift.io/cluster
+
+$ ssh -i ~/.crc/machines/crc/id_rsa -o StrictHostKeyChecking=no core@$(crc ip) << EOF
+  sudo echo " " | sudo tee -a /etc/containers/registries.conf
+  sudo echo "[[registry]]" | sudo tee -a /etc/containers/registries.conf
+  sudo echo "  location = \"${REGISTRY}\"" | sudo tee -a /etc/containers/registries.conf
+  sudo echo "  insecure = true" | sudo tee -a /etc/containers/registries.conf
+  sudo echo "  blocked = false" | sudo tee -a /etc/containers/registries.conf
+  sudo echo "  mirror-by-digest-only = false" | sudo tee -a /etc/containers/registries.conf
+  sudo echo "  prefix = \"\"" | sudo tee -a /etc/containers/registries.conf
+  sudo systemctl restart crio
+  sudo systemctl restart kubelet
+EOF
+
+$ oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-stage-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: "Stage Bundles"
+  publisher: "Red Hat"
+  sourceType: grpc
+  image: ${INDEX_IMAGE}
+  updateStrategy:
+    registryPoll:
+      interval: 45m
+EOF
+
+# $ for TAG in 1.2.0-5 1.2.1-3 1.3.0-3 1.4.0-3 1.4.1-3 7.8.0-3 7.8.1-2; do opm index add -c docker --bundles registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-operator-bundle:${TAG} --from-index ${INDEX_IMAGE} --tag ${INDEX_IMAGE}; docker push ${INDEX_IMAGE}; done
+```
 
 It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
 
@@ -76,13 +135,13 @@ Change log level at runtime w/ the `DEBUG` environment variable. e.g. -
 ```bash
 make mod
 make clean
-DEBUG="true" operator-sdk up local --namespace=<namespace>
+DEBUG="true" operator-sdk run local --watch-namespace <namespace>
 ```
 
 Also at runtime, change registry for rhpam ImageStreamTags -
 
 ```bash
-INSECURE=true REGISTRY=<registry url> operator-sdk up local --namespace=<namespace>
+INSECURE=true REGISTRY=<registry url> operator-sdk run local --watch-namespace<namespace>
 ```
 
 Before submitting PR, please be sure to generate, vet, format, and test your code. This all can be done with one command.
@@ -91,77 +150,9 @@ Before submitting PR, please be sure to generate, vet, format, and test your cod
 make test
 ```
 
-## Authentication configuration
-
-It is possible to configure RHPAM authentication with an external Identity Provider such as RH-SSO or LDAP.
-
-### SSO
-
-In order to integrate RHPAM authentication with an existing instance of RH-SSO an `auth` element must be provided with a valid `sso` configuration. If the `hostnameHTTPS` is not provided for some client it will be retrieved from the generated route hostname. It is important to say that the URL and Realm parameters are mandatory.
-
-```yaml
-spec:
-  environment: rhpam-authoring
-  auth:
-    sso:
-      url: https://rh-sso.example.com
-      realm: rhpam
-      adminUser: admin
-      adminPassword: secret
-  objects:
-    console:
-      ssoClient:
-        name: rhpam-console
-        secret: somePwd
-    servers:
-      - name: kieserver-one
-        deployments: 2
-        ssoClient:
-          name: kieserver-one
-          secret: otherPwd
-          hostnameHTTPS: kieserver-one.example.com
-      - name: kieserver-two
-        ssoClient:
-          name: kieserver-two
-          secret: yetOtherPwd
-```
-
-### LDAP
-
-The LDAP configuration allows RHPAM to authenticate and retrieve the user's groups from an existing LDAP instance. Only the URL parameter is mandatory
-
-```yaml
-spec:
-  environment: rhpam-production
-  auth:
-    ldap:
-      url: ldaps://myldap.example.com
-      bindDN: uid=admin,ou=users,ou=exmample,ou=com
-      bindCredential: s3cret
-      baseCtxDN: ou=users,ou=example,ou=com
-```
-
-### RoleMapper
-
-Finally, it is also possible to provide a properties file including how the roles returned by the external IdP are going to be mapped into application roles.
-
-```yaml
-spec:
-  environment: rhpam-production
-  auth:
-    ldap:
-      url: ldaps://myldap.example.com
-      bindDN: uid=admin,ou=users,ou=exmample,ou=com
-      bindCredential: s3cret
-      baseCtxDN: ou=users,ou=example,ou=com
-    roleMapper:
-      rolesProperties: /conf/roleMapper.properties
-      replaceRole: true
-```
-
 ## Build rhel-based image for release
 
-Requires `cekit` v3.2+ and `rhpkg` -
+Requires `cekit` v3.7+ and `rhpkg` -
 
 ```bash
 # local build

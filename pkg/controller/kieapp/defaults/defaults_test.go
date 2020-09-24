@@ -28,11 +28,15 @@ import (
 )
 
 var (
-	bcmImage      = constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
-	latestTag     = ":latest"
-	helloRules    = "hello-rules" + latestTag
-	byeRules      = "bye-rules" + latestTag
-	kieServerName = "test-kieserver"
+	bcmImage             = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
+	bcImage              = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
+	dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
+	latestTag            = ":latest"
+	helloRules           = "hello-rules" + latestTag
+	byeRules             = "bye-rules" + latestTag
+	kieServerName        = "test-kieserver"
+	rhpamKieserverAndTag = "rhpam-kieserver-rhel8:%s"
+	pimImage             = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -146,10 +150,10 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 
 	pingService := getService(wbServices, "test-rhpamcentr-ping")
 	assert.NotNil(t, pingService, "Ping service not found")
-	assert.False(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhpam-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 }
@@ -179,10 +183,10 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
 	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.False(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhdm-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -227,7 +231,7 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhdmPrefix)
-	assert.Equal(t, constants.RhdmPrefix+"-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -259,7 +263,7 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhpamPrefix)
-	assert.Equal(t, constants.RhpamPrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhpamPrefix+"-7/"+constants.RhpamPrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	amqPassword := getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
@@ -307,7 +311,7 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhdm-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdwSmartRouter(t *testing.T) {
@@ -404,7 +408,7 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, "rhdm-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
@@ -459,18 +463,6 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
-	cr.Spec.Version = "7.7.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
-	assert.Equal(t, "test-jms-kieserver-postgresql", env.Servers[0].DeploymentConfigs[1].Name)
-	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[2].Name)
-	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
-	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
-	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[2].Spec.Template.Spec.Containers[0].Env)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
@@ -788,16 +780,18 @@ func TestExtensionImageBuildConfiguration(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "mssql",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-									BackgroundValidation: "true",
-									MinPoolSize:          "10",
-									MaxPoolSize:          "10",
-									Username:             "sqlserverUser",
-									Password:             "sqlserverPwd",
-									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mssql",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+										BackgroundValidation: "true",
+										MinPoolSize:          "10",
+										MaxPoolSize:          "10",
+										Username:             "sqlserverUser",
+										Password:             "sqlserverPwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
@@ -840,16 +834,18 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "mssql",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
-									BackgroundValidation: "true",
-									MinPoolSize:          "10",
-									MaxPoolSize:          "10",
-									Username:             "sqlserverUser",
-									Password:             "sqlserverPwd",
-									JdbcURL:              "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:sqlserver://192.168.1.129:1433;DatabaseName=rhpam",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mssql",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter",
+										BackgroundValidation: "true",
+										MinPoolSize:          "10",
+										MaxPoolSize:          "10",
+										Username:             "sqlserverUser",
+										Password:             "sqlserverPwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.SQLServerDialect",
 							},
@@ -927,10 +923,12 @@ func TestBuildConfiguration(t *testing.T) {
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
-							Kind:      "ImageStreamTag",
-							Name:      "test",
-							Namespace: "other-ns",
+						From: &api.ImageObjRef{
+							Kind: "ImageStreamTag",
+							ObjectReference: api.ObjectReference{
+								Name:      "test",
+								Namespace: "other-ns",
+							},
 						},
 					},
 				},
@@ -1240,7 +1238,7 @@ func TestConstructServerObject(t *testing.T) {
 			} else {
 				assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 			}
-			assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+			assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 			for i := range sampleEnv {
 				assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 			}
@@ -1269,7 +1267,7 @@ func TestSetReplicas(t *testing.T) {
 		} else {
 			assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", name, i+1), s.DeploymentConfigs[0].Name)
 		}
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), env.Servers[i].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, *replicas, s.DeploymentConfigs[0].Spec.Replicas)
 		for i := range sampleEnv {
 			assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
@@ -1291,6 +1289,11 @@ var sampleEnv = []corev1.EnvVar{
 var sampleResources = &corev1.ResourceRequirements{
 	Limits: map[corev1.ResourceName]resource.Quantity{
 		"memory": *resource.NewQuantity(1, "Mi"),
+		"cpu":    *resource.NewQuantity(500, "m"),
+	},
+	Requests: map[corev1.ResourceName]resource.Quantity{
+		"memory": *resource.NewQuantity(1, "Mi"),
+		"cpu":    *resource.NewQuantity(500, "m"),
 	},
 }
 
@@ -1335,7 +1338,8 @@ func TestTrialServerEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
+			Environment:  api.RhpamTrial,
+			UseImageTags: true,
 			Objects: api.KieAppObjects{
 				Console: api.ConsoleObject{
 					Jvm: &api.JvmObject{
@@ -1402,7 +1406,8 @@ func TestTrialServersEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
+			Environment:  api.RhpamTrial,
+			UseImageTags: true,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{
@@ -1434,7 +1439,7 @@ func TestTrialServersEnv(t *testing.T) {
 	assert.Len(t, env.Servers, 4)
 	for index := 0; index < 1; index++ {
 		s := env.Servers[index]
-		assert.Equal(t, fmt.Sprintf("rhpam-kieserver-rhel8:%s", cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+		assert.Equal(t, fmt.Sprintf(rhpamKieserverAndTag, cr.Status.Applied.Version), s.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Name, s.DeploymentConfigs[0].Name)
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 		assert.Contains(t, s.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
@@ -1467,7 +1472,8 @@ func TestTrialConsoleEnv(t *testing.T) {
 			Name: name,
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhdmTrial,
+			Environment:  api.RhdmTrial,
+			UseImageTags: true,
 			CommonConfig: api.CommonConfig{
 				ApplicationName: "trial",
 			},
@@ -1823,7 +1829,8 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 			Name: name,
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
+			Environment:  api.RhpamTrial,
+			UseImageTags: true,
 			Objects: api.KieAppObjects{
 				Console: api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
@@ -2024,15 +2031,19 @@ func TestSetKieServerFrom(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						Name: "one",
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: helloRules,
+							ObjectReference: api.ObjectReference{
+								Name: helloRules,
+							},
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: byeRules,
+							ObjectReference: api.ObjectReference{
+								Name: byeRules,
+							},
 						},
 					},
 				},
@@ -2058,15 +2069,19 @@ func TestSetKieServerFromBuild(t *testing.T) {
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: helloRules,
+							ObjectReference: api.ObjectReference{
+								Name: helloRules,
+							},
 						},
 					},
 					{
-						From: &corev1.ObjectReference{
+						From: &api.ImageObjRef{
 							Kind: "ImageStreamTag",
-							Name: byeRules,
+							ObjectReference: api.ObjectReference{
+								Name: byeRules,
+							},
 						},
 						Build: &api.KieAppBuildObject{},
 					},
@@ -2106,10 +2121,12 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 									Secret: "s3cr3t",
 								},
 							},
-							From: &corev1.ObjectReference{
-								Kind:      "ImageStreamTag",
-								Name:      "custom-kieserver",
-								Namespace: "",
+							From: &api.ImageObjRef{
+								Kind: "ImageStreamTag",
+								ObjectReference: api.ObjectReference{
+									Name:      "custom-kieserver",
+									Namespace: "",
+								},
 							},
 						},
 					},
@@ -2225,14 +2242,16 @@ func TestDatabaseExternal(t *testing.T) {
 								Type: api.DatabaseExternal,
 							},
 							ExternalConfig: &api.ExternalDatabaseObject{
-								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
-									Driver:               "oracle",
-									ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
-									ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
-									BackgroundValidation: "false",
-									Username:             "oracleUser",
-									Password:             "oraclePwd",
-									JdbcURL:              "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:oracle:thin:@myoracle.example.com:1521:rhpam7",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "oracle",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "oracleUser",
+										Password:             "oraclePwd",
+									},
 								},
 								Dialect: "org.hibernate.dialect.Oracle10gDialect",
 							},
@@ -2376,7 +2395,7 @@ func TestConfigVersioning(t *testing.T) {
 	assert.Error(t, err, "Incompatible product versions should throw an error")
 	assert.Equal(t, fmt.Sprintf("Product version %s is not allowed. The following versions are allowed - %s", cr.Status.Applied.Version, constants.SupportedVersions), err.Error())
 	assert.Equal(t, "6.3.1", cr.Status.Applied.Version)
-	major, minor, micro := MajorMinorMicro(cr.Status.Applied.Version)
+	major, minor, micro := GetMajorMinorMicro(cr.Status.Applied.Version)
 	assert.Equal(t, "6", major)
 	assert.Equal(t, "3", minor)
 	assert.Equal(t, "1", micro)
@@ -2433,7 +2452,7 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhpam-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2506,35 +2525,6 @@ func TestDatabaseMySQL(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
 		assert.Equal(t, resource.MustParse("10Mi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
-	cr.Spec.Version = "7.7.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	for i := 0; i < deployments; i++ {
-		idx := ""
-		if i > 0 {
-			idx = fmt.Sprintf("-%d", i+1)
-		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
-
-		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("10Mi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
-	}
 }
 
 func TestDatabaseMySQLDefaultSize(t *testing.T) {
@@ -2601,47 +2591,6 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
 		assert.Equal(t, resource.MustParse("1Gi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
-
-	cr.Spec.Version = "7.7.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	for i := 0; i < deployments; i++ {
-		idx := ""
-		if i > 0 {
-			idx = fmt.Sprintf("-%d", i+1)
-		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
-
-		// MYSQL Credentials
-		adminUser := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_USERNAME")
-		assert.NotEmpty(t, adminUser, "The admin user must not be empty")
-		assert.Equal(t, adminUser, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_USER"))
-		adminPwd := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
-		assert.NotEmpty(t, adminPwd, "The admin password should have been generated")
-		assert.Equal(t, adminPwd, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_PASSWORD"))
-		dbName := getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE")
-		assert.NotEmpty(t, dbName, "The Database Name must not be empty")
-		assert.Equal(t, dbName, getEnvVariable(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0], "MYSQL_DATABASE"))
-
-		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("1Gi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
-	}
 }
 func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 	deployments := 2
@@ -2669,7 +2618,7 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting trial environment")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhpam-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 
@@ -2696,36 +2645,6 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].Name)
 		assert.NotNil(t, env.Databases[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes[0].EmptyDir)
 		assert.Equal(t, 0, len(env.Databases[i].PersistentVolumeClaims))
-	}
-	cr.Spec.Version = "7.7.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhpam-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
-	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
-
-	for i := 0; i < deployments; i++ {
-		idx := ""
-		if i > 0 {
-			idx = fmt.Sprintf("-%d", i+1)
-		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "mariadb", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
-
-		// MYSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.NotNil(t, env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].EmptyDir)
-		assert.Equal(t, 0, len(env.Servers[i].PersistentVolumeClaims))
 	}
 }
 
@@ -2783,35 +2702,6 @@ func TestDatabasePostgresql(t *testing.T) {
 		assert.Equal(t, 1, len(env.Databases[i].PersistentVolumeClaims))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Databases[i].PersistentVolumeClaims[0].Name)
 		assert.Equal(t, resource.MustParse("10Mi"), env.Databases[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
-	}
-	cr.Spec.Version = "7.7.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	for i := 0; i < deployments; i++ {
-		idx := ""
-		if i > 0 {
-			idx = fmt.Sprintf("-%d", i+1)
-		}
-		assert.Equal(t, 3, len(env.Servers[i].Services))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].Services[2].ObjectMeta.Name)
-		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
-		assert.Equal(t, "postgresql", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
-
-		// PostgreSQL Deployment
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Servers[i].DeploymentConfigs[1].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-pvol", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].DeploymentConfigs[1].Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
-		assert.Equal(t, 1, len(env.Servers[i].PersistentVolumeClaims))
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql-claim", idx), env.Servers[i].PersistentVolumeClaims[0].Name)
-		assert.Equal(t, resource.MustParse("10Mi"), env.Servers[i].PersistentVolumeClaims[0].Spec.Resources.Requests["storage"])
 	}
 }
 
@@ -2909,7 +2799,7 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, "rhpam-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2992,7 +2882,8 @@ func TestEnvCustomImageTag(t *testing.T) {
 	// test useImageTags = true
 	cr.Spec.UseImageTags = true
 	env, err := GetEnvironment(cr, test.MockService())
-	assert.Equal(t, constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	// test that setting imagetag in CR overrides env vars
 	cr.Spec.Environment = api.RhpamAuthoring
@@ -3199,9 +3090,11 @@ func TestGitHooks(t *testing.T) {
 	}, {
 		name: "ConfigMap GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "ConfigMap",
-				Name: "test-cm",
+				ObjectReference: api.ObjectReference{
+					Name: "test-cm",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3225,9 +3118,11 @@ func TestGitHooks(t *testing.T) {
 		name: "Secret GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "Secret",
-				Name: "test-secret",
+				ObjectReference: api.ObjectReference{
+					Name: "test-secret",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3249,9 +3144,11 @@ func TestGitHooks(t *testing.T) {
 		name: "PersistentVolumeClaim GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
-				Name: "test-pvc",
+				ObjectReference: api.ObjectReference{
+					Name: "test-pvc",
+				},
 			},
 		},
 		expectedVolumeMount: &corev1.VolumeMount{
@@ -3272,9 +3169,11 @@ func TestGitHooks(t *testing.T) {
 		name: "SSH Secret for GitHooks are configured",
 		gitHooks: &api.GitHooksVolume{
 			MountPath: "/some/path",
-			From: &corev1.ObjectReference{
+			From: &api.ObjRef{
 				Kind: "PersistentVolumeClaim",
-				Name: "test-pvc",
+				ObjectReference: api.ObjectReference{
+					Name: "test-pvc",
+				},
 			},
 			SSHSecret: "test-ssh-secret",
 		},
@@ -3662,8 +3561,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type:             api.DatabaseMySQL,
@@ -3685,9 +3585,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    "test-pim-image",
-				ImageTag: "test-pim-image-tag",
-				ImageURL: "test-pim-image:test-pim-image-tag",
+				Image:        "test-pim-image",
+				ImageContext: "test-context",
+				ImageTag:     "test-pim-image-tag",
+				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -3726,9 +3627,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    constants.RhpamPrefix + "-process-migration" + constants.RhelVersion,
-				ImageTag: constants.CurrentVersion,
-				ImageURL: constants.RhpamPrefix + "-process-migration" + constants.RhelVersion + ":" + constants.CurrentVersion,
+				Image:        pimImage,
+				ImageTag:     constants.CurrentVersion,
+				ImageContext: constants.RhpamPrefix + "-7",
+				ImageURL:     constants.ProcessMigrationDefaultImageURL + ":" + constants.CurrentVersion,
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -3742,25 +3644,6 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					},
 				},
 			},
-			false,
-		},
-		{
-			"ProcessMigration_UnsupportedVersion",
-			args{
-				&api.KieApp{
-					Spec: api.KieAppSpec{
-						Environment: api.RhpamTrial,
-						Objects: api.KieAppObjects{
-							ProcessMigration: &api.ProcessMigrationObject{},
-						},
-						Version: "7.7.1",
-					},
-				},
-				[]api.ServerTemplate{
-					{KieName: "kieserver1"},
-				},
-			},
-			nil,
 			false,
 		},
 		{
@@ -3790,8 +3673,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
@@ -3821,23 +3705,26 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:    "test-pim-image",
-								ImageTag: "test-pim-image-tag",
+								Image:        "test-pim-image",
+								ImageContext: "test-context",
+								ImageTag:     "test-pim-image-tag",
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
 									},
-									ExternalConfig: &api.CommonExternalDatabaseObject{
-										Driver:                     "mariadb",
-										JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
-										Username:                   "pim",
-										Password:                   "pim",
-										MinPoolSize:                "10",
-										MaxPoolSize:                "10",
-										ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
-										ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
-										BackgroundValidation:       "true",
-										BackgroundValidationMillis: "150000",
+									ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+										JdbcURL: "jdbc:mariadb://hello-mariadb:3306/pimdb",
+										CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+											Driver:                     "mariadb",
+											Username:                   "pim",
+											Password:                   "pim",
+											MinPoolSize:                "10",
+											MaxPoolSize:                "10",
+											ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+											ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+											BackgroundValidation:       "true",
+											BackgroundValidationMillis: "150000",
+										},
 									},
 								},
 							},
@@ -3854,9 +3741,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:    "test-pim-image",
-				ImageTag: "test-pim-image-tag",
-				ImageURL: "test-pim-image:test-pim-image-tag",
+				Image:        "test-pim-image",
+				ImageTag:     "test-pim-image-tag",
+				ImageContext: "test-context",
+				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -3873,17 +3761,19 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					InternalDatabaseObject: api.InternalDatabaseObject{
 						Type: api.DatabaseExternal,
 					},
-					ExternalConfig: &api.CommonExternalDatabaseObject{
-						Driver:                     "mariadb",
-						JdbcURL:                    "jdbc:mariadb://hello-mariadb:3306/pimdb",
-						Username:                   "pim",
-						Password:                   "pim",
-						MinPoolSize:                "10",
-						MaxPoolSize:                "10",
-						ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
-						ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
-						BackgroundValidation:       "true",
-						BackgroundValidationMillis: "150000",
+					ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+						JdbcURL: "jdbc:mariadb://hello-mariadb:3306/pimdb",
+						CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+							Driver:                     "mariadb",
+							Username:                   "pim",
+							Password:                   "pim",
+							MinPoolSize:                "10",
+							MaxPoolSize:                "10",
+							ConnectionChecker:          "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+							ExceptionSorter:            "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+							BackgroundValidation:       "true",
+							BackgroundValidationMillis: "150000",
+						},
 					},
 				},
 			},
@@ -3977,11 +3867,13 @@ func TestMergeProcessMigrationDB(t *testing.T) {
 							InternalDatabaseObject: api.InternalDatabaseObject{
 								Type: api.DatabaseExternal,
 							},
-							ExternalConfig: &api.CommonExternalDatabaseObject{
-								Driver:   "mariadb",
-								JdbcURL:  "jdbc:mariadb://test-process-migration-mysql:3306/pimdb",
-								Username: "pim",
-								Password: "pim",
+							ExternalConfig: &api.CommonExtDBObjectRequiredURL{
+								JdbcURL: "jdbc:mariadb://test-process-migration-mysql:3306/pimdb",
+								CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+									Driver:   "mariadb",
+									Username: "pim",
+									Password: "pim",
+								},
 							},
 						},
 					},
@@ -4327,7 +4219,7 @@ func TestGetDatabaseDeploymentTemplate(t *testing.T) {
 						InternalDatabaseObject: api.InternalDatabaseObject{
 							Type: api.DatabaseExternal,
 						},
-						ExternalConfig: &api.CommonExternalDatabaseObject{},
+						ExternalConfig: &api.CommonExtDBObjectRequiredURL{},
 					},
 				},
 			},
@@ -4524,7 +4416,7 @@ func TestMergeDBDeployment(t *testing.T) {
 	}
 }
 
-func TestJvmDefaultConf(t *testing.T) {
+func TestJvmDefaultConsole(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4536,6 +4428,23 @@ func TestJvmDefaultConf(t *testing.T) {
 				Console: api.ConsoleObject{
 					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
 				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptyConsole(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
 			},
 		},
 	}
@@ -4557,6 +4466,23 @@ func TestJvmDefaultServers(t *testing.T) {
 						Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
 					},
 				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptyServer(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
 			},
 		},
 	}
@@ -4639,4 +4565,268 @@ func TestSimplifiedMonitoringSwitch(t *testing.T) {
 	}
 
 	assert.Nil(t, env.Console.PersistentVolumeClaims, "Should not have PVC!")
+}
+
+func TestResourcesDefault(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{},
+				},
+
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{},
+				},
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{},
+					},
+				},
+			},
+		},
+	}
+	GetEnvironment(cr, test.MockService())
+	testReqAndLimit(t, cr, "1", "500m", "2", "1", "500m", "250m")
+}
+
+func TestResourcesOverrideServers(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					KieAppObject: api.KieAppObject{
+						Resources: sampleLimitAndRequestsResources,
+					},
+				},
+
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Resources: sampleLimitAndRequestsResources,
+					},
+				},
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							Resources: sampleLimitAndRequestsResources,
+						},
+					},
+				},
+			},
+		},
+	}
+	GetEnvironment(cr, test.MockService())
+	testReqAndLimit(t, cr, "200", "100", "200", "100", "200", "100")
+}
+
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string) {
+
+	assert.NotNil(t, cr.Status.Applied)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.Console.Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
+
+	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
+	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
+
+	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
+	assert.True(t, requestsCPUServer.String() == rCPUServer)
+
+	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
+	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
+
+	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
+	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
+
+	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
+	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)
+
+	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceCPU]
+	assert.True(t, requestsCPUSmartRouter.String() == rCPUSmartRouter)
+}
+
+var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
+	Limits: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
+	},
+	Requests: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
+	},
+}
+
+func TestSmartRouterDefaultConf(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext, "smartrouter")
+}
+
+func TestSmartRouterWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				SmartRouter: createSmartRouter(),
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.SmartRouter.ImageContext, "smartrouter")
+}
+
+func createSmartRouter() *api.SmartRouterObject {
+	smartRouter := api.SmartRouterObject{
+		KieAppObject: api.KieAppObject{
+			ImageContext: "rhpam-42",
+		},
+		Protocol:         "",
+		UseExternalRoute: false,
+	}
+	return &smartRouter
+}
+
+func TestConsoleDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext, "businesscentral")
+}
+
+func TestConsoleWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Console: api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-41",
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Console.ImageContext, "businesscentral")
+}
+
+func TestServersDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext, "kieserver")
+}
+
+func TestServersWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							ImageContext: "rhpam-42",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.Servers[0].ImageContext, "kieserver")
+}
+
+func TestProcessMigrationDefaultImage(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext, "process-migration")
+}
+
+func TestProcessMigrationWithImageContext(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					ImageContext: "rhpam-43",
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testContext(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image, cr.Status.Applied.Version, cr.Status.Applied.Objects.ProcessMigration.ImageContext, "process-migration")
+}
+
+func testContext(t *testing.T, image, version, context, label string) {
+	if context != "" {
+		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-"+label+constants.RhelVersion+":"+version, image)
+	} else {
+		assert.Equal(t, constants.PamContext+label+constants.RhelVersion+":"+version, image)
+	}
 }

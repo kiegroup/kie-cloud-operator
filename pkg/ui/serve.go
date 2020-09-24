@@ -3,16 +3,17 @@ package ui
 //go:generate go run -mod=vendor ../controller/kieapp/defaults/.packr/packr.go
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"io/ioutil"
 
 	"github.com/RHsyseng/console-cr-form/pkg/web"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
 	"github.com/gobuffalo/packr/v2"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -59,7 +60,7 @@ func apply(cr string) error {
 		return err
 	}
 	kieApp.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
-	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do().Into(kieApp)
+	err = restClient.Post().Namespace(getCurrentNamespace()).Body(kieApp).Resource("kieapps").Do(context.TODO()).Into(kieApp)
 	if err != nil {
 		log.Debug("Failed to create KIE app", err)
 		return err
@@ -139,7 +140,7 @@ func getObjectKind() string {
 		log.Fatal(err)
 		panic("Failed to retrieve crd, there must be an environment problem!")
 	}
-	crd := &v1beta1.CustomResourceDefinition{}
+	crd := &extv1.CustomResourceDefinition{}
 	err = yaml.Unmarshal(yamlByte, crd)
 	if err != nil {
 		panic("Failed to unmarshal static schema, there must be an environment problem!")

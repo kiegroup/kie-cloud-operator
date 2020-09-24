@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,5 +20,6 @@ type PlatformService interface {
 	GetCached(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
 	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
 	GetScheme() *runtime.Scheme
+	Status() client.StatusWriter
 	IsMockService() bool
 }
