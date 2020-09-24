@@ -11,12 +11,29 @@ spec:
     singular: kieapp
   scope: Namespaced
   version: v2
+  additionalPrinterColumns:
+    - name: Version
+      type: string
+      description: The version of the application deployment
+      JSONPath: .status.version
+    - name: Environment
+      type: string
+      description: The name of the environment used as a baseline
+      JSONPath: .spec.environment
+    - name: Status
+      type: string
+      description: The status of the KieApp deployment
+      JSONPath: .status.phase
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   versions:
     - name: v2
       served: true
       storage: true
       schema:
         openAPIV3Schema:
+          type: object
           required:
             - spec
           properties:
@@ -141,6 +158,9 @@ spec:
                               type: object
                             requests:
                               type: object
+                        storageClassName:
+                          type: string
+                          description: The storageClassName to use for console pvc's.
                         ssoClient:
                           type: object
                           description: Client definitions used for creating the RH-SSO clients in the specified Realm
@@ -162,6 +182,9 @@ spec:
                           type: object
                           description: GitHooks configuration object
                           properties:
+                            sshSecret:
+                              type: string
+                              description: Secret to use for ssh key and known hosts file.
                             mountPath:
                               type: string
                               description: Absolute path where the gitHooks folder will be mounted.
@@ -222,15 +245,15 @@ spec:
                             gcTimeRatio:
                               type: integer
                               format: int32
-                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                              description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means spent 20% on gc.
                             gcAdaptiveSizePolicyWeight:
                               type: integer
                               format: int32
-                              description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                              description: The weighting given to the current GC time versus previous GC times  when determining the new heap size. e.g. '90'
                             gcMaxMetaspaceSize:
                               type: integer
                               format: int32
-                              description: The maximum metaspace size. e.g. '100'
+                              description: The maximum metaspace size unit, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
                             gcContainerOptions:
                               type: string
                               description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
@@ -393,6 +416,9 @@ spec:
                                 type: object
                               requests:
                                 type: object
+                          storageClassName:
+                            type: string
+                            description: The storageClassName to use for server pvc's.
                           ssoClient:
                             type: object
                             description: Client definitions used for creating the RH-SSO clients in the specified Realm
@@ -426,6 +452,9 @@ spec:
                               size:
                                 type: string
                                 description: Size of the PersistentVolumeClaim to create. For example, 100Gi
+                              storageClassName:
+                                type: string
+                                description: The storageClassName to use for database pvc's.
                               externalConfig:
                                 type: object
                                 description: External Database configuration
@@ -446,7 +475,7 @@ spec:
                                     description: Driver name to use. For example, mysql
                                   dialect:
                                     type: string
-                                    description: Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL57Dialect
+                                    description: Hibernate dialect class to use. For example, org.hibernate.dialect.MySQL8Dialect
                                   name:
                                     type: string
                                     description: Database Name. For example, rhpam
@@ -490,7 +519,7 @@ spec:
                             type: object
                             description: Configuration for JMS integration with KIE Server.
                             required:
-                            - enableIntegration
+                              - enableIntegration
                             properties:
                               enableIntegration:
                                 type: boolean
@@ -592,15 +621,15 @@ spec:
                               gcTimeRatio:
                                 type: integer
                                 format: int32
-                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection. e.g. '4'
+                                description: Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 means 1% spent on gc, 4 means spent 20% on gc.
                               gcAdaptiveSizePolicyWeight:
                                 type: integer
                                 format: int32
-                                description: The weighting given to the current GC time versus previous GC times. e.g. '90'
+                                description: The weighting given to the current GC time versus previous GC times when determining the new heap size, between 0 and 100. e.g. '90'
                               gcMaxMetaspaceSize:
                                 type: integer
                                 format: int32
-                                description: The maximum metaspace size. e.g. '100'
+                                description: The maximum metaspace size, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
                               gcContainerOptions:
                                 type: string
                                 description: Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
@@ -658,6 +687,75 @@ spec:
                               type: object
                             requests:
                               type: object
+                        storageClassName:
+                          type: string
+                          description: The storageClassName to use for smart router pvc's.
+                    processMigration:
+                      type: object
+                      description: Configuration of the RHPAM Process Instance Migration
+                      properties:
+                        image:
+                          type: string
+                          description: The image to use for Process Instance Migration.
+                        imageTag:
+                          type: string
+                          description: The image tag to use for Process Instance Migration.
+                        database:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              description: Database type to use
+                              enum:
+                                - mysql
+                                - postgresql
+                                - external
+                                - h2
+                            size:
+                              type: string
+                              description: Size of the PersistentVolumeClaim to create. For example, 100Gi
+                            storageClassName:
+                              type: string
+                              description: The storageClassName to use for database pvc's.
+                            externalConfig:
+                              type: object
+                              description: External Database configuration is not fully supported for PIM Image.
+                              required:
+                                - driver
+                                - username
+                                - password
+                                - jdbcURL
+                              properties:
+                                driver:
+                                  type: string
+                                  description: Driver name to use. For example, mysql
+                                jdbcURL:
+                                  type: string
+                                  description: Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
+                                username:
+                                  type: string
+                                  description: External database username
+                                password:
+                                  type: string
+                                  description: External database password
+                                minPoolSize:
+                                  type: string
+                                  description: Sets xa-pool/min-pool-size for the configured datasource.
+                                maxPoolSize:
+                                  type: string
+                                  description: Sets xa-pool/max-pool-size for the configured datasource.
+                                connectionChecker:
+                                  type: string
+                                  description: An org.jboss.jca.adapters.jdbc.ValidConnectionChecker that provides a SQLException isValidConnection(Connection e) method to validate if a connection is valid.
+                                exceptionSorter:
+                                  type: string
+                                  description: An org.jboss.jca.adapters.jdbc.ExceptionSorter that provides a boolean isExceptionFatal(SQLException e) method to validate if an exception should be broadcast to all javax.resource.spi.ConnectionEventListener as a connectionErrorOccurred.
+                                backgroundValidation:
+                                  type: string
+                                  description: Sets the sql validation method to background-validation, if set to false the validate-on-match method will be used.
+                                backgroundValidationMillis:
+                                  type: string
+                                  description: Defines the interval for the background-validation check for the jdbc connections.
                 imageRegistry:
                   type: object
                   description: If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
@@ -817,6 +915,7 @@ spec:
       storage: false
       schema:
         openAPIV3Schema:
+          type: object
           required:
             - spec
           properties:
@@ -1181,7 +1280,7 @@ spec:
                             type: object
                             description: Configuration for JMS integration with KIE Server.
                             required:
-                            - enableIntegration
+                              - enableIntegration
                             properties:
                               enableIntegration:
                                 type: boolean
