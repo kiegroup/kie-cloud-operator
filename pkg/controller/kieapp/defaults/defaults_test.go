@@ -303,18 +303,22 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
 
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
-	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
 
-func TestRhpamProdwSmartRouter(t *testing.T) {
+func TestRhpamProdWithSmartRouter(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -381,6 +385,12 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmProductionImmutable,
 			Objects: api.KieAppObjects{
+				// set console anyways to make sure rhdmcentrl is not created
+				Console: &api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Replicas: Pint32(1),
+					},
+				},
 				Servers: []api.KieServerSet{
 					{
 						Jms: &api.KieAppJmsObject{
@@ -400,15 +410,18 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
-	assert.Equal(t, "test-jms-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
-	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Nil(t, env.Console.DeploymentConfigs)
 }
 
 func TestRhpamProdImmutableEnvironment(t *testing.T) {
@@ -421,12 +434,49 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
-
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Business Central Monitoring should be omitted by default on immutable env.")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhpamProdImmutableEnvironmentWithConsole(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Replicas: Pint32(2),
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "test-rhpamcentrmon", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentrmon", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.False(t, env.Console.Omit, "Business Central Monitoring should not be omitted on immutable env if Console is set.")
+	assert.NotNil(t, cr.Status.Applied.Objects.Console, "Console should not be nil")
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, int32(2), env.Console.DeploymentConfigs[0].Spec.Replicas)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 }
 
 func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
@@ -456,6 +506,62 @@ func TestRhpamProdImmutableJMSEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Business Central Monitoring should be omitted by default on immutable env.")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
+	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
+	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
+	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
+	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhpamProdImmutableJMSEnvironmentWithConsole(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-jms",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Replicas: Pint32(1),
+					},
+				},
+				Servers: []api.KieServerSet{
+					{
+						Jms: &api.KieAppJmsObject{
+							EnableIntegration:  true,
+							ExecutorTransacted: true,
+							Username:           "adminUser",
+							Password:           "adminPassword",
+							AuditTransacted:    Pbool(false),
+							EnableAudit:        true,
+							QueueAudit:         "queue/CUSTOM.KIE.SERVER.AUDIT",
+							EnableSignal:       true,
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.False(t, env.Console.Omit, "Business Central Monitoring should not be omitted.")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "test-jms-rhpamcentrmon", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
+	assert.NotNil(t, cr.Status.Applied.Objects.Console, "Console should not be nil")
 	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
@@ -499,8 +605,8 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-
-	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Business Central Monitoring should be omitted by default on immutable env.")
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
@@ -510,8 +616,8 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
 	assert.True(t, cr.Status.Applied.Objects.Servers[0].Jms.AMQEnableSSL)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
 
 func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
@@ -567,12 +673,13 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 
 	_, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Business Central Monitoring should be omitted by default on immutable env.")
 	assert.Equal(t, user1, cr.Status.Applied.Objects.Servers[0].Jms.Username)
 	assert.Equal(t, password1, cr.Status.Applied.Objects.Servers[0].Jms.Password)
 	assert.Equal(t, user2, cr.Status.Applied.Objects.Servers[1].Jms.Username)
 	assert.Equal(t, password2, cr.Status.Applied.Objects.Servers[1].Jms.Password)
 
-	assert.Equal(t, "test-jms-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-postgresql", env.Databases[0].DeploymentConfigs[0].Name)
 	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].DeploymentConfigs[1].Name)
@@ -586,8 +693,8 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.SIGNAL", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_SIGNAL"), "Variable should exist")
 	assert.Equal(t, "queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AMQ_QUEUES"), "Variable should exist")
 
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
 
 func testAMQEnvs(t *testing.T, kieserverEnvs []corev1.EnvVar, amqEnvs []corev1.EnvVar) {
@@ -1141,7 +1248,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Console.Replicas)
 
-	cr.Spec.Objects = api.KieAppObjects{Console: api.ConsoleObject{}}
+	cr.Spec.Objects = api.KieAppObjects{Console: &api.ConsoleObject{}}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Nil(t, cr.Spec.Objects.Servers)
@@ -1341,7 +1448,7 @@ func TestTrialServerEnv(t *testing.T) {
 			Environment:  api.RhpamTrial,
 			UseImageTags: true,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					Jvm: &api.JvmObject{
 						JavaOptsAppend:     "",
 						GcContainerOptions: "",
@@ -1478,7 +1585,7 @@ func TestTrialConsoleEnv(t *testing.T) {
 				ApplicationName: "trial",
 			},
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env: []corev1.EnvVar{
 							envReplace,
@@ -1525,7 +1632,7 @@ func TestKieAppDefaults(t *testing.T) {
 
 	assert.False(t, cr.Spec.Upgrades.Enabled)
 	assert.Empty(t, cr.Spec.CommonConfig.ApplicationName)
-	assert.Nil(t, cr.Spec.Objects.Console.Replicas)
+	assert.Nil(t, cr.Spec.Objects.Console)
 	assert.Nil(t, cr.Spec.Objects.Servers)
 	assert.NotEmpty(t, cr.Status.Applied.CommonConfig.ApplicationName)
 	assert.NotNil(t, cr.Status.Applied.Objects.Console.Replicas)
@@ -1752,7 +1859,7 @@ func TestSetProductLabels(t *testing.T) {
 }
 
 func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
-	assert.NotNil(t, cr.Spec.Objects.Console)
+	assert.NotNil(t, cr.Status.Applied.Objects.Console)
 	assert.Len(t, cr.Spec.Objects.Servers, 2)
 	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
 	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
@@ -1832,7 +1939,7 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 			Environment:  api.RhpamTrial,
 			UseImageTags: true,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
 						Resources: sampleResources,
@@ -2273,9 +2380,8 @@ func TestDatabaseExternal(t *testing.T) {
 	env = ConsolidateObjects(env, cr)
 
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
 
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2337,11 +2443,9 @@ func TestDatabaseH2(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
 
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2497,8 +2601,8 @@ func TestDatabaseMySQL(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2552,8 +2656,8 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2672,11 +2776,9 @@ func TestDatabasePostgresql(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
 
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2729,11 +2831,9 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
 
-	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < deployments; i++ {
 		idx := ""
 		if i > 0 {
@@ -2834,7 +2934,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{},
+				Console: &api.ConsoleObject{},
 				Servers: []api.KieServerSet{
 					{
 						Deployments: Pint(2),
@@ -3001,7 +3101,7 @@ func TestStorageClassName(t *testing.T) {
 	cr.Spec.Objects.Servers[0].StorageClassName = "silver"
 	cr.Spec.Objects.Servers[1].StorageClassName = "silver"
 	cr.Spec.Objects.Servers[2].StorageClassName = "silver"
-	cr.Spec.Objects.Console = api.ConsoleObject{
+	cr.Spec.Objects.Console = &api.ConsoleObject{
 		KieAppObject: api.KieAppObject{StorageClassName: "fast"},
 	}
 	cr.Spec.Objects.SmartRouter.StorageClassName = "slow"
@@ -3212,7 +3312,7 @@ func TestGitHooks(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{},
+				Console: &api.ConsoleObject{},
 			},
 		},
 	}
@@ -4425,7 +4525,7 @@ func TestJvmDefaultConsole(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
 				},
 			},
@@ -4444,7 +4544,7 @@ func TestJvmEmptyConsole(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{},
+				Console: &api.ConsoleObject{},
 			},
 		},
 	}
@@ -4532,7 +4632,7 @@ func TestSimplifiedMonitoringSwitch(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProductionImmutable,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env: []corev1.EnvVar{
 							{
@@ -4580,7 +4680,7 @@ func TestResourcesDefault(t *testing.T) {
 					KieAppObject: api.KieAppObject{},
 				},
 
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{},
 				},
 				Servers: []api.KieServerSet{
@@ -4610,7 +4710,7 @@ func TestResourcesOverrideServers(t *testing.T) {
 					},
 				},
 
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Resources: sampleLimitAndRequestsResources,
 					},
@@ -4718,7 +4818,7 @@ func TestConsoleDefaultImage(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamAuthoringHA,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{},
+				Console: &api.ConsoleObject{},
 			},
 		},
 	}
@@ -4735,7 +4835,7 @@ func TestConsoleWithImageContext(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamAuthoringHA,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						ImageContext: "rhpam-41",
 					},

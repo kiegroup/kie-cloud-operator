@@ -1,5 +1,3 @@
-console:
-  omit: true
 ## KIE Servers BEGIN
 servers:
   ## RANGE BEGINS
