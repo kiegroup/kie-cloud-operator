@@ -504,7 +504,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
 			}
-			if cr.Spec.Objects.Console == nil || cr.Spec.Environment == api.RhdmProductionImmutable {
+			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
 				template.OmitConsole = true
 			}
 			if serverSet.ID != "" {

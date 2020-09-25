@@ -231,6 +231,9 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhdmPrefix)
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
 	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
@@ -275,6 +278,9 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
 	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
 	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
 
 }
 
@@ -417,6 +423,7 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Equal(t, "amq-jolokia-console", env.Servers[0].Routes[1].Name)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
 	assert.True(t, env.Servers[0].Routes[1].Spec.TLS == nil)
@@ -616,6 +623,9 @@ func TestRhpamProdImmutableJMSEnvironmentWithSSL(t *testing.T) {
 	assert.False(t, env.Servers[0].Routes[2].Spec.TLS == nil)
 	testAMQEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, env.Servers[0].DeploymentConfigs[1].Spec.Template.Spec.Containers[0].Env)
 	assert.True(t, cr.Status.Applied.Objects.Servers[0].Jms.AMQEnableSSL)
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Nil(t, env.Console.DeploymentConfigs)
 	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
@@ -693,6 +703,9 @@ func TestRhpamProdImmutableJMSEnvironmentExecutorDisabled(t *testing.T) {
 	assert.Equal(t, "queue/CUSTOM.KIE.SERVER.SIGNAL", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_JMS_QUEUE_SIGNAL"), "Variable should exist")
 	assert.Equal(t, "queue/KIE.SERVER.REQUEST, queue/KIE.SERVER.RESPONSE, queue/CUSTOM.KIE.SERVER.SIGNAL, queue/CUSTOM.KIE.SERVER.AUDIT", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AMQ_QUEUES"), "Variable should exist")
 
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERV"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Nil(t, env.Console.DeploymentConfigs)
 	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
@@ -1202,6 +1215,9 @@ func TestAuthoringEnvironment(t *testing.T) {
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring environment")
 	dbPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
@@ -1229,7 +1245,9 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
-
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
@@ -1997,7 +2015,9 @@ func TestPartialTemplateConfig(t *testing.T) {
 	assert.Equal(t, cr.Spec.CommonConfig.AdminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
 	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
 	assert.Equal(t, "MyPassword", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
-
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 }
