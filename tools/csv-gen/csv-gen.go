@@ -260,6 +260,18 @@ func main() {
 				},
 				StatusDescriptors: []csvv1.StatusDescriptor{
 					{
+						Description:  "The admin user for BC console.",
+						DisplayName:  "Business/Decision Central Admin User",
+						Path:         "applied.commonConfig.adminUser",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:password"},
+					},
+					{
+						Description:  "The admin password for BC console.",
+						DisplayName:  "Business/Decision Central Admin Password",
+						Path:         "applied.commonConfig.adminPassword",
+						XDescriptors: []string{"urn:alm:descriptor:com.tectonic.ui:password"},
+					},
+					{
 						Description:  "Product version installed.",
 						DisplayName:  "Version",
 						Path:         "version",
