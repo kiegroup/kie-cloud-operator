@@ -771,9 +771,8 @@ func (spt *ServicePrincipalToken) EnsureFresh() error {
 // EnsureFreshWithContext will refresh the token if it will expire within the refresh window (as set by
 // RefreshWithin) and autoRefresh flag is on.  This method is safe for concurrent use.
 func (spt *ServicePrincipalToken) EnsureFreshWithContext(ctx context.Context) error {
-	// must take the read lock when initially checking the token's expiration
-	if spt.inner.AutoRefresh && spt.Token().WillExpireIn(spt.inner.RefreshWithin) {
-		// take the write lock then check again to see if the token was already refreshed
+	if spt.inner.AutoRefresh && spt.inner.Token.WillExpireIn(spt.inner.RefreshWithin) {
+		// take the write lock then check to see if the token was already refreshed
 		spt.refreshLock.Lock()
 		defer spt.refreshLock.Unlock()
 		if spt.inner.Token.WillExpireIn(spt.inner.RefreshWithin) {
