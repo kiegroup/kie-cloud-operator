@@ -28,7 +28,7 @@ import (
 	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/pavel-v-chernykh/keystore-go"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
@@ -316,11 +316,14 @@ func setDeploymentStatus(instance *api.KieApp, resources []resource.KubernetesRe
 
 func (reconciler *Reconciler) verifyExternalReferences(cr *api.KieApp) error {
 	var err error
+
 	if cr.Status.Applied.Auth != nil && cr.Status.Applied.Auth.RoleMapper != nil {
 		err = reconciler.verifyExternalReference(cr.GetNamespace(), cr.Status.Applied.Auth.RoleMapper.From)
 	}
-	if err == nil && cr.Status.Applied.Objects.Console.GitHooks != nil {
-		err = reconciler.verifyExternalReference(cr.GetNamespace(), cr.Status.Applied.Objects.Console.GitHooks.From)
+	if cr.Status.Applied.Objects.Console != nil {
+		if err == nil && cr.Status.Applied.Objects.Console.GitHooks != nil {
+			err = reconciler.verifyExternalReference(cr.GetNamespace(), cr.Status.Applied.Objects.Console.GitHooks.From)
+		}
 	}
 	return err
 }

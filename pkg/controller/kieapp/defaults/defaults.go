@@ -80,10 +80,21 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		env.SmartRouter.Omit = true
 	}
 
+	if cr.Status.Applied.Environment == api.RhdmProductionImmutable || (isImmutable(cr) && cr.Status.Applied.Objects.Console == nil) {
+		env.Console.Omit = true
+	}
+
 	mergedEnv, err := merge(common, env)
 	if err != nil {
 		return api.Environment{}, err
 	}
+
+	// if bc monitoring is not set, there's no need to set the environment variables below
+	if mergedEnv.Console.Omit {
+		// cleaning console object
+		mergedEnv.Console = api.CustomObject{Omit: true}
+	}
+
 	if mergedEnv.SmartRouter.Omit {
 		// remove router env vars from kieserver DCs
 		for _, server := range mergedEnv.Servers {
@@ -217,6 +228,7 @@ func findCustomObjectByName(template api.CustomObject, objects []api.CustomObjec
 }
 
 func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
+
 	SetDefaults(cr)
 	serversConfig, err := getServersConfig(cr)
 	if err != nil {
@@ -286,60 +298,64 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 }
 
 func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
-	// Set replicas
 	template := api.ConsoleTemplate{}
-	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
-	if !hasEnv {
-		return template
-	}
-	replicas, denyScale := setReplicas(cr.Status.Applied.Objects.Console.Replicas, envConstants.Replica.Console, hasEnv)
-	if denyScale || cr.Status.Applied.Objects.Console.Replicas == nil {
-		cr.Status.Applied.Objects.Console.Replicas = Pint32(replicas)
-	}
-	template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
-	template.Name = envConstants.App.Prefix
-	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
-	template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
-	template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
-	if template.KeystoreSecret == "" {
-		template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
-	}
-	template.StorageClassName = cr.Status.Applied.Objects.Console.StorageClassName
-	if !cr.Status.Applied.UseImageTags {
-		if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists {
-			template.ImageURL = val
+	if cr.Status.Applied.Objects.Console != nil {
+		envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
+
+		// Set replicas
+		if !hasEnv {
+			return template
 		}
-		template.OmitImageStream = true
-	}
-	template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
-	if cr.Status.Applied.Objects.Console.Image != "" {
-		template.Image = cr.Status.Applied.Objects.Console.Image
-		template.ImageURL = template.Image + ":" + template.ImageTag
-		template.OmitImageStream = false
-	}
-	if cr.Status.Applied.Objects.Console.ImageTag != "" {
-		template.ImageTag = cr.Status.Applied.Objects.Console.ImageTag
-		template.ImageURL = template.Image + ":" + template.ImageTag
-		template.OmitImageStream = false
-	}
-	if cr.Status.Applied.Objects.Console.ImageContext != "" {
-		template.ImageContext = cr.Status.Applied.Objects.Console.ImageContext
-		template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
-		template.OmitImageStream = false
-	}
-	if cr.Status.Applied.Objects.Console.GitHooks != nil {
-		template.GitHooks = *cr.Status.Applied.Objects.Console.GitHooks.DeepCopy()
-		if template.GitHooks.MountPath == "" {
-			template.GitHooks.MountPath = constants.GitHooksDefaultDir
+		replicas, denyScale := setReplicas(cr.Status.Applied.Objects.Console.Replicas, envConstants.Replica.Console, hasEnv)
+		if denyScale || cr.Status.Applied.Objects.Console.Replicas == nil {
+			cr.Status.Applied.Objects.Console.Replicas = Pint32(replicas)
 		}
-	}
-	// JVM configuration
-	if cr.Status.Applied.Objects.Console.Jvm != nil {
-		template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
-	}
-	// Simplified mode configuration
-	if enabled, err := strconv.ParseBool(getSpecEnv(cr.Spec.Objects.Console.Env, "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED")); err == nil {
-		template.Simplified = enabled
+		template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
+		template.Name = envConstants.App.Prefix
+		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+		template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
+		if template.KeystoreSecret == "" {
+			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
+		}
+
+		template.StorageClassName = cr.Status.Applied.Objects.Console.StorageClassName
+		if !cr.Status.Applied.UseImageTags {
+			if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists {
+				template.ImageURL = val
+			}
+			template.OmitImageStream = true
+		}
+		template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
+		if cr.Status.Applied.Objects.Console.Image != "" {
+			template.Image = cr.Status.Applied.Objects.Console.Image
+			template.ImageURL = template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.Console.ImageTag != "" {
+			template.ImageTag = cr.Status.Applied.Objects.Console.ImageTag
+			template.ImageURL = template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.Console.ImageContext != "" {
+			template.ImageContext = cr.Status.Applied.Objects.Console.ImageContext
+			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
+			template.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.Console.GitHooks != nil {
+			template.GitHooks = *cr.Status.Applied.Objects.Console.GitHooks.DeepCopy()
+			if template.GitHooks.MountPath == "" {
+				template.GitHooks.MountPath = constants.GitHooksDefaultDir
+			}
+		}
+		// JVM configuration
+		if cr.Status.Applied.Objects.Console.Jvm != nil {
+			template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
+		}
+		// Simplified mode configuration
+		if enabled, err := strconv.ParseBool(getSpecEnv(cr.Status.Applied.Objects.Console.Env, "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED")); err == nil {
+			template.Simplified = enabled
+		}
 	}
 	return template
 }
@@ -488,6 +504,9 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
 			}
+			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
+				template.OmitConsole = true
+			}
 			if serverSet.ID != "" {
 				template.KieServerID = serverSet.ID
 			}
@@ -597,7 +616,9 @@ func getKieSetName(spec *api.KieAppSpec, index int) string {
 
 // ConsolidateObjects construct all CustomObjects prior to creation
 func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
-	env.Console = ConstructObject(env.Console, cr.Status.Applied.Objects.Console.KieAppObject)
+	if cr.Status.Applied.Objects.Console != nil {
+		env.Console = ConstructObject(env.Console, cr.Status.Applied.Objects.Console.KieAppObject)
+	}
 	if cr.Status.Applied.Objects.SmartRouter != nil {
 		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Status.Applied.Objects.SmartRouter.KieAppObject)
 	}
@@ -1002,9 +1023,17 @@ func SetDefaults(cr *api.KieApp) {
 			api.SchemeGroupVersion.Group: version.Version,
 		})
 	}
+
 	// retain certain items from status... e.g. version, usernames, passwords, etc
 	// everything else in status should be recreated with each reconcile.
 	specApply := cr.Spec.DeepCopy()
+
+	if !isImmutable(cr) && specApply.Objects.Console == nil {
+		specApply.Objects.Console = &api.ConsoleObject{
+			KieAppObject: api.KieAppObject{},
+		}
+	}
+
 	if len(specApply.Version) == 0 {
 		specApply.Version = constants.CurrentVersion
 		if len(cr.Status.Applied.Version) != 0 {
@@ -1024,8 +1053,7 @@ func SetDefaults(cr *api.KieApp) {
 		specApply.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
 	}
 	setKieSetNames(specApply)
-	checkJvmOnConsole(&specApply.Objects.Console)
-	setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
+
 	for index := range specApply.Objects.Servers {
 		addWebhookTypes(specApply.Objects.Servers[index].Build)
 		for _, statusServer := range cr.Status.Applied.Objects.Servers {
@@ -1035,13 +1063,27 @@ func SetDefaults(cr *api.KieApp) {
 		checkJvmOnServer(&specApply.Objects.Servers[index])
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
 	}
+
+	if specApply.Objects.Console != nil {
+		checkJvmOnConsole(specApply.Objects.Console)
+		setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
+	}
+
 	if specApply.Objects.SmartRouter != nil {
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
 	}
 
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
 	setPasswords(specApply, isTrialEnv)
+
 	cr.Status.Applied = *specApply
+}
+
+func checkJvmOnConsole(console *api.ConsoleObject) {
+	if console.Jvm == nil {
+		console.Jvm = &api.JvmObject{}
+	}
+	setJvmDefault(console.Jvm)
 }
 
 func setJvmDefault(jvm *api.JvmObject) {
@@ -1053,13 +1095,6 @@ func setJvmDefault(jvm *api.JvmObject) {
 			jvm.JavaInitialMemRatio = Pint32(25)
 		}
 	}
-}
-
-func checkJvmOnConsole(console *api.ConsoleObject) {
-	if console.Jvm == nil {
-		console.Jvm = &api.JvmObject{}
-	}
-	setJvmDefault(console.Jvm)
 }
 
 func checkJvmOnServer(server *api.KieServerSet) {
@@ -1260,6 +1295,14 @@ func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp,
 func isRHPAM(cr *api.KieApp) bool {
 	switch cr.Status.Applied.Environment {
 	case api.RhpamTrial, api.RhpamAuthoring, api.RhpamAuthoringHA, api.RhpamProduction, api.RhpamProductionImmutable:
+		return true
+	}
+	return false
+}
+
+func isImmutable(cr *api.KieApp) bool {
+	switch cr.Status.Applied.Environment {
+	case api.RhdmProductionImmutable, api.RhpamProductionImmutable:
 		return true
 	}
 	return false

@@ -14,7 +14,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
-	operators "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operators "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
@@ -163,6 +163,7 @@ func checkCSV(t *testing.T, csv *operators.ClusterServiceVersion) {
 
 	link := getConsoleLink(updatedCSV)
 	assert.NotNil(t, link, "Found no console link in CSV")
+	assert.NotEmpty(t, updatedCSV.Spec.InstallModes, "Found no install modes in CSV")
 	assert.True(t, strings.Contains(updatedCSV.Spec.Description, constants.ConsoleDescription), "Found no information about link in description")
 	assert.Equal(t, fmt.Sprintf("https://%s", url), link.URL, "The console link did not have the expected value")
 }

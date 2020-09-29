@@ -231,7 +231,7 @@ func TestSpecifySecret(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						KeystoreSecret: "console-ks-secret",
 					},
@@ -522,7 +522,7 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{},
+				Console: &api.ConsoleObject{},
 			},
 		},
 	}
@@ -564,7 +564,7 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
 			Objects: api.KieAppObjects{
-				Console: api.ConsoleObject{
+				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						ImageContext: "test",
 					},

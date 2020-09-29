@@ -95,7 +95,7 @@ type KieAppList struct {
 
 // KieAppObjects KIE App deployment objects
 type KieAppObjects struct {
-	Console ConsoleObject `json:"console,omitempty"`
+	Console *ConsoleObject `json:"console,omitempty"`
 	// Configuration of the each individual KIE server
 	Servers          []KieServerSet          `json:"servers,omitempty"`
 	SmartRouter      *SmartRouterObject      `json:"smartRouter,omitempty"`
@@ -612,6 +612,7 @@ type ConsoleTemplate struct {
 // ServerTemplate contains all the variables used in the yaml templates
 type ServerTemplate struct {
 	OmitImageStream  bool              `json:"omitImageStream"`
+	OmitConsole      bool              `json:"omitConsole"`
 	KieName          string            `json:"kieName,omitempty"`
 	KieServerID      string            `json:"kieServerID,omitempty"`
 	Replicas         int32             `json:"replicas,omitempty"`

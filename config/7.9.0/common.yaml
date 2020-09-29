@@ -621,8 +621,14 @@ servers:
                         - /bin/sh
                         - /opt/eap/bin/launch/jboss-kie-kieserver-hooks.sh
                   env:
+                    #[[if not .OmitConsole]]
                     - name: WORKBENCH_SERVICE_NAME
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
+                    - name: KIE_SERVER_CONTROLLER_SERVICE
+                      value: "[[$.ApplicationName]]-[[$.Console.Name]]"
+                    - name: KIE_SERVER_CONTROLLER_PROTOCOL
+                      value: ws
+                    #[[end]]
                     - name: KIE_ADMIN_USER
                       value: "[[$.AdminUser]]"
                     - name: KIE_ADMIN_PWD
@@ -631,10 +637,6 @@ servers:
                       value: "OpenShiftStartupStrategy"
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
-                    - name: KIE_SERVER_CONTROLLER_SERVICE
-                      value: "[[$.ApplicationName]]-[[$.Console.Name]]"
-                    - name: KIE_SERVER_CONTROLLER_PROTOCOL
-                      value: ws
                     - name: KIE_SERVER_MODE
                       value: DEVELOPMENT
                     - name: KIE_MBEANS
