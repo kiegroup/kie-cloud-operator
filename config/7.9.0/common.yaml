@@ -321,9 +321,6 @@ console:
                   - key: id_rsa
                     path: id_rsa
                     mode: 0440
-                  - key: known_hosts
-                    path: known_hosts
-                    mode: 0660
               #[[end]]
               #[[end]]
   #[[if not .Console.Simplified]]
