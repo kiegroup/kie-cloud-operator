@@ -3179,7 +3179,6 @@ func TestStorageClassName(t *testing.T) {
 
 func TestGitHooks(t *testing.T) {
 	var defaultMode int32 = 0770
-	var knownHosts int32 = 0660
 	var idRsa int32 = 0440
 	tests := []struct {
 		name                string
@@ -3311,11 +3310,6 @@ func TestGitHooks(t *testing.T) {
 							Key:  "id_rsa",
 							Path: "id_rsa",
 							Mode: &idRsa,
-						},
-						{
-							Key:  "known_hosts",
-							Path: "known_hosts",
-							Mode: &knownHosts,
 						},
 					},
 				},
