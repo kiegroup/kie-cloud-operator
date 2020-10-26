@@ -504,6 +504,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
 			}
+
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
 				template.OmitConsole = true
 			}
@@ -569,6 +570,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 
 			servers = append(servers, *instanceTemplate)
 		}
+
 	}
 	return servers, nil
 }
@@ -625,6 +627,12 @@ func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
 		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
+		// apply the build config envs provided through cr to the given kieSerever BuildConfig Spec envs
+		for bcindex := range env.Servers[index].BuildConfigs {
+			env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env = shared.EnvOverride(
+				env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env,
+				cr.Spec.Objects.Servers[index].Build.Env)
+		}
 	}
 	return env
 }
@@ -702,6 +710,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 			ArtifactDir:                  serverSet.Build.ArtifactDir,
 		}
 	}
+
 	buildTemplate.From, _, _ = getDefaultKieServerImage(product, cr, serverSet, true)
 	if serverSet.Build.From != nil {
 		buildTemplate.From = *serverSet.Build.From

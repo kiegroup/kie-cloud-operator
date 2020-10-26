@@ -244,6 +244,8 @@ type KieAppObject struct {
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
+	// Env set environment variables for BuildConfigs
+	Env []corev1.EnvVar `json:"env,omitempty"`
 	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
 	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
 	GitSource                    GitSource `json:"gitSource,omitempty"`
