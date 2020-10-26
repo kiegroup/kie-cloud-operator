@@ -192,17 +192,7 @@ func TestAuthSSOConfig(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
 
-	expectedEnvs := []corev1.EnvVar{
-		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
-		{Name: "SSO_REALM", Value: "rhpam-test"},
-		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
-		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
-		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
-		{Name: "SSO_USERNAME"},
-		{Name: "SSO_PASSWORD"},
-		{Name: "SSO_PASSWORD"},
-	}
-	for _, expectedEnv := range expectedEnvs {
+	for _, expectedEnv := range getExpectedSSOEnvs() {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 		for i := range env.Servers {
 			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
@@ -217,6 +207,35 @@ func TestAuthSSOConfig(t *testing.T) {
 	}
 	for _, expectedEnv := range expectedClientEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
+		for i := range env.Servers {
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
+		}
+	}
+}
+
+func TestAuthSSOConfigWithRHDMImmutable(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: "rhdm-production-immutable",
+			Auth: &api.KieAppAuthObject{
+				SSO: &api.SSOAuthConfig{
+					URL:   "https://sso.example.com:8080",
+					Realm: "rhpam-test",
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting rhdm-production-immutable environment")
+
+	// console dc should be nil
+	assert.Nil(t, env.Console.DeploymentConfigs, "Console should be nil")
+
+	for _, expectedEnv := range getExpectedSSOEnvs() {
 		for i := range env.Servers {
 			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
@@ -551,5 +570,18 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func getExpectedSSOEnvs() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
+		{Name: "SSO_REALM", Value: "rhpam-test"},
+		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
+		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
+		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
+		{Name: "SSO_USERNAME"},
+		{Name: "SSO_PASSWORD"},
+		{Name: "SSO_PASSWORD"},
 	}
 }
