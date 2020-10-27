@@ -8,9 +8,9 @@ kind: KieApp
 metadata:
   name: library-s2i
   annotations:
-    consoleName: snippet-library-s2i
-    consoleTitle: S2I Immutable Deployment
-    consoleDesc: Use this snippet to configure an immutable deployment with s2i
+    consoleName: snippet-library-s2i-with-extra-buildconfig-envs
+    consoleTitle: S2I Immutable Deployment with extra Build Config environment variables
+    consoleDesc: Use this snippet to configure an immutable deployment with s2i passing extra Build Config environment variables.
     consoleSnippet: true
 spec:
   objects:
@@ -21,3 +21,6 @@ spec:
             uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
             reference: master
             contextDir: quickstarts/library-process/library
+          env:
+            - name: "JAVA_OPTS_APPEND"
+              value: "-Dmy.custom.property=prop-test"

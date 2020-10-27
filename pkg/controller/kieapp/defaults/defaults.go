@@ -631,7 +631,7 @@ func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 		for bcindex := range env.Servers[index].BuildConfigs {
 			env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env = shared.EnvOverride(
 				env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env,
-				cr.Spec.Objects.Servers[index].Build.Env)
+				serverSet.Build.Env)
 		}
 	}
 	return env

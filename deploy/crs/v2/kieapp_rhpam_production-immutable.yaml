@@ -16,8 +16,3 @@ spec:
             uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
             reference: master
             contextDir: quickstarts/library-process/library
-          # uncomment the block below to set custom environment variable for BuildConfig, useful to configure JAVA_OPTS_APPEND or other
-          # properties such as MAVEN_OPTS_APPEND
-          # env:
-          #  - name: "JAVA_OPTS_APPEND"
-          #    value: "-Dmy.custom.property=prop-test"
