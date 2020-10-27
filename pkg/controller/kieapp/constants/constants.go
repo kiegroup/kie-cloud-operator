@@ -8,11 +8,11 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.9.0"
+	CurrentVersion = "7.9.1"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.8.1"
+	PriorVersion1 = "7.9.0"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.8.0"
+	PriorVersion2 = "7.8.1"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -262,11 +262,11 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker76ImageTag,
-		BrokerImageURL:      Broker76ImageURL,
+		BrokerImageTag:      Broker77ImageTag,
+		BrokerImageURL:      Broker77ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag15,
-		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
