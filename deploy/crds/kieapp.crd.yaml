@@ -537,8 +537,7 @@ spec:
                           gcMaxMetaspaceSize:
                             description: The maximum metaspace size unit, unit could
                               be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                            format: int32
-                            type: integer
+                            type: string
                           gcMinHeapFreeRatio:
                             description: Minimum percentage of heap free after GC
                               to avoid expansion. e.g. '20'
@@ -1269,8 +1268,7 @@ spec:
                             gcMaxMetaspaceSize:
                               description: The maximum metaspace size unit, unit could
                                 be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                              format: int32
-                              type: integer
+                              type: string
                             gcMinHeapFreeRatio:
                               description: Minimum percentage of heap free after GC
                                 to avoid expansion. e.g. '20'
@@ -2119,8 +2117,7 @@ spec:
                               gcMaxMetaspaceSize:
                                 description: The maximum metaspace size unit, unit
                                   could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                                format: int32
-                                type: integer
+                                type: string
                               gcMinHeapFreeRatio:
                                 description: Minimum percentage of heap free after
                                   GC to avoid expansion. e.g. '20'
@@ -2876,8 +2873,7 @@ spec:
                                 gcMaxMetaspaceSize:
                                   description: The maximum metaspace size unit, unit
                                     could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                                  format: int32
-                                  type: integer
+                                  type: string
                                 gcMinHeapFreeRatio:
                                   description: Minimum percentage of heap free after
                                     GC to avoid expansion. e.g. '20'

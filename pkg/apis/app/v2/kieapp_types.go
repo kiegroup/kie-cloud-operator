@@ -219,7 +219,7 @@ type JvmObject struct {
 	// The weighting given to the current GC time versus previous GC times  when determining the new heap size. e.g. '90'
 	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
 	// The maximum metaspace size unit, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-	GcMaxMetaspaceSize *int32 `json:"gcMaxMetaspaceSize,omitempty"`
+	GcMaxMetaspaceSize string `json:"gcMaxMetaspaceSize,omitempty"`
 	// Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
 	GcContainerOptions string `json:"gcContainerOptions,omitempty"`
 }

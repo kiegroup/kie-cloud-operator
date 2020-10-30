@@ -165,14 +165,72 @@ const (
 	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
 	RhelVersion = "-rhel8"
 
-	//Resources Limits
-	ConsoleCPULimit        = "2"
-	ConsoleCPURequests     = "1"
-	ServersCPULimit        = "1"
-	ServersCPURequests     = "500m"
-	SmartRouterCPULimit    = "500m"
-	SmartRouterCPURequests = "250m"
+	//Resources Limits and Requests
+	ConsoleProdCPULimit         = "1"
+	ConsoleProdMemLimit         = "2Gi"
+	ConsoleAuthoringCPULimit    = "2"
+	ConsoleAuthoringMemLimit    = "4Gi"
+	ConsoleAuthoringCPURequests = "1500m"
+	ConsoleAuthoringMemRequests = "3Gi"
+	ConsoleProdCPURequests      = "500m"
+	ConsoleProdMemRequests      = "1.5Gi"
+	ServersCPULimit             = "1"
+	ServersMemLimit             = "2Gi"
+	ServersCPURequests          = "750m"
+	ServersMemRequests          = "1Gi"
+	SmartRouterCPULimit         = "500m"
+	SmartRouterMemLimit         = "1Gi"
+	SmartRouterCPURequests      = "250m"
+	SmartRouterMemRequests      = "1Gi"
 )
+
+// Console Resource Limits for BC Monitoring in Prod Env
+var ConsoleProdLimits = map[string]string{
+	"CPU": ConsoleProdCPULimit,
+	"MEM": ConsoleProdMemLimit,
+}
+
+// Console Resource Limits for BC in Authoring Env
+var ConsoleAuthoringLimits = map[string]string{
+	"CPU": ConsoleAuthoringCPULimit,
+	"MEM": ConsoleAuthoringMemLimit,
+}
+
+// Server Limits for every Env
+var ServersLimits = map[string]string{
+	"CPU": ServersCPULimit,
+	"MEM": ServersMemLimit,
+}
+
+// SmartRouter Limits for every Env
+var SmartRouterLimits = map[string]string{
+	"CPU": SmartRouterCPULimit,
+	"MEM": SmartRouterMemLimit,
+}
+
+// ConsoleAuthoringRequests defines requests in Authoring environment
+var ConsoleAuthoringRequests = map[string]string{
+	"CPU": ConsoleAuthoringCPURequests,
+	"MEM": ConsoleAuthoringMemRequests,
+}
+
+// ConsoleProdRequests defines requests in Prod or Immutable environment
+var ConsoleProdRequests = map[string]string{
+	"CPU": ConsoleProdCPURequests,
+	"MEM": ConsoleProdMemRequests,
+}
+
+// ServerRequests defines the requests for kieserver deployment
+var ServerRequests = map[string]string{
+	"CPU": ServersCPURequests,
+	"MEM": ServersMemRequests,
+}
+
+// SmartRouterRequests defines the requests for smart router deployment
+var SmartRouterRequests = map[string]string{
+	"CPU": SmartRouterCPURequests,
+	"MEM": SmartRouterMemRequests,
+}
 
 var Images = []ImageEnv{
 	{
