@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var consoleName = "console-cr-form"
@@ -53,11 +54,12 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersion, operator)
 	service := getService(namespace, reconciler.OcpVersion)
 	route := getRoute(namespace)
+	scheme := reconciler.Service.GetScheme()
 	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
 	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
 		existing := &corev1.ConfigMap{}
 		new := getCaConfigMap(namespace)
-		new.SetOwnerReferences(operator.GetOwnerReferences())
+		controllerutil.SetOwnerReference(operator, new, scheme)
 		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("Creating ConfigMap ", new.Name)
@@ -70,7 +72,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		} else {
 			if !reflect.DeepEqual(existing.Labels, new.Labels) {
 				existing.Labels = new.Labels
-				existing.SetOwnerReferences(operator.GetOwnerReferences())
+				controllerutil.SetOwnerReference(operator, existing, scheme)
 				log.Info("Updating ConfigMap ", existing.Name)
 				if err := reconciler.Service.Update(context.TODO(), existing); err != nil {
 					log.Error("failed to update configmap", err)
@@ -86,7 +88,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	}
 	comparator := compare.NewMapComparator()
 	deltas := comparator.Compare(deployed, requested)
-	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
+	writer := write.New(reconciler.Service).WithOwnerController(operator, scheme)
 	var hasUpdates bool
 	for resourceType, delta := range deltas {
 		if !delta.HasChanges() {
