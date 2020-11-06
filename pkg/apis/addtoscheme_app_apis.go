@@ -10,6 +10,7 @@ import (
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -24,5 +25,6 @@ func init() {
 		operatorsv1alpha1.AddToScheme,
 		monv1.AddToScheme,
 		consolev1.Install,
+		metav1.AddMetaToScheme,
 	)
 }
