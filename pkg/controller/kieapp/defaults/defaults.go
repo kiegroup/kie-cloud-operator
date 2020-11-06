@@ -1070,16 +1070,20 @@ func SetDefaults(cr *api.KieApp) {
 		}
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
-		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
+		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersLimits, constants.ServerRequests)
 	}
 
 	if specApply.Objects.Console != nil {
 		checkJvmOnConsole(specApply.Objects.Console)
-		setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
+		if strings.Contains(string(specApply.Environment), "authoring") {
+			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleAuthoringLimits, constants.ConsoleAuthoringRequests)
+		} else if strings.Contains(string(specApply.Environment), "production") {
+			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleProdLimits, constants.ConsoleProdRequests)
+		}
 	}
 
 	if specApply.Objects.SmartRouter != nil {
-		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
+		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterLimits, constants.SmartRouterRequests)
 	}
 
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
@@ -1103,6 +1107,9 @@ func setJvmDefault(jvm *api.JvmObject) {
 		if jvm.JavaInitialMemRatio == nil {
 			jvm.JavaInitialMemRatio = Pint32(25)
 		}
+		if len(jvm.GcMaxMetaspaceSize) == 0 {
+			jvm.GcMaxMetaspaceSize = "512m"
+		}
 	}
 }
 
@@ -1113,21 +1120,27 @@ func checkJvmOnServer(server *api.KieServerSet) {
 	setJvmDefault(server.Jvm)
 }
 
-func setResourcesDefault(kieObject *api.KieAppObject, limits, requests string) {
+func setResourcesDefault(kieObject *api.KieAppObject, limits, requests map[string]string) {
 	if kieObject.Resources == nil {
 		kieObject.Resources = &corev1.ResourceRequirements{}
 	}
 	if kieObject.Resources.Limits == nil {
-		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits)}
+		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits["CPU"]), corev1.ResourceMemory: createResourceQuantity(limits["MEM"])}
 	}
 	if kieObject.Resources.Requests == nil {
-		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests)}
+		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests["CPU"]), corev1.ResourceMemory: createResourceQuantity(requests["MEM"])}
 	}
 	if kieObject.Resources.Limits.Cpu() == nil {
-		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits))
+		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits["CPU"]))
+	}
+	if kieObject.Resources.Limits.Memory() == nil {
+		kieObject.Resources.Limits.Memory().Add(createResourceQuantity(limits["MEM"]))
 	}
 	if kieObject.Resources.Requests.Cpu() == nil {
-		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests))
+		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests["CPU"]))
+	}
+	if kieObject.Resources.Requests.Memory() == nil {
+		kieObject.Resources.Requests.Memory().Add(createResourceQuantity(requests["MEM"]))
 	}
 }
 

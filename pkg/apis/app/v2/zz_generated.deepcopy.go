@@ -587,11 +587,6 @@ func (in *JvmObject) DeepCopyInto(out *JvmObject) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.GcMaxMetaspaceSize != nil {
-		in, out := &in.GcMaxMetaspaceSize, &out.GcMaxMetaspaceSize
-		*out = new(int32)
-		**out = **in
-	}
 	return
 }
 
