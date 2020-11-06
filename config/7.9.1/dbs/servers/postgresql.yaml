@@ -1,0 +1,60 @@
+## KIE Servers BEGIN
+servers:
+  ## RANGE BEGINS
+  #[[ range $index, $Map := .Servers ]]
+  ## KIE server deployment config BEGIN
+  - deploymentConfigs:
+      - metadata:
+          name: "[[.KieName]]"
+        spec:
+          template:
+            spec:
+              initContainers:
+                - command:
+                    [
+                      "/bin/bash",
+                      "-c",
+                      ">-
+                       replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
+                    ]
+                  image: "[[$.Constants.OseCliImageURL]]"
+                  imagePullPolicy: IfNotPresent
+                  name: "[[.KieName]]-postgresql-init"
+                  terminationMessagePolicy: FallbackToLogsOnError
+              containers:
+                - name: "[[.KieName]]"
+                  env:
+                    ## PostgreSQL driver settings BEGIN
+                    - name: DATASOURCES
+                      value: "RHPAM"
+                    - name: RHPAM_DATABASE
+                      value: "rhpam7"
+                    - name: RHPAM_JNDI
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_JTA
+                      value: "true"
+                    - name: KIE_SERVER_PERSISTENCE_DS
+                      value: "java:/jboss/datasources/rhpam"
+                    - name: RHPAM_DRIVER
+                      value: "postgresql"
+                    - name: KIE_SERVER_PERSISTENCE_DIALECT
+                      value: "org.hibernate.dialect.PostgreSQLDialect"
+                    - name: RHPAM_USERNAME
+                      value: "rhpam"
+                    - name: RHPAM_PASSWORD
+                      value: "[[$.DBPassword]]"
+                    - name: RHPAM_SERVICE_HOST
+                      value: "[[.KieName]]-postgresql"
+                    - name: RHPAM_SERVICE_PORT
+                      value: "5432"
+                    - name: RHPAM_CONNECTION_CHECKER
+                      value: "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"
+                    - name: RHPAM_EXCEPTION_SORTER
+                      value: "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"
+                    - name: TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL
+                      value: "30000"
+                    ## PostgreSQL driver settings END
+      ## KIE server deployment config END
+  #[[end]]
+  ## RANGE ends
+  ## KIE Servers END
