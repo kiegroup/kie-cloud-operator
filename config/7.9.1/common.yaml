@@ -40,9 +40,6 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 image: "[[.Console.ImageURL]]"
                 imagePullPolicy: Always
-                resources:
-                  limits:
-                    memory: 2Gi
                 livenessProbe:
                   httpGet:
                     path: /rest/healthy

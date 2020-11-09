@@ -71,6 +71,9 @@ servers:
                       value: "Access-Control-Max-Age"
                     - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
                       value: "1"
+                  resources:
+                    limits:
+                      memory: 2Gi
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
