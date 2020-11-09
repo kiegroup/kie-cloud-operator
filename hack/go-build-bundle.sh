@@ -17,7 +17,9 @@ fi
 
 echo ${CFLAGS}
 
-VERSION=$(go run getversion.go)
+#VERSION=$(go run getversion.go)
+VERSION="7.9.0-2"
+
 OLMDIR=deploy/olm-catalog/prod
 BUNDLE_NAME=rhpam-7/${BUNDLE}
 CSV=businessautomation-operator.${VERSION}.clusterserviceversion.yaml

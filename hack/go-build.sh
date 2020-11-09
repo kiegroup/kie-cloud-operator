@@ -7,7 +7,10 @@ VERSION=$(go run getversion.go)
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
 TAR=modules/builder/${IMAGE}.tar.gz
-URL=${REPO}/archive/${VERSION}.tar.gz
+
+#URL=${REPO}/archive/${VERSION}.tar.gz
+URL=${REPO}/archive/7.9.0-2.tar.gz
+
 CFLAGS="docker"
 
 if [[ -z ${CI} ]]; then
