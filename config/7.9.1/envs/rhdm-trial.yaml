@@ -9,6 +9,9 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 env:
                   - name: KIE_SERVER_HOST
+                resources:
+                  limits:
+                    memory: 2Gi
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 emptyDir: {}
@@ -73,7 +76,7 @@ servers:
                       value: "1"
                   resources:
                     limits:
-                      memory: 2Gi
+                      memory: 1Gi
     ## KIE server deployment config END
     ## KIE server route BEGIN
     routes:
