@@ -178,7 +178,7 @@ func TestJvmCrd(t *testing.T) {
 	testInteger(t, "gcMaxHeapFreeRatio", jvm)
 	testInteger(t, "gcTimeRatio", jvm)
 	testInteger(t, "gcAdaptiveSizePolicyWeight", jvm)
-	testString(t, "gcMaxMetaspaceSize", jvm)
+	testInteger(t, "gcMaxMetaspaceSize", jvm)
 	testString(t, "gcContainerOptions", jvm)
 }
 

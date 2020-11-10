@@ -535,9 +535,10 @@ spec:
                             format: int32
                             type: integer
                           gcMaxMetaspaceSize:
-                            description: The maximum metaspace size unit, unit could
-                              be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                            type: string
+                            description: The maximum metaspace size in Mega bytes
+                              unit e.g. 400
+                            format: int32
+                            type: integer
                           gcMinHeapFreeRatio:
                             description: Minimum percentage of heap free after GC
                               to avoid expansion. e.g. '20'
@@ -1382,9 +1383,10 @@ spec:
                               format: int32
                               type: integer
                             gcMaxMetaspaceSize:
-                              description: The maximum metaspace size unit, unit could
-                                be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                              type: string
+                              description: The maximum metaspace size in Mega bytes
+                                unit e.g. 400
+                              format: int32
+                              type: integer
                             gcMinHeapFreeRatio:
                               description: Minimum percentage of heap free after GC
                                 to avoid expansion. e.g. '20'
@@ -2231,9 +2233,10 @@ spec:
                                 format: int32
                                 type: integer
                               gcMaxMetaspaceSize:
-                                description: The maximum metaspace size unit, unit
-                                  could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                                type: string
+                                description: The maximum metaspace size in Mega bytes
+                                  unit e.g. 400
+                                format: int32
+                                type: integer
                               gcMinHeapFreeRatio:
                                 description: Minimum percentage of heap free after
                                   GC to avoid expansion. e.g. '20'
@@ -3107,9 +3110,10 @@ spec:
                                   format: int32
                                   type: integer
                                 gcMaxMetaspaceSize:
-                                  description: The maximum metaspace size unit, unit
-                                    could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
-                                  type: string
+                                  description: The maximum metaspace size in Mega
+                                    bytes unit e.g. 400
+                                  format: int32
+                                  type: integer
                                 gcMinHeapFreeRatio:
                                   description: Minimum percentage of heap free after
                                     GC to avoid expansion. e.g. '20'

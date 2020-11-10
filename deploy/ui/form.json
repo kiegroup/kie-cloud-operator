@@ -709,7 +709,7 @@
                     },
                     {
                       "label": "GC max metaspace size",
-                      "type": "text",
+                      "type": "integer",
                       "required": false,
                       "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'",
                       "jsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize",
@@ -1363,7 +1363,7 @@
                         },
                         {
                           "label": "GC max metaspace size",
-                          "type": "text",
+                          "type": "integer",
                           "required": false,
                           "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (Kilo)  e.g. '400m'.",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize",

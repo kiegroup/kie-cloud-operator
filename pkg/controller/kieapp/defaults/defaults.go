@@ -1107,8 +1107,8 @@ func setJvmDefault(jvm *api.JvmObject) {
 		if jvm.JavaInitialMemRatio == nil {
 			jvm.JavaInitialMemRatio = Pint32(25)
 		}
-		if len(jvm.GcMaxMetaspaceSize) == 0 {
-			jvm.GcMaxMetaspaceSize = "512m"
+		if jvm.GcMaxMetaspaceSize == nil {
+			jvm.GcMaxMetaspaceSize = Pint32(512)
 		}
 	}
 }
