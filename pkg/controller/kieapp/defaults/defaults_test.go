@@ -799,7 +799,7 @@ func createJvmTestObject() *api.JvmObject {
 		GcMaxHeapFreeRatio:         Pint32(40),
 		GcTimeRatio:                Pint32(4),
 		GcAdaptiveSizePolicyWeight: Pint32(90),
-		GcMaxMetaspaceSize:         "100m",
+		GcMaxMetaspaceSize:         Pint32(100),
 		GcContainerOptions:         "-XX:+UseG1GC",
 	}
 	return &jvmObject
@@ -842,7 +842,7 @@ func testJvmEnv(t *testing.T, envs []corev1.EnvVar) {
 			assert.Equal(t, "90", env.Value)
 
 		case "GC_MAX_METASPACE_SIZE":
-			assert.Equal(t, "100m", env.Value)
+			assert.Equal(t, "100", env.Value)
 
 		case "GC_CONTAINER_OPTIONS":
 			assert.Equal(t, "-XX:+UseG1GC", env.Value)
@@ -4664,7 +4664,7 @@ func createJvmTestObjectWithoutJavaMaxMemRatio() *api.JvmObject {
 		GcMaxHeapFreeRatio:         Pint32(40),
 		GcTimeRatio:                Pint32(4),
 		GcAdaptiveSizePolicyWeight: Pint32(90),
-		GcMaxMetaspaceSize:         "100m",
+		GcMaxMetaspaceSize:         Pint32(100),
 		GcContainerOptions:         "-XX:+UseG1GC",
 	}
 	return &jvmObject
