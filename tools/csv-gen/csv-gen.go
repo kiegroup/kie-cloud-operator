@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -67,6 +68,11 @@ var (
 	}
 )
 
+var (
+	ver      = flag.String("version", version.Version, "set CSV version")
+	replaces = flag.String("replaces", version.PriorVersion, "set CSV version to replace")
+)
+
 type csvSetting struct {
 	Name         string `json:"name"`
 	DisplayName  string `json:"displayName"`
@@ -99,6 +105,7 @@ type image struct {
 }
 
 func main() {
+	flag.Parse()
 	imageShaMap := map[string]string{}
 	for _, csv := range csvs {
 		operatorName := csv.Name + "-operator"
@@ -114,10 +121,10 @@ func main() {
 		templateStruct.Spec.InstallStrategy.StrategySpec = templateStrategySpec
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
 
-		csvVersionedName := operatorName + "." + version.Version
+		csvVersionedName := operatorName + "." + *ver
 		random := rand.String(10)
 		csvVersion := csvversion.OperatorVersion{}
-		csvVersion.Version = semver.MustParse(version.Version)
+		csvVersion.Version = semver.MustParse(*ver)
 		if csv.Maturity != channel {
 			csvVersionedName = csvVersionedName + "-dev-" + random
 			csvVersion.Version.Build = []string{random}
@@ -151,7 +158,7 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
+		templateStruct.Spec.Replaces = operatorName + "." + *replaces
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = csv.Maturity
@@ -287,16 +294,16 @@ func main() {
 			},
 		}
 
-		bundleDir := "deploy/olm-catalog/prod/" + version.Version + "/"
+		bundleDir := "deploy/olm-catalog/prod/" + *ver + "/"
 		if csv.Maturity != channel {
-			bundleDir = "deploy/olm-catalog/dev/" + version.Version + "/"
+			bundleDir = "deploy/olm-catalog/dev/" + *ver + "/"
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
 			createFile(deployFile, deployment)
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
-		csvFile := bundleDir + "manifests/" + operatorName + "." + version.Version + ".clusterserviceversion.yaml"
+		csvFile := bundleDir + "manifests/" + operatorName + "." + *ver + ".clusterserviceversion.yaml"
 
 		// create image-references file for automated ART digest find/replace
 		imageRef := &constants.ImageRef{

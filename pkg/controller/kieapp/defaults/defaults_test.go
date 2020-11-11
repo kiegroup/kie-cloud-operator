@@ -1008,6 +1008,16 @@ func TestBuildConfiguration(t *testing.T) {
 					{
 						Name: serverName,
 						Build: &api.KieAppBuildObject{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "JAVA_OPTS_APPEND",
+									Value: "-Dmyprop=test",
+								},
+								{
+									Name:  "OTHER_ENV",
+									Value: "other",
+								},
+							},
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
@@ -1020,7 +1030,7 @@ func TestBuildConfiguration(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
@@ -1032,13 +1042,19 @@ func TestBuildConfiguration(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
 								ContextDir: "example2",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "ANOTHER_ENV",
+									Value: "AnotherEnv",
+								},
 							},
 						},
 					},
@@ -1086,6 +1102,9 @@ func TestBuildConfiguration(t *testing.T) {
 	cr.Spec.Objects.Servers[2].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret2}}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+
+	// ConsolidateObjects
+	ConsolidateObjects(env, cr)
 	assert.Len(t, cr.Spec.Objects.Servers[1].Build.Webhooks, 1)
 	assert.Len(t, cr.Spec.Objects.Servers[2].Build.Webhooks, 1)
 	assert.Equal(t, secret1, cr.Spec.Objects.Servers[1].Build.Webhooks[0].Secret)
@@ -1098,8 +1117,12 @@ func TestBuildConfiguration(t *testing.T) {
 	// Server Test
 	crServer := cr.Status.Applied.Objects.Servers[0]
 	server := env.Servers[0]
+
 	assert.Equal(t, serverName, crServer.Name)
 	assert.Equal(t, crServer.Name+latestTag, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "-Dmyprop=test", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[3].Value)
+	assert.Equal(t, "other", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[4].Value)
 
 	// Server #1
 	crServer = cr.Status.Applied.Objects.Servers[1]
@@ -1108,9 +1131,11 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	// default envs size is 3
+	assert.Equal(t, 3, len(server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env))
 	for _, s := range server.BuildConfigs[0].Spec.Triggers {
 		if s.GitHubWebHook != nil {
 			assert.NotEmpty(t, s.GitHubWebHook.Secret)
@@ -1128,9 +1153,10 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	assert.Equal(t, "AnotherEnv", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[3].Value)
 	for _, s := range server.BuildConfigs[0].Spec.Triggers {
 		if s.GitHubWebHook != nil {
 			assert.NotEmpty(t, s.GitHubWebHook.Secret)
@@ -4712,7 +4738,10 @@ func TestResourcesDefault(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "1", "500m", "2", "1", "500m", "250m")
+	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
+		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
+		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -4746,10 +4775,13 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "200", "100", "200", "100", "200", "100")
+	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, rMEMConsole, rMEMServers string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -4757,16 +4789,16 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 
 	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
+	assert.True(t, limitCPUServer.String() == lCPUServer)
 
 	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUServer.String() == rCPUServer)
 
 	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
+	assert.True(t, limitCPUConsole.String() == lCPUConsole)
 
 	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
-	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
+	assert.True(t, requestsCPUConsole.String() == rCPUConsole)
 
 	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)

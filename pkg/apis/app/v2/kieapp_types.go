@@ -218,7 +218,7 @@ type JvmObject struct {
 	GcTimeRatio *int32 `json:"gcTimeRatio,omitempty"`
 	// The weighting given to the current GC time versus previous GC times  when determining the new heap size. e.g. '90'
 	GcAdaptiveSizePolicyWeight *int32 `json:"gcAdaptiveSizePolicyWeight,omitempty"`
-	// The maximum metaspace size unit, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+	// The maximum metaspace size in Mega bytes unit e.g. 400
 	GcMaxMetaspaceSize *int32 `json:"gcMaxMetaspaceSize,omitempty"`
 	// Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
 	GcContainerOptions string `json:"gcContainerOptions,omitempty"`
@@ -244,6 +244,8 @@ type KieAppObject struct {
 
 // KieAppBuildObject Data to define how to build an application from source
 type KieAppBuildObject struct {
+	// Env set environment variables for BuildConfigs
+	Env []corev1.EnvVar `json:"env,omitempty"`
 	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
 	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
 	GitSource                    GitSource `json:"gitSource,omitempty"`

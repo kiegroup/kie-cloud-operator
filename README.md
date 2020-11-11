@@ -37,7 +37,7 @@ BUNDLE=${IMAGE}:${VERSION}
 
 $ docker push ${BUNDLE}
 BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
-INDEX_VERSION=v4.5 # v4.6
+INDEX_VERSION=v4.6
 INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
 INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go --prior)
 INDEX_TO=${INDEX_IMAGE}_${VERSION}
