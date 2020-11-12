@@ -185,7 +185,7 @@ const (
 	SmartRouterCPURequests      = "250m"
 	SmartRouterMemRequests      = "1Gi"
 
-  //ImageNames for metering labels
+	//ImageNames for metering labels
 	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
 	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
 	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
