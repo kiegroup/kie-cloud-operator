@@ -1,0 +1,24 @@
+console:
+  deploymentConfigs:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]"
+      spec:
+        template:
+          metadata:
+            name: "[[.ApplicationName]]-[[.Console.Name]]"
+          spec:
+            containers:
+              - name: "[[.ApplicationName]]-[[.Console.Name]]"
+  persistentVolumeClaims:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
+      spec:
+        # [[ if ne .Console.StorageClassName "" ]]
+        storageClassName: "[[.Console.StorageClassName]]"
+        # [[ end ]]
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
