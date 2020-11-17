@@ -25,17 +25,19 @@ const (
 	// ProductName used for metering labels
 	ProductName = "process-automation"
 	// LabelRHproductName used as metering label
-	LabelRHproductName = "com.redhat.product-name"
+	LabelRHproductName = "rht.prod_name"
 	// LabelRHproductVersion used as metering label
-	LabelRHproductVersion = "com.redhat.product-version"
+	LabelRHproductVersion = "rht.prod_ver"
 	// LabelRHcomponentName used as metering label
-	LabelRHcomponentName = "com.redhat.component-name"
+	LabelRHcomponentName = "rht.comp"
 	// LabelRHcomponentVersion used as metering label
-	LabelRHcomponentVersion = "com.redhat.component-version"
-	// LabelRHcomponentType used as metering label
-	LabelRHcomponentType = "com.redhat.component-type"
+	LabelRHcomponentVersion = "rht.comp_ver"
+	// LabelRHsubcomponentName used as metering label
+	LabelRHsubcomponentName = "rht.subcomp"
+	// LabelRHsubcomponentType used as metering label
+	LabelRHsubcomponentType = "rht.subcomp_t"
 	// LabelRHcompany used as metering label
-	LabelRHcompany = "com.redhat.company"
+	LabelRHcompany = "com.company"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
@@ -182,6 +184,12 @@ const (
 	SmartRouterMemLimit         = "1Gi"
 	SmartRouterCPURequests      = "250m"
 	SmartRouterMemRequests      = "1Gi"
+
+	//ImageNames for metering labels
+	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
+	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
+	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
+	RhdmControllerImageName   = RhdmPrefix + "-controller-" + RhelVersion
 )
 
 // Console Resource Limits for BC Monitoring in Prod Env

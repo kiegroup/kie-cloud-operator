@@ -131,33 +131,48 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 }
 
 func setProductLabels(cr *api.KieApp, env *api.Environment) {
-	setObjectLabels(cr, &env.Console, "business-central")
+	setObjectLabels(cr, &env.Console)
 	for index := range env.Servers {
-		setObjectLabels(cr, &env.Servers[index], "kie-server")
+		setObjectLabels(cr, &env.Servers[index])
 	}
-	setObjectLabels(cr, &env.SmartRouter, "smart-router")
-	setObjectLabels(cr, &env.ProcessMigration, "process-migration")
+	setObjectLabels(cr, &env.SmartRouter)
+
+	setObjectLabels(cr, &env.ProcessMigration)
 }
 
-func setObjectLabels(cr *api.KieApp, object *api.CustomObject, component string) {
+func getSubComponentTypeByImageName(imageName string) string {
+	retValue := "application"
+	if imageName == constants.RhpamSmartRouterImageName || imageName == constants.RhpamControllerImageName ||
+		imageName == constants.RhdmSmartRouterImageName || imageName == constants.RhdmControllerImageName {
+
+		retValue = "infrastructure"
+	}
+	return retValue
+}
+
+func setObjectLabels(cr *api.KieApp, object *api.CustomObject) {
 	for index, obj := range object.DeploymentConfigs {
-		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+		subcomponent, _, _ := GetImage(object.DeploymentConfigs[index].Spec.Template.Spec.Containers[0].Image)
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 	for index, obj := range object.StatefulSets {
-		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+		subcomponent, _, _ := GetImage(object.StatefulSets[index].Spec.Template.Spec.Containers[0].Image)
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
+
 }
 
-func setLabels(cr *api.KieApp, labels map[string]string, component string) map[string]string {
+func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, subcomponentType string) map[string]string {
 	if labels == nil {
 		labels = map[string]string{}
 	}
 	labels[constants.LabelRHproductName] = constants.ProductName
 	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
-	labels[constants.LabelRHcomponentName] = component
+	labels[constants.LabelRHcomponentName] = "PAM"
+	labels[constants.LabelRHsubcomponentName] = subcomponent
 	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
-	labels[constants.LabelRHcomponentType] = "application"
-	labels[constants.LabelRHcompany] = "redhat"
+	labels[constants.LabelRHsubcomponentType] = subcomponentType
+	labels[constants.LabelRHcompany] = "Red_Hat"
 	return labels
 }
 

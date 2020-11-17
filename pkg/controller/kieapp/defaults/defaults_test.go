@@ -1907,13 +1907,13 @@ func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
 	assert.Len(t, cr.Spec.Objects.Servers, 2)
 	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
 	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
-
-	checkObjectLabels(t, cr, env.Console, "business-central")
+	component := "PAM"
+	checkObjectLabels(t, cr, env.Console, component)
 	for _, server := range env.Servers {
-		checkObjectLabels(t, cr, server, "kie-server")
+		checkObjectLabels(t, cr, server, component)
 	}
-	checkObjectLabels(t, cr, env.SmartRouter, "smart-router")
-	checkObjectLabels(t, cr, env.ProcessMigration, "process-migration")
+	checkObjectLabels(t, cr, env.SmartRouter, component)
+	checkObjectLabels(t, cr, env.ProcessMigration, component)
 }
 
 func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
@@ -1931,8 +1931,8 @@ func checkLabels(t *testing.T, labels map[string]string, component, version stri
 	assert.Equal(t, version, labels[constants.LabelRHproductVersion])
 	assert.Equal(t, component, labels[constants.LabelRHcomponentName])
 	assert.Equal(t, version, labels[constants.LabelRHcomponentVersion])
-	assert.Equal(t, "application", labels[constants.LabelRHcomponentType])
-	assert.Equal(t, "redhat", labels[constants.LabelRHcompany])
+	assert.Equal(t, "application", labels[constants.LabelRHsubcomponentType])
+	assert.Equal(t, "Red_Hat", labels[constants.LabelRHcompany])
 }
 
 func TestImageRegistry(t *testing.T) {
