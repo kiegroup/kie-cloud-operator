@@ -41,15 +41,27 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 
 	watchOwnedObjects := []runtime.Object{
 		&corev1.ConfigMap{},
-		&corev1.Pod{},
+	}
+	ownerHandler := &handler.EnqueueRequestForOwner{
+		OwnerType: &operatorsv1alpha1.ClusterServiceVersion{},
+	}
+	for _, watchObject := range watchOwnedObjects {
+		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+		if err != nil {
+			return err
+		}
+	}
+
+	watchOwnedObjects = []runtime.Object{
+		&corev1.ConfigMap{},
 		&rbacv1.RoleBinding{},
 		&rbacv1.Role{},
 		&corev1.Service{},
 		&routev1.Route{},
 		&corev1.ServiceAccount{},
 	}
-	ownerHandler := &handler.EnqueueRequestForOwner{
-		OwnerType: &operatorsv1alpha1.ClusterServiceVersion{},
+	ownerHandler = &handler.EnqueueRequestForOwner{
+		OwnerType: &appsv1.Deployment{},
 	}
 	for _, watchObject := range watchOwnedObjects {
 		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
