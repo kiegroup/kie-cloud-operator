@@ -17,8 +17,7 @@ fi
 
 echo ${CFLAGS}
 
-#VERSION=$(go run getversion.go)
-VERSION="7.9.0-2"
+VERSION=$(go run getversion.go)
 
 OLMDIR=deploy/olm-catalog/prod
 BUNDLE_NAME=rhpam-7/${BUNDLE}

@@ -4738,7 +4738,10 @@ func TestResourcesDefault(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "1", "500m", "2", "1", "500m", "250m")
+	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
+		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
+		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -4772,10 +4775,13 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "200", "100", "200", "100", "200", "100")
+	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, rMEMConsole, rMEMServers string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -4783,16 +4789,16 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 
 	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
+	assert.True(t, limitCPUServer.String() == lCPUServer)
 
 	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUServer.String() == rCPUServer)
 
 	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
+	assert.True(t, limitCPUConsole.String() == lCPUConsole)
 
 	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
-	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
+	assert.True(t, requestsCPUConsole.String() == rCPUConsole)
 
 	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)

@@ -12,7 +12,6 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
-	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
@@ -81,37 +80,19 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 			}
 		}
 	}
-	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
-	deployed, err := loadCounterparts(reconciler, namespace, requested)
+	requestedResources := []resource.KubernetesResource{role, roleBinding, sa, pod, service, route}
+	resourceMap := compare.NewMapBuilder()
+	for _, resource := range requestedResources {
+		resourceMap.Add(resource)
+	}
+	deployed, err := loadCounterparts(reconciler, namespace, resourceMap.ResourceMap())
 	if err != nil {
 		log.Error("Failed to load deployed resources.", err)
 		return
 	}
-	comparator := compare.NewMapComparator()
-	deltas := comparator.Compare(deployed, requested)
-	writer := write.New(reconciler.Service).WithOwnerController(operator, scheme)
-	var hasUpdates bool
-	for resourceType, delta := range deltas {
-		if !delta.HasChanges() {
-			continue
-		}
-		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := writer.AddResources(delta.Added)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		removed, err := writer.RemoveResources(delta.Removed)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		hasUpdates = hasUpdates || added || updated || removed
+	if _, err = reconciler.reconcileResources(operator, requestedResources, deployed); err != nil {
+		log.Error("Failed to reconcile resources.", err)
+		return
 	}
 	updateCSVlinks(reconciler, route, operator)
 }
