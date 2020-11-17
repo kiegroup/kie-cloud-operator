@@ -711,7 +711,7 @@
                       "label": "GC max metaspace size",
                       "type": "integer",
                       "required": false,
-                      "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'",
+                      "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
                       "jsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize",
                       "originalJsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize"
                     },
@@ -981,11 +981,33 @@
                           "description": "Secret value for WebHook to configure. Generated if empty"
                         }
                       ]
+                    },
+                    {
+                      "label": "Build Config Environment variable",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].build.env",
+                      "type": "object",
+                      "fields": [
+                        {
+                          "label": "Name",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.env[*].name",
+                          "description": "Environment variable name for build config"
+                        },
+                        {
+                          "label": "Value",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.env[*].value",
+                          "description": "Environment variable value for build config"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "label": "Environment variable",
+                  "label": "Kie Server Environment variable",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].env",
                   "type": "object",
@@ -1365,7 +1387,7 @@
                           "label": "GC max metaspace size",
                           "type": "integer",
                           "required": false,
-                          "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (Kilo)  e.g. '400m'.",
+                          "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize"
                         },

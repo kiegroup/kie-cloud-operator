@@ -209,8 +209,8 @@ func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp,
 	return reconcile.Result{Requeue: requeue}, nil
 }
 
-func (reconciler *Reconciler) reconcileResources(instance *api.KieApp, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
-	writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
+func (reconciler *Reconciler) reconcileResources(ownerController metav1.Object, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
+	writer := write.New(reconciler.Service).WithOwnerController(ownerController, reconciler.Service.GetScheme())
 	//Compare what's deployed with what should be deployed
 	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
 	comparator := getComparator()

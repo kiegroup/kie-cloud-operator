@@ -535,8 +535,8 @@ spec:
                             format: int32
                             type: integer
                           gcMaxMetaspaceSize:
-                            description: The maximum metaspace size unit, unit could
-                              be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                            description: The maximum metaspace size in Mega bytes
+                              unit e.g. 400
                             format: int32
                             type: integer
                           gcMinHeapFreeRatio:
@@ -1383,8 +1383,8 @@ spec:
                               format: int32
                               type: integer
                             gcMaxMetaspaceSize:
-                              description: The maximum metaspace size unit, unit could
-                                be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                              description: The maximum metaspace size in Mega bytes
+                                unit e.g. 400
                               format: int32
                               type: integer
                             gcMinHeapFreeRatio:
@@ -2233,8 +2233,8 @@ spec:
                                 format: int32
                                 type: integer
                               gcMaxMetaspaceSize:
-                                description: The maximum metaspace size unit, unit
-                                  could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                                description: The maximum metaspace size in Mega bytes
+                                  unit e.g. 400
                                 format: int32
                                 type: integer
                               gcMinHeapFreeRatio:
@@ -3110,8 +3110,8 @@ spec:
                                   format: int32
                                   type: integer
                                 gcMaxMetaspaceSize:
-                                  description: The maximum metaspace size unit, unit
-                                    could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                                  description: The maximum metaspace size in Mega
+                                    bytes unit e.g. 400
                                   format: int32
                                   type: integer
                                 gcMinHeapFreeRatio:

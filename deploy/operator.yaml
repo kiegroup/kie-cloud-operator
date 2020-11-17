@@ -37,6 +37,34 @@ spec:
           value: "true"
         - name: DEBUG
           value: "false"
+        - name: DM_KIESERVER_IMAGE_7.9.1
+          value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.9.1
+        - name: DM_CONTROLLER_IMAGE_7.9.1
+          value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.9.1
+        - name: DM_DC_IMAGE_7.9.1
+          value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.9.1
+        - name: PAM_KIESERVER_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.9.1
+        - name: PAM_CONTROLLER_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.9.1
+        - name: PAM_BC_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.9.1
+        - name: PAM_BC_MONITORING_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.9.1
+        - name: PAM_SMARTROUTER_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.9.1
+        - name: PAM_PROCESS_MIGRATION_IMAGE_7.9.1
+          value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.9.1
+        - name: OSE_CLI_IMAGE_7.9.1
+          value: registry.redhat.io/openshift3/ose-cli:v3.11
+        - name: MYSQL_PROXY_IMAGE_7.9.1
+          value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+        - name: POSTGRESQL_PROXY_IMAGE_7.9.1
+          value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+        - name: DATAGRID_IMAGE_7.9.1
+          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+        - name: BROKER_IMAGE_7.9.1
+          value: registry.redhat.io/amq7/amq-broker:7.7
         - name: DM_KIESERVER_IMAGE_7.9.0
           value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.9.0
         - name: DM_CONTROLLER_IMAGE_7.9.0
@@ -93,34 +121,6 @@ spec:
           value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
         - name: BROKER_IMAGE_7.8.1
           value: registry.redhat.io/amq7/amq-broker:7.6
-        - name: DM_KIESERVER_IMAGE_7.8.0
-          value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.8.0
-        - name: DM_CONTROLLER_IMAGE_7.8.0
-          value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.8.0
-        - name: DM_DC_IMAGE_7.8.0
-          value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.8.0
-        - name: PAM_KIESERVER_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.8.0
-        - name: PAM_CONTROLLER_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.8.0
-        - name: PAM_BC_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.8.0
-        - name: PAM_BC_MONITORING_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.8.0
-        - name: PAM_SMARTROUTER_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.8.0
-        - name: PAM_PROCESS_MIGRATION_IMAGE_7.8.0
-          value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.8.0
-        - name: OSE_CLI_IMAGE_7.8.0
-          value: registry.redhat.io/openshift3/ose-cli:v3.11
-        - name: MYSQL_PROXY_IMAGE_7.8.0
-          value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-        - name: POSTGRESQL_PROXY_IMAGE_7.8.0
-          value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-        - name: DATAGRID_IMAGE_7.8.0
-          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.5
-        - name: BROKER_IMAGE_7.8.0
-          value: registry.redhat.io/amq7/amq-broker:7.6
         - name: OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
         - name: OAUTH_PROXY_IMAGE_4.6
@@ -137,7 +137,7 @@ spec:
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
         - name: OAUTH_PROXY_IMAGE_3
           value: registry.redhat.io/openshift3/oauth-proxy:latest
-        image: quay.io/kiegroup/kie-cloud-operator:7.9.0
+        image: quay.io/kiegroup/kie-cloud-operator:7.9.1
         imagePullPolicy: Always
         name: business-automation-operator
         resources: {}
