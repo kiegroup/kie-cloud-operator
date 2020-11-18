@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.9.1
-    createdAt: "2020-11-10 12:40:34"
+    createdAt: "2020-11-18 09:29:26"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.9.1-dev-c7g4mrvkdk
+  name: businessautomation-operator.7.9.1-dev-sspx2d6szl
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -295,14 +295,6 @@ spec:
           - update
           - watch
         - apiGroups:
-          - ""
-          resources:
-          - bindings
-          - endpoints
-          - podtemplates
-          verbs:
-          - list
-        - apiGroups:
           - apps
           resources:
           - deployments
@@ -375,7 +367,6 @@ spec:
           - image.openshift.io
           resources:
           - images
-          - imagetags
           - imagestreams
           - imagestreamimages
           - imagestreamtags
@@ -407,11 +398,9 @@ spec:
           - monitoring.coreos.com
           resources:
           - servicemonitors
-          - prometheusrules
           verbs:
           - get
           - create
-          - list
         - apiGroups:
           - operators.coreos.com
           resources:
@@ -446,7 +435,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.9.1-dev-c7g4mrvkdk
+    operated-by: businessautomation-operator.7.9.1-dev-sspx2d6szl
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -551,5 +540,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.9.1-dev-c7g4mrvkdk
-  version: 7.9.1+c7g4mrvkdk
+      operated-by: businessautomation-operator.7.9.1-dev-sspx2d6szl
+  version: 7.9.1+sspx2d6szl
