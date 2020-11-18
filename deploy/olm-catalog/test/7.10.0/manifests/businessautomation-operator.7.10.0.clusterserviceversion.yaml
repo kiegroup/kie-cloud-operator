@@ -6,7 +6,7 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "true"
-    containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.10.0
+    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.10.0
     createdAt: "2021-01-06 08:56:56"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.10.0
+  name: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -225,23 +225,23 @@ spec:
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.9.0
                   value: registry.redhat.io/amq7/amq-broker:7.7
                 - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-kieserver-rhel8:7.10.0
                 - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-controller-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-controller-rhel8:7.10.0
                 - name: RELATED_IMAGE_DM_DC_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-decisioncentral-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-kieserver-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-controller-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-controller-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.10.0
-                  value: registry.stage.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.10.0
+                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-process-migration-rhel8:7.10.0
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.10.0
                   value: registry.redhat.io/openshift3/ose-cli:v3.11
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.10.0
@@ -268,7 +268,7 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_3
                   value: registry.redhat.io/openshift3/oauth-proxy:latest
-                image: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.10.0
+                image: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.10.0
                 imagePullPolicy: Always
                 name: business-automation-operator
                 resources: {}
@@ -435,7 +435,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.10.0
+    operated-by: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -444,12 +444,12 @@ spec:
   maintainers:
   - email: bsig-cloud@redhat.com
     name: Red Hat
-  maturity: stable
+  maturity: test
   provider:
     name: Red Hat
   replaces: businessautomation-operator.7.9.1
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.10.0
-  version: 7.10.0
+      operated-by: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
+  version: 7.10.0+w5dw4wv5fk

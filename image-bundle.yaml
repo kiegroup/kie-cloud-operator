@@ -39,7 +39,7 @@ labels:
     value: v4.6
 modules:
   repositories:
-    - path: deploy/olm-catalog/prod
+    - path: deploy/olm-catalog
       name: olm-catalog
   install:
     - name: olm-catalog

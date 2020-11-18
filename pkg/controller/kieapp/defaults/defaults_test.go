@@ -4979,6 +4979,6 @@ func testContext(t *testing.T, image, version, context, label string) {
 	if context != "" {
 		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-"+label+constants.RhelVersion+":"+version, image)
 	} else {
-		assert.Equal(t, constants.PamContext+label+constants.RhelVersion+":"+version, image)
+		assert.Equal(t, constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
 	}
 }
