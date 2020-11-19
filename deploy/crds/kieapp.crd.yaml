@@ -497,8 +497,9 @@ spec:
                               be mounted.
                             type: string
                           sshSecret:
-                            description: Secret to use for ssh key and known hosts
-                              file.
+                            description: 'Secret to use for ssh key and known hosts
+                              file. The secret must contain two files: id_rsa and
+                              known_hosts.'
                             type: string
                         type: object
                       image:
@@ -2195,8 +2196,9 @@ spec:
                                   will be mounted.
                                 type: string
                               sshSecret:
-                                description: Secret to use for ssh key and known hosts
-                                  file.
+                                description: 'Secret to use for ssh key and known
+                                  hosts file. The secret must contain two files: id_rsa
+                                  and known_hosts.'
                                 type: string
                             type: object
                           image:
