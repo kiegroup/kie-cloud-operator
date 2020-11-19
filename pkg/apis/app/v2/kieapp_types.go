@@ -300,7 +300,7 @@ type GitHooksVolume struct {
 	// Absolute path where the gitHooks folder will be mounted.
 	MountPath string  `json:"mountPath,omitempty"`
 	From      *ObjRef `json:"from,omitempty"`
-	// Secret to use for ssh key and known hosts file.
+	// Secret to use for ssh key and known hosts file. The secret must contain two files: id_rsa and known_hosts.
 	SSHSecret string `json:"sshSecret,omitempty"`
 }
 

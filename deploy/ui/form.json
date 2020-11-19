@@ -543,7 +543,7 @@
                   "type": "text",
                   "required": false,
                   "jsonPath": "$.spec.objects.console.gitHooks.sshSecret",
-                  "description": "Secret to use for ssh key and known hosts file."
+                  "description": "Secret to use for ssh key and known hosts file. The secret must contain two files: id_rsa and known_hosts."
                 }
               ]
             },
