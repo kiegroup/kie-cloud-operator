@@ -342,8 +342,8 @@ func main() {
 		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL16, constants.Datagrid73Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 		relatedImages = addRefRelatedImages(constants.Broker77ImageURL, constants.BrokerComponent, imageRef, relatedImages)
+		relatedImages = addRefRelatedImages(constants.Broker78ImageURL, constants.BrokerComponent, imageRef, relatedImages)
 
 		if logs.GetBoolEnv("DIGESTS") {
 			// use stage registry for current release image digest population
