@@ -57,6 +57,7 @@ console:
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
+                  successThreshold: 1
                   failureThreshold: 36
                 readinessProbe:
                   httpGet:
