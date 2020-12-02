@@ -173,7 +173,7 @@ const (
 	ConsoleAuthoringCPURequests = "1500m"
 	ConsoleAuthoringMemRequests = "3Gi"
 	ConsoleProdCPURequests      = "500m"
-	ConsoleProdMemRequests      = "1.5Gi"
+	ConsoleProdMemRequests      = "1500Mi"
 	ServersCPULimit             = "1"
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
