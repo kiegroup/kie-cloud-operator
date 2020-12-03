@@ -109,11 +109,7 @@ console:
                   - name: WORKBENCH_ROUTE_NAME
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: JGROUPS_PING_PROTOCOL
-                    value: "openshift.DNS_PING"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "[[.ApplicationName]]-[[.Console.Name]]-ping"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                    value: "8888"
+                    value: "kubernetes.KUBE_PING"
                   # Auth config BEGIN
                   ## SSO config BEGIN
                   #[[if .Auth.SSO.URL]]
@@ -674,11 +670,7 @@ servers:
                     - name: HTTPS_PASSWORD
                       value: "[[$.KeyStorePassword]]"
                     - name: JGROUPS_PING_PROTOCOL
-                      value: "openshift.DNS_PING"
-                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "[[.KieName]]-ping"
-                    - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                      value: "8888"
+                      value: "kubernetes.KUBE_PING"
                     # Auth config BEGIN
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
