@@ -16,7 +16,7 @@ import (
 // KieAppSpec defines the desired state of KieApp
 type KieAppSpec struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum:=rhdm-authoring-ha;rhdm-authoring;rhdm-production-immutable;rhdm-trial;rhpam-authoring-ha;rhpam-authoring;rhpam-production-immutable;rhpam-production;rhpam-trial
+	// +kubebuilder:validation:Enum:=rhdm-authoring-ha;rhdm-authoring;rhdm-production-immutable;rhdm-trial;rhpam-authoring-ha;rhpam-authoring;rhpam-production-immutable;rhpam-production;rhpam-standalone-dashbuilder;rhpam-trial
 	// The name of the environment used as a baseline
 	Environment EnvironmentType `json:"environment"`
 	// If required imagestreams are missing in both the 'openshift' and local namespaces, the operator will create said imagestreams locally using the registry specified here.
@@ -47,6 +47,8 @@ const (
 	RhpamAuthoring EnvironmentType = "rhpam-authoring"
 	// RhpamAuthoringHA RHPAM Authoring HA environment
 	RhpamAuthoringHA EnvironmentType = "rhpam-authoring-ha"
+	// RhpamDashbuilder RHPAM Standalone Dashbuilder environment
+	RhpamStandaloneDashbuilder EnvironmentType = "rhpam-standalone-dashbuilder"
 	// RhdmTrial RHDM Trial environment
 	RhdmTrial EnvironmentType = "rhdm-trial"
 	// RhdmAuthoring RHDM Authoring environment
@@ -100,6 +102,7 @@ type KieAppObjects struct {
 	Servers          []KieServerSet          `json:"servers,omitempty"`
 	SmartRouter      *SmartRouterObject      `json:"smartRouter,omitempty"`
 	ProcessMigration *ProcessMigrationObject `json:"processMigration,omitempty"`
+	Dashbuilder      *DashbuilderObject      `json:"dashbuilder,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
@@ -135,6 +138,14 @@ type ConsoleObject struct {
 	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
 	Jvm          *JvmObject      `json:"jvm,omitempty"`
 	PvSize       string          `json:"pvSize,omitempty"`
+}
+
+// DashbuilderObject configuration of the RHPAM Dashbuilder
+type DashbuilderObject struct {
+	KieAppObject `json:",inline"`
+	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
+	Jvm          *JvmObject         `json:"jvm,omitempty"`
+	Config       *DashbuilderConfig `json:"config,omitempty"`
 }
 
 // SmartRouterObject configuration of the RHPAM smart router
@@ -546,6 +557,7 @@ type Environment struct {
 	SmartRouter      CustomObject   `json:"smartRouter,omitempty"`
 	Servers          []CustomObject `json:"servers,omitempty"`
 	ProcessMigration CustomObject   `json:"processMigration,omitempty"`
+	Dashbuilder      CustomObject   `json:"dashbuilder,omitempty"`
 	Databases        []CustomObject `json:"databases,omitempty"`
 	Others           []CustomObject `json:"others,omitempty"`
 }
@@ -578,6 +590,7 @@ type EnvTemplate struct {
 	SmartRouter      SmartRouterTemplate      `json:"smartRouter,omitempty"`
 	Auth             AuthTemplate             `json:"auth,omitempty"`
 	ProcessMigration ProcessMigrationTemplate `json:"processMigration,omitempty"`
+	Dashbuilder      DashbuilderTemplate      `json:"dashbuilder,omitempty"`
 	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
 	Constants        TemplateConstants        `json:"constants,omitempty"`
 }
@@ -609,20 +622,21 @@ type TemplateConstants struct {
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	OmitImageStream  bool           `json:"omitImageStream"`
-	SSOAuthClient    SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name             string         `json:"name,omitempty"`
-	Replicas         int32          `json:"replicas,omitempty"`
-	ImageContext     string         `json:"imageContext,omitempty"`
-	Image            string         `json:"image,omitempty"`
-	ImageTag         string         `json:"imageTag,omitempty"`
-	ImageURL         string         `json:"imageURL,omitempty"`
-	KeystoreSecret   string         `json:"keystoreSecret,omitempty"`
-	GitHooks         GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm              JvmObject      `json:"jvm,omitempty"`
-	StorageClassName string         `json:"storageClassName,omitempty"`
-	PvSize           string         `json:"pvSize,omitempty"`
-	Simplified       bool           `json:"simplifed"`
+	OmitImageStream     bool           `json:"omitImageStream"`
+	SSOAuthClient       SSOAuthClient  `json:"ssoAuthClient,omitempty"`
+	Name                string         `json:"name,omitempty"`
+	Replicas            int32          `json:"replicas,omitempty"`
+	ImageContext        string         `json:"imageContext,omitempty"`
+	Image               string         `json:"image,omitempty"`
+	ImageTag            string         `json:"imageTag,omitempty"`
+	ImageURL            string         `json:"imageURL,omitempty"`
+	KeystoreSecret      string         `json:"keystoreSecret,omitempty"`
+	GitHooks            GitHooksVolume `json:"gitHooks,omitempty"`
+	Jvm                 JvmObject      `json:"jvm,omitempty"`
+	StorageClassName    string         `json:"storageClassName,omitempty"`
+	PvSize              string         `json:"pvSize,omitempty"`
+	Simplified          bool           `json:"simplifed"`
+	DashbuilderLocation string         `json:"dashbuilderLocation,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -642,6 +656,92 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+}
+
+// DashbuilderTemplate contains all the variables used in the yaml templates
+type DashbuilderTemplate struct {
+	OmitImageStream  bool              `json:"omitImageStream"`
+	Name             string            `json:"name,omitempty"`
+	Replicas         int32             `json:"replicas,omitempty"`
+	SSOAuthClient    SSOAuthClient     `json:"ssoAuthClient,omitempty"`
+	ImageContext     string            `json:"imageContext,omitempty"`
+	Image            string            `json:"image,omitempty"`
+	ImageTag         string            `json:"imageTag,omitempty"`
+	ImageURL         string            `json:"imageURL,omitempty"`
+	KeystoreSecret   string            `json:"keystoreSecret,omitempty"`
+	Database         DatabaseObject    `json:"database,omitempty"`
+	Jvm              JvmObject         `json:"jvm,omitempty"`
+	StorageClassName string            `json:"storageClassName,omitempty"`
+	Config           DashbuilderConfig `json:"config,omitempty"`
+}
+
+// DashbuilderConfig holds all configurations that can be applied to the Dashbuilder env
+type DashbuilderConfig struct {
+	// Enables integration with Business Central
+	// +optional
+	EnableBusinessCentral bool `json:"enableBusinessCentral,omitempty"`
+	// Enables integration with KIE Server
+	// +optional
+	EnableKieServer bool `json:"enableKieServer,omitempty"`
+	// Allow download of external (remote) files into runtime. Default value is false
+	// +optional
+	AllowExternalFileRegister *bool `json:"allowExternalFileRegister,omitempty"`
+	// Components will be partitioned by the Runtime Model ID. Default value is true
+	// +optional
+	ComponentPartition *bool `json:"componentPartition,omitempty"`
+	// Datasets IDs will partitioned by the Runtime Model ID. Default value is true
+	// +optional
+	DataSetPartition *bool `json:"dataSetPartition,omitempty"`
+	// Set a static dashboard to run with runtime. When this property is set no new imports are allowed.
+	// +optional
+	ImportFileLocation string `json:"importFileLocation,omitempty"`
+	// Make Dashbuilder not ephemeral. If ImportFileLocation is set PersistentConfigs will be ignored.
+	// Default value is true.
+	// +optional
+	PersistentConfigs *bool `json:"persistentConfigs,omitempty"`
+	// Base Directory where dashboards ZIPs are stored. If PersistentConfigs is enabled and ImportsBaseDir is not
+	// pointing to a already existing PV the /opt/kie/dashbuilder/imports directory will be used. If ImportFileLocation is set
+	// ImportsBaseDir will be ignored.
+	// +optional
+	ImportsBaseDir string `json:"importsBaseDir,omitempty"`
+	// Allows Runtime to check model last update in FS to update its content. Default value is true.
+	// +optional
+	ModelUpdate *bool `json:"modelUpdate,omitempty"`
+	// When enabled will also remove actual model file from file system. Default value is false.
+	// +optional
+	ModelFileRemoval *bool `json:"modelFileRemoval,omitempty"`
+	// Runtime will always allow use of new imports (multi tenancy). Default value is false.
+	// +optional
+	RuntimeMultipleImport *bool `json:"runtimeMultipleImport,omitempty"`
+	// Limits the size of uploaded dashboards (in kb). Default value is 10485760 kb.
+	// +optional
+	UploadSize *int64 `json:"uploadSize,omitempty"`
+	// When set to true enables external components.
+	// +optional
+	ComponentEnable *bool `json:"componentEnable,omitempty"`
+	// Base Directory where dashboards ZIPs are stored. If PersistentConfigs is enabled and ExternalCompDir is not
+	// pointing to a already existing PV the /opt/kie/dashbuilder/components directory will be used.
+	// +optional
+	ExternalCompDir string `json:"externalCompDir,omitempty"`
+	// Properties file with Dashbuilder configurations, if set, uniq properties will be appended and, if a property
+	// is set mode than once, the one from this property file will be used.
+	// +optional
+	ConfigMapProps string `json:"configMapProps,omitempty"`
+	// Defines the KIE Server Datasets access configurations
+	// +optional
+	KieServerDataSets []KieServerDataSetOrTemplate `json:"kieServerDataSets,omitempty"`
+	// Defines the KIE Server Templates access configurations
+	// +optional
+	KieServerTemplates []KieServerDataSetOrTemplate `json:"kieServerTemplates,omitempty"`
+}
+
+type KieServerDataSetOrTemplate struct {
+	Name         string `json:"name,omitempty"`
+	Location     string `json:"location,omitempty"`
+	User         string `json:"user,omitempty"`
+	Password     string `json:"password,omitempty"`
+	Token        string `json:"token,omitempty"`
+	ReplaceQuery string `json:"replaceQuery,omitempty"`
 }
 
 // DatabaseTemplate contains all the variables used in the yaml templates
@@ -669,6 +769,7 @@ type SmartRouterTemplate struct {
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
 type ReplicaConstants struct {
 	Console     Replicas `json:"console,omitempty"`
+	Dashbuilder Replicas `json:"dashbuilder,omitempty"`
 	Server      Replicas `json:"server,omitempty"`
 	SmartRouter Replicas `json:"smartRouter,omitempty"`
 }

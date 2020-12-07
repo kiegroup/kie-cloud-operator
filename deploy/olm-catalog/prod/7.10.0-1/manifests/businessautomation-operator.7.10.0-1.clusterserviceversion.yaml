@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.10.0
-    createdAt: "2021-01-06 14:37:00"
+    createdAt: "2021-01-06 16:50:30"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -242,6 +242,8 @@ spec:
                   value: registry.stage.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.10.0
                   value: registry.stage.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.10.0
+                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.10.0
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.10.0
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.10.0
                   value: registry.redhat.io/openshift3/ose-cli:v3.11
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.10.0

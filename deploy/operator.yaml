@@ -111,6 +111,8 @@ spec:
           value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
         - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.10.0
           value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.10.0
+        - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.10.0
+          value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.10.0
         - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.10.0
           value: registry.redhat.io/openshift3/ose-cli:v3.11
         - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.10.0
