@@ -80,8 +80,12 @@ others:
                       value: "[[.ApplicationName]]-datagrid"
                     - name: SERVICE_PROFILE
                       value: "[[.ApplicationName]]-datagrid"
+                    - name: KUBERNETES_NAMESPACE
+                      value: "${KUBERNETES_NAMESPACE}"
+                    - name: KUBERNETES_LABELS
+                      value: "${KUBERNETES_LABELS}"
                     - name: JGROUPS_PING_PROTOCOL
-                      value: kubernetes.KUBE_PING
+                      value: "kubernetes.KUBE_PING"
                     - name: INFINISPAN_CONNECTORS
                       value: "hotrod"
                   image: "[[$.Constants.DatagridImageURL]]"
@@ -283,40 +287,6 @@ others:
             service: "[[.ApplicationName]]-amq"
           annotations:
             description: The broker's OpenWire port.
-
-      - spec:
-          clusterIP: None
-          ports:
-            - port: 8888
-              protocol: TCP
-              targetPort: 8888
-          selector:
-            deploymentConfig: "[[.ApplicationName]]-amq"
-        metadata:
-          name: "[[.ApplicationName]]-amq-ping"
-          annotations:
-            description: The JGroups ping port for clustering.
-            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-          labels:
-            app: "[[.ApplicationName]]"
-            application: "[[.ApplicationName]]"
-
-      - spec:
-          clusterIP: None
-          ports:
-            - name: ping
-              port: 8888
-              protocol: TCP
-              targetPort: 8888
-          selector:
-            deploymentConfig: "[[.ApplicationName]]-datagrid"
-        metadata:
-          name: "[[.ApplicationName]]-datagrid-ping"
-          labels:
-            application: "[[.ApplicationName]]"
-          annotations:
-            description: "The JGroups ping port for clustering."
-            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 
       - spec:
           ports:
