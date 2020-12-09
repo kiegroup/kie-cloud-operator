@@ -148,9 +148,6 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamcentr service should have two ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhpamcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhpamcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -182,8 +179,6 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhdmcentr service should have three ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -211,9 +206,6 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
-	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "PRODUCTION", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -275,9 +267,6 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "admin", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	amqClusterPassword = getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_CLUSTER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
-	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
