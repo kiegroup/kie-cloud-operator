@@ -144,14 +144,15 @@ const (
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
 	OseCli311Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent  = "amq-broker-openshift-container"
-	BrokerVar        = "BROKER_IMAGE_"
-	BrokerImage      = "amq-broker"
-	Broker76ImageTag = "7.6"
-	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
+	BrokerComponent = "amq-broker-openshift-container"
+	BrokerVar       = "BROKER_IMAGE_"
+	BrokerImage     = "amq-broker"
+	BrokerImageURL  = ImageRegistry + "/amq7/" + BrokerImage + ":"
 
 	Broker77ImageTag = "7.7"
-	Broker77ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker77ImageTag
+	Broker78ImageTag = "7.8"
+	Broker77ImageURL = BrokerImageURL + Broker77ImageTag
+	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
 
 	DatagridVar         = "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
@@ -312,8 +313,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker77ImageTag,
-		BrokerImageURL:      Broker77ImageURL,
+		BrokerImageTag:      Broker78ImageTag,
+		BrokerImageURL:      Broker78ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag16,
 		DatagridImageURL:    Datagrid73ImageURL16,

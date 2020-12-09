@@ -120,7 +120,7 @@ spec:
         - name: DATAGRID_IMAGE_7.10.0
           value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
         - name: BROKER_IMAGE_7.10.0
-          value: registry.redhat.io/amq7/amq-broker:7.7
+          value: registry.redhat.io/amq7/amq-broker:7.8
         - name: OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
         - name: OAUTH_PROXY_IMAGE_4.6
