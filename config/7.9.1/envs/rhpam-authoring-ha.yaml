@@ -85,7 +85,7 @@ others:
                     - name: KUBERNETES_LABELS
                       value: "${KUBERNETES_LABELS}"
                     - name: JGROUPS_PING_PROTOCOL
-                      value: kubernetes.KUBE_PING
+                      value: "kubernetes.KUBE_PING"
                     - name: INFINISPAN_CONNECTORS
                       value: "hotrod"
                   image: "[[$.Constants.DatagridImageURL]]"
