@@ -55,8 +55,9 @@ func TestMergeServices(t *testing.T) {
 	assert.Equal(t, "overwrite", finalService1.Labels["source"], "Expected the source label to have been overwritten by merge")
 	assert.Equal(t, "true", finalService3.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
 	assert.Equal(t, "overwrite", finalService3.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "true", finalService3.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
-	assert.Equal(t, "overwrite", finalService3.Labels["source"], "Expected the source label to have been overwritten by merge")
+	assert.Equal(t, "true", finalService2.Labels["baseline"], "Expected the overwrite label to also be set as part of the merge")
+	assert.Equal(t, "baseline", finalService2.Labels["source"], "Expected the source label to have been overwritten by merge")
+	assert.Equal(t, "test-rhpamcentr", finalService1.Name, "Third service name should end without -number")
 	assert.Equal(t, "test-rhpamcentr-2", finalService2.Name, "Third service name should end with -2")
 	assert.Equal(t, "test-rhpamcentr-3", finalService3.Name, "Third service name should end with -3")
 }
