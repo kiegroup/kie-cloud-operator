@@ -46,22 +46,19 @@ func TestMergeServices(t *testing.T) {
 	overwrite.Console.Services = append(overwrite.Console.Services, *service5)
 
 	mergedEnv, _ := merge(baseline, *overwrite)
-	assert.Equal(t, 4, len(mergedEnv.Console.Services), "Expected 4 services")
+	assert.Equal(t, 3, len(mergedEnv.Console.Services), "Expected 3 services")
 	finalService1 := mergedEnv.Console.Services[0]
-	// ping service
 	finalService2 := mergedEnv.Console.Services[1]
 	finalService3 := mergedEnv.Console.Services[2]
-	finalService4 := mergedEnv.Console.Services[3]
 	assert.Equal(t, "true", finalService1.Labels["baseline"], "Expected the baseline label to be set")
 	assert.Equal(t, "true", finalService1.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
 	assert.Equal(t, "overwrite", finalService1.Labels["source"], "Expected the source label to have been overwritten by merge")
-	assert.Equal(t, "true", finalService3.Labels["baseline"], "Expected the baseline label to be set")
-	assert.Equal(t, "baseline", finalService3.Labels["source"], "Expected the source label to be baseline")
-	assert.Equal(t, "true", finalService4.Labels["overwrite"], "Expected the overwrite label to be set")
-	assert.Equal(t, "overwrite", finalService4.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "test-rhpamcentr-ping", finalService2.Name, "Second service must be ping.")
-	assert.Equal(t, "test-rhpamcentr-2", finalService3.Name, "Second service name should end with -2")
-	assert.Equal(t, "test-rhpamcentr-3", finalService4.Name, "Second service name should end with -3")
+	assert.Equal(t, "true", finalService3.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
+	assert.Equal(t, "overwrite", finalService3.Labels["source"], "Expected the source label to be overwrite")
+	assert.Equal(t, "true", finalService3.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
+	assert.Equal(t, "overwrite", finalService3.Labels["source"], "Expected the source label to have been overwritten by merge")
+	assert.Equal(t, "test-rhpamcentr-2", finalService2.Name, "Third service name should end with -2")
+	assert.Equal(t, "test-rhpamcentr-3", finalService3.Name, "Third service name should end with -3")
 }
 
 func TestMergeRoutes(t *testing.T) {
