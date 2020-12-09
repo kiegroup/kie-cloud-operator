@@ -116,12 +116,12 @@ console:
                     value: "[[.KeyStorePassword]]"
                   - name: WORKBENCH_ROUTE_NAME
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
-                  - name: KUBERNETES_NAMESPACE
-                    value: "${KUBERNETES_NAMESPACE}"
-                  - name: KUBERNETES_LABELS
-                    value: "${KUBERNETES_LABELS}"
                   - name: JGROUPS_PING_PROTOCOL
-                    value: "kubernetes.KUBE_PING"
+                    value: "openshift.DNS_PING"
+                  - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+                    value: "[[.ApplicationName]]-[[.Console.Name]]-ping"
+                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+                    value: "8888"
                   # Auth config BEGIN
                   ## SSO config BEGIN
                   #[[if .Auth.SSO.URL]]
@@ -367,6 +367,23 @@ console:
           service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           description: All the Business Central web server's ports.
+    - spec:
+        clusterIP: "None"
+        ports:
+          - name: "ping"
+            port: 8888
+            targetPort: 8888
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
+      metadata:
+        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Console.Name]]"
+        annotations:
+          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+          description: "The JGroups ping port for clustering."
   routes:
     - id: "[[.ApplicationName]]-[[.Console.Name]]-https"
       metadata:
@@ -661,12 +678,12 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "[[$.KeyStorePassword]]"
-                    - name: KUBERNETES_NAMESPACE
-                      value: "${KUBERNETES_NAMESPACE}"
-                    - name: KUBERNETES_LABELS
-                      value: "${KUBERNETES_LABELS}"
                     - name: JGROUPS_PING_PROTOCOL
-                      value: "kubernetes.KUBE_PING"
+                      value: "openshift.DNS_PING"
+                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+                      value: "[[.KieName]]-ping"
+                    - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+                      value: "8888"
                     # Auth config BEGIN
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
@@ -899,6 +916,23 @@ servers:
             service: "[[.KieName]]"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
+      - spec:
+          clusterIP: "None"
+          ports:
+            - name: "ping"
+              port: 8888
+              targetPort: 8888
+          selector:
+            deploymentConfig: "[[.KieName]]"
+        metadata:
+          name: "[[.KieName]]-ping"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]"
+          annotations:
+            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+            description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
