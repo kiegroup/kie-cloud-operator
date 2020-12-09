@@ -247,6 +247,13 @@
                   "description": "LDAP Credentials used for authentication of bindDN"
                 },
                 {
+                  "label": "LoginModule Flag",
+                  "type": "dropDown",
+                  "jsonPath": "$.spec.auth.ldap.loginModule",
+                  "originalJsonPath": "$.spec.auth.ldap.loginModule",
+                  "description": "A flag to set login module to optional. The default value is required"
+                },
+                {
                   "label": "JAAS security domain",
                   "type": "password",
                   "jsonPath": "$.spec.auth.ldap.jaasSecurityDomain",

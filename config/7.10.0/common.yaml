@@ -159,6 +159,8 @@ console:
                     value: "[[.Auth.LDAP.BindCredential]]"
                   - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
                     value: "[[.Auth.LDAP.JAASSecurityDomain]]"
+                  - name: AUTH_LDAP_LOGIN_MODULE
+                    value: "[[.Auth.LDAP.LoginModule]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
