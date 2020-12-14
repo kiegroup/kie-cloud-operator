@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:bb7dc014287f067fd6490d5a96ab54cadabe54e48d54b4524741b75333e8e9ee
-    createdAt: "2020-12-03 09:10:49"
+    createdAt: "2020-12-14 11:30:25"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -169,23 +169,23 @@ spec:
                 - name: DEBUG
                   value: "false"
                 - name: DM_KIESERVER_IMAGE_7.9.1
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:0d1824121b0645839a7d88b73118032ea01f70b6aee3b1cebe167dda6b01af8f
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:6c4e37ce3de9640d37db4ea1b82ae79e5817e2341bc1b5d7ef5cbf7eb3086207
                 - name: DM_CONTROLLER_IMAGE_7.9.1
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:accb285978f4be289ca0fbc39fc601e538e08c1936a324a11afd913e2d568480
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:361393690e298b8d2d15e96bb464546cc6a007bfb7b4fa36d91cd497fde147a0
                 - name: DM_DC_IMAGE_7.9.1
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:8545ef646a584c43954e70525b749d4e7c516ba04274026f2e6ef02ad4e2b95f
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:e9550ef4f107a62a31f06fa24f21899d7ebb2098f197d29f3386132705661510
                 - name: PAM_KIESERVER_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:95ac80162ba67b3ecb6f1b074bc5ae3050e6e4b5cf563b0ca9eccb0ee4636189
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:58e23f50e4d4840a611bcc4b854ace8158d6ae235b76855a10a35d6e6df1b8b2
                 - name: PAM_CONTROLLER_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:48ea9bb22a5998c0dd3b84360d7fa5ecff09ed7c96c05979d8bc08f9fbb07445
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:080f0748eb4444a1bc7834ccc969d97f9bd10d18628b8785715251e41a3d3e20
                 - name: PAM_BC_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:9118dfdde7d1e00e4563e6d684b318d42ff20a876c68dbc2dc65d9cb14432322
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:6ec1f875f3015a32578575c0f265f0b2c6c9bea7b5fff74a719528ae26ce5b11
                 - name: PAM_BC_MONITORING_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:ef5eb6450cc5c2a198bfaa99fba24ea0315801300ceee47457714661258f1100
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:a116e234d413a918215f5677f4cb3e8e25463e7b26c27c3204f73472405acf6f
                 - name: PAM_SMARTROUTER_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:81c0c30c25003afe411553fcc58b3d426c2bb5f30423513b93f7dc5702a0e766
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:bdcb6232619b2763aca7b18b7e3669d21e8e41c302ad52f2f8d1ab400dacfb41
                 - name: PAM_PROCESS_MIGRATION_IMAGE_7.9.1
-                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8@sha256:5f522de7223d6f9598cfcdab2a8e272edf20f937fa8f0f65a8fce3e63460832d
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8@sha256:5e82b4e071ba00377614dc3c863a42a4466c6bbdb341ed8eb20a7b9d2ffe219e
                 - name: OSE_CLI_IMAGE_7.9.1
                   value: registry.redhat.io/openshift3/ose-cli@sha256:8f9732773d3d4fb940f9660f01f3a681d3c7ea61e06a26853cfc14a5140165b9
                 - name: MYSQL_PROXY_IMAGE_7.9.1
@@ -253,9 +253,9 @@ spec:
                 - name: BROKER_IMAGE_7.8.1
                   value: registry.redhat.io/amq7/amq-broker@sha256:7e81fec6e8fcb760829ab73512d1abf4da93e6e3bca42a12f517f793b34d6709
                 - name: OAUTH_PROXY_IMAGE_LATEST
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:b3291b06f478cf98a74ef47b0c4e41a8979c682044c6cd597f9f188852879693
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:0088d7e77a812f95788ceb1e7346fac0fe66753598674c9f3b4e3621f382c1fa
                 - name: OAUTH_PROXY_IMAGE_4.6
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:b3291b06f478cf98a74ef47b0c4e41a8979c682044c6cd597f9f188852879693
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:0088d7e77a812f95788ceb1e7346fac0fe66753598674c9f3b4e3621f382c1fa
                 - name: OAUTH_PROXY_IMAGE_4.5
                   value: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:7c17e480cff1dbc805ee3dc389acfd02fafc12894cac2b36e07f95e82f2e06f1
                 - name: OAUTH_PROXY_IMAGE_4.4
@@ -450,23 +450,23 @@ spec:
   relatedImages:
   - image: registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:bb7dc014287f067fd6490d5a96ab54cadabe54e48d54b4524741b75333e8e9ee
     name: rhpam-rhel8-operator
-  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:0d1824121b0645839a7d88b73118032ea01f70b6aee3b1cebe167dda6b01af8f
+  - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:6c4e37ce3de9640d37db4ea1b82ae79e5817e2341bc1b5d7ef5cbf7eb3086207
     name: rhdm-kieserver-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:accb285978f4be289ca0fbc39fc601e538e08c1936a324a11afd913e2d568480
+  - image: registry.redhat.io/rhdm-7/rhdm-controller-rhel8@sha256:361393690e298b8d2d15e96bb464546cc6a007bfb7b4fa36d91cd497fde147a0
     name: rhdm-controller-rhel8
-  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:8545ef646a584c43954e70525b749d4e7c516ba04274026f2e6ef02ad4e2b95f
+  - image: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8@sha256:e9550ef4f107a62a31f06fa24f21899d7ebb2098f197d29f3386132705661510
     name: rhdm-decisioncentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:95ac80162ba67b3ecb6f1b074bc5ae3050e6e4b5cf563b0ca9eccb0ee4636189
+  - image: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8@sha256:58e23f50e4d4840a611bcc4b854ace8158d6ae235b76855a10a35d6e6df1b8b2
     name: rhpam-kieserver-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:48ea9bb22a5998c0dd3b84360d7fa5ecff09ed7c96c05979d8bc08f9fbb07445
+  - image: registry.redhat.io/rhpam-7/rhpam-controller-rhel8@sha256:080f0748eb4444a1bc7834ccc969d97f9bd10d18628b8785715251e41a3d3e20
     name: rhpam-controller-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:9118dfdde7d1e00e4563e6d684b318d42ff20a876c68dbc2dc65d9cb14432322
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8@sha256:6ec1f875f3015a32578575c0f265f0b2c6c9bea7b5fff74a719528ae26ce5b11
     name: rhpam-businesscentral-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:ef5eb6450cc5c2a198bfaa99fba24ea0315801300ceee47457714661258f1100
+  - image: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8@sha256:a116e234d413a918215f5677f4cb3e8e25463e7b26c27c3204f73472405acf6f
     name: rhpam-businesscentral-monitoring-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:81c0c30c25003afe411553fcc58b3d426c2bb5f30423513b93f7dc5702a0e766
+  - image: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8@sha256:bdcb6232619b2763aca7b18b7e3669d21e8e41c302ad52f2f8d1ab400dacfb41
     name: rhpam-smartrouter-rhel8
-  - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8@sha256:5f522de7223d6f9598cfcdab2a8e272edf20f937fa8f0f65a8fce3e63460832d
+  - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8@sha256:5e82b4e071ba00377614dc3c863a42a4466c6bbdb341ed8eb20a7b9d2ffe219e
     name: rhpam-process-migration-rhel8
   - image: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8@sha256:c9ee12321e0ef9dd6447e3acf1b0c8e9a81c266dd1ccb3a586ca113a1e114020
     name: rhdm-kieserver-rhel8
@@ -504,9 +504,9 @@ spec:
     name: rhpam-smartrouter-rhel8
   - image: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8@sha256:677e32d5ebec1f8169c37826563a89cc8bfd13686d52d80084226748732ac8f7
     name: rhpam-process-migration-rhel8
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:b3291b06f478cf98a74ef47b0c4e41a8979c682044c6cd597f9f188852879693
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:0088d7e77a812f95788ceb1e7346fac0fe66753598674c9f3b4e3621f382c1fa
     name: ose-oauth-proxy
-  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:b3291b06f478cf98a74ef47b0c4e41a8979c682044c6cd597f9f188852879693
+  - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:0088d7e77a812f95788ceb1e7346fac0fe66753598674c9f3b4e3621f382c1fa
     name: ose-oauth-proxy
   - image: registry.redhat.io/openshift4/ose-oauth-proxy@sha256:7c17e480cff1dbc805ee3dc389acfd02fafc12894cac2b36e07f95e82f2e06f1
     name: ose-oauth-proxy
