@@ -585,3 +585,55 @@ func getExpectedSSOEnvs() []corev1.EnvVar {
 		{Name: "SSO_PASSWORD"},
 	}
 }
+
+func testLDAPLoginModuleRequiredFlag(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: "rhpam-trial",
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Deployments: Pint(2)},
+				},
+			},
+			Auth: &api.KieAppAuthObject{
+				LDAP: &api.LDAPAuthConfig{
+					LoginModule: "required",
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+
+	assert.Equal(t, "required", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
+
+}
+
+func testLDAPLoginModuleOptionalFlag(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: "rhpam-trial",
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Deployments: Pint(2)},
+				},
+			},
+			Auth: &api.KieAppAuthObject{
+				LDAP: &api.LDAPAuthConfig{
+					LoginModule: "optional",
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+
+	assert.Equal(t, "optional", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
+
+}

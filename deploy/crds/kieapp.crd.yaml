@@ -86,6 +86,13 @@ spec:
                         description: The JMX ObjectName of the JaasSecurityDomain
                           used to decrypt the password.
                         type: string
+                      loginModule:
+                        description: A flag to set login module to optional. The default
+                          value is required
+                        enum:
+                        - optional
+                        - required
+                        type: string
                       parseRoleNameFromDN:
                         description: A flag indicating if the DN returned by a query
                           contains the roleNameAttributeID. If set to true, the DN
@@ -1772,6 +1779,13 @@ spec:
                           jaasSecurityDomain:
                             description: The JMX ObjectName of the JaasSecurityDomain
                               used to decrypt the password.
+                            type: string
+                          loginModule:
+                            description: A flag to set login module to optional. The
+                              default value is required
+                            enum:
+                            - optional
+                            - required
                             type: string
                           parseRoleNameFromDN:
                             description: A flag indicating if the DN returned by a

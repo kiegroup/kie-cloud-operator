@@ -356,6 +356,8 @@ type LDAPAuthConfig struct {
 	BindDN string `json:"bindDN,omitempty"`
 	// The JMX ObjectName of the JaasSecurityDomain used to decrypt the password.
 	JAASSecurityDomain string `json:"jaasSecurityDomain,omitempty"`
+	// +kubebuilder:validation:Enum:=optional;required
+	LoginModule LoginModuleType `json:"loginModule,omitempty"`
 	// LDAP Base DN of the top-level context to begin the user search.
 	BaseCtxDN string `json:"baseCtxDN,omitempty"`
 	// DAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}).
@@ -392,6 +394,16 @@ type LDAPAuthConfig struct {
 	// If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
 	ReferralUserAttributeIDToCheck string `json:"referralUserAttributeIDToCheck,omitempty"`
 }
+
+// A flag to set login module to optional. The default value is required
+type LoginModuleType string
+
+const (
+	//OptionalLoginModule optional login module
+	OptionalLoginModule LoginModuleType = "optional"
+	//RequiredLoginModule required login module
+	RequiredLoginModule LoginModuleType = "required"
+)
 
 // SearchScopeType Type used to define how the LDAP searches are performed
 type SearchScopeType string
