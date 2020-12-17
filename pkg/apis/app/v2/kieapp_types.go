@@ -134,6 +134,7 @@ type ConsoleObject struct {
 	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
 	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
 	Jvm          *JvmObject      `json:"jvm,omitempty"`
+	PvSize       string          `json:"pvSize,omitempty"`
 }
 
 // SmartRouterObject configuration of the RHPAM smart router
@@ -620,6 +621,7 @@ type ConsoleTemplate struct {
 	GitHooks         GitHooksVolume `json:"gitHooks,omitempty"`
 	Jvm              JvmObject      `json:"jvm,omitempty"`
 	StorageClassName string         `json:"storageClassName,omitempty"`
+	PvSize           string         `json:"pvSize,omitempty"`
 	Simplified       bool           `json:"simplifed"`
 }
 

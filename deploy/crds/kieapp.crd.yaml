@@ -623,6 +623,8 @@ spec:
                       keystoreSecret:
                         description: Keystore secret name
                         type: string
+                      pvSize:
+                        type: string
                       replicas:
                         description: Replicas to set for the DeploymentConfig
                         format: int32
@@ -2329,6 +2331,8 @@ spec:
                             type: object
                           keystoreSecret:
                             description: Keystore secret name
+                            type: string
+                          pvSize:
                             type: string
                           replicas:
                             description: Replicas to set for the DeploymentConfig

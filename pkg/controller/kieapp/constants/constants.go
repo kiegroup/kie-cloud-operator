@@ -185,6 +185,8 @@ const (
 	ConsoleAuthoringMemRequests = "3Gi"
 	ConsoleProdCPURequests      = "500m"
 	ConsoleProdMemRequests      = "1500Mi"
+	ConsolePvSize               = "1Gi"
+	ConsoleProdPvSize           = "64Mi"
 	ServersCPULimit             = "1"
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
