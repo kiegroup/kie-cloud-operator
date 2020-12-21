@@ -586,13 +586,13 @@ func getExpectedSSOEnvs() []corev1.EnvVar {
 	}
 }
 
-func testLDAPLoginModuleRequiredFlag(t *testing.T) {
+func TestLDAPLoginModuleRequiredFlag(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: api.RhpamAuthoring,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{Deployments: Pint(2)},
@@ -600,6 +600,8 @@ func testLDAPLoginModuleRequiredFlag(t *testing.T) {
 			},
 			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
+					URL:         "ldaps://ldap.example.com",
+					BindDN:      "cn=admin,dc=example,dc=com",
 					LoginModule: "required",
 				},
 			},
@@ -612,13 +614,13 @@ func testLDAPLoginModuleRequiredFlag(t *testing.T) {
 
 }
 
-func testLDAPLoginModuleOptionalFlag(t *testing.T) {
+func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
-			Environment: "rhpam-trial",
+			Environment: api.RhpamAuthoring,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{Deployments: Pint(2)},
@@ -626,6 +628,8 @@ func testLDAPLoginModuleOptionalFlag(t *testing.T) {
 			},
 			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
+					URL:         "ldaps://ldap.example.com",
+					BindDN:      "cn=admin,dc=example,dc=com",
 					LoginModule: "optional",
 				},
 			},
