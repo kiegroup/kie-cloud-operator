@@ -26,8 +26,8 @@ import (
 )
 
 func TestUpdateLink(t *testing.T) {
-	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
-	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.CsvVersion+"/manifests")
+	bytes, err := box.Find("businessautomation-operator." + version.CsvVersion + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
@@ -37,8 +37,8 @@ func TestUpdateLink(t *testing.T) {
 }
 
 func TestUpdateExistingLink(t *testing.T) {
-	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
-	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.CsvVersion+"/manifests")
+	bytes, err := box.Find("businessautomation-operator." + version.CsvVersion + ".clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)

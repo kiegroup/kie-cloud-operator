@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source ./hack/go-mod-env.sh
-VERSION=$(go run getversion.go)
+VERSION=$(go run getversion.go -csv)
 
 go run ./tools/csv-gen/csv-gen.go
 

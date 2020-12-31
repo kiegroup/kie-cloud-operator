@@ -76,8 +76,8 @@ var (
 )
 
 var (
-	ver      = flag.String("version", version.Version, "set CSV version")
-	replaces = flag.String("replaces", version.PriorVersion, "set CSV version to replace")
+	ver      = flag.String("version", version.CsvVersion, "set CSV version")
+	replaces = flag.String("replaces", version.CsvPriorVersion, "set CSV version to replace")
 )
 
 type csvSetting struct {
