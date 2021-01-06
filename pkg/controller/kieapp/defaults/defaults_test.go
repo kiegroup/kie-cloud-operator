@@ -31,6 +31,7 @@ var (
 	bcmImage             = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
 	bcImage              = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
 	dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
+	dashImage            = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-dashbuilder" + constants.RhelVersion
 	latestTag            = ":latest"
 	helloRules           = "hello-rules" + latestTag
 	byeRules             = "bye-rules" + latestTag
@@ -190,6 +191,224 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+}
+
+func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting dashbuilder environment")
+
+	dashServices := env.Dashbuilder.Services
+	mainService := getService(dashServices, "test-dash-rhpamdash")
+
+	assert.NotNil(t, mainService, "rhpamdash service not found")
+	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamdash service should have two ports")
+	assert.False(t, hasPort(mainService, 8001), "The rhpamdash service should NOT listen on port 8001")
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	pingService := getService(dashServices, "test-dash-rhpamdash-ping")
+	assert.NotNil(t, pingService, "Ping service not found")
+	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
+	assert.Equal(t, "test-dash-rhpamdash", env.Dashbuilder.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, dashImage+":"+cr.Status.Applied.Version, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+
+	cpuL, _ := resource.ParseQuantity("1")
+	cpuR, _ := resource.ParseQuantity("750m")
+	memL, _ := resource.ParseQuantity("2Gi")
+	memR, _ := resource.ParseQuantity("1536Mi")
+	dashLimAndReq := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuL,
+			corev1.ResourceMemory: memL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuR,
+			corev1.ResourceMemory: memR,
+		},
+	}
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Resources)
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceCPU], *dashLimAndReq.Limits.Cpu())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceCPU], *dashLimAndReq.Requests.Cpu())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
+
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM")
+}
+
+func TestRHPAMDashbuilderEnvironmentWithCustomProperties(t *testing.T) {
+	tr := true
+	f := false
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						ImportFileLocation:        "/test/testing",
+						PersistentConfigs:         &tr,
+						AllowExternalFileRegister: &f,
+						ConfigMapProps:            "/tmp/configMap.properties",
+					},
+				},
+			},
+		},
+	}
+
+	shouldNotContainEnvs := []string{"DASHBUILDER_EXTERNAL_COMP_DIR", "DASHBUILDER_COMP_ENABLE",
+		"DASHBUILDER_UPLOAD_SIZE", "DASHBUILDER_RUNTIME_MULTIPLE_IMPORT", "DASHBUILDER_MODEL_FILE_REMOVAL",
+		"DASHBUILDER_MODEL_UPDATE", "DASHBUILDER_IMPORTS_BASE_DIR", "DASHBUILDER_DATASET_PARTITION",
+		"DASHBUILDER_COMPONENT_PARTITION"}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	isInSlice := func(a string, list []string) bool {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+		return false
+	}
+	for _, env := range env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		assert.Falsef(t, isInSlice(env.Name, shouldNotContainEnvs), "env %s should not be present", env.Name)
+	}
+}
+
+func TestRhpamDashbuilderDatasetsAndTemplates(t *testing.T) {
+
+	datasets := []api.KieServerDataSetOrTemplate{
+		{
+			Name:         "dataset_1",
+			Location:     "http://dataset-1.com/rest",
+			Token:        "my-dataset-1-token",
+			ReplaceQuery: "true",
+		},
+		{
+			Name:     "dataset_2",
+			Location: "https://dataset-2.com/rest",
+			User:     "user-2",
+			Password: "passwd-2",
+		},
+	}
+
+	templates := []api.KieServerDataSetOrTemplate{
+		{
+			Name:         "template_1",
+			Location:     "http://template-1.com/rest",
+			User:         "user-1",
+			Password:     "passwd-1",
+			ReplaceQuery: "false",
+		},
+		{
+			Name:     "template_2",
+			Location: "https://template-2.com/rest",
+			Token:    "my-template-2-token",
+		},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						KieServerDataSets:  datasets,
+						KieServerTemplates: templates,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "http://dataset-1.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_LOCATION"))
+	assert.Equal(t, "my-dataset-1-token", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_TOKEN"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_USER"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_PASSWORD"))
+	assert.Equal(t, "true", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_REPLACE_QUERY"))
+	assert.Equal(t, "https://dataset-2.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_LOCATION"))
+	assert.Equal(t, "user-2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_USER"))
+	assert.Equal(t, "passwd-2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_PASSWORD"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_TOKEN"))
+	assert.Equal(t, "dataset_1,dataset_2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_DATASETS"))
+	assert.Equal(t, "http://template-1.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_LOCATION"))
+	assert.Equal(t, "user-1", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_USER"))
+	assert.Equal(t, "passwd-1", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_PASSWORD"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_TOKEN"))
+	assert.Equal(t, "false", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_REPLACE_QUERY"))
+	assert.Equal(t, "https://template-2.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_LOCATION"))
+	assert.Equal(t, "my-template-2-token", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_TOKEN"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_USER"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_PASSWORD"))
+	assert.Equal(t, "template_1,template_2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
+}
+
+func TestRHPAMDashbuilderIntegrationWithKieServer(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						EnableKieServer: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "test-dash-kieserver", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
+	assert.Equal(t, "http://test-dash-kieserver:8080/services/rest/server", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_LOCATION"))
+	assert.Equal(t, "adminUser", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_USER"))
+	assert.Equal(t, "RedHat", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_PASSWORD"))
+}
+
+func TestRHPAMDashbuilderIntegrationWithBC(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						EnableBusinessCentral: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "http://rhpamdash:8080", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_DASHBUILDER_RUNTIME_LOCATION"))
+	assert.Equal(t, "true", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "DASHBUILDER_RUNTIME_MULTIPLE_IMPORT"))
 }
 
 func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
@@ -1337,6 +1556,50 @@ func TestConstructConsoleObject(t *testing.T) {
 	for i := range sampleEnv {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
+}
+
+func TestConstructDashbuilderObject(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	cr.Spec.Objects = api.KieAppObjects{Dashbuilder: &api.DashbuilderObject{}}
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Nil(t, cr.Spec.Objects.Servers)
+	assert.Nil(t, cr.Spec.Objects.Dashbuilder.Replicas)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	cr.Spec.Objects.Dashbuilder.Replicas = Pint32(1)
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+	assert.Equal(t, Pint32(1), cr.Spec.Objects.Dashbuilder.Replicas)
+
+	assert.Equal(t, fmt.Sprintf("%s-rhpamdash", name), env.Dashbuilder.DeploymentConfigs[0].Name)
+	assert.Equal(t, int32(1), env.Dashbuilder.DeploymentConfigs[0].Spec.Replicas)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:%s", cr.Status.Applied.Version), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	cr.Spec.UseImageTags = true
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Equal(t, fmt.Sprintf("rhpam-dashbuilder-rhel8:%s", cr.Status.Applied.Version), env.Dashbuilder.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+
+	cr.Spec.Objects.Dashbuilder.Replicas = Pint32(3)
+	cr.Spec.Objects.Dashbuilder.Image = "test"
+	cr.Spec.UseImageTags = false
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "test", cr.Status.Applied.Objects.Dashbuilder.Image)
+	assert.Equal(t, Pint32(3), cr.Status.Applied.Objects.Dashbuilder.Replicas)
 }
 
 func TestConstructSmartRouterObject(t *testing.T) {

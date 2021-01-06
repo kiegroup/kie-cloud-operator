@@ -511,6 +511,23 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		}
 	}
 
+	// dashbuilder keystore generation
+	if cr.Status.Applied.Objects.Dashbuilder != nil {
+		consoleCN := reconciler.setConsoleHost(cr, env, routes)
+		defaults.ConfigureHostname(&env.Dashbuilder, cr, consoleCN)
+		if cr.Status.Applied.Objects.Dashbuilder.KeystoreSecret == "" {
+			secret, err := reconciler.generateKeystoreSecret(
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-")),
+				consoleCN,
+				cr,
+			)
+			if err != nil {
+				return api.Environment{}, err
+			}
+			env.Dashbuilder.Secrets = append(env.Dashbuilder.Secrets, secret)
+		}
+	}
+
 	// server(s) keystore generation
 	for i, server := range env.Servers {
 		if server.Omit {
@@ -574,15 +591,29 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 }
 
 func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (consoleCN string) {
-	for _, rt := range env.Console.Routes {
-		if checkTLS(rt.Spec.TLS) {
-			// use host of first tls route in env template
-			consoleCN = reconciler.GetRouteHost(rt, routes)
-			cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
-			log.Debug("Set console host to: ", cr.Status.ConsoleHost)
-			break
+
+	if cr.Status.Applied.Environment == api.RhpamStandaloneDashbuilder {
+		for _, rt := range env.Dashbuilder.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, routes)
+				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
+				log.Debug("Set dashbuilder console host to: ", cr.Status.ConsoleHost)
+				break
+			}
+		}
+	} else {
+		for _, rt := range env.Console.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, routes)
+				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
+				log.Debug("Set console host to: ", cr.Status.ConsoleHost)
+				break
+			}
 		}
 	}
+
 	if consoleCN == "" {
 		consoleCN = cr.Status.Applied.CommonConfig.ApplicationName
 		cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
@@ -645,6 +676,7 @@ func (reconciler *Reconciler) imageStreams(cr *api.KieApp, objects []api.CustomO
 func getCustomObjects(env api.Environment) []api.CustomObject {
 	var objects []api.CustomObject
 	objects = append(objects, env.Console)
+	objects = append(objects, env.Dashbuilder)
 	objects = append(objects, env.Servers...)
 	objects = append(objects, env.SmartRouter)
 	objects = append(objects, env.ProcessMigration)

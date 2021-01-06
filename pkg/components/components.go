@@ -118,6 +118,9 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			if i.Var == constants.PamProcessMigrationVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.8") < 0 {
 				continue
 			}
+			if i.Var == constants.PamDashbuilderVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.10") < 0 {
+				continue
+			}
 			registry := i.Registry
 			imageContext := i.Context
 			if version.Version == imageVersion && !dev {

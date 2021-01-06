@@ -130,6 +130,7 @@ const (
 	PamBusinessCentralVar  = relatedImageVar + "PAM_BC_IMAGE_"
 	PamBCMonitoringVar     = relatedImageVar + "PAM_BC_MONITORING_IMAGE_"
 	PamProcessMigrationVar = relatedImageVar + "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamDashbuilderVar      = relatedImageVar + "PAM_DASHBUILDER_IMAGE_"
 	PamSmartRouterVar      = relatedImageVar + "PAM_SMARTROUTER_IMAGE_"
 
 	OauthVar             = relatedImageVar + "OAUTH_PROXY_IMAGE_"
@@ -181,12 +182,16 @@ const (
 	ConsoleProdMemLimit         = "2Gi"
 	ConsoleAuthoringCPULimit    = "2"
 	ConsoleAuthoringMemLimit    = "4Gi"
-	ConsoleAuthoringCPURequests = "1500m"
+	ConsoleAuthoringCPURequests = "1536Mi"
 	ConsoleAuthoringMemRequests = "3Gi"
 	ConsoleProdCPURequests      = "500m"
-	ConsoleProdMemRequests      = "1500Mi"
+	ConsoleProdMemRequests      = "1536Mi"
 	ConsolePvSize               = "1Gi"
 	ConsoleProdPvSize           = "64Mi"
+	DashbuilderCPULimit         = "1"
+	DashbuilderCPURequests      = "750m"
+	DashbuilderMemLimit         = "2Gi"
+	DashbuilderMemRequests      = "1536Mi"
 	ServersCPULimit             = "1"
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
@@ -215,6 +220,12 @@ var ConsoleAuthoringLimits = map[string]string{
 	"MEM": ConsoleAuthoringMemLimit,
 }
 
+// Dashbuilder Resource Limits for Dasubuilder deployment
+var DashbuilderLimits = map[string]string{
+	"CPU": DashbuilderCPULimit,
+	"MEM": DashbuilderMemLimit,
+}
+
 // Server Limits for every Env
 var ServersLimits = map[string]string{
 	"CPU": ServersCPULimit,
@@ -237,6 +248,12 @@ var ConsoleAuthoringRequests = map[string]string{
 var ConsoleProdRequests = map[string]string{
 	"CPU": ConsoleProdCPURequests,
 	"MEM": ConsoleProdMemRequests,
+}
+
+// Dashbuilder defines requests Dasubuilder deployment
+var DashbuilderRequests = map[string]string{
+	"CPU": DashbuilderCPURequests,
+	"MEM": DashbuilderMemRequests,
 }
 
 // ServerRequests defines the requests for kieserver deployment
@@ -305,6 +322,12 @@ var Images = []ImageEnv{
 		Component: RhpamPrefix + "-7-process-migration-rhel8-container",
 		Registry:  ImageRegistry,
 		Context:   PamContext + "process-migration" + RhelVersion,
+	},
+	{
+		Var:       PamDashbuilderVar,
+		Component: RhpamPrefix + "-7-dashbuilder-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "dashbuilder" + RhelVersion,
 	},
 }
 
@@ -380,6 +403,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 
 var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
 var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
 var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
 
 var replicasTrial = api.ReplicaConstants{
@@ -403,6 +427,10 @@ var replicasAuthoringHA = api.ReplicaConstants{
 	SmartRouter: api.Replicas{Replicas: 1},
 }
 
+var replicasDashbuilder = api.ReplicaConstants{
+	Dashbuilder: api.Replicas{Replicas: 1},
+}
+
 // DefaultDatabaseConfig defines the default Database to use for each environment
 var databaseRhpamAuthoring = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}}
 var databaseRhpamAuthoringHA = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}}
@@ -412,15 +440,16 @@ var databaseRhpamTrial = &api.DatabaseObject{InternalDatabaseObject: api.Interna
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
-	api.RhpamProduction:          {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
-	api.RhpamProductionImmutable: {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
-	api.RhpamTrial:               {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
-	api.RhpamAuthoring:           {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
-	api.RhpamAuthoringHA:         {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
-	api.RhdmTrial:                {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoring:            {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoringHA:          {App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:  {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhpamProduction:            {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
+	api.RhpamProductionImmutable:   {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
+	api.RhpamTrial:                 {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
+	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
+	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
+	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
+	api.RhdmTrial:                  {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: rhdmAppConstants, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates

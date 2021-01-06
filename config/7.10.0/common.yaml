@@ -96,6 +96,10 @@ console:
                   - name: GIT_HOOKS_DIR
                     value: "[[.Console.GitHooks.MountPath]]"
                   #[[end]]
+                  #[[if .Dashbuilder.Config.EnableBusinessCentral]]
+                  - name: KIE_DASHBUILDER_RUNTIME_LOCATION
+                    value: "[[.Console.DashbuilderLocation]]"
+                  #[[end]]
                   ## OpenShift Enhancement BEGIN
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
                     value: "true"
