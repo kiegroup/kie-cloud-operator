@@ -348,7 +348,7 @@ console:
           - ReadWriteMany
         resources:
           requests:
-            storage: "64Mi"
+            storage: [[.Console.PvSize]]
   #[[end]]
   services:
     - spec:

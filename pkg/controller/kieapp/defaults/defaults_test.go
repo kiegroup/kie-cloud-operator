@@ -207,6 +207,7 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, adminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -231,6 +232,7 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhdmPrefix)
+	assert.Equal(t, "1Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -252,6 +254,11 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 				AMQPassword:        "amq",
 				AMQClusterPassword: "cluster",
 			},
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					PvSize: "3Gi",
+				},
+			},
 		},
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
@@ -266,6 +273,7 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhpamPrefix)
+	assert.Equal(t, "3Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhpamPrefix+"-7/"+constants.RhpamPrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
@@ -313,6 +321,7 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
+	assert.Nil(t, env.Console.PersistentVolumeClaims)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
@@ -340,6 +349,7 @@ func TestRhpamProdWithSmartRouter(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
@@ -472,6 +482,7 @@ func TestRhpamProdImmutableEnvironmentWithConsole(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhpamcentrmon", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
@@ -927,7 +938,6 @@ func TestExtensionImageBuildConfiguration(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, 1, len(env.Servers))
 	assert.Equal(t, "openshift", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Namespace)
 	assert.Equal(t, "test-sqlserver:1.0", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Name)

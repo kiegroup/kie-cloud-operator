@@ -31,5 +31,5 @@ console:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 1Gi
+            storage: [[.Console.PvSize]]
 

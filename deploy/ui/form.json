@@ -509,6 +509,13 @@
               "description": "The storageClassName to use for console pvc's."
             },
             {
+              "label": "Persistent Volume Size",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.pvSize",
+              "type": "text",
+              "description": "The size of the Business Central's Persistent Volume. Examples: 1Gi, 512Mi."
+            },
+            {
               "label": "GitHooks",
               "required": false,
               "jsonPath": "$.spec.objects.console.gitHooks",

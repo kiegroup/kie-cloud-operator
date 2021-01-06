@@ -363,6 +363,17 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				template.GitHooks.MountPath = constants.GitHooksDefaultDir
 			}
 		}
+
+		// Apply PV default size
+		template.PvSize = cr.Status.Applied.Objects.Console.PvSize
+		if len(template.PvSize) <= 0 {
+			if isImmutable(cr) || cr.Spec.Environment == api.RhpamProduction {
+				template.PvSize = constants.ConsoleProdPvSize
+			} else {
+				template.PvSize = constants.ConsolePvSize
+			}
+		}
+
 		// JVM configuration
 		if cr.Status.Applied.Objects.Console.Jvm != nil {
 			template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()

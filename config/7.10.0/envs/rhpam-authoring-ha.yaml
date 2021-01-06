@@ -13,7 +13,7 @@ console:
           - ReadWriteMany
         resources:
           requests:
-            storage: 1Gi
+            storage: [[.Console.PvSize]]
 
   deploymentConfigs:
     - metadata:
