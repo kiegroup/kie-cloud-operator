@@ -5,9 +5,9 @@ metadata:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
-    certified: "true"
-    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.10.0
-    createdAt: "2021-01-06 08:56:56"
+    certified: "false"
+    containerImage: quay.io/kiegroup/kie-cloud-operator:7.10.0
+    createdAt: "2021-01-06 10:56:15"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
+  name: businessautomation-operator.7.10.0-1-dev-xptll2f64k
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -112,7 +112,7 @@ spec:
      * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.
 
     [See more](https://www.redhat.com/en/products/process-automation).
-  displayName: Business Automation
+  displayName: Business Automation (DEV)
   icon:
   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjEuMTUgNzIxLjE1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2RkMzkyNjt9LmNscy0ye2ZpbGw6I2NjMzQyNzt9LmNscy0ze2ZpbGw6I2ZmZjt9LmNscy00e2ZpbGw6I2U1ZTVlNDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlByb2R1Y3RfSWNvbi1SZWRfSGF0LUF1dG9tYXRpb24tUkdCPC90aXRsZT48Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjM2MC41NyIgY3k9IjM2MC41NyIgcj0iMzU4LjU4Ii8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNjEzLjc4LDEwNy4wOSwxMDYuNzIsNjE0LjE2YzE0MC4xNCwxMzguNjIsMzY2LjExLDEzOC4xNiw1MDUuNjctMS40Uzc1Mi40LDI0Ny4yNCw2MTMuNzgsMTA3LjA5WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIzNzguOTcgMzI3LjQ4IDQ2MS43NyAxNTkuNTcgMjU5LjY3IDE1OS40OSAyNTkuNjcgNDEzLjEgMzA2Ljk3IDQxMy43OCAzOTMuMjcgMzI3LjQ3IDM3OC45NyAzMjcuNDgiLz48cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iMzU5LjYgNTc4LjA2IDQ4Mi41NSAzMjcuNDUgMzkzLjI3IDMyNy40NyAzMDYuOTcgNDEzLjc4IDM1OS42IDQxNC41MiAzNTkuNiA1NzguMDYiLz48L3N2Zz4=
     mediatype: image/svg+xml
@@ -225,23 +225,23 @@ spec:
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.9.0
                   value: registry.redhat.io/amq7/amq-broker:7.7
                 - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-kieserver-rhel8:7.10.0
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.10.0
                 - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-controller-rhel8:7.10.0
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.10.0
                 - name: RELATED_IMAGE_DM_DC_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhdm-7/rhdm-decisioncentral-rhel8:7.10.0
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-kieserver-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-controller-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.10.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-process-migration-rhel8:7.10.0
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.10.0
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.10.0
                   value: registry.redhat.io/openshift3/ose-cli:v3.11
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.10.0
@@ -268,7 +268,7 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_3
                   value: registry.redhat.io/openshift3/oauth-proxy:latest
-                image: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.10.0
+                image: quay.io/kiegroup/kie-cloud-operator:7.10.0
                 imagePullPolicy: Always
                 name: business-automation-operator
                 resources: {}
@@ -435,7 +435,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
+    operated-by: businessautomation-operator.7.10.0-1-dev-xptll2f64k
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -444,12 +444,12 @@ spec:
   maintainers:
   - email: bsig-cloud@redhat.com
     name: Red Hat
-  maturity: test
+  maturity: dev
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.9.1
+  replaces: businessautomation-operator.7.9.1-1
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.10.0-dev-w5dw4wv5fk
-  version: 7.10.0+w5dw4wv5fk
+      operated-by: businessautomation-operator.7.10.0-1-dev-xptll2f64k
+  version: 7.10.0-1+xptll2f64k

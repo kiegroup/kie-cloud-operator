@@ -26,10 +26,20 @@ fi
 
 echo ${CFLAGS}
 
-OLMDIR=deploy/${ENVDIR}
-VERDIR=${OLMDIR}/${VERSION}
-MODULEDIR=modules/${ENVDIR}
+CSVVERSION=$(go run getversion.go -csv)
+
+OLMDIR=deploy/olm-catalog/prod
+BUNDLE_NAME=rhpam-7/${BUNDLE}
+CSV=businessautomation-operator.${CSVVERSION}.clusterserviceversion.yaml
+if [[ ${DEV} == true ]]; then
+    OLMDIR=deploy/olm-catalog/dev
+    BUNDLE_NAME=quay.io/tchughesiv/${BUNDLE}
+fi
+VERDIR=${OLMDIR}/${CSVVERSION}
 CRD=kieapp.crd.yaml
+if (( $(echo "${CSVVERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
+    CRD=kieapp.crd.v1beta1.yaml
+fi
 ANNO=annotations.yaml
 CSV_PATH=${VERDIR}/manifests/${CSV}
 CRD_PATH=${VERDIR}/manifests/${CRD}
@@ -50,7 +60,7 @@ cekit-cache add --md5 ${MD5_ANNO} ${ANNO_PATH}
 
 cekit -v --descriptor image-bundle.yaml --redhat build \
     --overrides '{name: '${BUNDLE_NAME}'}' \
-    --overrides '{version: '${VERSION}'}' \
+    --overrides '{version: '${CSVVERSION}'}' \
     --overrides '{
 artifacts: [
     {name: '${CSV}', path: '${CSV_PATH}', md5: '${MD5_CSV}', dest: '/manifests'},
@@ -65,7 +75,7 @@ artifacts: [
         "container":
             {
             "operator_manifests":
-                {"manifests_dir": '${MODULEDIR}/${VERSION}/manifests'},
+                {"enable_digest_pinning": false, "enable_repo_replacements": false, "enable_registry_replacements": false, "manifests_dir": 'modules/olm-catalog/${CSVVERSION}/manifests'},
             "platforms":
                 {"only": ["x86_64"]}
             }
