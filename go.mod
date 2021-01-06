@@ -11,7 +11,6 @@ require (
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/google/go-cmp v0.5.0
 	github.com/google/uuid v1.1.1
-	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/imdario/mergo v0.3.9
 	github.com/openshift/api v0.0.0-20200827090112-c05698d102cf
 	github.com/openshift/client-go v0.0.0-00010101000000-000000000000

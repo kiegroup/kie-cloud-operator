@@ -46,6 +46,12 @@ const (
 	KieServerServicePrefix = "kieserver"
 	// ImageRegistry default registry
 	ImageRegistry = "registry.redhat.io"
+	// ImageRegistryStage default registry
+	ImageRegistryStage = "registry.stage.redhat.io"
+	// ImageRegistryBrew default registry
+	ImageRegistryBrew = "registry-proxy.engineering.redhat.com"
+	// ImageContextBrew default context
+	ImageContextBrew = "rh-osbs"
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
 	// ConfigMapPrefix prefix to use for the configmaps
@@ -112,40 +118,42 @@ const (
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
-	ProcessMigrationDefaultImageURL = PamContext + "process-migration" + RhelVersion
+	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
 
-	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
-	DmDecisionCentralVar   = "DM_DC_IMAGE_"
-	DmControllerVar        = "DM_CONTROLLER_IMAGE_"
-	PamKieImageVar         = "PAM_KIESERVER_IMAGE_"
-	PamControllerVar       = "PAM_CONTROLLER_IMAGE_"
-	PamBusinessCentralVar  = "PAM_BC_IMAGE_"
-	PamBCMonitoringVar     = "PAM_BC_MONITORING_IMAGE_"
-	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
-	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
+	relatedImageVar = "RELATED_IMAGE_"
 
-	OauthVar             = "OAUTH_PROXY_IMAGE_"
+	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
+	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
+	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
+	PamKieImageVar         = relatedImageVar + "PAM_KIESERVER_IMAGE_"
+	PamControllerVar       = relatedImageVar + "PAM_CONTROLLER_IMAGE_"
+	PamBusinessCentralVar  = relatedImageVar + "PAM_BC_IMAGE_"
+	PamBCMonitoringVar     = relatedImageVar + "PAM_BC_MONITORING_IMAGE_"
+	PamProcessMigrationVar = relatedImageVar + "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamSmartRouterVar      = relatedImageVar + "PAM_SMARTROUTER_IMAGE_"
+
+	OauthVar             = relatedImageVar + "OAUTH_PROXY_IMAGE_"
 	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
 	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
 	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
 	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
 
-	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
+	PostgreSQLVar         = relatedImageVar + "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
 	PostgreSQL10Component = "rh-postgresql10-container"
 
-	MySQLVar         = "MYSQL_PROXY_IMAGE_"
+	MySQLVar         = relatedImageVar + "MYSQL_PROXY_IMAGE_"
 	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
 	MySQL57Component = "rh-mysql57-container"
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
 	MySQL80Component = "rh-mysql80-container"
 
-	OseCliVar          = "OSE_CLI_IMAGE_"
+	OseCliVar          = relatedImageVar + "OSE_CLI_IMAGE_"
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
 	OseCli311Component = "openshift-enterprise-cli-container"
 
 	BrokerComponent = "amq-broker-openshift-container"
-	BrokerVar       = "BROKER_IMAGE_"
+	BrokerVar       = relatedImageVar + "BROKER_IMAGE_"
 	BrokerImage     = "amq-broker"
 	BrokerImageURL  = ImageRegistry + "/amq7/" + BrokerImage + ":"
 
@@ -154,7 +162,7 @@ const (
 	Broker77ImageURL = BrokerImageURL + Broker77ImageTag
 	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
 
-	DatagridVar         = "DATAGRID_IMAGE_"
+	DatagridVar         = relatedImageVar + "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
@@ -164,8 +172,8 @@ const (
 	Datagrid73ImageTag16 = "1.6"
 	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
 
-	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
-	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
+	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
+	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
 	RhelVersion = "-rhel8"
 
 	//Resources Limits and Requests
@@ -244,48 +252,57 @@ var SmartRouterRequests = map[string]string{
 var Images = []ImageEnv{
 	{
 		Var:       DmKieImageVar,
-		Component: "rhdm-7-kieserver-rhel8-container",
-		Registry:  DmContext + "kieserver" + RhelVersion,
+		Component: RhdmPrefix + "-7-kieserver-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       DmControllerVar,
-		Component: "rhdm-7-controller-rhel8-container",
-		Registry:  DmContext + "controller" + RhelVersion,
+		Component: RhdmPrefix + "-7-controller-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       DmDecisionCentralVar,
-		Component: "rhdm-7-decisioncentral-rhel8-container",
-		Registry:  DmContext + "decisioncentral" + RhelVersion,
+		Component: RhdmPrefix + "-7-decisioncentral-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "decisioncentral" + RhelVersion,
 	},
 	{
 		Var:       PamKieImageVar,
-		Component: "rhpam-7-kieserver-rhel8-container",
-		Registry:  PamContext + "kieserver" + RhelVersion,
+		Component: RhpamPrefix + "-7-kieserver-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       PamControllerVar,
-		Component: "rhpam-7-controller-rhel8-container",
-		Registry:  PamContext + "controller" + RhelVersion,
+		Component: RhpamPrefix + "-7-controller-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       PamBusinessCentralVar,
-		Component: "rhpam-7-businesscentral-rhel8-container",
-		Registry:  PamContext + "businesscentral" + RhelVersion,
+		Component: RhpamPrefix + "-7-businesscentral-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "businesscentral" + RhelVersion,
 	},
 	{
 		Var:       PamBCMonitoringVar,
-		Component: "rhpam-7-businesscentral-monitoring-rhel8-container",
-		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
+		Component: RhpamPrefix + "-7-businesscentral-monitoring-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "businesscentral-monitoring" + RhelVersion,
 	},
 	{
 		Var:       PamSmartRouterVar,
-		Component: "rhpam-7-smartrouter-rhel8-container",
-		Registry:  PamContext + "smartrouter" + RhelVersion,
+		Component: RhpamPrefix + "-7-smartrouter-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "smartrouter" + RhelVersion,
 	},
 	{
 		Var:       PamProcessMigrationVar,
-		Component: "rhpam-7-process-migration-rhel8-container",
-		Registry:  ProcessMigrationDefaultImageURL,
+		Component: RhpamPrefix + "-7-process-migration-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "process-migration" + RhelVersion,
 	},
 }
 
@@ -293,6 +310,7 @@ type ImageEnv struct {
 	Var       string
 	Component string
 	Registry  string
+	Context   string
 }
 type ImageRef struct {
 	metav1.TypeMeta `json:",inline"`
