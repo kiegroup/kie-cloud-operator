@@ -26,6 +26,7 @@ fi
 
 echo ${CFLAGS}
 
+VERSION=$(go run getversion.go)
 CSVVERSION=$(go run getversion.go -csv)
 
 OLMDIR=deploy/olm-catalog/prod
@@ -37,7 +38,7 @@ if [[ ${DEV} == true ]]; then
 fi
 VERDIR=${OLMDIR}/${CSVVERSION}
 CRD=kieapp.crd.yaml
-if (( $(echo "${CSVVERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
+if (( $(echo "${VERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
     CRD=kieapp.crd.v1beta1.yaml
 fi
 ANNO=annotations.yaml
@@ -60,7 +61,7 @@ cekit-cache add --md5 ${MD5_ANNO} ${ANNO_PATH}
 
 cekit -v --descriptor image-bundle.yaml --redhat build \
     --overrides '{name: '${BUNDLE_NAME}'}' \
-    --overrides '{version: '${CSVVERSION}'}' \
+    --overrides '{version: '${VERSION}'}' \
     --overrides '{
 artifacts: [
     {name: '${CSV}', path: '${CSV_PATH}', md5: '${MD5_CSV}', dest: '/manifests'},
