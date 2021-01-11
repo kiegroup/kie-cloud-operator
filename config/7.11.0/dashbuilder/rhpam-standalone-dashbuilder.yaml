@@ -47,6 +47,7 @@ dashbuilder:
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
               service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+              cluster: "jgrp.k8s.[[.ApplicationName]].[[.Dashbuilder.Name]]"
           spec:
             serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
@@ -83,9 +84,6 @@ dashbuilder:
                     protocol: TCP
                   - name: https
                     containerPort: 8443
-                    protocol: TCP
-                  - name: ping
-                    containerPort: 8888
                     protocol: TCP
                 env:
                   - name: KIE_ADMIN_USER
@@ -154,6 +152,8 @@ dashbuilder:
                       fieldRef:
                         apiVersion: v1
                         fieldPath: metadata.namespace
+                  - name: KUBERNETES_LABELS
+                    value: "cluster=jgrp.k8s.[[.ApplicationName]].[[.Dashbuilder.Name]]"
                   ## Dashbuilder config END
                   # Auth config BEGIN
                   ## SSO config BEGIN
@@ -329,23 +329,6 @@ dashbuilder:
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         annotations:
           description: All the Dashbuilder web server's ports.
-    - spec:
-        clusterIP: "None"
-        ports:
-          - name: "ping"
-            port: 8888
-            targetPort: 8888
-        selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
-      metadata:
-        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-ping"
-        labels:
-          app: "[[.ApplicationName]]"
-          application: "[[.ApplicationName]]"
-          service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
-        annotations:
-          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-          description: "The JGroups ping port for clustering."
   routes:
     - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-https"
       metadata:

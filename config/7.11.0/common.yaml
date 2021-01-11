@@ -33,6 +33,7 @@ console:
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
               service: "[[.ApplicationName]]-[[.Console.Name]]"
+              cluster: "jgrp.k8s.[[.ApplicationName]].[[.Console.Name]]"
           spec:
             serviceAccountName: "[[.ApplicationName]]-[[.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
@@ -78,9 +79,6 @@ console:
                   - name: https
                     containerPort: 8443
                     protocol: TCP
-                  - name: ping
-                    containerPort: 8888
-                    protocol: TCP
                 env:
                   - name: APPLICATION_USERS_PROPERTIES
                     value: "/opt/kie/data/configuration/application-users.properties"
@@ -121,11 +119,13 @@ console:
                   - name: WORKBENCH_ROUTE_NAME
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: JGROUPS_PING_PROTOCOL
-                    value: "openshift.DNS_PING"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                    value: "[[.ApplicationName]]-[[.Console.Name]]-ping"
-                  - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                    value: "8888"
+                    value: "kubernetes.KUBE_PING"
+                  - name: KUBERNETES_NAMESPACE
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                  - name: KUBERNETES_LABELS
+                    value: "cluster=jgrp.k8s.[[.ApplicationName]].[[.Console.Name]]"
                   # Auth config BEGIN
                   ## SSO config BEGIN
                   #[[if .Auth.SSO.URL]]
@@ -373,23 +373,6 @@ console:
           service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
           description: All the Business Central web server's ports.
-    - spec:
-        clusterIP: "None"
-        ports:
-          - name: "ping"
-            port: 8888
-            targetPort: 8888
-        selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
-      metadata:
-        name: "[[.ApplicationName]]-[[.Console.Name]]-ping"
-        labels:
-          app: "[[.ApplicationName]]"
-          application: "[[.ApplicationName]]"
-          service: "[[.ApplicationName]]-[[.Console.Name]]"
-        annotations:
-          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-          description: "The JGroups ping port for clustering."
   routes:
     - id: "[[.ApplicationName]]-[[.Console.Name]]-https"
       metadata:
@@ -613,6 +596,7 @@ servers:
                 service: "[[.KieName]]"
                 deploymentConfig: "[[.KieName]]"
                 services.server.kie.org/kie-server-id: "[[.KieServerID]]"
+                cluster: "jgrp.k8s.[[.KieName]]"
             spec:
               serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
               terminationGracePeriodSeconds: 90
@@ -685,11 +669,13 @@ servers:
                     - name: HTTPS_PASSWORD
                       value: "[[$.KeyStorePassword]]"
                     - name: JGROUPS_PING_PROTOCOL
-                      value: "openshift.DNS_PING"
-                    - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                      value: "[[.KieName]]-ping"
-                    - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                      value: "8888"
+                      value: "kubernetes.KUBE_PING"
+                    - name: KUBERNETES_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: metadata.namespace
+                    - name: KUBERNETES_LABELS
+                      value: "cluster=jgrp.k8s.[[.KieName]]"
                     # Auth config BEGIN
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
@@ -867,9 +853,6 @@ servers:
                     - name: https
                       containerPort: 8443
                       protocol: TCP
-                    - name: ping
-                      containerPort: 8888
-                      protocol: TCP
                   volumeMounts:
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
@@ -924,23 +907,6 @@ servers:
             service: "[[.KieName]]"
           annotations:
             description: All the KIE server web server's ports. (KIE server)
-      - spec:
-          clusterIP: "None"
-          ports:
-            - name: "ping"
-              port: 8888
-              targetPort: 8888
-          selector:
-            deploymentConfig: "[[.KieName]]"
-        metadata:
-          name: "[[.KieName]]-ping"
-          labels:
-            app: "[[$.ApplicationName]]"
-            application: "[[$.ApplicationName]]"
-            service: "[[.KieName]]"
-          annotations:
-            service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-            description: "The JGroups ping port for clustering."
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
