@@ -264,6 +264,9 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 					{
 						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "test",
+							GitSource: api.GitSource{
+								URI: "test-url",
+							},
 						},
 					},
 				},
