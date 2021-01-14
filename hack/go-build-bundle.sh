@@ -38,9 +38,9 @@ if [[ ${DEV} == true ]]; then
 fi
 VERDIR=${OLMDIR}/${CSVVERSION}
 CRD=kieapp.crd.yaml
-if (( $(echo "${VERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
-    CRD=kieapp.crd.v1beta1.yaml
-fi
+#if (( $(echo "${VERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
+#    CRD=kieapp.crd.v1beta1.yaml
+#fi
 ANNO=annotations.yaml
 CSV_PATH=${VERDIR}/manifests/${CSV}
 CRD_PATH=${VERDIR}/manifests/${CRD}
@@ -76,7 +76,7 @@ artifacts: [
         "container":
             {
             "operator_manifests":
-                {"enable_digest_pinning": false, "enable_repo_replacements": false, "enable_registry_replacements": false, "manifests_dir": 'modules/olm-catalog/${CSVVERSION}/manifests'},
+                {"enable_digest_pinning": true, "enable_repo_replacements": true, "enable_registry_replacements": true, "manifests_dir": 'modules/olm-catalog/prod/${CSVVERSION}/manifests'},
             "platforms":
                 {"only": ["x86_64"]}
             }
