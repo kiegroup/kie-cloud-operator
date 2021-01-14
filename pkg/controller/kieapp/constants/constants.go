@@ -8,18 +8,18 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.10.0"
+	CurrentVersion = "7.10.1"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.9.1"
+	PriorVersion1 = "7.10.0"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.9.0"
+	PriorVersion2 = "7.9.1"
 )
 
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.7", "4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// ProductName used for metering labels
@@ -372,8 +372,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker77ImageTag,
-		BrokerImageURL:      Broker77ImageURL,
+		BrokerImageTag:      Broker78ImageTag,
+		BrokerImageURL:      Broker78ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag16,
 		DatagridImageURL:    Datagrid73ImageURL16,
