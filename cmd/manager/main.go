@@ -17,6 +17,7 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/kiegroup/kie-cloud-operator/pkg/apis"
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/version"
@@ -181,7 +182,7 @@ func serveCRMetrics(cfg *rest.Config, operatorNs string) error {
 	// The function below returns a list of filtered operator/CR specific GVKs. For more control, override the GVK list below
 	// with your own custom logic. Note that if you are adding third party API schemas, probably you will need to
 	// customize this implementation to avoid permissions issues.
-	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(apis.AddToScheme)
+	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(api.SchemeBuilder.AddToScheme)
 	if err != nil {
 		return err
 	}

@@ -7,25 +7,36 @@ echo Building operator bundle image:
 echo
 
 BUNDLE=rhpam-operator-bundle
+ENVDIR=olm-catalog/test
+BUNDLE_NAME=rhpam-7/${BUNDLE}
+VERSION=$(go run getversion.go)
+CSV=businessautomation-operator.${VERSION}.clusterserviceversion.yaml
+if [[ ${DEV} == true ]]; then
+    ENVDIR=olm-catalog/dev
+    BUNDLE_NAME=quay.io/tchughesiv/${BUNDLE}
+fi
 CFLAGS="docker --no-squash"
 if [[ ${LOCAL} != true ]]; then
     CFLAGS="osbs"
     if [[ ${1} == "release" ]]; then
         CFLAGS+=" --release"
+        ENVDIR=olm-catalog/prod
     fi
 fi
 
 echo ${CFLAGS}
 
 VERSION=$(go run getversion.go)
+CSVVERSION=$(go run getversion.go -csv)
+
 OLMDIR=deploy/olm-catalog/prod
 BUNDLE_NAME=rhpam-7/${BUNDLE}
-CSV=businessautomation-operator.${VERSION}.clusterserviceversion.yaml
+CSV=businessautomation-operator.${CSVVERSION}.clusterserviceversion.yaml
 if [[ ${DEV} == true ]]; then
     OLMDIR=deploy/olm-catalog/dev
     BUNDLE_NAME=quay.io/tchughesiv/${BUNDLE}
 fi
-VERDIR=${OLMDIR}/${VERSION}
+VERDIR=${OLMDIR}/${CSVVERSION}
 CRD=kieapp.crd.yaml
 if (( $(echo "${VERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
     CRD=kieapp.crd.v1beta1.yaml
@@ -61,10 +72,11 @@ artifacts: [
 "osbs":
     {
     "configuration":
-        {"container":
+        {
+        "container":
             {
             "operator_manifests":
-                {"enable_digest_pinning": false, "enable_repo_replacements": false, "enable_registry_replacements": false, "manifests_dir": 'modules/olm-catalog/${VERSION}/manifests'},
+                {"enable_digest_pinning": false, "enable_repo_replacements": false, "enable_registry_replacements": false, "manifests_dir": 'modules/olm-catalog/${CSVVERSION}/manifests'},
             "platforms":
                 {"only": ["x86_64"]}
             }
@@ -74,14 +86,3 @@ artifacts: [
     }
 }' \
     ${CFLAGS}
-
-#
-#    --overrides '{
-#"modules": {
-#    "repositories": [
-#        {"name": "olm-catalog", "path": '${OLMDIR}'}
-#    ],
-#    "install": [
-#        {"name": "olm-catalog"}
-#    ]}
-#}' \

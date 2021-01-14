@@ -1,0 +1,26 @@
+###
+# This CR deploys 1 kie server set that will build an image containing the
+# library process deployed.
+# Besides it will deploy the resulting image and a monitoring console if enabled
+###
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: library-s2i
+  annotations:
+    consoleName: snippet-library-s2i-with-extra-buildconfig-envs
+    consoleTitle: S2I Immutable Deployment with extra Build Config environment variables
+    consoleDesc: Use this snippet to configure an immutable deployment with s2i passing extra Build Config environment variables.
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - build:
+          kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+          gitSource:
+            uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
+            reference: master
+            contextDir: quickstarts/library-process/library
+          env:
+            - name: "JAVA_OPTS_APPEND"
+              value: "-Dmy.custom.property=prop-test"

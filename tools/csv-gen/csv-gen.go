@@ -4,22 +4,19 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/blang/semver"
-	"github.com/heroku/docker-registry-client/registry"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
@@ -53,18 +50,34 @@ var (
 			ImageName:    "kie-cloud-operator",
 			Tag:          version.Version,
 			Maturity:     "dev",
+			Dev:          true,
 		},
 		{
 			Name:         "businessautomation",
 			DisplayName:  "Business Automation",
 			OperatorName: "business-automation-operator",
-			Registry:     constants.ImageRegistry,
+			Registry:     constants.ImageRegistryBrew,
+			Context:      constants.ImageContextBrew,
+			ImageName:    "rhpam-" + major + "-rhpam-rhel8-operator",
+			Tag:          version.Version,
+			Maturity:     "test",
+		},
+		{
+			Name:         "businessautomation",
+			DisplayName:  "Business Automation",
+			OperatorName: "business-automation-operator",
+			Registry:     constants.ImageRegistryStage,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
 			Tag:          version.Version,
 			Maturity:     channel,
 		},
 	}
+)
+
+var (
+	ver      = flag.String("version", version.CsvVersion, "set CSV version")
+	replaces = flag.String("replaces", version.CsvPriorVersion, "set CSV version to replace")
 )
 
 type csvSetting struct {
@@ -76,6 +89,7 @@ type csvSetting struct {
 	ImageName    string `json:"imageName"`
 	Tag          string `json:"tag"`
 	Maturity     string `json:"maturity"`
+	Dev          bool   `json:"dev"`
 }
 type csvPermissions struct {
 	ServiceAccountName string              `json:"serviceAccountName"`
@@ -99,13 +113,14 @@ type image struct {
 }
 
 func main() {
+	flag.Parse()
 	imageShaMap := map[string]string{}
 	for _, csv := range csvs {
 		operatorName := csv.Name + "-operator"
 		templateStruct := &csvv1.ClusterServiceVersion{}
 		templateStruct.SetGroupVersionKind(csvv1.SchemeGroupVersion.WithKind("ClusterServiceVersion"))
 		templateStrategySpec := csvv1.StrategyDetailsDeployment{}
-		deployment := components.GetDeployment(csv.OperatorName, csv.Registry, csv.Context, csv.ImageName, csv.Tag, "Always")
+		deployment := components.GetDeployment(csv.OperatorName, csv.Registry, csv.Context, csv.ImageName, csv.Tag, "Always", csv.Dev)
 		templateStrategySpec.DeploymentSpecs = append(templateStrategySpec.DeploymentSpecs, []csvv1.StrategyDeploymentSpec{{Name: csv.OperatorName, Spec: deployment.Spec}}...)
 		role := components.GetRole(csv.OperatorName)
 		templateStrategySpec.Permissions = append(templateStrategySpec.Permissions, []csvv1.StrategyDeploymentPermissions{{ServiceAccountName: deployment.Spec.Template.Spec.ServiceAccountName, Rules: role.Rules}}...)
@@ -114,10 +129,10 @@ func main() {
 		templateStruct.Spec.InstallStrategy.StrategySpec = templateStrategySpec
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
 
-		csvVersionedName := operatorName + "." + version.Version
+		csvVersionedName := operatorName + "." + *ver
 		random := rand.String(10)
 		csvVersion := csvversion.OperatorVersion{}
-		csvVersion.Version = semver.MustParse(version.Version)
+		csvVersion.Version = semver.MustParse(*ver)
 		if csv.Maturity != channel {
 			csvVersionedName = csvVersionedName + "-dev-" + random
 			csvVersion.Version.Build = []string{random}
@@ -151,7 +166,7 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
+		templateStruct.Spec.Replaces = operatorName + "." + *replaces
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = csv.Maturity
@@ -287,109 +302,22 @@ func main() {
 			},
 		}
 
-		bundleDir := "deploy/olm-catalog/prod/" + version.Version + "/"
-		if csv.Maturity != channel {
-			bundleDir = "deploy/olm-catalog/dev/" + version.Version + "/"
+		bundleDir := "deploy/olm-catalog/prod/" + *ver + "/"
+		if csv.Maturity == "dev" {
+			bundleDir = "deploy/olm-catalog/dev/" + *ver + "/"
 			templateStruct.Annotations["certified"] = "false"
 			deployFile := "deploy/operator.yaml"
 			createFile(deployFile, deployment)
 			roleFile := "deploy/role.yaml"
 			createFile(roleFile, role)
 		}
-		csvFile := bundleDir + "manifests/" + operatorName + "." + version.Version + ".clusterserviceversion.yaml"
-
-		// create image-references file for automated ART digest find/replace
-		imageRef := &constants.ImageRef{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: oimagev1.GroupVersion.String(),
-				Kind:       "ImageStream",
-			},
+		if csv.Maturity == "test" {
+			bundleDir = "deploy/olm-catalog/test/" + *ver + "/"
 		}
-		relatedImages := []image{}
-		relatedImages = addRefRelatedImages(deployment.Spec.Template.Spec.Containers[0].Image, "rhpam-7"+constants.RhelVersion+"-operator-container", imageRef, relatedImages)
-
-		sort.Sort(sort.Reverse(sort.StringSlice(constants.SupportedVersions)))
-		for _, imageVersion := range constants.SupportedVersions {
-			v, err := semver.New(imageVersion)
-			if err != nil {
-				log.Error(err)
-			}
-			for _, i := range constants.Images {
-				if i.Var == constants.PamProcessMigrationVar && v.LT(semver.MustParse("7.8.0")) {
-					continue
-				}
-				relatedImages = addRefRelatedImages(i.Registry+":"+imageVersion, i.Component, imageRef, relatedImages)
-			}
-		}
-
-		// add ancillary images to relatedImages
-		relatedImages = addRefRelatedImages(constants.Oauth4ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
-		sort.Sort(sort.Reverse(sort.StringSlice(constants.Ocp4Versions)))
-		for _, ocpVersion := range constants.Ocp4Versions {
-			relatedImages = addRefRelatedImages(constants.Oauth4ImageURL+":v"+ocpVersion, constants.OauthComponent, imageRef, relatedImages)
-		}
-		relatedImages = addRefRelatedImages(constants.Oauth3ImageLatestURL, constants.OauthComponent, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.OseCli311ImageURL, constants.OseCli311Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.MySQL57ImageURL, constants.MySQL57Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.MySQL80ImageURL, constants.MySQL80Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.PostgreSQL10ImageURL, constants.PostgreSQL10Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL15, constants.Datagrid73Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Datagrid73ImageURL16, constants.Datagrid73Component, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Broker76ImageURL, constants.BrokerComponent, imageRef, relatedImages)
-		relatedImages = addRefRelatedImages(constants.Broker77ImageURL, constants.BrokerComponent, imageRef, relatedImages)
-
-		if logs.GetBoolEnv("DIGESTS") {
-			// use stage registry for current release image digest population
-			url := "https://registry.stage.redhat.io"
-			if val, ok := os.LookupEnv("REGISTRY"); ok {
-				url = val
-			}
-			stageuser := "" // anonymous
-			stagepass := "" // anonymous
-			if userToken := strings.Split(os.Getenv("STAGE_USER_TOKEN"), ":"); len(userToken) > 1 {
-				stageuser = userToken[0]
-				stagepass = userToken[1]
-			}
-			stagehub, err := registry.New(url, stageuser, stagepass)
-			if err == nil {
-				imageShaMap = retrieveImageShas(imageRef, imageShaMap, stagehub, true)
-			} else {
-				log.Error(err)
-			}
-
-			// use prod registry for prior release and ancillary image digest population
-			produser := "" // anonymous
-			prodpass := "" // anonymous
-			if userToken := strings.Split(os.Getenv("PROD_USER_TOKEN"), ":"); len(userToken) > 1 {
-				produser = userToken[0]
-				prodpass = userToken[1]
-			}
-			prodhub, err := registry.New("https://"+constants.ImageRegistry, produser, prodpass)
-			if err == nil {
-				imageShaMap = retrieveImageShas(imageRef, imageShaMap, prodhub, false)
-			} else {
-				log.Error(err)
-			}
-		}
-		// imageFile := bundleDir + "manifests/image-references"
-		// createFile(imageFile, imageRef)
+		csvFile := bundleDir + "manifests/" + operatorName + "." + *ver + ".clusterserviceversion.yaml"
 
 		var templateInterface interface{}
-		if len(relatedImages) > 0 {
-			templateJSON, err := json.Marshal(templateStruct)
-			if err != nil {
-				log.Error(err)
-			}
-			result, err := sjson.SetBytes(templateJSON, "spec.relatedImages", relatedImages)
-			if err != nil {
-				log.Error(err)
-			}
-			if err = json.Unmarshal(result, &templateInterface); err != nil {
-				log.Error(err)
-			}
-		} else {
-			templateInterface = templateStruct
-		}
+		templateInterface = templateStruct
 
 		// find and replace images with SHAs where necessary
 		templateByte, err := json.Marshal(templateInterface)
@@ -460,79 +388,6 @@ func main() {
 		}
 		createFile("deploy/crs/"+api.SchemeGroupVersion.Version+"/snippets/prior_version.yaml", snippetObj)
 	}
-}
-
-func retrieveImageShas(imageRef *constants.ImageRef, imageShaMap map[string]string, registry *registry.Registry, stage bool) map[string]string {
-	defaultCheckRedirect := registry.Client.CheckRedirect
-	for _, tagRef := range imageRef.Spec.Tags {
-		registry.Client.CheckRedirect = defaultCheckRedirect
-		if _, ok := imageShaMap[tagRef.From.Name]; !ok {
-			var retrieve bool
-			imageName, imageTag, imageContext := defaults.GetImage(tagRef.From.Name)
-			if !stage ||
-				(stage && imageTag == constants.CurrentVersion &&
-					(strings.Contains(imageContext, constants.RhpamPrefix+"-") || strings.Contains(imageContext, constants.RhdmPrefix+"-"))) {
-				retrieve = true
-			}
-			if retrieve {
-				imageShaMap[tagRef.From.Name] = ""
-				repo := imageContext + "/" + imageName
-				tags, err := registry.Tags(repo)
-				if err != nil {
-					log.Error(err)
-				}
-				// do not follow redirects - this is critical so we can get the registry digest from Location in redirect response
-				registry.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-					return http.ErrUseLastResponse
-				}
-				if _, exists := shared.Find(tags, imageTag); exists {
-					req, err := http.NewRequest("GET", registry.URL+"/v2/"+repo+"/manifests/"+imageTag, nil)
-					if err != nil {
-						log.Error(err)
-					}
-					req.Header.Add("Accept", "application/vnd.docker.distribution.manifest.v2+json")
-					resp, err := registry.Client.Do(req)
-					if err != nil {
-						log.Error(err)
-					}
-					if resp != nil {
-						defer resp.Body.Close()
-					}
-					if resp.StatusCode == 302 || resp.StatusCode == 301 {
-						digestURL, err := resp.Location()
-						if err != nil {
-							log.Error(err)
-						}
-						if digestURL != nil {
-							if url := strings.Split(digestURL.EscapedPath(), "/"); len(url) > 1 {
-								imageShaMap[tagRef.From.Name] = strings.ReplaceAll(tagRef.From.Name, ":"+imageTag, "@"+url[len(url)-1])
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return imageShaMap
-}
-
-func getRelatedImage(imageURL string) image {
-	imageName, _, _ := defaults.GetImage(imageURL)
-	return image{
-		Name:  imageName,
-		Image: imageURL,
-	}
-}
-
-func addRefRelatedImages(url, component string, imageRef *constants.ImageRef, relatedImages []image) []image {
-	imageRef.Spec.Tags = append(imageRef.Spec.Tags, constants.ImageRefTag{
-		Name: component,
-		From: &corev1.ObjectReference{
-			Name: url,
-			Kind: "DockerImage",
-		},
-	})
-	return append(relatedImages, getRelatedImage(url))
 }
 
 // fileExists checks if a file exists and is not a directory before we

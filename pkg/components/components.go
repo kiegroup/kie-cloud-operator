@@ -4,15 +4,16 @@ import (
 	"sort"
 	"strings"
 
-	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+	"github.com/kiegroup/kie-cloud-operator/version"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	csvv1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	csvv1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,7 @@ var Verbs = []string{
 	"watch",
 }
 
-func GetDeployment(operatorName, repository, context, imageName, tag, imagePullPolicy string) *appsv1.Deployment {
+func GetDeployment(operatorName, repository, context, imageName, tag, imagePullPolicy string, dev bool) *appsv1.Deployment {
 	registryName := strings.Join([]string{repository, context, imageName}, "/")
 	image := strings.Join([]string{registryName, tag}, ":")
 	deployment := &appsv1.Deployment{
@@ -117,9 +118,20 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			if i.Var == constants.PamProcessMigrationVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.8") < 0 {
 				continue
 			}
+			if i.Var == constants.PamDashbuilderVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.10") < 0 {
+				continue
+			}
+			registry := i.Registry
+			imageContext := i.Context
+			if version.Version == imageVersion && !dev {
+				registry = repository
+			}
+			if registry == constants.ImageContextBrew {
+				imageContext = getBrewContext(i.Context)
+			}
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  i.Var + imageVersion,
-				Value: i.Registry + ":" + imageVersion,
+				Value: registry + imageContext + ":" + imageVersion,
 			})
 		}
 		if versionConstants, found := constants.VersionConstants[imageVersion]; found {
@@ -192,17 +204,6 @@ func GetRole(operatorName string) *rbacv1.Role {
 			},
 			{
 				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"bindings",
-					"endpoints",
-					"podtemplates",
-				},
-				Verbs: []string{"list"},
-			},
-			{
-				APIGroups: []string{
 					appsv1.SchemeGroupVersion.Group,
 				},
 				Resources: []string{
@@ -256,7 +257,6 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"images",
-					"imagetags",
 					"imagestreams",
 					"imagestreamimages",
 					"imagestreamtags",
@@ -280,12 +280,10 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"servicemonitors",
-					"prometheusrules",
 				},
 				Verbs: []string{
 					"get",
 					"create",
-					"list",
 				},
 			},
 			{
@@ -331,6 +329,13 @@ func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
 			},
 		},
 	}
+}
+
+func getBrewContext(context string) string {
+	brewSlice := strings.Split(context, "/")
+	brewSlice[2] = brewSlice[1] + "-" + brewSlice[2]
+	brewSlice[1] = constants.ImageContextBrew
+	return strings.Join(brewSlice, "/")
 }
 
 func int32Ptr(i int32) *int32 {

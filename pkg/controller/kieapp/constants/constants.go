@@ -8,34 +8,36 @@ import (
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.9.0"
+	CurrentVersion = "7.10.0"
 	// PriorVersion1 product version supported
-	PriorVersion1 = "7.8.1"
+	PriorVersion1 = "7.9.1"
 	// PriorVersion2 product version supported
-	PriorVersion2 = "7.8.0"
+	PriorVersion2 = "7.9.0"
 )
 
 // SupportedVersions - product versions this operator supports
 var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.5", "4.4", "4.3", "4.2", "4.1"}
+var Ocp4Versions = []string{"4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// ProductName used for metering labels
 	ProductName = "process-automation"
 	// LabelRHproductName used as metering label
-	LabelRHproductName = "com.redhat.product-name"
+	LabelRHproductName = "rht.prod_name"
 	// LabelRHproductVersion used as metering label
-	LabelRHproductVersion = "com.redhat.product-version"
+	LabelRHproductVersion = "rht.prod_ver"
 	// LabelRHcomponentName used as metering label
-	LabelRHcomponentName = "com.redhat.component-name"
+	LabelRHcomponentName = "rht.comp"
 	// LabelRHcomponentVersion used as metering label
-	LabelRHcomponentVersion = "com.redhat.component-version"
-	// LabelRHcomponentType used as metering label
-	LabelRHcomponentType = "com.redhat.component-type"
+	LabelRHcomponentVersion = "rht.comp_ver"
+	// LabelRHsubcomponentName used as metering label
+	LabelRHsubcomponentName = "rht.subcomp"
+	// LabelRHsubcomponentType used as metering label
+	LabelRHsubcomponentType = "rht.subcomp_t"
 	// LabelRHcompany used as metering label
-	LabelRHcompany = "com.redhat.company"
+	LabelRHcompany = "com.company"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
@@ -44,6 +46,12 @@ const (
 	KieServerServicePrefix = "kieserver"
 	// ImageRegistry default registry
 	ImageRegistry = "registry.redhat.io"
+	// ImageRegistryStage default registry
+	ImageRegistryStage = "registry.stage.redhat.io"
+	// ImageRegistryBrew default registry
+	ImageRegistryBrew = "registry-proxy.engineering.redhat.com"
+	// ImageContextBrew default context
+	ImageContextBrew = "rh-osbs"
 	// ImageStreamNamespace default namespace for the ImageStreams
 	ImageStreamNamespace = "openshift"
 	// ConfigMapPrefix prefix to use for the configmaps
@@ -110,48 +118,52 @@ const (
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
-	ProcessMigrationDefaultImageURL = PamContext + "process-migration" + RhelVersion
+	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
 
-	DmKieImageVar          = "DM_KIESERVER_IMAGE_"
-	DmDecisionCentralVar   = "DM_DC_IMAGE_"
-	DmControllerVar        = "DM_CONTROLLER_IMAGE_"
-	PamKieImageVar         = "PAM_KIESERVER_IMAGE_"
-	PamControllerVar       = "PAM_CONTROLLER_IMAGE_"
-	PamBusinessCentralVar  = "PAM_BC_IMAGE_"
-	PamBCMonitoringVar     = "PAM_BC_MONITORING_IMAGE_"
-	PamProcessMigrationVar = "PAM_PROCESS_MIGRATION_IMAGE_"
-	PamSmartRouterVar      = "PAM_SMARTROUTER_IMAGE_"
+	relatedImageVar = "RELATED_IMAGE_"
 
-	OauthVar             = "OAUTH_PROXY_IMAGE_"
+	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
+	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
+	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
+	PamKieImageVar         = relatedImageVar + "PAM_KIESERVER_IMAGE_"
+	PamControllerVar       = relatedImageVar + "PAM_CONTROLLER_IMAGE_"
+	PamBusinessCentralVar  = relatedImageVar + "PAM_BC_IMAGE_"
+	PamBCMonitoringVar     = relatedImageVar + "PAM_BC_MONITORING_IMAGE_"
+	PamProcessMigrationVar = relatedImageVar + "PAM_PROCESS_MIGRATION_IMAGE_"
+	PamDashbuilderVar      = relatedImageVar + "PAM_DASHBUILDER_IMAGE_"
+	PamSmartRouterVar      = relatedImageVar + "PAM_SMARTROUTER_IMAGE_"
+
+	OauthVar             = relatedImageVar + "OAUTH_PROXY_IMAGE_"
 	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
 	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
 	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
 	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
 
-	PostgreSQLVar         = "POSTGRESQL_PROXY_IMAGE_"
+	PostgreSQLVar         = relatedImageVar + "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
 	PostgreSQL10Component = "rh-postgresql10-container"
 
-	MySQLVar         = "MYSQL_PROXY_IMAGE_"
+	MySQLVar         = relatedImageVar + "MYSQL_PROXY_IMAGE_"
 	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
 	MySQL57Component = "rh-mysql57-container"
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
 	MySQL80Component = "rh-mysql80-container"
 
-	OseCliVar          = "OSE_CLI_IMAGE_"
+	OseCliVar          = relatedImageVar + "OSE_CLI_IMAGE_"
 	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
 	OseCli311Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent  = "amq-broker-openshift-container"
-	BrokerVar        = "BROKER_IMAGE_"
-	BrokerImage      = "amq-broker"
-	Broker76ImageTag = "7.6"
-	Broker76ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker76ImageTag
+	BrokerComponent = "amq-broker-openshift-container"
+	BrokerVar       = relatedImageVar + "BROKER_IMAGE_"
+	BrokerImage     = "amq-broker"
+	BrokerImageURL  = ImageRegistry + "/amq7/" + BrokerImage + ":"
 
 	Broker77ImageTag = "7.7"
-	Broker77ImageURL = ImageRegistry + "/amq7/" + BrokerImage + ":" + Broker77ImageTag
+	Broker78ImageTag = "7.8"
+	Broker77ImageURL = BrokerImageURL + Broker77ImageTag
+	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
 
-	DatagridVar         = "DATAGRID_IMAGE_"
+	DatagridVar         = relatedImageVar + "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
@@ -161,64 +173,161 @@ const (
 	Datagrid73ImageTag16 = "1.6"
 	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
 
-	DmContext   = ImageRegistry + "/rhdm-7/rhdm-"
-	PamContext  = ImageRegistry + "/rhpam-7/rhpam-"
+	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
+	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
 	RhelVersion = "-rhel8"
 
-	//Resources Limits
-	ConsoleCPULimit        = "2"
-	ConsoleCPURequests     = "1"
-	ServersCPULimit        = "1"
-	ServersCPURequests     = "500m"
-	SmartRouterCPULimit    = "500m"
-	SmartRouterCPURequests = "250m"
+	//Resources Limits and Requests
+	ConsoleProdCPULimit         = "1"
+	ConsoleProdMemLimit         = "2Gi"
+	ConsoleAuthoringCPULimit    = "2"
+	ConsoleAuthoringMemLimit    = "4Gi"
+	ConsoleAuthoringCPURequests = "1536Mi"
+	ConsoleAuthoringMemRequests = "3Gi"
+	ConsoleProdCPURequests      = "500m"
+	ConsoleProdMemRequests      = "1536Mi"
+	ConsolePvSize               = "1Gi"
+	ConsoleProdPvSize           = "64Mi"
+	DashbuilderCPULimit         = "1"
+	DashbuilderCPURequests      = "750m"
+	DashbuilderMemLimit         = "2Gi"
+	DashbuilderMemRequests      = "1536Mi"
+	ServersCPULimit             = "1"
+	ServersMemLimit             = "2Gi"
+	ServersCPURequests          = "750m"
+	ServersMemRequests          = "1Gi"
+	SmartRouterCPULimit         = "500m"
+	SmartRouterMemLimit         = "1Gi"
+	SmartRouterCPURequests      = "250m"
+	SmartRouterMemRequests      = "1Gi"
+
+	//ImageNames for metering labels
+	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
+	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
+	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
+	RhdmControllerImageName   = RhdmPrefix + "-controller-" + RhelVersion
 )
+
+// Console Resource Limits for BC Monitoring in Prod Env
+var ConsoleProdLimits = map[string]string{
+	"CPU": ConsoleProdCPULimit,
+	"MEM": ConsoleProdMemLimit,
+}
+
+// Console Resource Limits for BC in Authoring Env
+var ConsoleAuthoringLimits = map[string]string{
+	"CPU": ConsoleAuthoringCPULimit,
+	"MEM": ConsoleAuthoringMemLimit,
+}
+
+// Dashbuilder Resource Limits for Dasubuilder deployment
+var DashbuilderLimits = map[string]string{
+	"CPU": DashbuilderCPULimit,
+	"MEM": DashbuilderMemLimit,
+}
+
+// Server Limits for every Env
+var ServersLimits = map[string]string{
+	"CPU": ServersCPULimit,
+	"MEM": ServersMemLimit,
+}
+
+// SmartRouter Limits for every Env
+var SmartRouterLimits = map[string]string{
+	"CPU": SmartRouterCPULimit,
+	"MEM": SmartRouterMemLimit,
+}
+
+// ConsoleAuthoringRequests defines requests in Authoring environment
+var ConsoleAuthoringRequests = map[string]string{
+	"CPU": ConsoleAuthoringCPURequests,
+	"MEM": ConsoleAuthoringMemRequests,
+}
+
+// ConsoleProdRequests defines requests in Prod or Immutable environment
+var ConsoleProdRequests = map[string]string{
+	"CPU": ConsoleProdCPURequests,
+	"MEM": ConsoleProdMemRequests,
+}
+
+// Dashbuilder defines requests Dasubuilder deployment
+var DashbuilderRequests = map[string]string{
+	"CPU": DashbuilderCPURequests,
+	"MEM": DashbuilderMemRequests,
+}
+
+// ServerRequests defines the requests for kieserver deployment
+var ServerRequests = map[string]string{
+	"CPU": ServersCPURequests,
+	"MEM": ServersMemRequests,
+}
+
+// SmartRouterRequests defines the requests for smart router deployment
+var SmartRouterRequests = map[string]string{
+	"CPU": SmartRouterCPURequests,
+	"MEM": SmartRouterMemRequests,
+}
 
 var Images = []ImageEnv{
 	{
 		Var:       DmKieImageVar,
-		Component: "rhdm-7-kieserver-rhel8-container",
-		Registry:  DmContext + "kieserver" + RhelVersion,
+		Component: RhdmPrefix + "-7-kieserver-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       DmControllerVar,
-		Component: "rhdm-7-controller-rhel8-container",
-		Registry:  DmContext + "controller" + RhelVersion,
+		Component: RhdmPrefix + "-7-controller-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       DmDecisionCentralVar,
-		Component: "rhdm-7-decisioncentral-rhel8-container",
-		Registry:  DmContext + "decisioncentral" + RhelVersion,
+		Component: RhdmPrefix + "-7-decisioncentral-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   DmContext + "decisioncentral" + RhelVersion,
 	},
 	{
 		Var:       PamKieImageVar,
-		Component: "rhpam-7-kieserver-rhel8-container",
-		Registry:  PamContext + "kieserver" + RhelVersion,
+		Component: RhpamPrefix + "-7-kieserver-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       PamControllerVar,
-		Component: "rhpam-7-controller-rhel8-container",
-		Registry:  PamContext + "controller" + RhelVersion,
+		Component: RhpamPrefix + "-7-controller-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       PamBusinessCentralVar,
-		Component: "rhpam-7-businesscentral-rhel8-container",
-		Registry:  PamContext + "businesscentral" + RhelVersion,
+		Component: RhpamPrefix + "-7-businesscentral-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "businesscentral" + RhelVersion,
 	},
 	{
 		Var:       PamBCMonitoringVar,
-		Component: "rhpam-7-businesscentral-monitoring-rhel8-container",
-		Registry:  PamContext + "businesscentral-monitoring" + RhelVersion,
+		Component: RhpamPrefix + "-7-businesscentral-monitoring-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "businesscentral-monitoring" + RhelVersion,
 	},
 	{
 		Var:       PamSmartRouterVar,
-		Component: "rhpam-7-smartrouter-rhel8-container",
-		Registry:  PamContext + "smartrouter" + RhelVersion,
+		Component: RhpamPrefix + "-7-smartrouter-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "smartrouter" + RhelVersion,
 	},
 	{
 		Var:       PamProcessMigrationVar,
-		Component: "rhpam-7-process-migration-rhel8-container",
-		Registry:  ProcessMigrationDefaultImageURL,
+		Component: RhpamPrefix + "-7-process-migration-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "process-migration" + RhelVersion,
+	},
+	{
+		Var:       PamDashbuilderVar,
+		Component: RhpamPrefix + "-7-dashbuilder-rhel8-container",
+		Registry:  ImageRegistry,
+		Context:   PamContext + "dashbuilder" + RhelVersion,
 	},
 }
 
@@ -226,6 +335,7 @@ type ImageEnv struct {
 	Var       string
 	Component string
 	Registry  string
+	Context   string
 }
 type ImageRef struct {
 	metav1.TypeMeta `json:",inline"`
@@ -246,8 +356,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker77ImageTag,
-		BrokerImageURL:      Broker77ImageURL,
+		BrokerImageTag:      Broker78ImageTag,
+		BrokerImageURL:      Broker78ImageURL,
 		DatagridImage:       Datagrid73Image,
 		DatagridImageTag:    Datagrid73ImageTag16,
 		DatagridImageURL:    Datagrid73ImageURL16,
@@ -262,11 +372,11 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker76ImageTag,
-		BrokerImageURL:      Broker76ImageURL,
+		BrokerImageTag:      Broker77ImageTag,
+		BrokerImageURL:      Broker77ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag15,
-		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
@@ -278,11 +388,11 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
 		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker76ImageTag,
-		BrokerImageURL:      Broker76ImageURL,
+		BrokerImageTag:      Broker77ImageTag,
+		BrokerImageURL:      Broker77ImageURL,
 		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag15,
-		DatagridImageURL:    Datagrid73ImageURL15,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
 		DatagridComponent:   Datagrid73Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
@@ -293,6 +403,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 
 var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
 var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
 var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
 
 var replicasTrial = api.ReplicaConstants{
@@ -316,6 +427,10 @@ var replicasAuthoringHA = api.ReplicaConstants{
 	SmartRouter: api.Replicas{Replicas: 1},
 }
 
+var replicasDashbuilder = api.ReplicaConstants{
+	Dashbuilder: api.Replicas{Replicas: 1},
+}
+
 // DefaultDatabaseConfig defines the default Database to use for each environment
 var databaseRhpamAuthoring = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseH2, Size: DefaultDatabaseSize}}
 var databaseRhpamAuthoringHA = &api.DatabaseObject{InternalDatabaseObject: api.InternalDatabaseObject{Type: api.DatabaseMySQL, Size: DefaultDatabaseSize}}
@@ -325,15 +440,16 @@ var databaseRhpamTrial = &api.DatabaseObject{InternalDatabaseObject: api.Interna
 
 // EnvironmentConstants contains
 var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
-	api.RhpamProduction:          {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
-	api.RhpamProductionImmutable: {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
-	api.RhpamTrial:               {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
-	api.RhpamAuthoring:           {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
-	api.RhpamAuthoringHA:         {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
-	api.RhdmTrial:                {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoring:            {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoringHA:          {App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:  {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhpamProduction:            {App: rhpamMonitorAppConstants, Replica: replicasRhpamProduction, Database: databaseRhpamProduction},
+	api.RhpamProductionImmutable:   {App: rhpamMonitorAppConstants, Replica: replicasRhpamProductionImmutable, Database: databaseRhpamProductionImmutable},
+	api.RhpamTrial:                 {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamTrial},
+	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
+	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
+	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
+	api.RhdmTrial:                  {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: rhdmAppConstants, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates

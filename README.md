@@ -28,18 +28,21 @@ To install this operator on OpenShift 4 for end-to-end testing, make sure you ha
 If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
 
 **Create your own index image**
+
+Requires [opm](https://github.com/operator-framework/operator-registry/releases) v1.15.3+ -
+
 ```bash
 $ make bundle-dev
 USERNAME=tchughesiv
-VERSION=$(go run getversion.go)
+VERSION=$(go run getversion.go -csv)
 IMAGE=quay.io/${USERNAME}/rhpam-operator-bundle
 BUNDLE=${IMAGE}:${VERSION}
 
 $ docker push ${BUNDLE}
 BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
-INDEX_VERSION=v4.5 # v4.6
+INDEX_VERSION=v4.6
 INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
-INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go --prior)
+INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go -csvPrior)
 INDEX_TO=${INDEX_IMAGE}_${VERSION}
 
 $ opm index add -c docker --bundles ${BUNDLE_DIGEST} --from-index ${INDEX_FROM} --tag ${INDEX_TO}
@@ -121,8 +124,4 @@ CSV Generation
 
 ```bash
 make csv
-
-# OR
-# w/ sha lookup/replacement against registry.redhat.io && registry.stage.redhat.io
-DIGESTS=true PROD_USER_TOKEN="<username>:<password>" STAGE_USER_TOKEN="<username>:<password>" make csv
 ```

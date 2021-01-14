@@ -86,6 +86,13 @@ spec:
                         description: The JMX ObjectName of the JaasSecurityDomain
                           used to decrypt the password.
                         type: string
+                      loginModule:
+                        description: A flag to set login module to optional. The default
+                          value is required
+                        enum:
+                        - optional
+                        - required
+                        type: string
                       parseRoleNameFromDN:
                         description: A flag indicating if the DN returned by a query
                           contains the roleNameAttributeID. If set to true, the DN
@@ -308,6 +315,7 @@ spec:
                 - rhpam-authoring
                 - rhpam-production-immutable
                 - rhpam-production
+                - rhpam-standalone-dashbuilder
                 - rhpam-trial
                 type: string
               imageRegistry:
@@ -375,9 +383,10 @@ spec:
                                   type: object
                                 fieldRef:
                                   description: 'Selects a field of the pod: supports
-                                    metadata.name, metadata.namespace, metadata.labels,
-                                    metadata.annotations, spec.nodeName, spec.serviceAccountName,
-                                    status.hostIP, status.podIP, status.podIPs.'
+                                    metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                    `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                    spec.serviceAccountName, status.hostIP, status.podIP,
+                                    status.podIPs.'
                                   properties:
                                     apiVersion:
                                       description: Version of the schema the FieldPath
@@ -496,8 +505,9 @@ spec:
                               be mounted.
                             type: string
                           sshSecret:
-                            description: Secret to use for ssh key and known hosts
-                              file.
+                            description: 'Secret to use for ssh key and known hosts
+                              file. The secret must contain two files: id_rsa and
+                              known_hosts.'
                             type: string
                         type: object
                       image:
@@ -534,8 +544,400 @@ spec:
                             format: int32
                             type: integer
                           gcMaxMetaspaceSize:
-                            description: The maximum metaspace size unit, unit could
-                              be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                            description: The maximum metaspace size in Mega bytes
+                              unit e.g. 400
+                            format: int32
+                            type: integer
+                          gcMinHeapFreeRatio:
+                            description: Minimum percentage of heap free after GC
+                              to avoid expansion. e.g. '20'
+                            format: int32
+                            type: integer
+                          gcTimeRatio:
+                            description: Specifies the ratio of the time spent outside
+                              the garbage collection (for example, the time spent
+                              for application execution) to the time spent in the
+                              garbage collection, it's desirable that not more than
+                              1 / (1 + n) e.g. 99 and means 1% spent on gc, 4 means
+                              spent 20% on gc.
+                            format: int32
+                            type: integer
+                          javaDebug:
+                            description: If set remote debugging will be switched
+                              on. Disabled by default. e.g. 'true'
+                            type: boolean
+                          javaDebugPort:
+                            description: Port used for remote debugging. Defaults
+                              to 5005. e.g. '8787'
+                            format: int32
+                            type: integer
+                          javaDiagnostics:
+                            description: Set this to get some diagnostics information
+                              to standard output when things are happening. Disabled
+                              by default. e.g. 'true'
+                            type: boolean
+                          javaInitialMemRatio:
+                            description: Is used when no '-Xms' option is given in
+                              JAVA_OPTS. This is used to calculate a default initial
+                              heap memory based on the maximum heap memory. If used
+                              in a container without any memory constraints for the
+                              container then this option has no effect. If there is
+                              a memory constraint then '-Xms' is set to a ratio of
+                              the '-Xmx' memory as set here. The default is '25' which
+                              means 25% of the '-Xmx' is used as the initial heap
+                              size. You can skip this mechanism by setting this value
+                              to '0' in which case no '-Xms' option is added. e.g.
+                              '25'
+                            format: int32
+                            type: integer
+                          javaMaxInitialMem:
+                            description: Is used when no '-Xms' option is given in
+                              JAVA_OPTS. This is used to calculate the maximum value
+                              of the initial heap memory. If used in a container without
+                              any memory constraints for the container then this option
+                              has no effect. If there is a memory constraint then
+                              '-Xms' is limited to the value set here. The default
+                              is 4096Mb which means the calculated value of '-Xms'
+                              never will be greater than 4096Mb. The value of this
+                              variable is expressed in MB. e.g. '4096'
+                            format: int32
+                            type: integer
+                          javaMaxMemRatio:
+                            description: Is used when no '-Xmx' option is given in
+                              JAVA_OPTS. This is used to calculate a default maximal
+                              heap memory based on a containers restriction. If used
+                              in a container without any memory constraints for the
+                              container then this option has no effect. If there is
+                              a memory constraint then '-Xmx' is set to a ratio of
+                              the container available memory as set here. The default
+                              is '50' which means 50% of the available memory is used
+                              as an upper boundary. You can skip this mechanism by
+                              setting this value to '0' in which case no '-Xmx' option
+                              is added.
+                            format: int32
+                            type: integer
+                          javaOptsAppend:
+                            description: User specified Java options to be appended
+                              to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                            type: string
+                        type: object
+                      keystoreSecret:
+                        description: Keystore secret name
+                        type: string
+                      pvSize:
+                        type: string
+                      replicas:
+                        description: Replicas to set for the DeploymentConfig
+                        format: int32
+                        type: integer
+                      resources:
+                        description: ResourceRequirements describes the compute resource
+                          requirements.
+                        properties:
+                          limits:
+                            additionalProperties:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            description: 'Limits describes the maximum amount of compute
+                              resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            type: object
+                          requests:
+                            additionalProperties:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            description: 'Requests describes the minimum amount of
+                              compute resources required. If Requests is omitted for
+                              a container, it defaults to Limits if that is explicitly
+                              specified, otherwise to an implementation-defined value.
+                              More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            type: object
+                        type: object
+                      ssoClient:
+                        description: SSOAuthClient Auth client to use for the SSO
+                          integration
+                        properties:
+                          hostnameHTTP:
+                            description: Hostname to set as redirect URL
+                            type: string
+                          hostnameHTTPS:
+                            description: Secure hostname to set as redirect URL
+                            type: string
+                          name:
+                            description: Client name
+                            type: string
+                          secret:
+                            description: Client secret
+                            format: password
+                            type: string
+                        type: object
+                      storageClassName:
+                        description: The storageClassName to use
+                        type: string
+                    type: object
+                  dashbuilder:
+                    description: DashbuilderObject configuration of the RHPAM Dashbuilder
+                    properties:
+                      config:
+                        description: DashbuilderConfig holds all configurations that
+                          can be applied to the Dashbuilder env
+                        properties:
+                          allowExternalFileRegister:
+                            description: Allow download of external (remote) files
+                              into runtime. Default value is false
+                            type: boolean
+                          componentEnable:
+                            description: When set to true enables external components.
+                            type: boolean
+                          componentPartition:
+                            description: Components will be partitioned by the Runtime
+                              Model ID. Default value is true
+                            type: boolean
+                          configMapProps:
+                            description: Properties file with Dashbuilder configurations,
+                              if set, uniq properties will be appended and, if a property
+                              is set mode than once, the one from this property file
+                              will be used.
+                            type: string
+                          dataSetPartition:
+                            description: Datasets IDs will partitioned by the Runtime
+                              Model ID. Default value is true
+                            type: boolean
+                          enableBusinessCentral:
+                            description: Enables integration with Business Central
+                            type: boolean
+                          enableKieServer:
+                            description: Enables integration with KIE Server
+                            type: boolean
+                          externalCompDir:
+                            description: Base Directory where dashboards ZIPs are
+                              stored. If PersistentConfigs is enabled and ExternalCompDir
+                              is not pointing to a already existing PV the /opt/kie/dashbuilder/components
+                              directory will be used.
+                            type: string
+                          importFileLocation:
+                            description: Set a static dashboard to run with runtime.
+                              When this property is set no new imports are allowed.
+                            type: string
+                          importsBaseDir:
+                            description: Base Directory where dashboards ZIPs are
+                              stored. If PersistentConfigs is enabled and ImportsBaseDir
+                              is not pointing to a already existing PV the /opt/kie/dashbuilder/imports
+                              directory will be used. If ImportFileLocation is set
+                              ImportsBaseDir will be ignored.
+                            type: string
+                          kieServerDataSets:
+                            description: Defines the KIE Server Datasets access configurations
+                            items:
+                              properties:
+                                location:
+                                  type: string
+                                name:
+                                  type: string
+                                password:
+                                  type: string
+                                replaceQuery:
+                                  type: string
+                                token:
+                                  type: string
+                                user:
+                                  type: string
+                              type: object
+                            type: array
+                          kieServerTemplates:
+                            description: Defines the KIE Server Templates access configurations
+                            items:
+                              properties:
+                                location:
+                                  type: string
+                                name:
+                                  type: string
+                                password:
+                                  type: string
+                                replaceQuery:
+                                  type: string
+                                token:
+                                  type: string
+                                user:
+                                  type: string
+                              type: object
+                            type: array
+                          modelFileRemoval:
+                            description: When enabled will also remove actual model
+                              file from file system. Default value is false.
+                            type: boolean
+                          modelUpdate:
+                            description: Allows Runtime to check model last update
+                              in FS to update its content. Default value is true.
+                            type: boolean
+                          persistentConfigs:
+                            description: Make Dashbuilder not ephemeral. If ImportFileLocation
+                              is set PersistentConfigs will be ignored. Default value
+                              is true.
+                            type: boolean
+                          runtimeMultipleImport:
+                            description: Runtime will always allow use of new imports
+                              (multi tenancy). Default value is false.
+                            type: boolean
+                          uploadSize:
+                            description: Limits the size of uploaded dashboards (in
+                              kb). Default value is 10485760 kb.
+                            format: int64
+                            type: integer
+                        type: object
+                      env:
+                        items:
+                          description: EnvVar represents an environment variable present
+                            in a Container.
+                          properties:
+                            name:
+                              description: Name of the environment variable. Must
+                                be a C_IDENTIFIER.
+                              type: string
+                            value:
+                              description: 'Variable references $(VAR_NAME) are expanded
+                                using the previous defined environment variables in
+                                the container and any service environment variables.
+                                If a variable cannot be resolved, the reference in
+                                the input string will be unchanged. The $(VAR_NAME)
+                                syntax can be escaped with a double $$, ie: $$(VAR_NAME).
+                                Escaped references will never be expanded, regardless
+                                of whether the variable exists or not. Defaults to
+                                "".'
+                              type: string
+                            valueFrom:
+                              description: Source for the environment variable's value.
+                                Cannot be used if value is not empty.
+                              properties:
+                                configMapKeyRef:
+                                  description: Selects a key of a ConfigMap.
+                                  properties:
+                                    key:
+                                      description: The key to select.
+                                      type: string
+                                    name:
+                                      description: 'Name of the referent. More info:
+                                        https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        TODO: Add other useful fields. apiVersion,
+                                        kind, uid?'
+                                      type: string
+                                    optional:
+                                      description: Specify whether the ConfigMap or
+                                        its key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                fieldRef:
+                                  description: 'Selects a field of the pod: supports
+                                    metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                    `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                    spec.serviceAccountName, status.hostIP, status.podIP,
+                                    status.podIPs.'
+                                  properties:
+                                    apiVersion:
+                                      description: Version of the schema the FieldPath
+                                        is written in terms of, defaults to "v1".
+                                      type: string
+                                    fieldPath:
+                                      description: Path of the field to select in
+                                        the specified API version.
+                                      type: string
+                                  required:
+                                  - fieldPath
+                                  type: object
+                                resourceFieldRef:
+                                  description: 'Selects a resource of the container:
+                                    only resources limits and requests (limits.cpu,
+                                    limits.memory, limits.ephemeral-storage, requests.cpu,
+                                    requests.memory and requests.ephemeral-storage)
+                                    are currently supported.'
+                                  properties:
+                                    containerName:
+                                      description: 'Container name: required for volumes,
+                                        optional for env vars'
+                                      type: string
+                                    divisor:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: Specifies the output format of
+                                        the exposed resources, defaults to "1"
+                                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                      x-kubernetes-int-or-string: true
+                                    resource:
+                                      description: 'Required: resource to select'
+                                      type: string
+                                  required:
+                                  - resource
+                                  type: object
+                                secretKeyRef:
+                                  description: Selects a key of a secret in the pod's
+                                    namespace
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      description: 'Name of the referent. More info:
+                                        https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        TODO: Add other useful fields. apiVersion,
+                                        kind, uid?'
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                              type: object
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      image:
+                        description: The image to use e.g. rhpam-<app>-rhel8, this
+                          param is optional for custom image.
+                        type: string
+                      imageContext:
+                        description: The image context to use  e.g. rhpam-7, this
+                          param is optional for custom image.
+                        type: string
+                      imageTag:
+                        description: The image tag to use e.g. 7.9.0, this param is
+                          optional for custom image.
+                        type: string
+                      jvm:
+                        description: JvmObject JVM specification to be used by the
+                          KieApp
+                        properties:
+                          gcAdaptiveSizePolicyWeight:
+                            description: The weighting given to the current GC time
+                              versus previous GC times  when determining the new heap
+                              size. e.g. '90'
+                            format: int32
+                            type: integer
+                          gcContainerOptions:
+                            description: Specify Java GC to use. The value of this
+                              variable should contain the necessary JRE command-line
+                              options to specify the required GC, which will override
+                              the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
+                            type: string
+                          gcMaxHeapFreeRatio:
+                            description: Maximum percentage of heap free after GC
+                              to avoid shrinking. e.g. '40'
+                            format: int32
+                            type: integer
+                          gcMaxMetaspaceSize:
+                            description: The maximum metaspace size in Mega bytes
+                              unit e.g. 400
                             format: int32
                             type: integer
                           gcMinHeapFreeRatio:
@@ -778,6 +1180,122 @@ spec:
                                 will be copied into the deployment folder. If unspecified,
                                 all archives in /target will be copied.
                               type: string
+                            env:
+                              description: Env set environment variables for BuildConfigs
+                              items:
+                                description: EnvVar represents an environment variable
+                                  present in a Container.
+                                properties:
+                                  name:
+                                    description: Name of the environment variable.
+                                      Must be a C_IDENTIFIER.
+                                    type: string
+                                  value:
+                                    description: 'Variable references $(VAR_NAME)
+                                      are expanded using the previous defined environment
+                                      variables in the container and any service environment
+                                      variables. If a variable cannot be resolved,
+                                      the reference in the input string will be unchanged.
+                                      The $(VAR_NAME) syntax can be escaped with a
+                                      double $$, ie: $$(VAR_NAME). Escaped references
+                                      will never be expanded, regardless of whether
+                                      the variable exists or not. Defaults to "".'
+                                    type: string
+                                  valueFrom:
+                                    description: Source for the environment variable's
+                                      value. Cannot be used if value is not empty.
+                                    properties:
+                                      configMapKeyRef:
+                                        description: Selects a key of a ConfigMap.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                      fieldRef:
+                                        description: 'Selects a field of the pod:
+                                          supports metadata.name, metadata.namespace,
+                                          `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`,
+                                          spec.nodeName, spec.serviceAccountName,
+                                          status.hostIP, status.podIP, status.podIPs.'
+                                        properties:
+                                          apiVersion:
+                                            description: Version of the schema the
+                                              FieldPath is written in terms of, defaults
+                                              to "v1".
+                                            type: string
+                                          fieldPath:
+                                            description: Path of the field to select
+                                              in the specified API version.
+                                            type: string
+                                        required:
+                                        - fieldPath
+                                        type: object
+                                      resourceFieldRef:
+                                        description: 'Selects a resource of the container:
+                                          only resources limits and requests (limits.cpu,
+                                          limits.memory, limits.ephemeral-storage,
+                                          requests.cpu, requests.memory and requests.ephemeral-storage)
+                                          are currently supported.'
+                                        properties:
+                                          containerName:
+                                            description: 'Container name: required
+                                              for volumes, optional for env vars'
+                                            type: string
+                                          divisor:
+                                            anyOf:
+                                            - type: integer
+                                            - type: string
+                                            description: Specifies the output format
+                                              of the exposed resources, defaults to
+                                              "1"
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          resource:
+                                            description: 'Required: resource to select'
+                                            type: string
+                                        required:
+                                        - resource
+                                        type: object
+                                      secretKeyRef:
+                                        description: Selects a key of a secret in
+                                          the pod's namespace
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                    type: object
+                                required:
+                                - name
+                                type: object
+                              type: array
                             extensionImageInstallDir:
                               description: Full path to the directory within the extensions
                                 image where the extensions are located (e.g. install.sh,
@@ -1028,9 +1546,10 @@ spec:
                                     type: object
                                   fieldRef:
                                     description: 'Selects a field of the pod: supports
-                                      metadata.name, metadata.namespace, metadata.labels,
-                                      metadata.annotations, spec.nodeName, spec.serviceAccountName,
-                                      status.hostIP, status.podIP, status.podIPs.'
+                                      metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                      `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                      spec.serviceAccountName, status.hostIP, status.podIP,
+                                      status.podIPs.'
                                     properties:
                                       apiVersion:
                                         description: Version of the schema the FieldPath
@@ -1265,8 +1784,8 @@ spec:
                               format: int32
                               type: integer
                             gcMaxMetaspaceSize:
-                              description: The maximum metaspace size unit, unit could
-                                be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                              description: The maximum metaspace size in Mega bytes
+                                unit e.g. 400
                               format: int32
                               type: integer
                             gcMinHeapFreeRatio:
@@ -1452,9 +1971,10 @@ spec:
                                   type: object
                                 fieldRef:
                                   description: 'Selects a field of the pod: supports
-                                    metadata.name, metadata.namespace, metadata.labels,
-                                    metadata.annotations, spec.nodeName, spec.serviceAccountName,
-                                    status.hostIP, status.podIP, status.podIPs.'
+                                    metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                    `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                    spec.serviceAccountName, status.hostIP, status.podIP,
+                                    status.podIPs.'
                                   properties:
                                     apiVersion:
                                       description: Version of the schema the FieldPath
@@ -1652,6 +2172,13 @@ spec:
                           jaasSecurityDomain:
                             description: The JMX ObjectName of the JaasSecurityDomain
                               used to decrypt the password.
+                            type: string
+                          loginModule:
+                            description: A flag to set login module to optional. The
+                              default value is required
+                            enum:
+                            - optional
+                            - required
                             type: string
                           parseRoleNameFromDN:
                             description: A flag indicating if the DN returned by a
@@ -1881,6 +2408,7 @@ spec:
                     - rhpam-authoring
                     - rhpam-production-immutable
                     - rhpam-production
+                    - rhpam-standalone-dashbuilder
                     - rhpam-trial
                     type: string
                   imageRegistry:
@@ -1948,9 +2476,10 @@ spec:
                                       type: object
                                     fieldRef:
                                       description: 'Selects a field of the pod: supports
-                                        metadata.name, metadata.namespace, metadata.labels,
-                                        metadata.annotations, spec.nodeName, spec.serviceAccountName,
-                                        status.hostIP, status.podIP, status.podIPs.'
+                                        metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                        `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                        spec.serviceAccountName, status.hostIP, status.podIP,
+                                        status.podIPs.'
                                       properties:
                                         apiVersion:
                                           description: Version of the schema the FieldPath
@@ -2075,8 +2604,9 @@ spec:
                                   will be mounted.
                                 type: string
                               sshSecret:
-                                description: Secret to use for ssh key and known hosts
-                                  file.
+                                description: 'Secret to use for ssh key and known
+                                  hosts file. The secret must contain two files: id_rsa
+                                  and known_hosts.'
                                 type: string
                             type: object
                           image:
@@ -2113,8 +2643,407 @@ spec:
                                 format: int32
                                 type: integer
                               gcMaxMetaspaceSize:
-                                description: The maximum metaspace size unit, unit
-                                  could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                                description: The maximum metaspace size in Mega bytes
+                                  unit e.g. 400
+                                format: int32
+                                type: integer
+                              gcMinHeapFreeRatio:
+                                description: Minimum percentage of heap free after
+                                  GC to avoid expansion. e.g. '20'
+                                format: int32
+                                type: integer
+                              gcTimeRatio:
+                                description: Specifies the ratio of the time spent
+                                  outside the garbage collection (for example, the
+                                  time spent for application execution) to the time
+                                  spent in the garbage collection, it's desirable
+                                  that not more than 1 / (1 + n) e.g. 99 and means
+                                  1% spent on gc, 4 means spent 20% on gc.
+                                format: int32
+                                type: integer
+                              javaDebug:
+                                description: If set remote debugging will be switched
+                                  on. Disabled by default. e.g. 'true'
+                                type: boolean
+                              javaDebugPort:
+                                description: Port used for remote debugging. Defaults
+                                  to 5005. e.g. '8787'
+                                format: int32
+                                type: integer
+                              javaDiagnostics:
+                                description: Set this to get some diagnostics information
+                                  to standard output when things are happening. Disabled
+                                  by default. e.g. 'true'
+                                type: boolean
+                              javaInitialMemRatio:
+                                description: Is used when no '-Xms' option is given
+                                  in JAVA_OPTS. This is used to calculate a default
+                                  initial heap memory based on the maximum heap memory.
+                                  If used in a container without any memory constraints
+                                  for the container then this option has no effect.
+                                  If there is a memory constraint then '-Xms' is set
+                                  to a ratio of the '-Xmx' memory as set here. The
+                                  default is '25' which means 25% of the '-Xmx' is
+                                  used as the initial heap size. You can skip this
+                                  mechanism by setting this value to '0' in which
+                                  case no '-Xms' option is added. e.g. '25'
+                                format: int32
+                                type: integer
+                              javaMaxInitialMem:
+                                description: Is used when no '-Xms' option is given
+                                  in JAVA_OPTS. This is used to calculate the maximum
+                                  value of the initial heap memory. If used in a container
+                                  without any memory constraints for the container
+                                  then this option has no effect. If there is a memory
+                                  constraint then '-Xms' is limited to the value set
+                                  here. The default is 4096Mb which means the calculated
+                                  value of '-Xms' never will be greater than 4096Mb.
+                                  The value of this variable is expressed in MB. e.g.
+                                  '4096'
+                                format: int32
+                                type: integer
+                              javaMaxMemRatio:
+                                description: Is used when no '-Xmx' option is given
+                                  in JAVA_OPTS. This is used to calculate a default
+                                  maximal heap memory based on a containers restriction.
+                                  If used in a container without any memory constraints
+                                  for the container then this option has no effect.
+                                  If there is a memory constraint then '-Xmx' is set
+                                  to a ratio of the container available memory as
+                                  set here. The default is '50' which means 50% of
+                                  the available memory is used as an upper boundary.
+                                  You can skip this mechanism by setting this value
+                                  to '0' in which case no '-Xmx' option is added.
+                                format: int32
+                                type: integer
+                              javaOptsAppend:
+                                description: User specified Java options to be appended
+                                  to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
+                                type: string
+                            type: object
+                          keystoreSecret:
+                            description: Keystore secret name
+                            type: string
+                          pvSize:
+                            type: string
+                          replicas:
+                            description: Replicas to set for the DeploymentConfig
+                            format: int32
+                            type: integer
+                          resources:
+                            description: ResourceRequirements describes the compute
+                              resource requirements.
+                            properties:
+                              limits:
+                                additionalProperties:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                description: 'Limits describes the maximum amount
+                                  of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                type: object
+                              requests:
+                                additionalProperties:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                description: 'Requests describes the minimum amount
+                                  of compute resources required. If Requests is omitted
+                                  for a container, it defaults to Limits if that is
+                                  explicitly specified, otherwise to an implementation-defined
+                                  value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                type: object
+                            type: object
+                          ssoClient:
+                            description: SSOAuthClient Auth client to use for the
+                              SSO integration
+                            properties:
+                              hostnameHTTP:
+                                description: Hostname to set as redirect URL
+                                type: string
+                              hostnameHTTPS:
+                                description: Secure hostname to set as redirect URL
+                                type: string
+                              name:
+                                description: Client name
+                                type: string
+                              secret:
+                                description: Client secret
+                                format: password
+                                type: string
+                            type: object
+                          storageClassName:
+                            description: The storageClassName to use
+                            type: string
+                        type: object
+                      dashbuilder:
+                        description: DashbuilderObject configuration of the RHPAM
+                          Dashbuilder
+                        properties:
+                          config:
+                            description: DashbuilderConfig holds all configurations
+                              that can be applied to the Dashbuilder env
+                            properties:
+                              allowExternalFileRegister:
+                                description: Allow download of external (remote) files
+                                  into runtime. Default value is false
+                                type: boolean
+                              componentEnable:
+                                description: When set to true enables external components.
+                                type: boolean
+                              componentPartition:
+                                description: Components will be partitioned by the
+                                  Runtime Model ID. Default value is true
+                                type: boolean
+                              configMapProps:
+                                description: Properties file with Dashbuilder configurations,
+                                  if set, uniq properties will be appended and, if
+                                  a property is set mode than once, the one from this
+                                  property file will be used.
+                                type: string
+                              dataSetPartition:
+                                description: Datasets IDs will partitioned by the
+                                  Runtime Model ID. Default value is true
+                                type: boolean
+                              enableBusinessCentral:
+                                description: Enables integration with Business Central
+                                type: boolean
+                              enableKieServer:
+                                description: Enables integration with KIE Server
+                                type: boolean
+                              externalCompDir:
+                                description: Base Directory where dashboards ZIPs
+                                  are stored. If PersistentConfigs is enabled and
+                                  ExternalCompDir is not pointing to a already existing
+                                  PV the /opt/kie/dashbuilder/components directory
+                                  will be used.
+                                type: string
+                              importFileLocation:
+                                description: Set a static dashboard to run with runtime.
+                                  When this property is set no new imports are allowed.
+                                type: string
+                              importsBaseDir:
+                                description: Base Directory where dashboards ZIPs
+                                  are stored. If PersistentConfigs is enabled and
+                                  ImportsBaseDir is not pointing to a already existing
+                                  PV the /opt/kie/dashbuilder/imports directory will
+                                  be used. If ImportFileLocation is set ImportsBaseDir
+                                  will be ignored.
+                                type: string
+                              kieServerDataSets:
+                                description: Defines the KIE Server Datasets access
+                                  configurations
+                                items:
+                                  properties:
+                                    location:
+                                      type: string
+                                    name:
+                                      type: string
+                                    password:
+                                      type: string
+                                    replaceQuery:
+                                      type: string
+                                    token:
+                                      type: string
+                                    user:
+                                      type: string
+                                  type: object
+                                type: array
+                              kieServerTemplates:
+                                description: Defines the KIE Server Templates access
+                                  configurations
+                                items:
+                                  properties:
+                                    location:
+                                      type: string
+                                    name:
+                                      type: string
+                                    password:
+                                      type: string
+                                    replaceQuery:
+                                      type: string
+                                    token:
+                                      type: string
+                                    user:
+                                      type: string
+                                  type: object
+                                type: array
+                              modelFileRemoval:
+                                description: When enabled will also remove actual
+                                  model file from file system. Default value is false.
+                                type: boolean
+                              modelUpdate:
+                                description: Allows Runtime to check model last update
+                                  in FS to update its content. Default value is true.
+                                type: boolean
+                              persistentConfigs:
+                                description: Make Dashbuilder not ephemeral. If ImportFileLocation
+                                  is set PersistentConfigs will be ignored. Default
+                                  value is true.
+                                type: boolean
+                              runtimeMultipleImport:
+                                description: Runtime will always allow use of new
+                                  imports (multi tenancy). Default value is false.
+                                type: boolean
+                              uploadSize:
+                                description: Limits the size of uploaded dashboards
+                                  (in kb). Default value is 10485760 kb.
+                                format: int64
+                                type: integer
+                            type: object
+                          env:
+                            items:
+                              description: EnvVar represents an environment variable
+                                present in a Container.
+                              properties:
+                                name:
+                                  description: Name of the environment variable. Must
+                                    be a C_IDENTIFIER.
+                                  type: string
+                                value:
+                                  description: 'Variable references $(VAR_NAME) are
+                                    expanded using the previous defined environment
+                                    variables in the container and any service environment
+                                    variables. If a variable cannot be resolved, the
+                                    reference in the input string will be unchanged.
+                                    The $(VAR_NAME) syntax can be escaped with a double
+                                    $$, ie: $$(VAR_NAME). Escaped references will
+                                    never be expanded, regardless of whether the variable
+                                    exists or not. Defaults to "".'
+                                  type: string
+                                valueFrom:
+                                  description: Source for the environment variable's
+                                    value. Cannot be used if value is not empty.
+                                  properties:
+                                    configMapKeyRef:
+                                      description: Selects a key of a ConfigMap.
+                                      properties:
+                                        key:
+                                          description: The key to select.
+                                          type: string
+                                        name:
+                                          description: 'Name of the referent. More
+                                            info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            TODO: Add other useful fields. apiVersion,
+                                            kind, uid?'
+                                          type: string
+                                        optional:
+                                          description: Specify whether the ConfigMap
+                                            or its key must be defined
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                    fieldRef:
+                                      description: 'Selects a field of the pod: supports
+                                        metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                        `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                        spec.serviceAccountName, status.hostIP, status.podIP,
+                                        status.podIPs.'
+                                      properties:
+                                        apiVersion:
+                                          description: Version of the schema the FieldPath
+                                            is written in terms of, defaults to "v1".
+                                          type: string
+                                        fieldPath:
+                                          description: Path of the field to select
+                                            in the specified API version.
+                                          type: string
+                                      required:
+                                      - fieldPath
+                                      type: object
+                                    resourceFieldRef:
+                                      description: 'Selects a resource of the container:
+                                        only resources limits and requests (limits.cpu,
+                                        limits.memory, limits.ephemeral-storage, requests.cpu,
+                                        requests.memory and requests.ephemeral-storage)
+                                        are currently supported.'
+                                      properties:
+                                        containerName:
+                                          description: 'Container name: required for
+                                            volumes, optional for env vars'
+                                          type: string
+                                        divisor:
+                                          anyOf:
+                                          - type: integer
+                                          - type: string
+                                          description: Specifies the output format
+                                            of the exposed resources, defaults to
+                                            "1"
+                                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                          x-kubernetes-int-or-string: true
+                                        resource:
+                                          description: 'Required: resource to select'
+                                          type: string
+                                      required:
+                                      - resource
+                                      type: object
+                                    secretKeyRef:
+                                      description: Selects a key of a secret in the
+                                        pod's namespace
+                                      properties:
+                                        key:
+                                          description: The key of the secret to select
+                                            from.  Must be a valid secret key.
+                                          type: string
+                                        name:
+                                          description: 'Name of the referent. More
+                                            info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            TODO: Add other useful fields. apiVersion,
+                                            kind, uid?'
+                                          type: string
+                                        optional:
+                                          description: Specify whether the Secret
+                                            or its key must be defined
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            type: array
+                          image:
+                            description: The image to use e.g. rhpam-<app>-rhel8,
+                              this param is optional for custom image.
+                            type: string
+                          imageContext:
+                            description: The image context to use  e.g. rhpam-7, this
+                              param is optional for custom image.
+                            type: string
+                          imageTag:
+                            description: The image tag to use e.g. 7.9.0, this param
+                              is optional for custom image.
+                            type: string
+                          jvm:
+                            description: JvmObject JVM specification to be used by
+                              the KieApp
+                            properties:
+                              gcAdaptiveSizePolicyWeight:
+                                description: The weighting given to the current GC
+                                  time versus previous GC times  when determining
+                                  the new heap size. e.g. '90'
+                                format: int32
+                                type: integer
+                              gcContainerOptions:
+                                description: Specify Java GC to use. The value of
+                                  this variable should contain the necessary JRE command-line
+                                  options to specify the required GC, which will override
+                                  the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'
+                                type: string
+                              gcMaxHeapFreeRatio:
+                                description: Maximum percentage of heap free after
+                                  GC to avoid shrinking. e.g. '40'
+                                format: int32
+                                type: integer
+                              gcMaxMetaspaceSize:
+                                description: The maximum metaspace size in Mega bytes
+                                  unit e.g. 400
                                 format: int32
                                 type: integer
                               gcMinHeapFreeRatio:
@@ -2361,6 +3290,126 @@ spec:
                                     will be copied into the deployment folder. If
                                     unspecified, all archives in /target will be copied.
                                   type: string
+                                env:
+                                  description: Env set environment variables for BuildConfigs
+                                  items:
+                                    description: EnvVar represents an environment
+                                      variable present in a Container.
+                                    properties:
+                                      name:
+                                        description: Name of the environment variable.
+                                          Must be a C_IDENTIFIER.
+                                        type: string
+                                      value:
+                                        description: 'Variable references $(VAR_NAME)
+                                          are expanded using the previous defined
+                                          environment variables in the container and
+                                          any service environment variables. If a
+                                          variable cannot be resolved, the reference
+                                          in the input string will be unchanged. The
+                                          $(VAR_NAME) syntax can be escaped with a
+                                          double $$, ie: $$(VAR_NAME). Escaped references
+                                          will never be expanded, regardless of whether
+                                          the variable exists or not. Defaults to
+                                          "".'
+                                        type: string
+                                      valueFrom:
+                                        description: Source for the environment variable's
+                                          value. Cannot be used if value is not empty.
+                                        properties:
+                                          configMapKeyRef:
+                                            description: Selects a key of a ConfigMap.
+                                            properties:
+                                              key:
+                                                description: The key to select.
+                                                type: string
+                                              name:
+                                                description: 'Name of the referent.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                  TODO: Add other useful fields. apiVersion,
+                                                  kind, uid?'
+                                                type: string
+                                              optional:
+                                                description: Specify whether the ConfigMap
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                          fieldRef:
+                                            description: 'Selects a field of the pod:
+                                              supports metadata.name, metadata.namespace,
+                                              `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`,
+                                              spec.nodeName, spec.serviceAccountName,
+                                              status.hostIP, status.podIP, status.podIPs.'
+                                            properties:
+                                              apiVersion:
+                                                description: Version of the schema
+                                                  the FieldPath is written in terms
+                                                  of, defaults to "v1".
+                                                type: string
+                                              fieldPath:
+                                                description: Path of the field to
+                                                  select in the specified API version.
+                                                type: string
+                                            required:
+                                            - fieldPath
+                                            type: object
+                                          resourceFieldRef:
+                                            description: 'Selects a resource of the
+                                              container: only resources limits and
+                                              requests (limits.cpu, limits.memory,
+                                              limits.ephemeral-storage, requests.cpu,
+                                              requests.memory and requests.ephemeral-storage)
+                                              are currently supported.'
+                                            properties:
+                                              containerName:
+                                                description: 'Container name: required
+                                                  for volumes, optional for env vars'
+                                                type: string
+                                              divisor:
+                                                anyOf:
+                                                - type: integer
+                                                - type: string
+                                                description: Specifies the output
+                                                  format of the exposed resources,
+                                                  defaults to "1"
+                                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                                x-kubernetes-int-or-string: true
+                                              resource:
+                                                description: 'Required: resource to
+                                                  select'
+                                                type: string
+                                            required:
+                                            - resource
+                                            type: object
+                                          secretKeyRef:
+                                            description: Selects a key of a secret
+                                              in the pod's namespace
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                description: 'Name of the referent.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                  TODO: Add other useful fields. apiVersion,
+                                                  kind, uid?'
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                        type: object
+                                    required:
+                                    - name
+                                    type: object
+                                  type: array
                                 extensionImageInstallDir:
                                   description: Full path to the directory within the
                                     extensions image where the extensions are located
@@ -2620,9 +3669,9 @@ spec:
                                       fieldRef:
                                         description: 'Selects a field of the pod:
                                           supports metadata.name, metadata.namespace,
-                                          metadata.labels, metadata.annotations, spec.nodeName,
-                                          spec.serviceAccountName, status.hostIP,
-                                          status.podIP, status.podIPs.'
+                                          `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`,
+                                          spec.nodeName, spec.serviceAccountName,
+                                          status.hostIP, status.podIP, status.podIPs.'
                                         properties:
                                           apiVersion:
                                             description: Version of the schema the
@@ -2870,8 +3919,8 @@ spec:
                                   format: int32
                                   type: integer
                                 gcMaxMetaspaceSize:
-                                  description: The maximum metaspace size unit, unit
-                                    could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'
+                                  description: The maximum metaspace size in Mega
+                                    bytes unit e.g. 400
                                   format: int32
                                   type: integer
                                 gcMinHeapFreeRatio:
@@ -3060,9 +4109,10 @@ spec:
                                       type: object
                                     fieldRef:
                                       description: 'Selects a field of the pod: supports
-                                        metadata.name, metadata.namespace, metadata.labels,
-                                        metadata.annotations, spec.nodeName, spec.serviceAccountName,
-                                        status.hostIP, status.podIP, status.podIPs.'
+                                        metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                        `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                        spec.serviceAccountName, status.hostIP, status.podIP,
+                                        status.podIPs.'
                                       properties:
                                         apiVersion:
                                           description: Version of the schema the FieldPath

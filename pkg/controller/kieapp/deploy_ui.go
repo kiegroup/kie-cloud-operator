@@ -12,13 +12,12 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
-	"github.com/RHsyseng/operator-utils/pkg/resource/write"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/components"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	routev1 "github.com/openshift/api/route/v1"
-	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var consoleName = "console-cr-form"
@@ -53,11 +54,12 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	pod := getPod(namespace, image, sa.Name, reconciler.OcpVersion, operator)
 	service := getService(namespace, reconciler.OcpVersion)
 	route := getRoute(namespace)
+	scheme := reconciler.Service.GetScheme()
 	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
 	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
 		existing := &corev1.ConfigMap{}
 		new := getCaConfigMap(namespace)
-		new.SetOwnerReferences(operator.GetOwnerReferences())
+		controllerutil.SetOwnerReference(operator, new, scheme)
 		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("Creating ConfigMap ", new.Name)
@@ -70,7 +72,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		} else {
 			if !reflect.DeepEqual(existing.Labels, new.Labels) {
 				existing.Labels = new.Labels
-				existing.SetOwnerReferences(operator.GetOwnerReferences())
+				controllerutil.SetOwnerReference(operator, existing, scheme)
 				log.Info("Updating ConfigMap ", existing.Name)
 				if err := reconciler.Service.Update(context.TODO(), existing); err != nil {
 					log.Error("failed to update configmap", err)
@@ -78,37 +80,19 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 			}
 		}
 	}
-	requested := compare.NewMapBuilder().Add(role, roleBinding, sa, pod, service, route).ResourceMap()
-	deployed, err := loadCounterparts(reconciler, namespace, requested)
+	requestedResources := []resource.KubernetesResource{role, roleBinding, sa, pod, service, route}
+	resourceMap := compare.NewMapBuilder()
+	for _, resource := range requestedResources {
+		resourceMap.Add(resource)
+	}
+	deployed, err := loadCounterparts(reconciler, namespace, resourceMap.ResourceMap())
 	if err != nil {
 		log.Error("Failed to load deployed resources.", err)
 		return
 	}
-	comparator := compare.NewMapComparator()
-	deltas := comparator.Compare(deployed, requested)
-	writer := write.New(reconciler.Service).WithOwnerReferences(operator.GetOwnerReferences()...)
-	var hasUpdates bool
-	for resourceType, delta := range deltas {
-		if !delta.HasChanges() {
-			continue
-		}
-		log.Debugf("Will create %d, update %d, and delete %d instances of %v", len(delta.Added), len(delta.Updated), len(delta.Removed), resourceType)
-		added, err := writer.AddResources(delta.Added)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		updated, err := writer.UpdateResources(deployed[resourceType], delta.Updated)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		removed, err := writer.RemoveResources(delta.Removed)
-		if err != nil {
-			log.Warnf("Got error applying changes %v", err)
-			return
-		}
-		hasUpdates = hasUpdates || added || updated || removed
+	if _, err = reconciler.reconcileResources(operator, requestedResources, deployed); err != nil {
+		log.Error("Failed to reconcile resources.", err)
+		return
 	}
 	updateCSVlinks(reconciler, route, operator)
 }
@@ -135,7 +119,7 @@ func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map
 }
 
 func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *appsv1.Deployment) {
-	var update bool
+	var patch bool
 	found := &routev1.Route{}
 	for i := 1; i < 60; i++ {
 		time.Sleep(time.Duration(100) * time.Millisecond)
@@ -154,26 +138,34 @@ func updateCSVlinks(reconciler *Reconciler, route *routev1.Route, operator *apps
 		log.Info("No ClusterServiceVersion found, likely because no such owner was set on the operator. This might be because the operator was not installed through OLM")
 		return
 	}
-	link := getConsoleLink(csv)
+	newCSV := csv.DeepCopy()
+	link := getConsoleLink(newCSV)
 	if link == nil || link.URL != url {
-		update = true
+		patch = true
 		if link == nil {
-			csv.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, csv.Spec.Links...)
+			newCSV.Spec.Links = append([]operatorsv1alpha1.AppLink{{Name: constants.ConsoleLinkName, URL: url}}, newCSV.Spec.Links...)
 		} else {
 			link.URL = url
 		}
 	}
 	if !strings.Contains(csv.Spec.Description, constants.ConsoleDescription) {
-		update = true
-		csv.Spec.Description = strings.Join([]string{csv.Spec.Description, constants.ConsoleDescription}, "\n\n")
+		patch = true
+		newCSV.Spec.Description = strings.Join([]string{newCSV.Spec.Description, constants.ConsoleDescription}, "\n\n")
 	}
-	if update {
-		log.Debugf("Updating ", csv.Name, " ", csv.Kind, ".")
-		err := reconciler.Service.Update(context.TODO(), csv)
-		if err != nil {
-			log.Error("Failed to update CSV. ", err)
+	if patch {
+		log.Debugf("Patching ", csv.Name, " ", csv.Kind, ".")
+		if err := patchCSVObject(reconciler, csv, newCSV); err != nil {
+			log.Error("Failed to patch CSV. ", err)
 		}
 	}
+}
+
+func patchCSVObject(reconciler *Reconciler, cur, mod *operatorsv1alpha1.ClusterServiceVersion) error {
+	patch, err := client.MergeFrom(cur).Data(mod)
+	if err != nil || len(patch) == 0 || string(patch) == "{}" {
+		return err
+	}
+	return reconciler.Service.Patch(context.TODO(), cur, client.RawPatch(types.MergePatchType, patch))
 }
 
 func getConsoleLink(csv *operatorsv1alpha1.ClusterServiceVersion) *operatorsv1alpha1.AppLink {

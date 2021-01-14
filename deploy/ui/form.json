@@ -116,9 +116,18 @@
           "jsonPath": "",
           "default": "default",
           "options": [
-            { "value": "default", "label": "Internal" },
-            { "value": "SSO", "label": "SSO" },
-            { "value": "LDAP", "label": "LDAP" }
+            {
+              "value": "default",
+              "label": "Internal"
+            },
+            {
+              "value": "SSO",
+              "label": "SSO"
+            },
+            {
+              "value": "LDAP",
+              "label": "LDAP"
+            }
           ],
           "fields": [
             {
@@ -210,7 +219,7 @@
                           "required": false,
                           "jsonPath": "$.spec.auth.roleMapper.from.name",
                           "description": "Reference object name for the RoleMapper."
-                       }
+                        }
                       ]
                     }
                   ]
@@ -245,6 +254,13 @@
                   "type": "password",
                   "jsonPath": "$.spec.auth.ldap.bindCredential",
                   "description": "LDAP Credentials used for authentication of bindDN"
+                },
+                {
+                  "label": "LoginModule Flag",
+                  "type": "dropDown",
+                  "jsonPath": "$.spec.auth.ldap.loginModule",
+                  "originalJsonPath": "$.spec.auth.ldap.loginModule",
+                  "description": "A flag to set login module to optional. The default value is required"
                 },
                 {
                   "label": "JAAS security domain",
@@ -368,7 +384,6 @@
                   "jsonPath": "$.spec.auth.ldap.referralUserAttributeIDToCheck",
                   "description": "If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
                 },
-
                 {
                   "label": "RoleMapper",
                   "required": false,
@@ -409,7 +424,7 @@
                           "required": false,
                           "jsonPath": "$.spec.auth.roleMapper.from.name",
                           "description": "Reference object name for the RoleMapper."
-                       }
+                        }
                       ]
                     }
                   ]
@@ -502,6 +517,13 @@
               "description": "The storageClassName to use for console pvc's."
             },
             {
+              "label": "Persistent Volume Size",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.pvSize",
+              "type": "text",
+              "description": "The size of the Business Central's Persistent Volume. Examples: 1Gi, 512Mi."
+            },
+            {
               "label": "GitHooks",
               "required": false,
               "jsonPath": "$.spec.objects.console.gitHooks",
@@ -543,7 +565,7 @@
                   "type": "text",
                   "required": false,
                   "jsonPath": "$.spec.objects.console.gitHooks.sshSecret",
-                  "description": "Secret to use for ssh key and known hosts file."
+                  "description": "Secret to use for ssh key and known hosts file. The secret must contain two files: id_rsa and known_hosts."
                 }
               ]
             },
@@ -711,7 +733,7 @@
                       "label": "GC max metaspace size",
                       "type": "integer",
                       "required": false,
-                      "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (kilo)  e.g. '400m'",
+                      "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
                       "jsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize",
                       "originalJsonPath": "$.spec.objects.console.jvm.gcMaxMetaspaceSize"
                     },
@@ -842,8 +864,14 @@
                       "description": "Specify whether containers are to be created from an image stream, or a container image.",
                       "default": "ImageStreamTag",
                       "options": [
-                        { "value": "ImageStreamTag", "label": "ImageStreamTag" },
-                        { "value": "DockerImage", "label": "DockerImage" }
+                        {
+                          "value": "ImageStreamTag",
+                          "label": "ImageStreamTag"
+                        },
+                        {
+                          "value": "DockerImage",
+                          "label": "DockerImage"
+                        }
                       ]
                     },
                     {
@@ -906,8 +934,14 @@
                           "description": "Specify whether build config is created from an image stream, or a container image.",
                           "default": "ImageStreamTag",
                           "options": [
-                            { "value": "ImageStreamTag", "label": "ImageStreamTag" },
-                            { "value": "DockerImage", "label": "DockerImage" }
+                            {
+                              "value": "ImageStreamTag",
+                              "label": "ImageStreamTag"
+                            },
+                            {
+                              "value": "DockerImage",
+                              "label": "DockerImage"
+                            }
                           ]
                         },
                         {
@@ -981,11 +1015,33 @@
                           "description": "Secret value for WebHook to configure. Generated if empty"
                         }
                       ]
+                    },
+                    {
+                      "label": "Build Config Environment variable",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].build.env",
+                      "type": "object",
+                      "fields": [
+                        {
+                          "label": "Name",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.env[*].name",
+                          "description": "Environment variable name for build config"
+                        },
+                        {
+                          "label": "Value",
+                          "type": "text",
+                          "required": true,
+                          "jsonPath": "$.spec.objects.servers[*].build.env[*].value",
+                          "description": "Environment variable value for build config"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "label": "Environment variable",
+                  "label": "Kie Server Environment variable",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].env",
                   "type": "object",
@@ -1144,8 +1200,7 @@
                           "jsonPath": "$.spec.objects.servers[*].jms.queueSignal",
                           "originalJsonPath": "$.spec.objects.servers[*].jms.queueSignal"
                         },
-
-                         {
+                        {
                           "label": "Enable audit",
                           "type": "checkbox",
                           "required": false,
@@ -1365,7 +1420,7 @@
                           "label": "GC max metaspace size",
                           "type": "integer",
                           "required": false,
-                          "description": "The maximum metaspace size, unit could be g (Giga) m (Mega) or k (Kilo)  e.g. '400m'.",
+                          "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
                           "jsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize",
                           "originalJsonPath": "$.spec.objects.servers[*].jvm.gcMaxMetaspaceSize"
                         },
@@ -1573,6 +1628,494 @@
           ]
         },
         {
+          "label": "Dashbuilder",
+          "fields": [
+            {
+              "label": "Dashbuilder",
+              "required": false,
+              "jsonPath": "$.spec.objects.dashbuilder",
+              "type": "object",
+              "max": 1,
+              "fields": [
+                {
+                  "label": "Enable integration with Business Central",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": false,
+                  "description": "Enables integration with Business Central.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.enableBusinessCentral",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.enableBusinessCentral"
+                },
+                {
+                  "label": "Enable integration with KIE Server",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": false,
+                  "description": "Enables integration with KIE Server",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.enableKieServer",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.enableKieServer"
+                },
+                {
+                  "label": "Allow External File Register",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": true,
+                  "description": "Allow download of external (remote) files into runtime.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.allowExternalFileRegister",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.allowExternalFileRegister"
+                },
+                {
+                  "label": "Partition Component by ID",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": true,
+                  "description": "Components will be partitioned by the Runtime Model ID.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.componentPartition",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.componentPartition"
+                },
+                {
+                  "label": "Partition Datasets by ID",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": true,
+                  "description": "Datasets IDs will partitioned by the Runtime Model ID.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.dataSetPartition",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.dataSetPartition"
+                },
+                {
+                  "label": "ImportFileLocation",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.importFileLocation",
+                  "description": "Set a static dashboard to run with runtime. When this property is set no new imports are allowed.",
+                  "type": "text"
+                },
+                {
+                  "label": "Persistent Dashbuilder Configurations",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": true,
+                  "description": "Make Dashbuilder not ephemeral. All needed Persistent Volumes will be created.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.persistentConfigs",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.persistentConfigs"
+                },
+                {
+                  "label": "Imports Base Directory",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.importsBaseDir",
+                  "description": "Base Directory where dashboards ZIPs are stored. If PersistentConfigs is enabled and ExternalCompDir is not pointing to a already existing PV the /opt/kie/data/components directory will be used.",
+                  "type": "text"
+                },
+                {
+                  "label": "Model Update",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": true,
+                  "description": "Allows Runtime to check model last update in FS to update its content.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.modelUpdate",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.modelUpdate"
+                },
+                {
+                  "label": "Model File Removal",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": false,
+                  "description": "When enabled will also remove actual model file from file system.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.modelFileRemoval",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.modelFileRemoval"
+                },
+                {
+                  "label": "Runtime Multiple Import",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": false,
+                  "description": "Runtime will always allow use of new imports (multi tenancy).",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.runtimeMultipleImport",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.runtimeMultipleImport"
+                },
+                {
+                  "label": "Upload File Size",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.uploadSize",
+                  "description": " Limits the size of uploaded dashboards (in kb). Default value is 10485760 kb.",
+                  "type": "integer"
+                },
+                {
+                  "label": "Enable Components",
+                  "type": "checkbox",
+                  "required": false,
+                  "default:": false,
+                  "description": " When set to true enables external components.",
+                  "jsonPath": "$.spec.objects.dashbuilder.config.componentEnable",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.config.componentEnable"
+                },
+                {
+                  "label": "External Components Directory",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.externalCompDir",
+                  "description": " Base Directory where dashboards ZIPs are stored. If PersistentConfigs is enabled and ExternalCompDir is not ointing to a already existing PV the /opt/kie/data/components directory will be used.",
+                  "type": "text"
+                },
+                {
+                  "label": "Config Map Properties",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.configMapProps",
+                  "description": "Properties file with Dashbuilder configurations, if set, uniq properties will be appended and, if a property is set mode than once, the one from this property file will be used.",
+                  "type": "text"
+                },
+                {
+                  "label": "KIE Server DataSets",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "DataSet name",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].name"
+                    },
+                    {
+                      "label": "Kie Server Location",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].location"
+                    },
+                    {
+                      "label": "Username",
+                      "type": "text",
+                      "required": false,
+                      "description": "Not needed if token is set.",
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].user"
+                    },
+                    {
+                      "label": "Password",
+                      "type": "password",
+                      "required": false,
+                      "description": "Not needed if token is set.",
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].password"
+                    },
+                    {
+                      "label": "Token",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].token"
+                    },
+                    {
+                      "label": "Replace Query",
+                      "type": "checkbox",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].replaceQuery",
+                      "originalJsonPath": "$.spec.objects.dashbuilder.config.kieServerDataSets[*].replaceQuery"
+                    }
+                  ]
+                },
+                {
+                  "label": "KIE Server Templates",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "DataSet name",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].name"
+                    },
+                    {
+                      "label": "Kie Server Location",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].location"
+                    },
+                    {
+                      "label": "Username",
+                      "type": "text",
+                      "required": false,
+                      "description": "Not needed if token is set.",
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].user"
+                    },
+                    {
+                      "label": "Password",
+                      "type": "password",
+                      "required": false,
+                      "description": "Not needed if token is set.",
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].password"
+                    },
+                    {
+                      "label": "Token",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].token"
+                    },
+                    {
+                      "label": "Replace Query",
+                      "type": "checkbox",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].replaceQuery",
+                      "originalJsonPath": "$.spec.objects.dashbuilder.config.kieServerTemplates[*].replaceQuery"
+                    }
+                  ]
+                },
+                {
+                  "label": "Image Context",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.imageContext",
+                  "description": "The image context to use for Dashbuilder e.g. rhpam-7, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.image",
+                  "description": "The image to use for Dashbuilder e.g. rhpam-dashbuilder-rhel8, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Image tag",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.imageTag",
+                  "description": "The image tag to use for Dashbuilder e.g. 7.10.0, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Keystore secret",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.keystoreSecret",
+                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty",
+                  "type": "text"
+                },
+                {
+                  "label": "Replicas",
+                  "default": "1",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.replicas",
+                  "description": "The number of replicas for the Dashbuilder component.",
+                  "type": "integer"
+                },
+                {
+                  "label": "StorageClass Name",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.storageClassName",
+                  "type": "text",
+                  "description": "The storageClassName to use for Dashbuilder pvc's."
+                },
+                {
+                  "label": "Environment variable",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.env",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "Name",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.dashbuilder.env[*].name",
+                      "description": "Environment variable name"
+                    },
+                    {
+                      "label": "Value",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.dashbuilder.env[*].value",
+                      "description": "Environment variable value"
+                    }
+                  ]
+                },
+                {
+                  "label": "Resource quotas",
+                  "type": "fieldGroup",
+                  "jsonPath": "$.spec.objects.dashbuilder.resources",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Memory request",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.resources.requests.memory",
+                      "description": "Minimum amount of memory requested by the container",
+                      "default": "1536Mi"
+                    },
+                    {
+                      "label": "CPU request",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.resources.requests.cpu",
+                      "description": "Minimum processing power requested by the container, default is 750m"
+                    },
+                    {
+                      "label": "Memory limit",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.resources.limits.memory",
+                      "description": "Maximum amount of memory granted to the container",
+                      "default": "2Gi"
+                    },
+                    {
+                      "label": "CPU limit",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.resources.limits.cpu",
+                      "description": "Maximum processing power granted to the container, default is 1000m"
+                    }
+                  ]
+                },
+                {
+                  "label": "Enable JVM configuration",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "When set to true will configure the RHPAM Dashbuilder with JVM configuration, if no configuration is added, the defaults will be used.",
+                  "jsonPath": "$.spec.objects.dashbuilder.jvm.enableConfiguration",
+                  "originalJsonPath": "$.spec.objects.dashbuilder.jvm.enableConfiguration",
+                  "fields": [
+                    {
+                      "label": "Enable JVM configuration",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.dashbuilder.jvm",
+                      "originalJsonPath": "$.spec.objects.dashbuilder.jvm",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Java Opts append",
+                          "type": "text",
+                          "required": false,
+                          "description": "User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaOptsAppend",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaOptsAppend"
+                        },
+                        {
+                          "label": "Java max memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaMaxMemRatio",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaMaxMemRatio"
+                        },
+                        {
+                          "label": "Java initial memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaInitialMemRatio",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaInitialMemRatio"
+                        },
+                        {
+                          "label": "Java max initial memory",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaMaxInitialMem",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaMaxInitialMem"
+                        },
+                        {
+                          "label": "Java diagnostics",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaDiagnostics",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaDiagnostics"
+                        },
+                        {
+                          "label": "Java debug",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "If set remote debugging will be switched on. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaDebug",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaDebug"
+                        },
+                        {
+                          "label": "Java debug port",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Port used for remote debugging. Defaults to 5005. e.g. '8787'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.javaDebugPort",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.javaDebugPort"
+                        },
+                        {
+                          "label": "GC min heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Minimum percentage of heap free after GC to avoid expansion. e.g. '20'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcMinHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcMinHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC max heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcMaxHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcMaxHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC time ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 means 1% spent on gc, 4 means spent 20% on gc.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcTimeRatio",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcTimeRatio"
+                        },
+                        {
+                          "label": "GC adaptive size policy weight",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The weighting given to the current GC time versus previous GC times when determining the new heap size, between 0 and 100. e.g. '90'",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcAdaptiveSizePolicyWeight",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcAdaptiveSizePolicyWeight"
+                        },
+                        {
+                          "label": "GC max metaspace size",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcMaxMetaspaceSize",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcMaxMetaspaceSize"
+                        },
+                        {
+                          "label": "GC gcContainerOptions",
+                          "type": "text",
+                          "required": false,
+                          "description": "Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'.",
+                          "jsonPath": "$.spec.objects.dashbuilder.jvm.gcContainerOptions",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.jvm.gcContainerOptions"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "SSO client",
+                  "type": "fieldGroup",
+                  "jsonPath": "$.spec.objects.dashbuilder.ssoClient",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Client name",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.ssoClient.name",
+                      "description": "Client name used for dashbuilder in RH-SSO, when configured"
+                    },
+                    {
+                      "label": "Client secret",
+                      "type": "password",
+                      "jsonPath": "$.spec.objects.dashbuilder.ssoClient.secret",
+                      "description": "Client secret to use for dashbuilder in RH-SSO, when configured"
+                    },
+                    {
+                      "label": "SSO HTTP URL",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.ssoClient.hostnameHTTP",
+                      "description": "HTTP hostname to set as redirect URL, when RH-SSO is configured"
+                    },
+                    {
+                      "label": "SSO HTTPS URL",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.dashbuilder.ssoClient.hostnameHTTPS",
+                      "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
           "label": "Smart Router",
           "fields": [
             {
@@ -1728,11 +2271,23 @@
                       "jsonPath": "$.spec.objects.processMigration.database.type",
                       "originalJsonPath": "$.spec.objects.processMigration.database.type",
                       "options": [
-                         { "value": "", "label": "Select" },
-                         { "value": "mysql", "label": "mysql" },
-                         { "value": "postgresql", "label": "postgresql" },
-                         { "value": "h2", "label": "h2" }
-                        ],
+                        {
+                          "value": "",
+                          "label": "Select"
+                        },
+                        {
+                          "value": "mysql",
+                          "label": "mysql"
+                        },
+                        {
+                          "value": "postgresql",
+                          "label": "postgresql"
+                        },
+                        {
+                          "value": "h2",
+                          "label": "h2"
+                        }
+                      ],
                       "fields": [
                         {
                           "label": "Size",
@@ -1759,4 +2314,4 @@
       ]
     }
   ]
-}  
+}
