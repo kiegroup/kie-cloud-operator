@@ -32,7 +32,7 @@ servers:
 
       ## KIE server deployment config END
     ## KIE server build config BEGIN
-    #[[if .Build.KieServerContainerDeployment]]
+    #[[if .Build.GitSource.URI]]
     imageStreams:
       - metadata:
           name: "[[.KieName]]"

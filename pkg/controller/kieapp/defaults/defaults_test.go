@@ -1224,6 +1224,35 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
+func TestKieAppContainerDeploymentWithoutS2i_BuildConfigNotSet(t *testing.T) {
+	serverName := "testing-name"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Name: serverName,
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	// ConsolidateObjects
+	ConsolidateObjects(env, cr)
+
+	//// Since there is not Build section with GitSource
+	assert.Len(t, env.Servers[0].BuildConfigs, 0)
+}
+
 func TestBuildConfiguration(t *testing.T) {
 	serverName := "testing-name"
 	cr := &api.KieApp{
