@@ -182,7 +182,7 @@ const (
 	ConsoleProdMemLimit         = "2Gi"
 	ConsoleAuthoringCPULimit    = "2"
 	ConsoleAuthoringMemLimit    = "4Gi"
-	ConsoleAuthoringCPURequests = "1536Mi"
+	ConsoleAuthoringCPURequests = "1500m"
 	ConsoleAuthoringMemRequests = "3Gi"
 	ConsoleProdCPURequests      = "500m"
 	ConsoleProdMemRequests      = "1536Mi"
