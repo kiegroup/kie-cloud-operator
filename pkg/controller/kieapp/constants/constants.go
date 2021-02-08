@@ -23,7 +23,7 @@ var Ocp4Versions = []string{"4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
 
 const (
 	// ProductName used for metering labels
-	ProductName = "process-automation"
+	ProductName = "Red_Hat_Process_Automation"
 	// LabelRHproductName used as metering label
 	LabelRHproductName = "rht.prod_name"
 	// LabelRHproductVersion used as metering label
