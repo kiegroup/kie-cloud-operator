@@ -177,7 +177,7 @@ func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, su
 	labels[constants.LabelRHproductName] = constants.ProductName
 	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHcomponentName] = "PAM"
-	labels[constants.LabelRHsubcomponentName] = subcomponent
+	// labels[constants.LabelRHsubcomponentName] = subcomponent
 	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHsubcomponentType] = subcomponentType
 	labels[constants.LabelRHcompany] = "Red_Hat"
