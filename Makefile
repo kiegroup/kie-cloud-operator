@@ -85,7 +85,7 @@ rhel-release:
 	./hack/go-build.sh rhel release
 
 .PHONY: csv
-csv:
+csv: sdk-generate
 	./hack/go-csv.sh
 
 .PHONY: clean
