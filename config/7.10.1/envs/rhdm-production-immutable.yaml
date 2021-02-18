@@ -29,11 +29,10 @@ servers:
                       value: ""
                     - name: MAVEN_REPOS
                       value: "EXTERNAL"
-                    - name: KIE_SERVER_ROUTER_PROTOCOL
-                      value: "http"
+
       ## KIE server deployment config END
     ## KIE server build config BEGIN
-    #[[if .Build.KieServerContainerDeployment]]
+    #[[if .Build.GitSource.URI]]
     imageStreams:
       - metadata:
           name: "[[.KieName]]"

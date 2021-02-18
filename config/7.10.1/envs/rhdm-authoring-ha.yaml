@@ -13,7 +13,7 @@ console:
           - ReadWriteMany
         resources:
           requests:
-            storage: 1Gi
+            storage: [[.Console.PvSize]]
 
   deploymentConfigs:
     - metadata:
@@ -153,6 +153,7 @@ others:
                 resources:
                   requests:
                     storage: 1Gi
+
       - metadata:
           annotations:
             alpha.image.policy.openshift.io/resolve-names: "*"
@@ -161,7 +162,7 @@ others:
             application: "[[.ApplicationName]]"
           name: "[[.ApplicationName]]-amq"
         spec:
-          podManagementPolicy: OrderedReady
+          podManagementPolicy:
           updateStrategy:
             rollingUpdate:
               partition: 0
@@ -174,7 +175,6 @@ others:
           serviceName: "[[.ApplicationName]]-amq-tcp"
           template:
             metadata:
-              creationTimestamp: null
               labels:
                 app: "[[.ApplicationName]]"
                 application: "[[.ApplicationName]]"
@@ -260,7 +260,6 @@ others:
               terminationGracePeriodSeconds: 60
           volumeClaimTemplates:
             - metadata:
-                creationTimestamp: null
                 name: "[[.ApplicationName]]-amq-pvol"
               spec:
                 # [[ if ne .Console.StorageClassName "" ]]
@@ -338,5 +337,5 @@ others:
           annotations:
             description: Provides a service for accessing the application over Hot Rod protocol.
             service.alpha.openshift.io/serving-cert-secret-name: datagrid-service-certs
-## ES/AMQ END
+  ## ES/AMQ END
 

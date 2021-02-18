@@ -9,6 +9,17 @@ console:
           spec:
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
+                env:
+                  - name: MAVEN_MIRROR_URL
+                    value: ""
+                  - name: MAVEN_REPO_ID
+                    value: ""
+                  - name: MAVEN_REPO_URL
+                    value: ""
+                  - name: MAVEN_REPO_USERNAME
+                    value: ""
+                  - name: MAVEN_REPO_PASSWORD
+                    value: ""
   persistentVolumeClaims:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
@@ -20,5 +31,5 @@ console:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 1Gi
+            storage: [[.Console.PvSize]]
 
