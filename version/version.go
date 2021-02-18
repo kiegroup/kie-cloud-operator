@@ -12,5 +12,5 @@ var (
 	// PriorVersion - prior version
 	PriorVersion = constants.PriorVersion1
 	// CsvPriorVersion - prior csv release
-	CsvPriorVersion = PriorVersion + "-1"
+	CsvPriorVersion = PriorVersion + "-2"
 )
