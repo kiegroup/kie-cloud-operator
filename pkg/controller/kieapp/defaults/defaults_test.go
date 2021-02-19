@@ -243,7 +243,7 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
 
-	checkObjectLabels(t, cr, env.Dashbuilder, "PAM")
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
 }
 
 func TestRHPAMDashbuilderEnvironmentWithCustomProperties(t *testing.T) {
@@ -2210,29 +2210,40 @@ func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
 	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
 	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
 	component := "PAM"
-	checkObjectLabels(t, cr, env.Console, component)
+	checkObjectLabels(t, cr, env.Console, component, "rhpam-businesscentral-rhel8")
+	checkObjectLabels(t, cr, env.Dashbuilder, component, "rhpam-dashbuilder-rhel8")
 	for _, server := range env.Servers {
-		checkObjectLabels(t, cr, server, component)
+		checkObjectLabelsForServer(t, cr, server, component)
 	}
-	checkObjectLabels(t, cr, env.SmartRouter, component)
-	checkObjectLabels(t, cr, env.ProcessMigration, component)
+	checkObjectLabels(t, cr, env.SmartRouter, component, "rhpam-smartrouter-rhel8")
+	checkObjectLabels(t, cr, env.ProcessMigration, component, "rhpam-process-migration-rhel8")
 }
 
-func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string, subcomponent string) {
 	for _, dc := range object.DeploymentConfigs {
-		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 	for _, ss := range object.StatefulSets {
-		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 }
 
-func checkLabels(t *testing.T, labels map[string]string, component, version string) {
+func checkObjectLabelsForServer(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+	for _, dc := range object.DeploymentConfigs {
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, "kieserver"))
+	}
+	for _, ss := range object.StatefulSets {
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, "kieserver"))
+	}
+}
+
+func checkLabels(t *testing.T, labels map[string]string, component, version string, subcomponent string) {
 	assert.NotNil(t, labels)
 	assert.Equal(t, constants.ProductName, labels[constants.LabelRHproductName])
 	assert.Equal(t, version, labels[constants.LabelRHproductVersion])
 	assert.Equal(t, component, labels[constants.LabelRHcomponentName])
 	assert.Equal(t, version, labels[constants.LabelRHcomponentVersion])
+	assert.Equal(t, subcomponent, labels[constants.LabelRHsubcomponentName])
 	assert.Equal(t, "application", labels[constants.LabelRHsubcomponentType])
 	assert.Equal(t, "Red_Hat", labels[constants.LabelRHcompany])
 }
