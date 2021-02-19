@@ -243,7 +243,7 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
 
-	checkObjectLabels(t, cr, env.Dashbuilder, "PAM")
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
 }
 
 func TestRHPAMDashbuilderEnvironmentWithCustomProperties(t *testing.T) {
@@ -2181,31 +2181,42 @@ func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
 	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
 	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
 	component := "PAM"
-	checkObjectLabels(t, cr, env.Console, component)
+	checkObjectLabels(t, cr, env.Console, component, "rhpam-businesscentral-rhel8")
+	checkObjectLabels(t, cr, env.Dashbuilder, component, "rhpam-dashbuilder-rhel8")
 	for _, server := range env.Servers {
-		checkObjectLabels(t, cr, server, component)
+		checkObjectLabelsForServer(t, cr, server, component)
 	}
-	checkObjectLabels(t, cr, env.SmartRouter, component)
-	checkObjectLabels(t, cr, env.ProcessMigration, component)
+	checkObjectLabels(t, cr, env.SmartRouter, component, "rhpam-smartrouter-rhel8")
+	checkObjectLabels(t, cr, env.ProcessMigration, component, "rhpam-process-migration-rhel8")
 }
 
-func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string, subcomponent string) {
 	for _, dc := range object.DeploymentConfigs {
-		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 	for _, ss := range object.StatefulSets {
-		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 }
 
-func checkLabels(t *testing.T, labels map[string]string, component, version string) {
+func checkLabels(t *testing.T, labels map[string]string, component, version string, subcomponent string) {
 	assert.NotNil(t, labels)
 	assert.Equal(t, constants.ProductName, labels[constants.LabelRHproductName])
 	assert.Equal(t, version, labels[constants.LabelRHproductVersion])
 	assert.Equal(t, component, labels[constants.LabelRHcomponentName])
+	assert.Equal(t, subcomponent, labels[constants.LabelRHsubcomponentName])
 	assert.Equal(t, version, labels[constants.LabelRHcomponentVersion])
 	assert.Equal(t, "application", labels[constants.LabelRHsubcomponentType])
 	assert.Equal(t, "Red_Hat", labels[constants.LabelRHcompany])
+}
+
+func checkObjectLabelsForServer(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+	for index, dc := range object.DeploymentConfigs {
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, object.DeploymentConfigs[index].Name))
+	}
+	for index, ss := range object.StatefulSets {
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, object.StatefulSets[index].Name))
+	}
 }
 
 func TestImageRegistry(t *testing.T) {
@@ -5254,4 +5265,20 @@ func testContext(t *testing.T, image, version, context, label string) {
 	} else {
 		assert.Equal(t, constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
 	}
+}
+
+func TestImageNameWithSha(t *testing.T) {
+	image, imageTag, imageContext, error := GetImage("rhpam-7/rhpam-kieserver-rhel8@sha256:6974be0e05b7663c5935f3135a5862bcbd825bcad6d66cf518e8eadc73a45b75")
+	assert.Equal(t, image, "rhpam-kieserver-rhel8@sha256")
+	assert.Equal(t, imageTag, "6974be0e05b7663c5935f3135a5862bcbd825bcad6d66cf518e8eadc73a45b75")
+	assert.Equal(t, imageContext, "rhpam-7")
+	assert.True(t, strings.Contains(error.Error(), "image name contains @sha, image and imageTag can not be considered valid"))
+}
+
+func TestImageNameWithTag(t *testing.T) {
+	image, imageTag, imageContext, error := GetImage("rhpam-7/rhpam-kieserver-rhel8:7.10")
+	assert.Equal(t, image, "rhpam-kieserver-rhel8")
+	assert.Equal(t, imageTag, "7.10")
+	assert.Equal(t, imageContext, "rhpam-7")
+	assert.Nil(t, error)
 }

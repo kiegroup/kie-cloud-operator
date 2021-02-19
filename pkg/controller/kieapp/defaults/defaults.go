@@ -5,6 +5,7 @@ package defaults
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -139,13 +140,13 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 }
 
 func setProductLabels(cr *api.KieApp, env *api.Environment) {
-	setObjectLabels(cr, &env.Console)
-	setObjectLabels(cr, &env.Dashbuilder)
+	setObjectLabels(cr, &env.Console, getFormattedComponentName(cr, "businesscentral"))
+	setObjectLabels(cr, &env.Dashbuilder, getFormattedComponentName(cr, "dashbuilder"))
 	for index := range env.Servers {
-		setObjectLabels(cr, &env.Servers[index])
+		setObjectLabelsForServer(cr, &env.Servers[index])
 	}
-	setObjectLabels(cr, &env.SmartRouter)
-	setObjectLabels(cr, &env.ProcessMigration)
+	setObjectLabels(cr, &env.SmartRouter, getFormattedComponentName(cr, "smartrouter"))
+	setObjectLabels(cr, &env.ProcessMigration, getFormattedComponentName(cr, "process-migration"))
 }
 
 func getSubComponentTypeByImageName(imageName string) string {
@@ -158,16 +159,39 @@ func getSubComponentTypeByImageName(imageName string) string {
 	return retValue
 }
 
-func setObjectLabels(cr *api.KieApp, object *api.CustomObject) {
+func setObjectLabels(cr *api.KieApp, object *api.CustomObject, subcomponent string) {
 	for index, obj := range object.DeploymentConfigs {
-		subcomponent, _, _ := GetImage(object.DeploymentConfigs[index].Spec.Template.Spec.Containers[0].Image)
 		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 	for index, obj := range object.StatefulSets {
-		subcomponent, _, _ := GetImage(object.StatefulSets[index].Spec.Template.Spec.Containers[0].Image)
 		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
+}
 
+func setObjectLabelsForServer(cr *api.KieApp, object *api.CustomObject) {
+	for index, obj := range object.DeploymentConfigs {
+		subcomponent := getFormattedComponentName(cr, object.DeploymentConfigs[index].Name)
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+	for index, obj := range object.StatefulSets {
+		subcomponent := getFormattedComponentName(cr, object.StatefulSets[index].Name)
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+}
+
+func getFormattedComponentName(cr *api.KieApp, name string) string {
+	return getPrefixEnv(cr) + "-" + name + constants.RhelVersion
+}
+
+func getPrefixEnv(cr *api.KieApp) string {
+	prefix := ""
+	if strings.HasPrefix(string(cr.Status.Applied.Environment), constants.RhpamPrefix) {
+		prefix = constants.RhpamPrefix
+	}
+	if strings.HasPrefix(string(cr.Status.Applied.Environment), constants.RhdmPrefix) {
+		prefix = constants.RhdmPrefix
+	}
+	return prefix
 }
 
 func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, subcomponentType string) map[string]string {
@@ -177,7 +201,7 @@ func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, su
 	labels[constants.LabelRHproductName] = constants.ProductName
 	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHcomponentName] = "PAM"
-	// labels[constants.LabelRHsubcomponentName] = subcomponent
+	labels[constants.LabelRHsubcomponentName] = subcomponent
 	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHsubcomponentType] = subcomponentType
 	labels[constants.LabelRHcompany] = "Red_Hat"
@@ -358,7 +382,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 			}
 			template.OmitImageStream = true
 		}
-		template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
+		template.Image, template.ImageTag, template.ImageContext, _ = GetImage(template.ImageURL)
 		if cr.Status.Applied.Objects.Console.Image != "" {
 			template.Image = cr.Status.Applied.Objects.Console.Image
 			template.ImageURL = template.Image + ":" + template.ImageTag
@@ -433,7 +457,7 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 			}
 			dashbuilderTemplate.OmitImageStream = true
 		}
-		dashbuilderTemplate.Image, dashbuilderTemplate.ImageTag, dashbuilderTemplate.ImageContext = GetImage(dashbuilderTemplate.ImageURL)
+		dashbuilderTemplate.Image, dashbuilderTemplate.ImageTag, dashbuilderTemplate.ImageContext, _ = GetImage(dashbuilderTemplate.ImageURL)
 		if cr.Status.Applied.Objects.Dashbuilder.Image != "" {
 			dashbuilderTemplate.Image = cr.Status.Applied.Objects.Dashbuilder.Image
 			dashbuilderTemplate.ImageURL = dashbuilderTemplate.Image + ":" + dashbuilderTemplate.ImageTag
@@ -532,7 +556,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			}
 			template.OmitImageStream = true
 		}
-		template.Image, template.ImageTag, template.ImageContext = GetImage(template.ImageURL)
+		template.Image, template.ImageTag, template.ImageContext, _ = GetImage(template.ImageURL)
 
 		if cr.Status.Applied.Objects.SmartRouter.Image != "" {
 			template.Image = cr.Status.Applied.Objects.SmartRouter.Image
@@ -554,7 +578,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 }
 
 // GetImage ...
-func GetImage(imageURL string) (image, imageTag, imageContext string) {
+func GetImage(imageURL string) (image, imageTag, imageContext string, error error) {
 	urlParts := strings.Split(imageURL, "/")
 	if len(urlParts) > 1 {
 		imageContext = urlParts[len(urlParts)-2]
@@ -565,7 +589,15 @@ func GetImage(imageURL string) (image, imageTag, imageContext string) {
 	if len(imageParts) > 1 {
 		imageTag = imageParts[len(imageParts)-1]
 	}
-	return image, imageTag, imageContext
+	return image, imageTag, imageContext, isImageValid(imageAndTag)
+}
+
+func isImageValid(imageAndTag string) error {
+	if strings.Contains(imageAndTag, "@sha") {
+		return errors.New("image name contains @sha, image and imageTag can not be considered valid")
+	} else {
+		return nil
+	}
 }
 
 func setReplicas(objectReplicas *int32, replicaConstant api.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
@@ -871,7 +903,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		}
 		omitImageTrigger = true
 	}
-	image, imageTag, imageContext := GetImage(imageURL)
+	image, imageTag, imageContext, _ := GetImage(imageURL)
 
 	if serverSet.Image != "" {
 		image = serverSet.Image
@@ -1371,7 +1403,7 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.ImageURL = val
 			processMigrationTemplate.OmitImageStream = true
 		}
-		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, processMigrationTemplate.ImageContext = GetImage(processMigrationTemplate.ImageURL)
+		processMigrationTemplate.Image, processMigrationTemplate.ImageTag, processMigrationTemplate.ImageContext, _ = GetImage(processMigrationTemplate.ImageURL)
 		if cr.Status.Applied.Objects.ProcessMigration.Image != "" {
 			processMigrationTemplate.Image = cr.Status.Applied.Objects.ProcessMigration.Image
 			processMigrationTemplate.ImageURL = processMigrationTemplate.Image + ":" + processMigrationTemplate.ImageTag

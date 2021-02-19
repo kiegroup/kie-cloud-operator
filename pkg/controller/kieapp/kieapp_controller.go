@@ -413,7 +413,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 	imageName := tagName
 	major, _, _ := defaults.GetMajorMinorMicro(cr.Status.Applied.Version)
 	regContext := fmt.Sprintf("%s-%s", product, major)
-	if _, _, imageContext := defaults.GetImage(imageURL); imageContext != "" {
+	if _, _, imageContext, _ := defaults.GetImage(imageURL); imageContext != "" {
 		regContext = imageContext
 	}
 
