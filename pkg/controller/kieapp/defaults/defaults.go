@@ -596,10 +596,22 @@ func GetImage(imageURL string) (image, imageTag, imageContext string) {
 		imageContext = urlParts[len(urlParts)-2]
 	}
 	imageAndTag := urlParts[len(urlParts)-1]
-	imageParts := strings.Split(imageAndTag, ":")
-	image = imageParts[0]
-	if len(imageParts) > 1 {
-		imageTag = imageParts[len(imageParts)-1]
+	if strings.Contains(imageAndTag, "@sha256") {
+		imageParts := strings.Split(imageAndTag, "@")
+		image = imageParts[0]
+		if len(imageParts) > 1 {
+			tagRaw := imageParts[len(imageParts)-1]
+			imageTagParts := strings.Split(tagRaw, ":")
+			if len(imageTagParts) > 1 {
+				imageTag = imageTagParts[len(imageTagParts)-1]
+			}
+		}
+	} else {
+		imageParts := strings.Split(imageAndTag, ":")
+		image = imageParts[0]
+		if len(imageParts) > 1 {
+			imageTag = imageParts[len(imageParts)-1]
+		}
 	}
 	return image, imageTag, imageContext
 }

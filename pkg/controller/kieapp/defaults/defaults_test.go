@@ -5434,3 +5434,17 @@ func TestClusterLabelsRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.True(t, dashKubeLabelNSPresent)
 	assert.True(t, dashKubeLabelPresent)
 }
+
+func TestImageNameWithSha(t *testing.T) {
+	image, imageTag, imageContext := GetImage("rhpam-7/rhpam-kieserver-rhel8@sha256:6974be0e05b7663c5935f3135a5862bcbd825bcad6d66cf518e8eadc73a45b75")
+	assert.Equal(t, image, "rhpam-kieserver-rhel8")
+	assert.Equal(t, imageTag, "6974be0e05b7663c5935f3135a5862bcbd825bcad6d66cf518e8eadc73a45b75")
+	assert.Equal(t, imageContext, "rhpam-7")
+}
+
+func TestImageNameWithTag(t *testing.T) {
+	image, imageTag, imageContext := GetImage("rhpam-7/rhpam-kieserver-rhel8:7.10")
+	assert.Equal(t, image, "rhpam-kieserver-rhel8")
+	assert.Equal(t, imageTag, "7.10")
+	assert.Equal(t, imageContext, "rhpam-7")
+}
