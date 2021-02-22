@@ -32,6 +32,8 @@ var (
 	bcImage              = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
 	dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
 	dashImage            = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-dashbuilder" + constants.RhelVersion
+	rhpamkieServerImage  = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-kieserver" + constants.RhelVersion
+	rhdmkieServerImage   = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-kieserver" + constants.RhelVersion
 	latestTag            = ":latest"
 	helloRules           = "hello-rules" + latestTag
 	byeRules             = "bye-rules" + latestTag
@@ -537,7 +539,7 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-
+	assert.Equal(t, fmt.Sprintf(rhdmkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
 	assert.Nil(t, env.Console.PersistentVolumeClaims)
@@ -671,6 +673,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
