@@ -8,7 +8,7 @@ var (
 	// Version - current version
 	Version = constants.CurrentVersion
 	// CsvVersion - csv release
-	CsvVersion = Version + "-2"
+	CsvVersion = Version + "-1"
 	// PriorVersion - prior version
 	PriorVersion = constants.PriorVersion1
 	// CsvPriorVersion - prior csv release
