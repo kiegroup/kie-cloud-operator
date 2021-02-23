@@ -1,0 +1,369 @@
+dashbuilder:
+  #[[if .Dashbuilder.Config.PersistentConfigs]]
+  persistentVolumeClaims:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-claim"
+      spec:
+        # [[ if ne .Dashbuilder.StorageClassName "" ]]
+        storageClassName: "[[.Dashbuilder.StorageClassName]]"
+        # [[ end ]]
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  #[[end]]
+  deploymentConfigs:
+    - metadata:
+        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+      spec:
+        strategy:
+          type: Recreate
+        triggers:
+          #[[if not .Dashbuilder.OmitImageStream]]
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+              from:
+                kind: ImageStreamTag
+                namespace: "openshift"
+                name: "[[.Dashbuilder.Image]]:[[.Dashbuilder.ImageTag]]"
+          #[[end]]
+          - type: ConfigChange
+        replicas: [[.Dashbuilder.Replicas]]
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        template:
+          metadata:
+            name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+            labels:
+              deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+              app: "[[.ApplicationName]]"
+              application: "[[.ApplicationName]]"
+              service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+          spec:
+            serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
+            terminationGracePeriodSeconds: 60
+            containers:
+              - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+                image: "[[.Dashbuilder.ImageURL]]"
+                imagePullPolicy: Always
+                livenessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /rest/healthy
+                    port: 8080
+                    scheme: HTTP
+                  initialDelaySeconds: 180
+                  periodSeconds: 15
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                readinessProbe:
+                  failureThreshold: 36
+                  httpGet:
+                    path: /rest/ready
+                    port: 8080
+                    scheme: HTTP
+                  initialDelaySeconds: 30
+                  periodSeconds: 5
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                ports:
+                  - name: jolokia
+                    containerPort: 8778
+                    protocol: TCP
+                  - name: http
+                    containerPort: 8080
+                    protocol: TCP
+                  - name: https
+                    containerPort: 8443
+                    protocol: TCP
+                  - name: ping
+                    containerPort: 8888
+                    protocol: TCP
+                env:
+                  - name: KIE_ADMIN_USER
+                    value: "[[.AdminUser]]"
+                  - name: KIE_ADMIN_PWD
+                    value: "[[.AdminPassword]]"
+                  ## Dashbuilder config BEGIN
+                  #[[if .Dashbuilder.Config.AllowExternalFileRegister]]
+                  - name: DASHBUILDER_ALLOW_EXTERNAL_FILE_REGISTER
+                    value: "[[.Dashbuilder.Config.AllowExternalFileRegister]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ComponentPartition]]
+                  - name: DASHBUILDER_COMPONENT_PARTITION
+                    value: "[[.Dashbuilder.Config.ComponentPartition]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.DataSetPartition]]
+                  - name: DASHBUILDER_DATASET_PARTITION
+                    value: "[[.Dashbuilder.Config.DataSetPartition]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ImportFileLocation]]
+                  - name: DASHBUILDER_IMPORT_FILE_LOCATION
+                    value: "[[.Dashbuilder.Config.ImportFileLocation]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ImportsBaseDir]]
+                  - name: DASHBUILDER_IMPORTS_BASE_DIR
+                    value: "[[.Dashbuilder.Config.ImportsBaseDir]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ModelUpdate]]
+                  - name: DASHBUILDER_MODEL_UPDATE
+                    value: "[[.Dashbuilder.Config.ModelUpdate]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ModelFileRemoval]]
+                  - name: DASHBUILDER_MODEL_FILE_REMOVAL
+                    value: "[[.Dashbuilder.Config.ModelFileRemoval]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.RuntimeMultipleImport]]
+                  - name: DASHBUILDER_RUNTIME_MULTIPLE_IMPORT
+                    value: "[[.Dashbuilder.Config.RuntimeMultipleImport]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.UploadSize]]
+                  - name: DASHBUILDER_UPLOAD_SIZE
+                    value: "[[.Dashbuilder.Config.UploadSize]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ComponentEnable]]
+                  - name: DASHBUILDER_COMP_ENABLE
+                    value: "[[.Dashbuilder.Config.ComponentEnable]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ExternalCompDir]]
+                  - name: DASHBUILDER_EXTERNAL_COMP_DIR
+                    value: "[[.Dashbuilder.Config.ExternalCompDir]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.ConfigMapProps]]
+                  - name: DASHBUILDER_CONFIG_MAP_PROPS
+                    value: "[[.Dashbuilder.Config.ConfigMapProps]]"
+                  #[[end]]
+                  - name: HTTPS_KEYSTORE_DIR
+                    value: "/etc/dashbuilder-secret-volume"
+                  - name: HTTPS_KEYSTORE
+                    value: "keystore.jks"
+                  - name: HTTPS_NAME
+                    value: "jboss"
+                  - name: HTTPS_PASSWORD
+                    value: "[[.KeyStorePassword]]"
+                  - name: KUBERNETES_NAMESPACE
+                    valueFrom:
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+                  ## Dashbuilder config END
+                  # Auth config BEGIN
+                  ## SSO config BEGIN
+                  #[[if .Auth.SSO.URL]]
+                  - name: SSO_OPENIDCONNECT_DEPLOYMENTS
+                    value: ROOT.war
+                  - name: SSO_URL
+                    value: "[[.Auth.SSO.URL]]"
+                  - name: SSO_REALM
+                    value: "[[.Auth.SSO.Realm]]"
+                  - name: SSO_USERNAME
+                    value: "[[.Auth.SSO.AdminUser]]"
+                  - name: SSO_PASSWORD
+                    value: "[[.Auth.SSO.AdminPassword]]"
+                  - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+                    value: "[[.Auth.SSO.DisableSSLCertValidation]]"
+                  - name: SSO_PRINCIPAL_ATTRIBUTE
+                    value: "[[.Auth.SSO.PrincipalAttribute]]"
+                  - name: SSO_SECRET
+                    value: "[[.Dashbuilder.SSOAuthClient.Secret]]"
+                  - name: SSO_CLIENT
+                    value: "[[.Dashbuilder.SSOAuthClient.Name]]"
+                  - name: HOSTNAME_HTTP
+                    value: "[[.Dashbuilder.SSOAuthClient.HostnameHTTP]]"
+                  - name: HOSTNAME_HTTPS
+                    value: "[[.Dashbuilder.SSOAuthClient.HostnameHTTPS]]"
+                  #[[end]]
+                  ## SSO config END
+                  ## LDAP config BEGIN
+                  #[[if .Auth.LDAP.URL]]
+                  - name: AUTH_LDAP_URL
+                    value: "[[.Auth.LDAP.URL]]"
+                  - name: AUTH_LDAP_BIND_DN
+                    value: "[[.Auth.LDAP.BindDN]]"
+                  - name: AUTH_LDAP_BIND_CREDENTIAL
+                    value: "[[.Auth.LDAP.BindCredential]]"
+                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
+                    value: "[[.Auth.LDAP.JAASSecurityDomain]]"
+                  - name: AUTH_LDAP_LOGIN_MODULE
+                    value: "[[.Auth.LDAP.LoginModule]]"
+                  - name: AUTH_LDAP_BASE_CTX_DN
+                    value: "[[.Auth.LDAP.BaseCtxDN]]"
+                  - name: AUTH_LDAP_BASE_FILTER
+                    value: "[[.Auth.LDAP.BaseFilter]]"
+                  - name: AUTH_LDAP_SEARCH_SCOPE
+                    value: "[[.Auth.LDAP.SearchScope]]"
+                  - name: AUTH_LDAP_SEARCH_TIME_LIMIT
+                    value: "[[.Auth.LDAP.SearchTimeLimit]]"
+                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
+                    value: "[[.Auth.LDAP.DistinguishedNameAttribute]]"
+                  - name: AUTH_LDAP_PARSE_USERNAME
+                    value: "[[.Auth.LDAP.ParseUsername]]"
+                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
+                    value: "[[.Auth.LDAP.UsernameBeginString]]"
+                  - name: AUTH_LDAP_USERNAME_END_STRING
+                    value: "[[.Auth.LDAP.UsernameEndString]]"
+                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
+                    value: "[[.Auth.LDAP.RoleAttributeID]]"
+                  - name: AUTH_LDAP_ROLES_CTX_DN
+                    value: "[[.Auth.LDAP.RolesCtxDN]]"
+                  - name: AUTH_LDAP_ROLE_FILTER
+                    value: "[[.Auth.LDAP.RoleFilter]]"
+                  - name: AUTH_LDAP_ROLE_RECURSION
+                    value: "[[.Auth.LDAP.RoleRecursion]]"
+                  - name: AUTH_LDAP_DEFAULT_ROLE
+                    value: "[[.Auth.LDAP.DefaultRole]]"
+                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
+                    value: "[[.Auth.LDAP.RoleNameAttributeID]]"
+                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
+                    value: "[[.Auth.LDAP.ParseRoleNameFromDN]]"
+                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
+                    value: "[[.Auth.LDAP.RoleAttributeIsDN]]"
+                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
+                    value: "[[.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                  #[[end]]
+                  ## LDAP config END
+                  ## RoleMapping config BEGIN
+                  #[[if .Auth.RoleMapper.RolesProperties]]
+                  - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
+                    value: "[[.Auth.RoleMapper.RolesProperties]]"
+                  - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
+                    value: "[[.Auth.RoleMapper.ReplaceRole]]"
+                  #[[end]]
+                  ## RoleMapping config END
+                  # Auth config END
+                  ## Jvm config BEGIN
+                  #[[if .Dashbuilder.Jvm.JavaOptsAppend]]
+                  - name: JAVA_OPTS_APPEND
+                    value: "[[.Dashbuilder.Jvm.JavaOptsAppend]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaMaxMemRatio]]
+                  - name: JAVA_MAX_MEM_RATIO
+                    value: "[[.Dashbuilder.Jvm.JavaMaxMemRatio]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaInitialMemRatio]]
+                  - name: JAVA_INITIAL_MEM_RATIO
+                    value: "[[.Dashbuilder.Jvm.JavaInitialMemRatio]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaMaxInitialMem]]
+                  - name: JAVA_MAX_INITIAL_MEM
+                    value: "[[.Dashbuilder.Jvm.JavaMaxInitialMem]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaDiagnostics]]
+                  - name: JAVA_DIAGNOSTICS
+                    value: "[[.Dashbuilder.Jvm.JavaDiagnostics]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaDebug]]
+                  - name: JAVA_DEBUG
+                    value: "[[.Dashbuilder.Jvm.JavaDebug]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.JavaDebugPort]]
+                  - name: JAVA_DEBUG_PORT
+                    value: "[[.Dashbuilder.Jvm.JavaDebugPort]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcMinHeapFreeRatio]]
+                  - name: GC_MIN_HEAP_FREE_RATIO
+                    value: "[[.Dashbuilder.Jvm.GcMinHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcMaxHeapFreeRatio]]
+                  - name: GC_MAX_HEAP_FREE_RATIO
+                    value: "[[.Dashbuilder.Jvm.GcMaxHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcTimeRatio]]
+                  - name: GC_TIME_RATIO
+                    value: "[[.Dashbuilder.Jvm.GcTimeRatio]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcAdaptiveSizePolicyWeight]]
+                  - name: GC_ADAPTIVE_SIZE_POLICY_WEIGHT
+                    value: "[[.Dashbuilder.Jvm.GcAdaptiveSizePolicyWeight]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcMaxMetaspaceSize]]
+                  - name: GC_MAX_METASPACE_SIZE
+                    value: "[[.Dashbuilder.Jvm.GcMaxMetaspaceSize]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Jvm.GcContainerOptions]]
+                  - name: GC_CONTAINER_OPTIONS
+                    value: "[[.Dashbuilder.Jvm.GcContainerOptions]]"
+                  #[[end]]
+                  ## Jvm config END
+                volumeMounts:
+                  - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
+                    mountPath: "/etc/dashbuilder-secret-volume"
+                    readOnly: true
+                  #[[if .Dashbuilder.Config.PersistentConfigs]]
+                  - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-pvol"
+                    mountPath: "/opt/kie/dashbuilder"
+                  #[[end]]
+            volumes:
+              - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
+                secret:
+                  secretName: "[[.Dashbuilder.KeystoreSecret]]"
+              #[[if .Dashbuilder.Config.PersistentConfigs]]
+              - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-pvol"
+                persistentVolumeClaim:
+                  claimName: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-claim"
+              #[[end]]
+  services:
+    - spec:
+        ports:
+          - name: http
+            port: 8080
+            targetPort: 8080
+          - name: https
+            port: 8443
+            targetPort: 8443
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+      metadata:
+        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        annotations:
+          description: All the Dashbuilder web server's ports.
+    - spec:
+        clusterIP: "None"
+        ports:
+          - name: "ping"
+            port: 8888
+            targetPort: 8888
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+      metadata:
+        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-ping"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        annotations:
+          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+          description: "The JGroups ping port for clustering."
+  routes:
+    - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-https"
+      metadata:
+        name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        annotations:
+          description: Route for Dashbuilder's https service.
+          haproxy.router.openshift.io/timeout: 60s
+      spec:
+        host: ""
+        to:
+          name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        port:
+          targetPort: https
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: passthrough
+

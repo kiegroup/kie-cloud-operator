@@ -40,10 +40,16 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 image: "[[.Console.ImageURL]]"
                 imagePullPolicy: Always
-                resources:
-                  limits:
-                    memory: 2Gi
                 livenessProbe:
+                  httpGet:
+                    path: /rest/healthy
+                    port: 8080
+                    scheme: HTTP
+                  initialDelaySeconds: 90
+                  timeoutSeconds: 2
+                  periodSeconds: 15
+                  failureThreshold: 10
+                startupProbe:
                   httpGet:
                     path: /rest/healthy
                     port: 8080
@@ -51,12 +57,14 @@ console:
                   initialDelaySeconds: 180
                   timeoutSeconds: 2
                   periodSeconds: 15
+                  successThreshold: 1
+                  failureThreshold: 36
                 readinessProbe:
                   httpGet:
                     path: /rest/ready
                     port: 8080
                     scheme: HTTP
-                  initialDelaySeconds: 30
+                  initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 5
                   failureThreshold: 36
@@ -87,6 +95,10 @@ console:
                   #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
                   - name: GIT_HOOKS_DIR
                     value: "[[.Console.GitHooks.MountPath]]"
+                  #[[end]]
+                  #[[if .Dashbuilder.Config.EnableBusinessCentral]]
+                  - name: KIE_DASHBUILDER_RUNTIME_LOCATION
+                    value: "[[.Console.DashbuilderLocation]]"
                   #[[end]]
                   ## OpenShift Enhancement BEGIN
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
@@ -151,6 +163,8 @@ console:
                     value: "[[.Auth.LDAP.BindCredential]]"
                   - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
                     value: "[[.Auth.LDAP.JAASSecurityDomain]]"
+                  - name: AUTH_LDAP_LOGIN_MODULE
+                    value: "[[.Auth.LDAP.LoginModule]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
@@ -338,7 +352,7 @@ console:
           - ReadWriteMany
         resources:
           requests:
-            storage: "64Mi"
+            storage: [[.Console.PvSize]]
   #[[end]]
   services:
     - spec:
@@ -458,9 +472,6 @@ smartRouter:
               - name: "[[.ApplicationName]]-smartrouter"
                 image: "[[.SmartRouter.ImageURL]]"
                 imagePullPolicy: Always
-                resources:
-                  limits:
-                    memory: "512Mi"
                 ports:
                   - name: http
                     containerPort: 9000
@@ -716,6 +727,8 @@ servers:
                       value: "[[$.Auth.LDAP.BindCredential]]"
                     - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
                       value: "[[$.Auth.LDAP.JAASSecurityDomain]]"
+                    - name: AUTH_LDAP_LOGIN_MODULE
+                      value: "[[$.Auth.LDAP.LoginModule]]"
                     - name: AUTH_LDAP_BASE_CTX_DN
                       value: "[[$.Auth.LDAP.BaseCtxDN]]"
                     - name: AUTH_LDAP_BASE_FILTER
@@ -826,9 +839,6 @@ servers:
                       value: "[[.Jvm.GcContainerOptions]]"
                     #[[end]]
                     ## Jvm config END
-                  resources:
-                    limits:
-                      memory: 1Gi
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

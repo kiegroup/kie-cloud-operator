@@ -15,7 +15,6 @@ servers:
             spec:
               containers:
                 - name: "[[.KieName]]"
-                  image: "[[.KieName]]"
                   env:
                     - name: KIE_SERVER_CONTAINER_DEPLOYMENT
                       value: "[[.Build.KieServerContainerDeployment]]"
@@ -33,7 +32,7 @@ servers:
                       value: "http"
       ## KIE server deployment config END
     ## KIE server build config BEGIN
-    #[[if .Build.KieServerContainerDeployment]]
+    #[[if .Build.GitSource.URI]]
     imageStreams:
       - metadata:
           name: "[[.KieName]]"
