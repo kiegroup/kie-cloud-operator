@@ -289,7 +289,6 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 	assert.Equal(t, "test-kieserver", server.BuildConfigs[0].ObjectMeta.Name)
 	assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "test-kieserver", server.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestMergeDeploymentconfigs(t *testing.T) {
