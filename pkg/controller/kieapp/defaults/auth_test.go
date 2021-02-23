@@ -609,9 +609,8 @@ func TestLDAPLoginModuleRequiredFlag(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, "required", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
-
+	assert.Equal(t, "required", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 }
 
 func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
@@ -637,7 +636,7 @@ func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, "optional", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
+	assert.Equal(t, "optional", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 
 }
