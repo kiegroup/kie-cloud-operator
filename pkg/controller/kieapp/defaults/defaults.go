@@ -139,35 +139,71 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 }
 
 func setProductLabels(cr *api.KieApp, env *api.Environment) {
-	setObjectLabels(cr, &env.Console)
-	setObjectLabels(cr, &env.Dashbuilder)
+	setObjectLabels(cr, &env.Console, getFormattedComponentName(cr, getConsoleName(cr)))
+	setObjectLabels(cr, &env.Dashbuilder, getFormattedComponentName(cr, constants.DashBuilder))
 	for index := range env.Servers {
-		setObjectLabels(cr, &env.Servers[index])
+		setObjectLabelsForServer(cr, &env.Servers[index])
 	}
-	setObjectLabels(cr, &env.SmartRouter)
-	setObjectLabels(cr, &env.ProcessMigration)
+	setObjectLabels(cr, &env.SmartRouter, getFormattedComponentName(cr, constants.Smartrouter))
+	setObjectLabels(cr, &env.ProcessMigration, getFormattedComponentName(cr, constants.ProcessMigration))
+}
+
+func getConsoleName(cr *api.KieApp) string {
+	env := string(cr.Spec.Environment)
+	consoleName := ""
+	if strings.Contains(env, constants.RhdmPrefix) {
+		consoleName = constants.RhdmDecisionCentral
+	} else if strings.Contains(env, constants.RhpamPrefix) {
+
+		if strings.Contains(env, constants.Production) {
+			consoleName = constants.RhpamBusinessCentralMon
+		} else {
+			consoleName = constants.RhpamBusinessCentral
+		}
+	}
+	return consoleName
 }
 
 func getSubComponentTypeByImageName(imageName string) string {
-	retValue := "application"
+	retValue := constants.SUBCOMPONENT_TYPE_APP
 	if imageName == constants.RhpamSmartRouterImageName || imageName == constants.RhpamControllerImageName ||
 		imageName == constants.RhdmSmartRouterImageName || imageName == constants.RhdmControllerImageName {
 
-		retValue = "infrastructure"
+		retValue = constants.SUBCOMPONENT_TYPE_INFRA
 	}
 	return retValue
 }
 
-func setObjectLabels(cr *api.KieApp, object *api.CustomObject) {
+func setObjectLabels(cr *api.KieApp, object *api.CustomObject, subcomponent string) {
 	for index, obj := range object.DeploymentConfigs {
-		subcomponent, _, _ := GetImage(object.DeploymentConfigs[index].Spec.Template.Spec.Containers[0].Image)
 		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 	for index, obj := range object.StatefulSets {
-		subcomponent, _, _ := GetImage(object.StatefulSets[index].Spec.Template.Spec.Containers[0].Image)
 		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
+}
 
+func setObjectLabelsForServer(cr *api.KieApp, object *api.CustomObject) {
+	for index, obj := range object.DeploymentConfigs {
+		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+	for index, obj := range object.StatefulSets {
+		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+}
+
+func getFormattedComponentName(cr *api.KieApp, name string) string {
+	return getPrefixEnv(cr) + "-" + name + constants.RhelVersion
+}
+
+func getPrefixEnv(cr *api.KieApp) string {
+	prefix := constants.RhpamPrefix
+	if strings.HasPrefix(string(cr.Status.Applied.Environment), constants.RhdmPrefix) {
+		prefix = constants.RhdmPrefix
+	}
+	return prefix
 }
 
 func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, subcomponentType string) map[string]string {
@@ -177,7 +213,7 @@ func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, su
 	labels[constants.LabelRHproductName] = constants.ProductName
 	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHcomponentName] = "PAM"
-	// labels[constants.LabelRHsubcomponentName] = subcomponent
+	labels[constants.LabelRHsubcomponentName] = subcomponent
 	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
 	labels[constants.LabelRHsubcomponentType] = subcomponentType
 	labels[constants.LabelRHcompany] = "Red_Hat"
