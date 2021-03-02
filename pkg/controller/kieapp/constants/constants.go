@@ -206,6 +206,18 @@ const (
 	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
 	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
 	RhdmControllerImageName   = RhdmPrefix + "-controller-" + RhelVersion
+
+	RhdmDecisionCentral     = "decisioncentral"
+	RhpamBusinessCentral    = "businesscentral"
+	RhpamBusinessCentralMon = "businesscentral-monitoring"
+
+	DashBuilder      = "dashbuilder"
+	Smartrouter      = "smartrouter"
+	ProcessMigration = "process-migration"
+	Production       = "production"
+
+	SUBCOMPONENT_TYPE_APP   = "application"
+	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
 )
 
 // Console Resource Limits for BC Monitoring in Prod Env
