@@ -151,9 +151,6 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamcentr service should have two ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhpamcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhpamcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -185,8 +182,6 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhdmcentr service should have three ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -216,9 +211,6 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.False(t, hasPort(mainService, 8001), "The rhpamdash service should NOT listen on port 8001")
 	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
 
-	pingService := getService(dashServices, "test-dash-rhpamdash-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, "test-dash-rhpamdash", env.Dashbuilder.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dashImage+":"+cr.Status.Applied.Version, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
@@ -245,6 +237,7 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
 	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
 
+	checkClusterLabels(t, cr, env.Dashbuilder)
 	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
 }
 
@@ -433,9 +426,6 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
-	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "PRODUCTION", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -504,9 +494,6 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "admin", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	amqClusterPassword = getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_CLUSTER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
-	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -2251,6 +2238,20 @@ func checkLabels(t *testing.T, labels map[string]string, component, version stri
 	assert.Equal(t, "Red_Hat", labels[constants.LabelRHcompany])
 }
 
+func checkClusterLabels(t *testing.T, cr *api.KieApp, object api.CustomObject) {
+	if cr.Spec.Version == constants.CurrentVersion {
+
+		for _, dc := range object.DeploymentConfigs {
+			assert.NotNil(t, dc.Spec.Template.Labels[constants.ClusterLabel])
+			assert.True(t, strings.HasPrefix(dc.Spec.Template.Labels[constants.ClusterLabel], constants.ClusterLabelPrefix))
+		}
+		for _, ss := range object.StatefulSets {
+			assert.NotNil(t, ss.Spec.Template.Labels[constants.ClusterLabel])
+			assert.True(t, strings.HasPrefix(ss.Spec.Template.Labels[constants.ClusterLabel], constants.ClusterLabelPrefix))
+		}
+	}
+}
+
 func TestImageRegistry(t *testing.T) {
 	registry1 := "registry1.test.com"
 	os.Setenv("REGISTRY", registry1)
@@ -2650,12 +2651,10 @@ func TestExampleServerCommonConfig(t *testing.T) {
 	assert.Equal(t, 6, len(env.Servers), "Expect six servers")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2-ping", env.Servers[len(env.Servers)-2].Services[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-http", env.Servers[len(env.Servers)-2].Routes[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2-2-ping", env.Servers[len(env.Servers)-1].Services[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2-http", env.Servers[len(env.Servers)-1].Routes[1].Name, "Unexpected name for object")
 }
@@ -2749,9 +2748,8 @@ func TestDatabaseExternal(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2813,9 +2811,8 @@ func TestDatabaseH2(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2924,9 +2921,8 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2970,10 +2966,9 @@ func TestDatabaseMySQL(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -3025,10 +3020,9 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -3093,10 +3087,9 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -3146,10 +3139,9 @@ func TestDatabasePostgresql(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -3201,10 +3193,9 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -3267,10 +3258,9 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -5297,4 +5287,72 @@ func testContext(t *testing.T, image, version, context, label string) {
 	} else {
 		assert.Equal(t, constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
 	}
+}
+
+func TestClusterLabelsDefaultEnvironment(t *testing.T) {
+	consoleLabel := "jgrp.k8s.test-clusterlabel.rhpamcentr"
+	serverLabel := "jgrp.k8s.test-clusterlabel-kieserver"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-clusterlabel",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting environment")
+	consoleClusterLabel := env.Console.DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, consoleClusterLabel, consoleLabel)
+	serverClusterLabel := env.Servers[0].DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, serverClusterLabel, serverLabel)
+
+	consoleKubeLabelNSPresent, consoleKubeLabelPresent := checkKubePingEnvs(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], consoleLabel)
+	assert.True(t, consoleKubeLabelNSPresent)
+	assert.True(t, consoleKubeLabelPresent)
+
+	serverKubeLabelNSPresent, serverKubeLabelPresent := checkKubePingEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], serverLabel)
+	assert.True(t, serverKubeLabelNSPresent)
+	assert.True(t, serverKubeLabelPresent)
+
+}
+
+func checkKubePingEnvs(t *testing.T, container corev1.Container, kubeLabel string) (kubeLabelNSPresent bool, kubeLabelPresent bool) {
+	envs := container.Env
+	kubeLabelNSPresent = false
+	kubeLabelPresent = false
+	for _, env := range envs {
+		if env.Name == constants.KubeNS {
+			kubeLabelNSPresent = true
+			assert.True(t, env.ValueFrom.FieldRef.FieldPath == "metadata.namespace")
+		}
+
+		if env.Name == constants.KubeLabels {
+			kubeLabelPresent = true
+			assert.True(t, env.Value == "cluster="+kubeLabel)
+		}
+	}
+	return kubeLabelNSPresent, kubeLabelPresent
+}
+
+func TestClusterLabelsRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
+	dashLabel := "jgrp.k8s.test-labels-dash.rhpamdash"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-labels-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting dashbuilder environment")
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
+	checkClusterLabels(t, cr, env.Dashbuilder)
+	dashClusterLabel := env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, dashClusterLabel, dashLabel)
+
+	dashKubeLabelNSPresent, dashKubeLabelPresent := checkKubePingEnvs(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], dashLabel)
+	assert.True(t, dashKubeLabelNSPresent)
+	assert.True(t, dashKubeLabelPresent)
 }

@@ -270,6 +270,14 @@ const (
 
 	SUBCOMPONENT_TYPE_APP   = "application"
 	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
+
+	//Labels for Kube_ping
+	ClusterLabel       = "cluster"
+	ClusterLabelPrefix = "jgrp.k8s."
+
+	//Envs
+	KubeNS     = "KUBERNETES_NAMESPACE"
+	KubeLabels = "KUBERNETES_LABELS"
 )
 
 // Console Resource Limits for BC Monitoring in Prod Env
