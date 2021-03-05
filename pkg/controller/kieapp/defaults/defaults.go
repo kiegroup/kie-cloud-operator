@@ -877,6 +877,8 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 			GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, serverSet.Build.Webhooks),
 			GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, serverSet.Build.Webhooks),
 			KieServerContainerDeployment: serverSet.Build.KieServerContainerDeployment,
+			DisablePullDeps:              serverSet.Build.DisablePullDeps,
+			DisableKCVerification:        serverSet.Build.DisableKCVerification,
 			MavenMirrorURL:               serverSet.Build.MavenMirrorURL,
 			ArtifactDir:                  serverSet.Build.ArtifactDir,
 		}
