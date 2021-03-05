@@ -1180,6 +1180,16 @@ spec:
                                 will be copied into the deployment folder. If unspecified,
                                 all archives in /target will be copied.
                               type: string
+                            disableKCVerification:
+                              description: Disable Maven KIE Jar verification. It
+                                is recommended to test the kjar manually before disabling
+                                this verification.
+                              type: boolean
+                            disablePullDeps:
+                              description: Disable Maven pull dependencies for immutable
+                                KIE Server configurations for S2I and pre built kjars.
+                                Useful for pre-compiled kjar.
+                              type: boolean
                             env:
                               description: Env set environment variables for BuildConfigs
                               items:
@@ -3290,6 +3300,16 @@ spec:
                                     will be copied into the deployment folder. If
                                     unspecified, all archives in /target will be copied.
                                   type: string
+                                disableKCVerification:
+                                  description: Disable Maven KIE Jar verification.
+                                    It is recommended to test the kjar manually before
+                                    disabling this verification.
+                                  type: boolean
+                                disablePullDeps:
+                                  description: Disable Maven pull dependencies for
+                                    immutable KIE Server configurations for S2I and
+                                    pre built kjars. Useful for pre-compiled kjar.
+                                  type: boolean
                                 env:
                                   description: Env set environment variables for BuildConfigs
                                   items:

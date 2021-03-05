@@ -259,8 +259,12 @@ type KieAppBuildObject struct {
 	// Env set environment variables for BuildConfigs
 	Env []corev1.EnvVar `json:"env,omitempty"`
 	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
-	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                    GitSource `json:"gitSource,omitempty"`
+	KieServerContainerDeployment string `json:"kieServerContainerDeployment,omitempty"`
+	// Disable Maven pull dependencies for immutable KIE Server configurations for S2I and pre built kjars. Useful for pre-compiled kjar.
+	DisablePullDeps bool `json:"disablePullDeps,omitempty"`
+	// Disable Maven KIE Jar verification. It is recommended to test the kjar manually before disabling this verification.
+	DisableKCVerification bool      `json:"disableKCVerification,omitempty"`
+	GitSource             GitSource `json:"gitSource,omitempty"`
 	// Maven mirror to use for S2I builds
 	MavenMirrorURL string `json:"mavenMirrorURL,omitempty"`
 	// List of directories from which archives will be copied into the deployment folder. If unspecified, all archives in /target will be copied.
@@ -787,6 +791,8 @@ type BuildTemplate struct {
 	GitHubWebhookSecret          string      `json:"githubWebhookSecret,omitempty"`
 	GenericWebhookSecret         string      `json:"genericWebhookSecret,omitempty"`
 	KieServerContainerDeployment string      `json:"kieServerContainerDeployment,omitempty"`
+	DisablePullDeps              bool        `json:"disablePullDeps,omitempty"`
+	DisableKCVerification        bool        `json:"disableKCVerification,omitempty"`
 	MavenMirrorURL               string      `json:"mavenMirrorURL,omitempty"`
 	ArtifactDir                  string      `json:"artifactDir,omitempty"`
 	// Extension image configuration which provides custom jdbc drivers to be used
