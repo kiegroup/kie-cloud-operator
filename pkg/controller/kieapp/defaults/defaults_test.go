@@ -541,6 +541,84 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
 }
 
+func TestRhpamProdImmutableEnvironmentDisableKCVerification(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+							DisableKCVerification:        true,
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be true")
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be false")
+}
+
+func TestRhdmProdImmutableEnvironmentDisableKCVerificationAndPull(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+							DisableKCVerification:        true,
+							DisablePullDeps:              true,
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be true")
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be true")
+}
+
+func TestRhpamProdImmutableEnvironmentEnableKCVerification(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be false")
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be false")
+}
+
 func TestRhpamProdWithSmartRouter(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
