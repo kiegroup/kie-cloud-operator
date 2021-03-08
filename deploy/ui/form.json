@@ -907,6 +907,22 @@
                       "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT"
                     },
                     {
+                      "label": "Disable KIE Jar Pull Dependencies",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Disable Maven pull dependencies for immutable KIE Server configurations for S2I and pre built kjars.",
+                      "jsonPath": "$.spec.objects.servers[*].build.disablePullDeps",
+                      "originalJsonPath": "$.spec.objects.servers[*].build.disablePullDeps"
+                    },
+                    {
+                      "label": "Disable KIE Jar Verification",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Disable Maven KIE Jar verification. It is recommended to test the kjar manually before disabling this verification.",
+                      "jsonPath": "$.spec.objects.servers[*].build.disableKCVerification",
+                      "originalJsonPath": "$.spec.objects.servers[*].build.disableKCVerification"
+                    },
+                    {
                       "label": "Maven mirror URL",
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].build.mavenMirrorURL",
