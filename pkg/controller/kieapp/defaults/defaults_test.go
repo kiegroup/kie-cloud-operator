@@ -2187,10 +2187,10 @@ func TestSetProductLabels(t *testing.T) {
 	assert.Equal(t, constants.CurrentVersion, cr.Status.Applied.Version)
 	testObjectLabels(t, cr, env)
 
-	cr.Spec.Version = constants.PriorVersion1
+	cr.Spec.Version = constants.PriorVersion
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, constants.PriorVersion1, cr.Status.Applied.Version)
+	assert.Equal(t, constants.PriorVersion, cr.Status.Applied.Version)
 	testObjectLabels(t, cr, env)
 }
 

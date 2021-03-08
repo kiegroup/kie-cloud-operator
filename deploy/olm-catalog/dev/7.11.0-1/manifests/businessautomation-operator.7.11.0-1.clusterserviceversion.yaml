@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.11.0
-    createdAt: "2021-02-23 10:25:49"
+    createdAt: "2021-03-08 10:19:42"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.11.0-1-dev-pttb26ljtw
+  name: businessautomation-operator.7.11.0-1-dev-29dgsgr92c
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -228,36 +228,6 @@ spec:
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.10.1
                   value: registry.redhat.io/amq7/amq-broker:7.8
-                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.10.0
-                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.10.0
-                - name: RELATED_IMAGE_DM_DC_IMAGE_7.10.0
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.10.0
-                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.10.0
-                  value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.10.0
-                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.10.0
-                  value: registry.redhat.io/openshift3/ose-cli:v3.11
-                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.10.0
-                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.10.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.10.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
-                - name: RELATED_IMAGE_BROKER_IMAGE_7.10.0
-                  value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
@@ -443,7 +413,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.11.0-1-dev-pttb26ljtw
+    operated-by: businessautomation-operator.7.11.0-1-dev-29dgsgr92c
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -459,5 +429,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.11.0-1-dev-pttb26ljtw
-  version: 7.11.0-1+pttb26ljtw
+      operated-by: businessautomation-operator.7.11.0-1-dev-29dgsgr92c
+  version: 7.11.0-1+29dgsgr92c

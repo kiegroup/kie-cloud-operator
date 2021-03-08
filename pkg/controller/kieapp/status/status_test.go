@@ -67,7 +67,7 @@ func TestSetProvisioningSkipUpdate(t *testing.T) {
 
 func TestSetProvisioningAndThenDeployed(t *testing.T) {
 	now := metav1.Now()
-	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.PriorVersion1}}}
+	cr := &api.KieApp{Status: api.KieAppStatus{Applied: api.KieAppSpec{Version: constants.PriorVersion}}}
 
 	assert.True(t, SetProvisioning(cr))
 	assert.True(t, SetDeployed(cr))
@@ -81,13 +81,13 @@ func TestSetProvisioningAndThenDeployed(t *testing.T) {
 
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Equal(t, corev1.ConditionTrue, cr.Status.Conditions[0].Status)
-	assert.Equal(t, constants.PriorVersion1, cr.Status.Conditions[0].Version)
+	assert.Equal(t, constants.PriorVersion, cr.Status.Conditions[0].Version)
 	assert.True(t, now.Before(&condition.LastTransitionTime))
 
 	assert.Equal(t, api.DeployedConditionType, cr.Status.Conditions[1].Type)
 	assert.Equal(t, corev1.ConditionTrue, cr.Status.Conditions[1].Status)
 	assert.True(t, condition.LastTransitionTime.Before(&cr.Status.Conditions[1].LastTransitionTime))
-	assert.Equal(t, constants.PriorVersion1, cr.Status.Conditions[1].Version)
+	assert.Equal(t, constants.PriorVersion, cr.Status.Conditions[1].Version)
 
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[2].Type)
 	assert.Equal(t, corev1.ConditionTrue, cr.Status.Conditions[2].Status)
