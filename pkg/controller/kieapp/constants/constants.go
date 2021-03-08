@@ -12,14 +12,12 @@ var Ocp4Versions = []string{"4.7", "4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
 const (
 	// CurrentVersion product version supported
 	CurrentVersion = "7.11.0"
-	// PriorVersion1 product version supported
-	PriorVersion1 = "7.10.1"
-	// PriorVersion2 product version supported
-	PriorVersion2 = "7.10.0"
+	// PriorVersion product version supported
+	PriorVersion = "7.10.1"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
+var SupportedVersions = []string{CurrentVersion, PriorVersion}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
@@ -39,23 +37,7 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	PriorVersion1: {
-		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL80ImageURL,
-		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
-	},
-	PriorVersion2: {
+	PriorVersion: {
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli311ImageURL,
 		OseCliComponent:     OseCli311Component,
