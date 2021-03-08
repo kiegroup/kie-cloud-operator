@@ -385,7 +385,7 @@ func main() {
 		if jsonByte, err = sjson.DeleteBytes(jsonByte, "spec"); err != nil {
 			log.Error(err)
 		}
-		if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion1)); err != nil {
+		if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion)); err != nil {
 			log.Error(err)
 		}
 		var snippetObj interface{}

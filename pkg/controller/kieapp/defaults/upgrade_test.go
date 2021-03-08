@@ -33,7 +33,7 @@ func TestGetConfigVersionDiffs(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamTrial,
-			Version:     constants.PriorVersion2,
+			Version:     constants.PriorVersion,
 			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
@@ -69,7 +69,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PriorVersion2,
+			Version:     constants.PriorVersion,
 		},
 	}
 	minor, micro, err = checkProductUpgrade(cr)
@@ -84,7 +84,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PriorVersion2,
+			Version:     constants.PriorVersion,
 			Upgrades:    api.KieAppUpgrades{Enabled: true},
 		},
 	}
@@ -104,7 +104,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PriorVersion2,
+			Version:     constants.PriorVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: true},
 		},
 	}
@@ -118,7 +118,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 	// assert.Empty(t, diffs)
 
 	// check upgrade against version in status section
-	cr.Status.Applied.Version = constants.PriorVersion2
+	cr.Status.Applied.Version = constants.PriorVersion
 	cr.Spec.Version = ""
 	minor, micro, err = checkProductUpgrade(cr)
 	assert.Empty(t, cr.Spec.Version)
@@ -157,7 +157,7 @@ func TestCheckProductUpgrade(t *testing.T) {
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
-			Version:     constants.PriorVersion2,
+			Version:     constants.PriorVersion,
 			Upgrades:    api.KieAppUpgrades{Minor: true, Enabled: false},
 		},
 	}
