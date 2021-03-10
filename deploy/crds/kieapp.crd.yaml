@@ -522,6 +522,10 @@ spec:
                         description: The image tag to use e.g. 7.9.0, this param is
                           optional for custom image.
                         type: string
+                      jbpmCluster:
+                        description: Enable the clustering between Kieservers and
+                          add one replicas if only one is configured
+                        type: boolean
                       jvm:
                         description: JvmObject JVM specification to be used by the
                           KieApp
@@ -914,6 +918,10 @@ spec:
                         description: The image tag to use e.g. 7.9.0, this param is
                           optional for custom image.
                         type: string
+                      jbpmCluster:
+                        description: Enable the clustering between Kieservers and
+                          add one replicas if only one is configured
+                        type: boolean
                       jvm:
                         description: JvmObject JVM specification to be used by the
                           KieApp
@@ -1683,6 +1691,10 @@ spec:
                           description: The image tag to use e.g. 7.9.0, this param
                             is optional for custom image.
                           type: string
+                        jbpmCluster:
+                          description: Enable the clustering between Kieservers and
+                            add one replicas if only one is configured
+                          type: boolean
                         jms:
                           description: KieAppJmsObject messaging specification to
                             be used by the KieApp
@@ -2060,6 +2072,10 @@ spec:
                         description: The image tag to use e.g. 7.9.0, this param is
                           optional for custom image.
                         type: string
+                      jbpmCluster:
+                        description: Enable the clustering between Kieservers and
+                          add one replicas if only one is configured
+                        type: boolean
                       keystoreSecret:
                         description: Keystore secret name
                         type: string
@@ -2631,6 +2647,10 @@ spec:
                             description: The image tag to use e.g. 7.9.0, this param
                               is optional for custom image.
                             type: string
+                          jbpmCluster:
+                            description: Enable the clustering between Kieservers
+                              and add one replicas if only one is configured
+                            type: boolean
                           jvm:
                             description: JvmObject JVM specification to be used by
                               the KieApp
@@ -3030,6 +3050,10 @@ spec:
                             description: The image tag to use e.g. 7.9.0, this param
                               is optional for custom image.
                             type: string
+                          jbpmCluster:
+                            description: Enable the clustering between Kieservers
+                              and add one replicas if only one is configured
+                            type: boolean
                           jvm:
                             description: JvmObject JVM specification to be used by
                               the KieApp
@@ -3820,6 +3844,10 @@ spec:
                               description: The image tag to use e.g. 7.9.0, this param
                                 is optional for custom image.
                               type: string
+                            jbpmCluster:
+                              description: Enable the clustering between Kieservers
+                                and add one replicas if only one is configured
+                              type: boolean
                             jms:
                               description: KieAppJmsObject messaging specification
                                 to be used by the KieApp
@@ -4209,6 +4237,10 @@ spec:
                             description: The image tag to use e.g. 7.9.0, this param
                               is optional for custom image.
                             type: string
+                          jbpmCluster:
+                            description: Enable the clustering between Kieservers
+                              and add one replicas if only one is configured
+                            type: boolean
                           keystoreSecret:
                             description: Keystore secret name
                             type: string

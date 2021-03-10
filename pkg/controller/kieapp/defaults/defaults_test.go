@@ -5434,3 +5434,53 @@ func TestClusterLabelsRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.True(t, dashKubeLabelNSPresent)
 	assert.True(t, dashKubeLabelPresent)
 }
+
+func TestRhdmProdImmutableEnvironmentWithJbpmClusterEnabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							JbpmCluster: true,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, env.Servers[0].DeploymentConfigs[0].Spec.Replicas == 2)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhdmProdImmutableEnvironmentWithJbpmClusterDisabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							JbpmCluster: false,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, env.Servers[0].DeploymentConfigs[0].Spec.Replicas == 1)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}

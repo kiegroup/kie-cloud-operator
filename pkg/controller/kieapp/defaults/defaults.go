@@ -695,6 +695,15 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 
 			// Set replicas
+			// if the configuration use only one replica we increment
+			if len(cr.Spec.Objects.Servers) != 0 && cr.Spec.Objects.Servers[0].JbpmCluster && *serverReplicas == 1 {
+				if serverSet.Replicas == nil {
+					serverSet.Replicas = new(int32)
+					*serverSet.Replicas = *serverReplicas + 1
+				} else {
+					*serverSet.Replicas = *serverSet.Replicas + 1
+				}
+			}
 			if serverSet.Replicas == nil {
 				serverSet.Replicas = serverReplicas
 			}

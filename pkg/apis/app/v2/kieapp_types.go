@@ -252,6 +252,8 @@ type KieAppObject struct {
 	ImageTag string `json:"imageTag,omitempty"`
 	// The storageClassName to use
 	StorageClassName string `json:"storageClassName,omitempty"`
+	// Enable the clustering between Kieservers and add one replicas if only one is configured
+	JbpmCluster bool `json:"jbpmCluster,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
@@ -660,6 +662,8 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	// Enable the clustering between Kieservers and add one replicas if only one is configured
+	JbpmCluster bool `json:"jbpmCluster,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates

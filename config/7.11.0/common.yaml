@@ -680,6 +680,8 @@ servers:
                       value: "[[.Build.DisablePullDeps]]"
                     - name: KIE_SERVER_DISABLE_KC_VERIFICATION
                       value: "[[.Build.DisableKCVerification]]"
+                    - name: JBPM_CLUSTER
+                      value: "[[.JbpmCluster]]"
                     # Auth config BEGIN
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]
