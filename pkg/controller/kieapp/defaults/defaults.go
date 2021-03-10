@@ -646,10 +646,10 @@ func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
 // or a specific one.
 func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	var servers []api.ServerTemplate
-	serverReplicas := Pint32(1)
+	serverReplicas := int32(1)
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if hasEnv {
-		serverReplicas = &envConstants.Replica.Server.Replicas
+		serverReplicas = envConstants.Replica.Server.Replicas
 	}
 	product := GetProduct(cr.Status.Applied.Environment)
 	usedNames := map[string]bool{}
@@ -671,6 +671,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				Build:            getBuildConfig(product, cr, serverSet),
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
+				JbpmCluster:      serverSet.JbpmCluster,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -696,7 +697,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 
 			// Set replicas
 			if serverSet.Replicas == nil {
-				serverSet.Replicas = serverReplicas
+				serverSet.Replicas = &serverReplicas
+			}
+			// If JbpmCluster enabled and replicas set to 1, increase replicas to 2.
+			if serverSet.JbpmCluster && *serverSet.Replicas == int32(1) {
+				serverSet.Replicas = Pint32(2)
 			}
 			template.Replicas = *serverSet.Replicas
 

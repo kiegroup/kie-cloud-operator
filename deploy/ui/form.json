@@ -842,6 +842,24 @@
                   "description": "The secret name within the Java keystore used for https encryption. Generated if empty"
                 },
                 {
+                  "label": "Enable JBPM CLuster",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "JBPM Cluster",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                      "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                      "type": "checkbox",
+                      "checked": "true",
+                      "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers"
+                    }
+                  ]
+                },
+                {
                   "label": "Replicas",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].replicas",
