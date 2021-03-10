@@ -842,6 +842,24 @@
                   "description": "The secret name within the Java keystore used for https encryption. Generated if empty"
                 },
                 {
+                  "label": "JBPM Cluster",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "type" : "dropDown",
+                  "description": "Enable the clustering between kieserver on some RHDM envs, it could increase the number of kieservers",
+                  "options": [
+                    {
+                      "value": "true",
+                      "label": "Jbpm clustering enabled"
+                    },
+                    {
+                      "value": "false",
+                      "label": "Jbpm clustering enabled"
+                    }
+                    ]
+                },
+                {
                   "label": "Replicas",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].replicas",
