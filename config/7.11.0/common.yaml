@@ -907,6 +907,40 @@ servers:
                       value: "[[.Jvm.GcContainerOptions]]"
                     #[[end]]
                     ## Jvm config END
+                    ## AMQ Streams BEGIN
+                    #[[if .Kafka]]
+                    - name: KIE_SERVER_KAFKA_EXT_ENABLED
+                      value: "true"
+                      #[[if .Kafka.Topics]]
+                    - name: KIE_SERVER_KAFKA_EXT_TOPICS
+                      value: "[[.Kafka.Topics]]"
+                      #[[end]]
+                      #[[if .Kafka.BootstrapServers]]
+                    - name: KIE_SERVER_KAFKA_EXT_SERVERS
+                      value: "[[.Kafka.BootstrapServers]]"
+                      #[[end]]
+                      #[[if .Kafka.ClientID]]
+                    - name: KIE_SERVER_KAFKA_EXT_CLIENT_ID
+                      value: "[[.Kafka.ClientID]]"
+                      #[[end]]
+                      #[[if .Kafka.AutocreateTopics]]
+                    - name: KIE_SERVER_KAFKA_EXT_AUTOCREATE_TOPICS
+                      value: "[[.Kafka.AutocreateTopics]]"
+                      #[[end]]
+                      #[[if .Kafka.GroupID]]
+                    - name: KIE_SERVER_KAFKA_EXT_GROUP_ID
+                      value: "[[.Kafka.GroupID]]"
+                      #[[end]]
+                      #[[if .Kafka.Acks]]
+                    - name: KIE_SERVER_KAFKA_EXT_ACKS
+                      value: "[[.Kafka.Acks]]"
+                      #[[end]]
+                      #[[if .Kafka.MaxBlockMs]]
+                    - name: KIE_SERVER_KAFKA_EXT_MAX_BLOCK_MS
+                      value: "[[.Kafka.MaxBlockMs]]"
+                      #[[end]]
+                    #[[end]]
+                    ## AMQ Streams END
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck
