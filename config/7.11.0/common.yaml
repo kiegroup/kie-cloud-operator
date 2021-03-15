@@ -681,7 +681,7 @@ servers:
                     - name: KIE_SERVER_DISABLE_KC_VERIFICATION
                       value: "[[.Build.DisableKCVerification]]"
                     - name: JBPM_CLUSTER
-                      value: "[[.JbpmCluster]]"
+                      value: "true"
                     # Auth config BEGIN
                     ## SSO config BEGIN
                     #[[if $.Auth.SSO.URL]]

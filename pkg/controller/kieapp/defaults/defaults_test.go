@@ -5446,7 +5446,7 @@ func TestRhdmProdImmutableEnvironmentWithJbpmClusterEnabled(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						KieAppObject: api.KieAppObject{
-							JbpmCluster: true,
+							JbpmCluster: "true",
 						},
 					},
 				},
@@ -5471,7 +5471,7 @@ func TestRhdmProdImmutableEnvironmentWithJbpmClusterDisabled(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						KieAppObject: api.KieAppObject{
-							JbpmCluster: false,
+							JbpmCluster: "false",
 						},
 					},
 				},
