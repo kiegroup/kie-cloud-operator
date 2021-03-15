@@ -269,6 +269,9 @@ const (
 	//Envs
 	KubeNS     = "KUBERNETES_NAMESPACE"
 	KubeLabels = "KUBERNETES_LABELS"
+
+	//Kafka
+	KafkaTopicsEnv = "KIE_SERVER_KAFKA_EXT_TOPICS"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
