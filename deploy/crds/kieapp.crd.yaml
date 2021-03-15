@@ -525,7 +525,7 @@ spec:
                       jbpmCluster:
                         description: Enable the clustering between Kieservers and
                           add one replicas if only one is configured
-                        type: boolean
+                        type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
                           KieApp
@@ -921,7 +921,7 @@ spec:
                       jbpmCluster:
                         description: Enable the clustering between Kieservers and
                           add one replicas if only one is configured
-                        type: boolean
+                        type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
                           KieApp
@@ -1694,7 +1694,7 @@ spec:
                         jbpmCluster:
                           description: Enable the clustering between Kieservers and
                             add one replicas if only one is configured
-                          type: boolean
+                          type: string
                         jms:
                           description: KieAppJmsObject messaging specification to
                             be used by the KieApp
@@ -2075,7 +2075,7 @@ spec:
                       jbpmCluster:
                         description: Enable the clustering between Kieservers and
                           add one replicas if only one is configured
-                        type: boolean
+                        type: string
                       keystoreSecret:
                         description: Keystore secret name
                         type: string
@@ -2650,7 +2650,7 @@ spec:
                           jbpmCluster:
                             description: Enable the clustering between Kieservers
                               and add one replicas if only one is configured
-                            type: boolean
+                            type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
                               the KieApp
@@ -3053,7 +3053,7 @@ spec:
                           jbpmCluster:
                             description: Enable the clustering between Kieservers
                               and add one replicas if only one is configured
-                            type: boolean
+                            type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
                               the KieApp
@@ -3847,7 +3847,7 @@ spec:
                             jbpmCluster:
                               description: Enable the clustering between Kieservers
                                 and add one replicas if only one is configured
-                              type: boolean
+                              type: string
                             jms:
                               description: KieAppJmsObject messaging specification
                                 to be used by the KieApp
@@ -4240,7 +4240,7 @@ spec:
                           jbpmCluster:
                             description: Enable the clustering between Kieservers
                               and add one replicas if only one is configured
-                            type: boolean
+                            type: string
                           keystoreSecret:
                             description: Keystore secret name
                             type: string
