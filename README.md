@@ -109,7 +109,7 @@ make test
 
 ## Build rhel-based image for release
 
-Requires `cekit` v3.8 and `rhpkg` -
+Requires `cekit` v3.9 and `rhpkg` -
 
 ```bash
 # local build
