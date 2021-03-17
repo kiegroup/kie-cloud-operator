@@ -123,6 +123,7 @@ console:
                   - name: KUBERNETES_NAMESPACE
                     valueFrom:
                       fieldRef:
+                        apiVersion: v1
                         fieldPath: metadata.namespace
                   - name: KUBERNETES_LABELS
                     value: "cluster=jgrp.k8s.[[.ApplicationName]].[[.Console.Name]]"
@@ -673,6 +674,7 @@ servers:
                     - name: KUBERNETES_NAMESPACE
                       valueFrom:
                         fieldRef:
+                          apiVersion: v1
                           fieldPath: metadata.namespace
                     - name: KUBERNETES_LABELS
                       value: "cluster=jgrp.k8s.[[.KieName]]"
