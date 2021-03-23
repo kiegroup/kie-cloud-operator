@@ -337,6 +337,6 @@ others:
             application: "[[.ApplicationName]]"
           annotations:
             description: Provides a service for accessing the application over Hot Rod protocol.
-            service.alpha.openshift.io/serving-cert-secret-name: datagrid-service-certs
+            service.beta.openshift.io/serving-cert-secret-name: datagrid-service-certs
 ## ES/AMQ END
 

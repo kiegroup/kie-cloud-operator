@@ -141,8 +141,6 @@ spec:
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.1
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_3
-          value: registry.redhat.io/openshift3/oauth-proxy:latest
         image: quay.io/kiegroup/kie-cloud-operator:7.10.1
         imagePullPolicy: Always
         name: business-automation-operator
