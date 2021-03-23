@@ -169,6 +169,10 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			Value: constants.Oauth4ImageURL + ":v" + ocpVersion,
 		})
 	}
+	deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+		Name:  constants.OauthVar + "3",
+		Value: constants.Oauth3ImageLatestURL,
+	})
 
 	return deployment
 }
