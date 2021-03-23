@@ -22,7 +22,7 @@ fi
 echo ${CFLAGS}
 
 OLMDIR=deploy/olm-catalog/prod
-CSV=businessautomation-operator.${CSVVERSION}.clusterserviceversion.yaml
+CSV=businessautomation-operator.clusterserviceversion.yaml
 if [[ ${DEV} == true ]]; then
     OLMDIR=deploy/olm-catalog/dev
     BUNDLE_NAME=quay.io/tchughesiv/${BUNDLE}
@@ -75,8 +75,8 @@ if [[ ${LOCAL} != true ]]; then
     }' \
         --overrides '{
     artifacts: [
-        {name: '${CRD}', path: '${CRD_PATH}', md5: '${MD5_CRD}', dest: '/manifests'},
-        {name: '${ANNO}', path: '${ANNO_PATH}', md5: '${MD5_ANNO}', dest: '/metadata'}
+        {name: '${CRD}', path: '${CRD_PATH}', md5: '${MD5_CRD}', dest: '/manifests/'},
+        {name: '${ANNO}', path: '${ANNO_PATH}', md5: '${MD5_ANNO}', dest: '/metadata/'}
     ]}' \
         ${CFLAGS}
 else
@@ -85,9 +85,9 @@ else
         --overrides '{version: '${VERSION}'}' \
         --overrides '{
     artifacts: [
-        {name: '${CSV}', path: '${CSV_PATH}', md5: '${MD5_CSV}', dest: '/manifests'},
-        {name: '${CRD}', path: '${CRD_PATH}', md5: '${MD5_CRD}', dest: '/manifests'},
-        {name: '${ANNO}', path: '${ANNO_PATH}', md5: '${MD5_ANNO}', dest: '/metadata'}
+        {name: '${CSV}', path: '${CSV_PATH}', md5: '${MD5_CSV}', dest: '/manifests/'},
+        {name: '${CRD}', path: '${CRD_PATH}', md5: '${MD5_CRD}', dest: '/manifests/'},
+        {name: '${ANNO}', path: '${ANNO_PATH}', md5: '${MD5_ANNO}', dest: '/metadata/'}
     ]}' \
         ${CFLAGS}
 fi
