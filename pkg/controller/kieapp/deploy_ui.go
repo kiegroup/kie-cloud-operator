@@ -210,12 +210,6 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	} else if val, exists := os.LookupEnv(constants.OauthVar + "LATEST"); exists {
 		oauthImage = val
 	}
-	if ocpMajor == "3" {
-		oauthImage = constants.Oauth3ImageLatestURL
-		if val, exists := os.LookupEnv(constants.OauthVar + "3"); exists {
-			oauthImage = val
-		}
-	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
 	httpsPort := int32(8443)
@@ -328,9 +322,6 @@ func getService(namespace, ocpVersion string) *corev1.Service {
 			},
 			Selector: labels,
 		},
-	}
-	if semver.Major(ocpVersion) == "v3" {
-		svc.Annotations = map[string]string{"service.alpha.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"}
 	}
 	return svc
 }

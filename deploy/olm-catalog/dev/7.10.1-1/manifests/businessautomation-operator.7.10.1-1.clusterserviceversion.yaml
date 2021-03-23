@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.10.1
-    createdAt: "2021-03-08 16:16:40"
+    createdAt: "2021-03-23 11:07:23"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.10.1-1-dev-96psq2wrq6
+  name: businessautomation-operator.7.10.1-1-dev-zbhl4hwpzp
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -272,8 +272,6 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.1
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_3
-                  value: registry.redhat.io/openshift3/oauth-proxy:latest
                 image: quay.io/kiegroup/kie-cloud-operator:7.10.1
                 imagePullPolicy: Always
                 name: business-automation-operator
@@ -441,7 +439,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.10.1-1-dev-96psq2wrq6
+    operated-by: businessautomation-operator.7.10.1-1-dev-zbhl4hwpzp
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -457,5 +455,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.10.1-1-dev-96psq2wrq6
-  version: 7.10.1-1+96psq2wrq6
+      operated-by: businessautomation-operator.7.10.1-1-dev-zbhl4hwpzp
+  version: 7.10.1-1+zbhl4hwpzp
