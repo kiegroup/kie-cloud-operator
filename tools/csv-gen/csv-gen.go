@@ -315,7 +315,7 @@ func main() {
 		if csv.Maturity == "test" {
 			bundleDir = "deploy/olm-catalog/test/" + *ver + "/"
 		}
-		csvFile := bundleDir + "manifests/" + operatorName + "." + *ver + ".clusterserviceversion.yaml"
+		csvFile := bundleDir + "manifests/" + operatorName + ".clusterserviceversion.yaml"
 
 		var templateInterface interface{}
 		templateInterface = templateStruct
