@@ -2216,6 +2216,15 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              truststore:
+                description: Defines which truststore is used by the console, kieservers,
+                  smartrouter, and dashbuilder
+                properties:
+                  openshiftCaBundle:
+                    description: Set true to use Openshift's CA Bundle as a truststore,
+                      instead of java's cacert.
+                    type: boolean
+                type: object
               upgrades:
                 description: Specify the level of product upgrade that should be allowed
                   when an older product version is detected
@@ -2233,10 +2242,6 @@ spec:
               useImageTags:
                 description: Set true to enable image tags, disabled by default. This
                   will leverage image tags instead of the image digests.
-                type: boolean
-              useOpenshiftCA:
-                description: Set true to use Openshift's CA bundle as a truststore,
-                  instead of java's cacert.
                 type: boolean
               version:
                 description: The version of the application deployment.
@@ -4474,6 +4479,15 @@ spec:
                             type: boolean
                         type: object
                     type: object
+                  truststore:
+                    description: Defines which truststore is used by the console,
+                      kieservers, smartrouter, and dashbuilder
+                    properties:
+                      openshiftCaBundle:
+                        description: Set true to use Openshift's CA Bundle as a truststore,
+                          instead of java's cacert.
+                        type: boolean
+                    type: object
                   upgrades:
                     description: Specify the level of product upgrade that should
                       be allowed when an older product version is detected
@@ -4491,10 +4505,6 @@ spec:
                   useImageTags:
                     description: Set true to enable image tags, disabled by default.
                       This will leverage image tags instead of the image digests.
-                    type: boolean
-                  useOpenshiftCA:
-                    description: Set true to use Openshift's CA bundle as a truststore,
-                      instead of java's cacert.
                     type: boolean
                   version:
                     description: The version of the application deployment.

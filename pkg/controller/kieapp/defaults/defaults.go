@@ -306,7 +306,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		Constants:   *getTemplateConstants(cr),
 	}
 	if IsOcpCA(cr) {
-		envTemplate.UseOpenshiftCA = cr.Status.Applied.UseOpenshiftCA
+		envTemplate.OpenshiftCaBundle = cr.Status.Applied.Truststore.OpenshiftCaBundle
 	}
 
 	dashbuilderTemplate, err := getDashbuilderTemplate(cr, serversConfig, &envTemplate.Console)
@@ -1643,7 +1643,9 @@ func isGE710(cr *api.KieApp) bool {
 }
 
 func IsOcpCA(cr *api.KieApp) bool {
-	return cr.Status.Applied.UseOpenshiftCA && semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.11") >= 0
+	return cr.Status.Applied.Truststore != nil &&
+		cr.Status.Applied.Truststore.OpenshiftCaBundle &&
+		semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.11") >= 0
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,

@@ -297,7 +297,7 @@ dashbuilder:
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/dashbuilder-secret-volume"
                     readOnly: true
-                  #[[if .UseOpenshiftCA]]
+                  #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
                     readOnly: true
@@ -310,7 +310,7 @@ dashbuilder:
               - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Dashbuilder.KeystoreSecret]]"
-              #[[if .UseOpenshiftCA]]
+              #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
                   secretName: "[[.ApplicationName]]-truststore"
