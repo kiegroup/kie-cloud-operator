@@ -1683,6 +1683,11 @@ spec:
                           description: The image tag to use e.g. 7.9.0, this param
                             is optional for custom image.
                           type: string
+                        jbpmCluster:
+                          description: JbpmCluster Enable the KIE Server Jbpm clustering
+                            for processes fail-over, it could increase the number
+                            of kieservers
+                          type: boolean
                         jms:
                           description: KieAppJmsObject messaging specification to
                             be used by the KieApp
@@ -3820,6 +3825,11 @@ spec:
                               description: The image tag to use e.g. 7.9.0, this param
                                 is optional for custom image.
                               type: string
+                            jbpmCluster:
+                              description: JbpmCluster Enable the KIE Server Jbpm
+                                clustering for processes fail-over, it could increase
+                                the number of kieservers
+                              type: boolean
                             jms:
                               description: KieAppJmsObject messaging specification
                                 to be used by the KieApp

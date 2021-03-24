@@ -2,6 +2,7 @@ package constants
 
 import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"golang.org/x/mod/semver"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -23,8 +24,8 @@ var SupportedVersions = []string{CurrentVersion, PriorVersion}
 var VersionConstants = map[string]*api.VersionConfigs{
 	CurrentVersion: {
 		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
+		OseCliImageURL:      OseCli4ImageURL,
+		OseCliComponent:     OseCli4Component,
 		BrokerImage:         BrokerImage,
 		BrokerImageTag:      Broker78ImageTag,
 		BrokerImageURL:      Broker78ImageURL,
@@ -39,8 +40,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 	},
 	PriorVersion: {
 		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
+		OseCliImageURL:      OseCli4ImageURL,
+		OseCliComponent:     OseCli4Component,
 		BrokerImage:         BrokerImage,
 		BrokerImageTag:      Broker78ImageTag,
 		BrokerImageURL:      Broker78ImageURL,
@@ -168,7 +169,6 @@ const (
 	PamSmartRouterVar      = relatedImageVar + "PAM_SMARTROUTER_IMAGE_"
 
 	OauthVar             = relatedImageVar + "OAUTH_PROXY_IMAGE_"
-	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
 	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
 	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
 	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
@@ -183,9 +183,8 @@ const (
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
 	MySQL80Component = "rh-mysql80-container"
 
-	OseCliVar          = relatedImageVar + "OSE_CLI_IMAGE_"
-	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
-	OseCli311Component = "openshift-enterprise-cli-container"
+	OseCliVar        = relatedImageVar + "OSE_CLI_IMAGE_"
+	OseCli4Component = "openshift-enterprise-cli-container"
 
 	BrokerComponent = "amq-broker-openshift-container"
 	BrokerVar       = relatedImageVar + "BROKER_IMAGE_"
@@ -261,6 +260,8 @@ const (
 	KubeNS     = "KUBERNETES_NAMESPACE"
 	KubeLabels = "KUBERNETES_LABELS"
 )
+
+var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
 
 // Console Resource Limits for BC Monitoring in Prod Env
 var ConsoleProdLimits = map[string]string{
@@ -473,4 +474,15 @@ var DebugTrue = corev1.EnvVar{
 var DebugFalse = corev1.EnvVar{
 	Name:  "DEBUG",
 	Value: "false",
+}
+
+func highestOcpVersion(versions []string) string {
+	highest := ""
+	for _, ver := range versions {
+		ver = "v" + ver
+		if semver.IsValid(ver) && semver.Compare(ver, highest) > 0 {
+			highest = ver
+		}
+	}
+	return highest
 }
