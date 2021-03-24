@@ -678,6 +678,8 @@ servers:
                           fieldPath: metadata.namespace
                     - name: KUBERNETES_LABELS
                       value: "cluster=jgrp.k8s.[[.KieName]]"
+                    - name: KIE_SERVER_JBPM_CLUSTER
+                      value: "[[.JbpmCluster]]"
                     - name: KIE_SERVER_DISABLE_KC_PULL_DEPS
                       value: "[[.Build.DisablePullDeps]]"
                     - name: KIE_SERVER_DISABLE_KC_VERIFICATION
