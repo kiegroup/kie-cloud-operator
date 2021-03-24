@@ -2080,7 +2080,7 @@ func TestOpenshiftCA(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 
-	assert.False(t, cr.Status.Applied.UseOpenshiftCA)
+	assert.Nil(t, cr.Status.Applied.Truststore)
 	assert.False(t, IsOcpCA(cr))
 	assert.Empty(t, env.Others[0].ConfigMaps)
 	trustVolMnt := corev1.VolumeMount{
@@ -2105,10 +2105,12 @@ func TestOpenshiftCA(t *testing.T) {
 	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
 	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
 
-	cr.Spec.UseOpenshiftCA = true
+	cr.Spec.Truststore = &api.KieAppTruststore{
+		OpenshiftCaBundle: true,
+	}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
-	assert.True(t, cr.Status.Applied.UseOpenshiftCA)
+	assert.True(t, cr.Status.Applied.Truststore.OpenshiftCaBundle)
 	assert.True(t, IsOcpCA(cr))
 	assert.Len(t, env.Others[0].ConfigMaps, 1)
 	// Truststore volumes are mounted

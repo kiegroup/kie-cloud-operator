@@ -27,8 +27,8 @@ type KieAppSpec struct {
 	Upgrades KieAppUpgrades `json:"upgrades,omitempty"`
 	// Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
 	UseImageTags bool `json:"useImageTags,omitempty"`
-	// Set true to use Openshift's CA bundle as a truststore, instead of java's cacert.
-	UseOpenshiftCA bool `json:"useOpenshiftCA,omitempty"`
+	// Defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder
+	Truststore *KieAppTruststore `json:"truststore,omitempty"`
 	// The version of the application deployment.
 	Version      string            `json:"version,omitempty"`
 	CommonConfig CommonConfig      `json:"commonConfig,omitempty"`
@@ -67,6 +67,12 @@ type KieAppRegistry struct {
 	Registry string `json:"registry,omitempty"`
 	// A flag used to indicate the specified registry is insecure. Defaults to 'false'.
 	Insecure bool `json:"insecure,omitempty"`
+}
+
+// KieAppTruststore defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder
+type KieAppTruststore struct {
+	// Set true to use Openshift's CA Bundle as a truststore, instead of java's cacert.
+	OpenshiftCaBundle bool `json:"openshiftCaBundle,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -593,16 +599,16 @@ type OpenShiftObject interface {
 }
 
 type EnvTemplate struct {
-	*CommonConfig    `json:",inline"`
-	Console          ConsoleTemplate          `json:"console,omitempty"`
-	Servers          []ServerTemplate         `json:"servers,omitempty"`
-	SmartRouter      SmartRouterTemplate      `json:"smartRouter,omitempty"`
-	Auth             AuthTemplate             `json:"auth,omitempty"`
-	ProcessMigration ProcessMigrationTemplate `json:"processMigration,omitempty"`
-	Dashbuilder      DashbuilderTemplate      `json:"dashbuilder,omitempty"`
-	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
-	Constants        TemplateConstants        `json:"constants,omitempty"`
-	UseOpenshiftCA   bool                     `json:"useOpenshiftCA,omitempty"`
+	*CommonConfig     `json:",inline"`
+	Console           ConsoleTemplate          `json:"console,omitempty"`
+	Servers           []ServerTemplate         `json:"servers,omitempty"`
+	SmartRouter       SmartRouterTemplate      `json:"smartRouter,omitempty"`
+	Auth              AuthTemplate             `json:"auth,omitempty"`
+	ProcessMigration  ProcessMigrationTemplate `json:"processMigration,omitempty"`
+	Dashbuilder       DashbuilderTemplate      `json:"dashbuilder,omitempty"`
+	Databases         []DatabaseTemplate       `json:"databases,omitempty"`
+	Constants         TemplateConstants        `json:"constants,omitempty"`
+	OpenshiftCaBundle bool                     `json:"openshiftCaBundle,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates

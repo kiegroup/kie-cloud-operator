@@ -269,7 +269,7 @@ console:
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
-                  #[[if .UseOpenshiftCA]]
+                  #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
                     readOnly: true
@@ -296,7 +296,7 @@ console:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
-              #[[if .UseOpenshiftCA]]
+              #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
                   secretName: "[[.ApplicationName]]-truststore"
@@ -570,7 +570,7 @@ smartRouter:
                   - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
-                  #[[if .UseOpenshiftCA]]
+                  #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
                     readOnly: true
@@ -582,7 +582,7 @@ smartRouter:
               - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                 secret:
                   secretName: "[[.SmartRouter.KeystoreSecret]]"
-              #[[if .UseOpenshiftCA]]
+              #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
                   secretName: "[[.ApplicationName]]-truststore"
@@ -939,7 +939,7 @@ servers:
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
-                    #[[if $.UseOpenshiftCA]]
+                    #[[if $.OpenshiftCaBundle]]
                     - name: "[[$.ApplicationName]]-truststore"
                       mountPath: "/etc/openshift-truststore-volume"
                       readOnly: true
@@ -953,7 +953,7 @@ servers:
                 - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
-                #[[if $.UseOpenshiftCA]]
+                #[[if $.OpenshiftCaBundle]]
                 - name: "[[$.ApplicationName]]-truststore"
                   secret:
                     secretName: "[[$.ApplicationName]]-truststore"
@@ -1090,7 +1090,7 @@ others:
           kind: Role
           name: "[[.ApplicationName]]-[[.Constants.Product]]svc-edit"
 
-    #[[if .UseOpenshiftCA]]
+    #[[if .OpenshiftCaBundle]]
     configMaps:
       - metadata:
           name: "[[.ApplicationName]]-kieapp-ca-bundle"

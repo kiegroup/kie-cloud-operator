@@ -56,12 +56,22 @@
           "originalJsonPath": "$.spec.useImageTags"
         },
         {
-          "label": "Use Openshift CA",
-          "type": "checkbox",
+          "label": "Truststore",
+          "type": "fieldGroup",
           "required": false,
-          "description": "Set true to use Openshift's CA bundle as a truststore, instead of java's cacert.",
-          "jsonPath": "$.spec.useOpenshiftCA",
-          "originalJsonPath": "$.spec.useOpenshiftCA"
+          "description": "Defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder.",
+          "jsonPath": "$.spec.truststore",
+          "visible": true,
+          "fields": [
+            {
+              "label": "Use Openshift CA Bundle",
+              "type": "checkbox",
+              "required": false,
+              "description": "Set true to use Openshift's CA Bundle as a truststore, instead of java's cacert.",
+              "jsonPath": "$.spec.truststore.openshiftCaBundle",
+              "originalJsonPath": "$.spec.truststore.openshiftCaBundle"
+            }
+          ]
         },
         {
           "label": "Custom registry",
