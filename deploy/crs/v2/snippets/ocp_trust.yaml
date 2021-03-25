@@ -1,0 +1,12 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-ocp-truststore
+  annotations:
+    consoleName: snippet-rhpam-ocp-truststore
+    consoleTitle: Use Openshift's CA bundle as a Truststore
+    consoleDesc: Use this snippet to setup the openshift CA bundle as a truststore
+    consoleSnippet: true
+spec:
+  truststore:
+    openshiftCaBundle: true

@@ -297,6 +297,11 @@ dashbuilder:
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/dashbuilder-secret-volume"
                     readOnly: true
+                  #[[if .OpenshiftCaBundle]]
+                  - name: "[[.ApplicationName]]-truststore"
+                    mountPath: "/etc/openshift-truststore-volume"
+                    readOnly: true
+                  #[[end]]
                   #[[if .Dashbuilder.Config.PersistentConfigs]]
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-pvol"
                     mountPath: "/opt/kie/dashbuilder"
@@ -305,6 +310,11 @@ dashbuilder:
               - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Dashbuilder.KeystoreSecret]]"
+              #[[if .OpenshiftCaBundle]]
+              - name: "[[.ApplicationName]]-truststore"
+                secret:
+                  secretName: "[[.ApplicationName]]-truststore"
+              #[[end]]
               #[[if .Dashbuilder.Config.PersistentConfigs]]
               - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-pvol"
                 persistentVolumeClaim:

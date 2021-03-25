@@ -335,17 +335,6 @@ func main() {
 		}
 		createFile(csvFile, &templateInterface)
 
-		// copy crd to manifests dir
-		crdYaml := "kieapp.crd.yaml"
-		crdPath := "deploy/crds/"
-		crdFile := crdPath + crdYaml
-		err = CopyFile(crdFile, bundleDir+"manifests/"+crdYaml)
-		if err != nil {
-			log.Error(err)
-		}
-		//crdSymLink := bundleDir + "manifests/" + crdYaml
-		//os.Symlink("../../../../crds/"+crdYaml, crdSymLink)
-
 		annotationsdata := annotationsStruct{
 			Annotations: map[string]string{
 				"operators.operatorframework.io.bundle.channel.default.v1": channel,
