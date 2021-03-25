@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.11.0
-    createdAt: "2021-03-24 09:00:46"
+    createdAt: "2021-03-25 09:58:39"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -234,16 +234,6 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.5
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.4
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.3
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.2
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.1
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
                 image: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.11.0
                 imagePullPolicy: Always
                 name: business-automation-operator
