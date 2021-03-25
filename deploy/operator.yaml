@@ -103,16 +103,6 @@ spec:
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.5
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.4
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.4
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.3
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.3
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.2
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.2
-        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.1
-          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.1
         image: quay.io/kiegroup/kie-cloud-operator:7.11.0
         imagePullPolicy: Always
         name: business-automation-operator
