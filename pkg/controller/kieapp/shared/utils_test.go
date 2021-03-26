@@ -11,6 +11,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+var certChainLen = 129
+
 func TestEnvOverride(t *testing.T) {
 	src := []corev1.EnvVar{
 		{
@@ -99,7 +101,6 @@ func TestTruststoreInvalid(t *testing.T) {
 
 	trust1, err := createTruststoreObject(caBundle)
 	assert.Nil(t, err)
-	certChainLen := 129
 	assert.Len(t, trust1.Aliases(), certChainLen)
 
 	emptyCa := []byte{}
@@ -114,6 +115,33 @@ func TestTruststoreInvalid(t *testing.T) {
 	ok, err = IsValidTruststore(caBundle, trustBytes2)
 	assert.False(t, ok)
 	assert.Nil(t, err)
+}
+
+func TestAppendCerts(t *testing.T) {
+	caBundle, err := ioutil.ReadFile("test-" + constants.CaBundleKey)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, caBundle)
+
+	trustStore := keystore.New(keystore.WithOrderedAliases())
+	ok, err := appendCertsFromPEM(caBundle, &trustStore)
+	assert.True(t, ok)
+	assert.Nil(t, err)
+	assert.Len(t, trustStore.Aliases(), certChainLen)
+
+	trustStore = keystore.New(keystore.WithOrderedAliases())
+	ok, err = appendCertsFromPEM([]byte("test"), &trustStore)
+	assert.True(t, ok)
+	assert.Nil(t, err)
+	assert.Len(t, trustStore.Aliases(), 0)
+
+	trustStore = keystore.New(keystore.WithOrderedAliases())
+	badCert := `-----BEGIN CERTIFICATE-----
+blahblah`
+	caBundle = []byte(badCert)
+	ok, err = appendCertsFromPEM(caBundle, &trustStore)
+	assert.True(t, ok)
+	assert.Nil(t, err)
+	assert.Len(t, trustStore.Aliases(), 0)
 }
 
 func TestEnvVarCheck(t *testing.T) {

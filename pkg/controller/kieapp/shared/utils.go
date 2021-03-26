@@ -131,7 +131,7 @@ func appendCertsFromPEM(pemCerts []byte, s *keystore.KeyStore) (ok bool, err err
 			return false, err
 		}
 	}
-	return
+	return true, nil
 }
 
 func IsValidTruststoreSecret(secret corev1.Secret, caBundle []byte) (bool, error) {
