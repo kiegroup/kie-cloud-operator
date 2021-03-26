@@ -138,7 +138,8 @@ type KieServerSet struct {
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool `json:"jbpmCluster,omitempty"`
+	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
+	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -673,7 +674,8 @@ type ServerTemplate struct {
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool `json:"jbpmCluster,omitempty"`
+	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
+	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -955,6 +957,24 @@ type ObjectReference struct {
 	// TODO: this design is not final and this field is subject to change in the future.
 	// +optional
 	FieldPath string `json:"fieldPath,omitempty" protobuf:"bytes,7,opt,name=fieldPath"`
+}
+
+// KafkaExtObject kafka configuration to be used by the KieApp
+type KafkaExtObject struct {
+	// Contains the mapping message/signal=topicName for every topic that needs to be mapped globally
+	Topics []string `json:"topics,omitempty"`
+	// A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// Identifier to pass to the server when making requests
+	ClientID string `json:"clientID,omitempty"`
+	// Allow automatic topic creation.
+	AutocreateTopics *bool `json:"autocreateTopics,omitempty"`
+	// Group identifier the group this consumer belongs
+	GroupID string `json:"groupID,omitempty"`
+	// The number of acknowledgments the producer requires the leader to have received before considering a request complete.
+	Acks *int `json:"acks,omitempty"`
+	// Number of milliseconds that indicates how long publish method will bloc
+	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
 }
 
 func init() {

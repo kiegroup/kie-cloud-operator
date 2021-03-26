@@ -1876,6 +1876,43 @@ spec:
                                 to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
                               type: string
                           type: object
+                        kafka:
+                          description: KafkaExtObject kafka configuration to be used
+                            by the KieApp
+                          properties:
+                            acks:
+                              description: The number of acknowledgments the producer
+                                requires the leader to have received before considering
+                                a request complete.
+                              type: integer
+                            autocreateTopics:
+                              description: Allow automatic topic creation.
+                              type: boolean
+                            bootstrapServers:
+                              description: A comma separated list of host/port pairs
+                                to use for establishing the initial connection to
+                                the Kafka cluster
+                              type: string
+                            clientID:
+                              description: Identifier to pass to the server when making
+                                requests
+                              type: string
+                            groupID:
+                              description: Group identifier the group this consumer
+                                belongs
+                              type: string
+                            maxBlockMs:
+                              description: Number of milliseconds that indicates how
+                                long publish method will bloc
+                              format: int32
+                              type: integer
+                            topics:
+                              description: Contains the mapping message/signal=topicName
+                                for every topic that needs to be mapped globally
+                              items:
+                                type: string
+                              type: array
+                          type: object
                         keystoreSecret:
                           description: Keystore secret name
                           type: string
@@ -4135,6 +4172,43 @@ spec:
                                   description: User specified Java options to be appended
                                     to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'
                                   type: string
+                              type: object
+                            kafka:
+                              description: KafkaExtObject kafka configuration to be
+                                used by the KieApp
+                              properties:
+                                acks:
+                                  description: The number of acknowledgments the producer
+                                    requires the leader to have received before considering
+                                    a request complete.
+                                  type: integer
+                                autocreateTopics:
+                                  description: Allow automatic topic creation.
+                                  type: boolean
+                                bootstrapServers:
+                                  description: A comma separated list of host/port
+                                    pairs to use for establishing the initial connection
+                                    to the Kafka cluster
+                                  type: string
+                                clientID:
+                                  description: Identifier to pass to the server when
+                                    making requests
+                                  type: string
+                                groupID:
+                                  description: Group identifier the group this consumer
+                                    belongs
+                                  type: string
+                                maxBlockMs:
+                                  description: Number of milliseconds that indicates
+                                    how long publish method will bloc
+                                  format: int32
+                                  type: integer
+                                topics:
+                                  description: Contains the mapping message/signal=topicName
+                                    for every topic that needs to be mapped globally
+                                  items:
+                                    type: string
+                                  type: array
                               type: object
                             keystoreSecret:
                               description: Keystore secret name
