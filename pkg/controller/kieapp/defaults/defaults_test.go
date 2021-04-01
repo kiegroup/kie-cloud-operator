@@ -5718,7 +5718,7 @@ func TestRhdmEnvironmentWithKafkaExt(t *testing.T) {
 		case "KIE_SERVER_KAFKA_EXT_CLIENT_ID":
 			assert.Equal(t, env.Value, "C1234567")
 
-		case "KIE_SERVER_KAFKA_EXT_SERVERS":
+		case "KIE_SERVER_KAFKA_EXT_BOOTSTRAP_SERVERS":
 			assert.Equal(t, env.Value, "localhost:9092")
 
 		case "KIE_SERVER_KAFKA_EXT_TOPICS":
@@ -5731,7 +5731,7 @@ func TestRhdmEnvironmentWithKafkaExt(t *testing.T) {
 	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_AUTOCREATE_TOPICS"))
 	assert.Equal(t, "2100", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_MAX_BLOCK_MS"))
 	assert.Equal(t, "C1234567", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_CLIENT_ID"))
-	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_SERVERS"))
+	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_BOOTSTRAP_SERVERS"))
 	assert.Equal(t, "events=my-topics,errors=my-errs", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_TOPICS"))
 }
 
