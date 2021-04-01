@@ -916,7 +916,7 @@ servers:
                       value: "[[.Kafka.Topics]]"
                       #[[end]]
                       #[[if .Kafka.BootstrapServers]]
-                    - name: KIE_SERVER_KAFKA_EXT_SERVERS
+                    - name: KIE_SERVER_KAFKA_EXT_BOOTSTRAP_SERVERS
                       value: "[[.Kafka.BootstrapServers]]"
                       #[[end]]
                       #[[if .Kafka.ClientID]]
