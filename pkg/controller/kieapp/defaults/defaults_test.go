@@ -2152,23 +2152,6 @@ func TestOpenshiftCA(t *testing.T) {
 	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
 	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, smartRouterVar)
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
-
-	cr.Spec.Version = "7.10.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err)
-
-	assert.False(t, IsOcpCA(cr))
-	assert.Equal(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
-	assert.Empty(t, env.Others[0].ConfigMaps)
-	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-
-	assert.Empty(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
-	assert.Empty(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend)
 }
 func TestMergeTrialAndCommonConfig(t *testing.T) {
 	cr := &api.KieApp{

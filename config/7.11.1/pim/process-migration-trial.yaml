@@ -1,0 +1,17 @@
+processMigration:
+  routes:
+    - id: "[[.ApplicationName]]-process-migration-http"
+      metadata:
+        name: "[[.ApplicationName]]-process-migration-http"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-process-migration"
+        annotations:
+          description: Route for Process Migration https service.
+      spec:
+        to:
+          kind: Service
+          name: "[[.ApplicationName]]-process-migration"
+        port:
+          targetPort: http
