@@ -58,13 +58,14 @@ if [[ ${LOCAL} != true ]]; then
         --overrides '{
     "osbs":
         {
-        "extra_dir": '${VERDIR}',
+        "extra_dir": '${VERDIR}/',
+        "extra_dir_target": "/",
         "configuration":
             {
             "container":
                 {
                 "operator_manifests":
-                    {"enable_digest_pinning": true, "enable_repo_replacements": true, "enable_registry_replacements": true, "manifests_dir": "manifests"},
+                    {"enable_digest_pinning": true, "enable_repo_replacements": true, "enable_registry_replacements": true, "manifests_dir": '${VERDIR}/manifests'},
                 "platforms":
                     {"only": ["x86_64"]}
                 }
@@ -73,11 +74,6 @@ if [[ ${LOCAL} != true ]]; then
             {"name": "containers/rhpam-operator-bundle", "branch": "rhba-stable-rhel-8"}
         }
     }' \
-        --overrides '{
-    artifacts: [
-        {name: '${CRD}', path: '${CRD_PATH}', md5: '${MD5_CRD}', dest: '/manifests/'},
-        {name: '${ANNO}', path: '${ANNO_PATH}', md5: '${MD5_ANNO}', dest: '/metadata/'}
-    ]}' \
         ${CFLAGS}
 else
     cekit -v --descriptor image-bundle.yaml --redhat build \
