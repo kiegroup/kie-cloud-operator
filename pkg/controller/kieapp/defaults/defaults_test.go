@@ -31,6 +31,9 @@ var (
 	bcmImage             = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral-monitoring" + constants.RhelVersion
 	bcImage              = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-businesscentral" + constants.RhelVersion
 	dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
+	dashImage            = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-dashbuilder" + constants.RhelVersion
+	rhpamkieServerImage  = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-7/" + constants.RhpamPrefix + "-kieserver" + constants.RhelVersion
+	rhdmkieServerImage   = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-kieserver" + constants.RhelVersion
 	latestTag            = ":latest"
 	helloRules           = "hello-rules" + latestTag
 	byeRules             = "bye-rules" + latestTag
@@ -148,9 +151,6 @@ func TestRHPAMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamcentr service should have two ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhpamcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhpamcentr-ping")
-	assert.NotNil(t, pingService, "Ping service not found")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
@@ -182,14 +182,228 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhdmcentr service should have three ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
 
-	pingService := getService(wbServices, "test-rhdmcentr-ping")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should not listen on port 8888")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+}
+
+func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting dashbuilder environment")
+
+	dashServices := env.Dashbuilder.Services
+	mainService := getService(dashServices, "test-dash-rhpamdash")
+
+	assert.NotNil(t, mainService, "rhpamdash service not found")
+	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamdash service should have two ports")
+	assert.False(t, hasPort(mainService, 8001), "The rhpamdash service should NOT listen on port 8001")
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	assert.Equal(t, "test-dash-rhpamdash", env.Dashbuilder.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, dashImage+":"+cr.Status.Applied.Version, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+
+	cpuL, _ := resource.ParseQuantity("1")
+	cpuR, _ := resource.ParseQuantity("750m")
+	memL, _ := resource.ParseQuantity("2Gi")
+	memR, _ := resource.ParseQuantity("1536Mi")
+	dashLimAndReq := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuL,
+			corev1.ResourceMemory: memL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuR,
+			corev1.ResourceMemory: memR,
+		},
+	}
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Resources)
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceCPU], *dashLimAndReq.Limits.Cpu())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceCPU], *dashLimAndReq.Requests.Cpu())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
+	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
+
+	checkClusterLabels(t, cr, env.Dashbuilder)
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
+}
+
+func TestRHPAMDashbuilderEnvironmentWithCustomProperties(t *testing.T) {
+	tr := true
+	f := false
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						ImportFileLocation:        "/test/testing",
+						PersistentConfigs:         &tr,
+						AllowExternalFileRegister: &f,
+						ConfigMapProps:            "/tmp/configMap.properties",
+					},
+				},
+			},
+		},
+	}
+
+	shouldNotContainEnvs := []string{"DASHBUILDER_EXTERNAL_COMP_DIR", "DASHBUILDER_COMP_ENABLE",
+		"DASHBUILDER_UPLOAD_SIZE", "DASHBUILDER_RUNTIME_MULTIPLE_IMPORT", "DASHBUILDER_MODEL_FILE_REMOVAL",
+		"DASHBUILDER_MODEL_UPDATE", "DASHBUILDER_IMPORTS_BASE_DIR", "DASHBUILDER_DATASET_PARTITION",
+		"DASHBUILDER_COMPONENT_PARTITION"}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	isInSlice := func(a string, list []string) bool {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+		return false
+	}
+	for _, env := range env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		assert.Falsef(t, isInSlice(env.Name, shouldNotContainEnvs), "env %s should not be present", env.Name)
+	}
+}
+
+func TestRhpamDashbuilderDatasetsAndTemplates(t *testing.T) {
+
+	datasets := []api.KieServerDataSetOrTemplate{
+		{
+			Name:         "dataset_1",
+			Location:     "http://dataset-1.com/rest",
+			Token:        "my-dataset-1-token",
+			ReplaceQuery: "true",
+		},
+		{
+			Name:     "dataset_2",
+			Location: "https://dataset-2.com/rest",
+			User:     "user-2",
+			Password: "passwd-2",
+		},
+	}
+
+	templates := []api.KieServerDataSetOrTemplate{
+		{
+			Name:         "template_1",
+			Location:     "http://template-1.com/rest",
+			User:         "user-1",
+			Password:     "passwd-1",
+			ReplaceQuery: "false",
+		},
+		{
+			Name:     "template_2",
+			Location: "https://template-2.com/rest",
+			Token:    "my-template-2-token",
+		},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						KieServerDataSets:  datasets,
+						KieServerTemplates: templates,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "http://dataset-1.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_LOCATION"))
+	assert.Equal(t, "my-dataset-1-token", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_TOKEN"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_USER"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_PASSWORD"))
+	assert.Equal(t, "true", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_1_REPLACE_QUERY"))
+	assert.Equal(t, "https://dataset-2.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_LOCATION"))
+	assert.Equal(t, "user-2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_USER"))
+	assert.Equal(t, "passwd-2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_PASSWORD"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "dataset_2_TOKEN"))
+	assert.Equal(t, "dataset_1,dataset_2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_DATASETS"))
+	assert.Equal(t, "http://template-1.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_LOCATION"))
+	assert.Equal(t, "user-1", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_USER"))
+	assert.Equal(t, "passwd-1", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_PASSWORD"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_TOKEN"))
+	assert.Equal(t, "false", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_1_REPLACE_QUERY"))
+	assert.Equal(t, "https://template-2.com/rest", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_LOCATION"))
+	assert.Equal(t, "my-template-2-token", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_TOKEN"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_USER"))
+	assert.Equal(t, "", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "template_2_PASSWORD"))
+	assert.Equal(t, "template_1,template_2", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
+}
+
+func TestRHPAMDashbuilderIntegrationWithKieServer(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						EnableKieServer: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "test-dash-kieserver", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
+	assert.Equal(t, "http://test-dash-kieserver:8080/services/rest/server", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_LOCATION"))
+	assert.Equal(t, "adminUser", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_USER"))
+	assert.Equal(t, "RedHat", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_PASSWORD"))
+}
+
+func TestRHPAMDashbuilderIntegrationWithBC(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Config: &api.DashbuilderConfig{
+						EnableBusinessCentral: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "http://rhpamdash:8080", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_DASHBUILDER_RUNTIME_LOCATION"))
+	assert.Equal(t, "true", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "DASHBUILDER_RUNTIME_MULTIPLE_IMPORT"))
 }
 
 func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
@@ -207,13 +421,11 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, adminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
-	pingService := getService(env.Console.Services, "test-rhpamcentrmon-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "PRODUCTION", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -231,6 +443,7 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhdmPrefix)
+	assert.Equal(t, "1Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -252,6 +465,11 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 				AMQPassword:        "amq",
 				AMQClusterPassword: "cluster",
 			},
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					PvSize: "3Gi",
+				},
+			},
 		},
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
@@ -266,6 +484,7 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhpamPrefix)
+	assert.Equal(t, "3Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhpamPrefix+"-7/"+constants.RhpamPrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
@@ -275,9 +494,6 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "admin", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	amqClusterPassword = getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_CLUSTER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
-	pingService := getService(env.Console.Services, "test-rhpamcentr-ping")
-	assert.Len(t, pingService.Spec.Ports, 1, "The ping service should have only one port")
-	assert.True(t, hasPort(pingService, 8888), "The ping service should listen on port 8888")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -310,9 +526,10 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-
+	assert.Equal(t, fmt.Sprintf(rhdmkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
+	assert.Nil(t, env.Console.PersistentVolumeClaims)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
@@ -322,6 +539,84 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
 	assert.Nil(t, env.Console.DeploymentConfigs)
 	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhpamProdImmutableEnvironmentDisableKCVerification(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+							DisableKCVerification:        true,
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be true")
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be false")
+}
+
+func TestRhdmProdImmutableEnvironmentDisableKCVerificationAndPull(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+							DisableKCVerification:        true,
+							DisablePullDeps:              true,
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be true")
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be true")
+}
+
+func TestRhpamProdImmutableEnvironmentEnableKCVerification(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_VERIFICATION"), "Variable should exist and be false")
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be false")
 }
 
 func TestRhpamProdWithSmartRouter(t *testing.T) {
@@ -340,6 +635,7 @@ func TestRhpamProdWithSmartRouter(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.False(t, env.SmartRouter.Omit, "SmarterRouter should not be omitted")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should exist")
 	assert.Equal(t, "9000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should exist")
@@ -442,6 +738,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
@@ -472,6 +769,7 @@ func TestRhpamProdImmutableEnvironmentWithConsole(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "test-rhpamcentrmon", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
@@ -927,7 +1225,6 @@ func TestExtensionImageBuildConfiguration(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-
 	assert.Equal(t, 1, len(env.Servers))
 	assert.Equal(t, "openshift", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Namespace)
 	assert.Equal(t, "test-sqlserver:1.0", env.Servers[0].BuildConfigs[0].Spec.Source.Images[0].From.Name)
@@ -995,7 +1292,7 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
-func TestBuildConfiguration(t *testing.T) {
+func TestKieAppContainerDeploymentWithoutS2i_BuildConfigNotSet(t *testing.T) {
 	serverName := "testing-name"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1009,6 +1306,45 @@ func TestBuildConfiguration(t *testing.T) {
 						Name: serverName,
 						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	// ConsolidateObjects
+	ConsolidateObjects(env, cr)
+
+	//// Since there is not Build section with GitSource
+	assert.Len(t, env.Servers[0].BuildConfigs, 0)
+}
+
+func TestBuildConfiguration(t *testing.T) {
+	serverName := "testing-name"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Name: serverName,
+						Build: &api.KieAppBuildObject{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "JAVA_OPTS_APPEND",
+									Value: "-Dmyprop=test",
+								},
+								{
+									Name:  "OTHER_ENV",
+									Value: "other",
+								},
+							},
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
@@ -1020,7 +1356,7 @@ func TestBuildConfiguration(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
@@ -1032,13 +1368,19 @@ func TestBuildConfiguration(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "somebranch",
 								ContextDir: "example2",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "ANOTHER_ENV",
+									Value: "AnotherEnv",
+								},
 							},
 						},
 					},
@@ -1086,6 +1428,9 @@ func TestBuildConfiguration(t *testing.T) {
 	cr.Spec.Objects.Servers[2].Build.Webhooks = []api.WebhookSecret{{Type: api.GitHubWebhook, Secret: secret2}}
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
+
+	// ConsolidateObjects
+	ConsolidateObjects(env, cr)
 	assert.Len(t, cr.Spec.Objects.Servers[1].Build.Webhooks, 1)
 	assert.Len(t, cr.Spec.Objects.Servers[2].Build.Webhooks, 1)
 	assert.Equal(t, secret1, cr.Spec.Objects.Servers[1].Build.Webhooks[0].Secret)
@@ -1098,8 +1443,12 @@ func TestBuildConfiguration(t *testing.T) {
 	// Server Test
 	crServer := cr.Status.Applied.Objects.Servers[0]
 	server := env.Servers[0]
+
 	assert.Equal(t, serverName, crServer.Name)
 	assert.Equal(t, crServer.Name+latestTag, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "-Dmyprop=test", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[3].Value)
+	assert.Equal(t, "other", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[4].Value)
 
 	// Server #1
 	crServer = cr.Status.Applied.Objects.Servers[1]
@@ -1108,9 +1457,11 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	// default envs size is 3
+	assert.Equal(t, 3, len(server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env))
 	for _, s := range server.BuildConfigs[0].Spec.Triggers {
 		if s.GitHubWebHook != nil {
 			assert.NotEmpty(t, s.GitHubWebHook.Secret)
@@ -1128,9 +1479,10 @@ func TestBuildConfiguration(t *testing.T) {
 	assert.Equal(t, buildv1.BuildSourceGit, server.BuildConfigs[0].Spec.Source.Type)
 	assert.Equal(t, "http://git.example.com", server.BuildConfigs[0].Spec.Source.Git.URI)
 	assert.Equal(t, "somebranch", server.BuildConfigs[0].Spec.Source.Git.Ref)
-	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
+	assert.Equal(t, "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[0].Value)
 	assert.Equal(t, "https://maven.mirror.com/", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[1].Value)
 	assert.Equal(t, "dir", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[2].Value)
+	assert.Equal(t, "AnotherEnv", server.BuildConfigs[0].Spec.Strategy.SourceStrategy.Env[3].Value)
 	for _, s := range server.BuildConfigs[0].Spec.Triggers {
 		if s.GitHubWebHook != nil {
 			assert.NotEmpty(t, s.GitHubWebHook.Secret)
@@ -1301,6 +1653,50 @@ func TestConstructConsoleObject(t *testing.T) {
 	for i := range sampleEnv {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, sampleEnv[i], "Environment merge not functional. Expecting: %v", sampleEnv[i])
 	}
+}
+
+func TestConstructDashbuilderObject(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	cr.Spec.Objects = api.KieAppObjects{Dashbuilder: &api.DashbuilderObject{}}
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Nil(t, cr.Spec.Objects.Servers)
+	assert.Nil(t, cr.Spec.Objects.Dashbuilder.Replicas)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+
+	cr.Spec.Objects.Dashbuilder.Replicas = Pint32(1)
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+	assert.Equal(t, Pint32(1), cr.Spec.Objects.Dashbuilder.Replicas)
+
+	assert.Equal(t, fmt.Sprintf("%s-rhpamdash", name), env.Dashbuilder.DeploymentConfigs[0].Name)
+	assert.Equal(t, int32(1), env.Dashbuilder.DeploymentConfigs[0].Spec.Replicas)
+	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:%s", cr.Status.Applied.Version), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	cr.Spec.UseImageTags = true
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Equal(t, fmt.Sprintf("rhpam-dashbuilder-rhel8:%s", cr.Status.Applied.Version), env.Dashbuilder.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+
+	cr.Spec.Objects.Dashbuilder.Replicas = Pint32(3)
+	cr.Spec.Objects.Dashbuilder.Image = "test"
+	cr.Spec.UseImageTags = false
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.Equal(t, "test", cr.Status.Applied.Objects.Dashbuilder.Image)
+	assert.Equal(t, Pint32(3), cr.Status.Applied.Objects.Dashbuilder.Replicas)
 }
 
 func TestConstructSmartRouterObject(t *testing.T) {
@@ -1657,6 +2053,123 @@ func TestKieAppDefaults(t *testing.T) {
 	assert.Len(t, cr.Status.Applied.Objects.Servers, 1)
 }
 
+func TestOpenshiftCA(t *testing.T) {
+	smartOptsAppend := "testing"
+	dashOptsAppend := "-Djavax.net.ssl.trustStoreType=jks"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Jvm: &api.JvmObject{
+						JavaOptsAppend: dashOptsAppend,
+					},
+				},
+				SmartRouter: &api.SmartRouterObject{
+					Jvm: &api.JvmObject{
+						JavaOptsAppend: smartOptsAppend,
+					},
+				},
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
+	assert.Nil(t, cr.Status.Applied.Truststore)
+	assert.False(t, IsOcpCA(cr))
+	assert.Empty(t, env.Others[0].ConfigMaps)
+	trustVolMnt := corev1.VolumeMount{
+		Name:      cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+		MountPath: constants.TruststorePath,
+		ReadOnly:  true,
+	}
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	trustVol := corev1.Volume{
+		Name: cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: cr.Status.Applied.CommonConfig.ApplicationName + constants.TruststoreSecret,
+			},
+		},
+	}
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+
+	cr.Spec.Truststore = &api.KieAppTruststore{
+		OpenshiftCaBundle: true,
+	}
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+	assert.True(t, cr.Status.Applied.Truststore.OpenshiftCaBundle)
+	assert.True(t, IsOcpCA(cr))
+	assert.Len(t, env.Others[0].ConfigMaps, 1)
+	// Truststore volumes are mounted
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, trustVol)
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Console.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Jvm)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Jvm)
+
+	for _, caOption := range caOptsAppend {
+		assert.Contains(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend, caOption)
+		assert.Contains(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend, caOption)
+	}
+	assert.NotEqual(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Contains(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend, smartOptsAppend)
+	assert.NotEqual(t, dashOptsAppend, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
+	assert.Contains(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend, dashOptsAppend)
+	envVar := corev1.EnvVar{
+		Name:  "JAVA_OPTS_APPEND",
+		Value: strings.Join(caOptsAppend, " "),
+	}
+	smartRouterVar := corev1.EnvVar{
+		Name:  "JAVA_OPTS_APPEND",
+		Value: strings.Join(append([]string{smartOptsAppend}, caOptsAppend...), " "),
+	}
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, smartRouterVar)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
+
+	cr.Spec.Version = "7.10.1"
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err)
+
+	assert.False(t, IsOcpCA(cr))
+	assert.Equal(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Empty(t, env.Others[0].ConfigMaps)
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
+
+	assert.Empty(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
+	assert.NotEmpty(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
+	assert.Empty(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend)
+}
 func TestMergeTrialAndCommonConfig(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1869,10 +2382,10 @@ func TestSetProductLabels(t *testing.T) {
 	assert.Equal(t, constants.CurrentVersion, cr.Status.Applied.Version)
 	testObjectLabels(t, cr, env)
 
-	cr.Spec.Version = constants.PriorVersion1
+	cr.Spec.Version = constants.PriorVersion
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, constants.PriorVersion1, cr.Status.Applied.Version)
+	assert.Equal(t, constants.PriorVersion, cr.Status.Applied.Version)
 	testObjectLabels(t, cr, env)
 }
 
@@ -1881,32 +2394,57 @@ func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {
 	assert.Len(t, cr.Spec.Objects.Servers, 2)
 	assert.NotNil(t, cr.Spec.Objects.SmartRouter)
 	assert.NotNil(t, cr.Spec.Objects.ProcessMigration)
-
-	checkObjectLabels(t, cr, env.Console, "business-central")
+	component := "PAM"
+	checkObjectLabels(t, cr, env.Console, component, "rhpam-businesscentral-rhel8")
+	checkObjectLabels(t, cr, env.Dashbuilder, component, "rhpam-dashbuilder-rhel8")
 	for _, server := range env.Servers {
-		checkObjectLabels(t, cr, server, "kie-server")
+		checkObjectLabelsForServer(t, cr, server, component)
 	}
-	checkObjectLabels(t, cr, env.SmartRouter, "smart-router")
-	checkObjectLabels(t, cr, env.ProcessMigration, "process-migration")
+	checkObjectLabels(t, cr, env.SmartRouter, component, "rhpam-smartrouter-rhel8")
+	checkObjectLabels(t, cr, env.ProcessMigration, component, "rhpam-process-migration-rhel8")
 }
 
-func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+func checkObjectLabels(t *testing.T, cr *api.KieApp, object api.CustomObject, component string, subcomponent string) {
 	for _, dc := range object.DeploymentConfigs {
-		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 	for _, ss := range object.StatefulSets {
-		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version)
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, subcomponent)
 	}
 }
 
-func checkLabels(t *testing.T, labels map[string]string, component, version string) {
+func checkObjectLabelsForServer(t *testing.T, cr *api.KieApp, object api.CustomObject, component string) {
+	for _, dc := range object.DeploymentConfigs {
+		checkLabels(t, dc.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, "kieserver"))
+	}
+	for _, ss := range object.StatefulSets {
+		checkLabels(t, ss.Spec.Template.Labels, component, cr.Status.Applied.Version, getFormattedComponentName(cr, "kieserver"))
+	}
+}
+
+func checkLabels(t *testing.T, labels map[string]string, component, version string, subcomponent string) {
 	assert.NotNil(t, labels)
 	assert.Equal(t, constants.ProductName, labels[constants.LabelRHproductName])
 	assert.Equal(t, version, labels[constants.LabelRHproductVersion])
 	assert.Equal(t, component, labels[constants.LabelRHcomponentName])
 	assert.Equal(t, version, labels[constants.LabelRHcomponentVersion])
-	assert.Equal(t, "application", labels[constants.LabelRHcomponentType])
-	assert.Equal(t, "redhat", labels[constants.LabelRHcompany])
+	assert.Equal(t, subcomponent, labels[constants.LabelRHsubcomponentName])
+	assert.Equal(t, "application", labels[constants.LabelRHsubcomponentType])
+	assert.Equal(t, "Red_Hat", labels[constants.LabelRHcompany])
+}
+
+func checkClusterLabels(t *testing.T, cr *api.KieApp, object api.CustomObject) {
+	if cr.Spec.Version == constants.CurrentVersion {
+
+		for _, dc := range object.DeploymentConfigs {
+			assert.NotNil(t, dc.Spec.Template.Labels[constants.ClusterLabel])
+			assert.True(t, strings.HasPrefix(dc.Spec.Template.Labels[constants.ClusterLabel], constants.ClusterLabelPrefix))
+		}
+		for _, ss := range object.StatefulSets {
+			assert.NotNil(t, ss.Spec.Template.Labels[constants.ClusterLabel])
+			assert.True(t, strings.HasPrefix(ss.Spec.Template.Labels[constants.ClusterLabel], constants.ClusterLabelPrefix))
+		}
+	}
 }
 
 func TestImageRegistry(t *testing.T) {
@@ -2308,12 +2846,10 @@ func TestExampleServerCommonConfig(t *testing.T) {
 	assert.Equal(t, 6, len(env.Servers), "Expect six servers")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2-ping", env.Servers[len(env.Servers)-2].Services[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2", env.Servers[len(env.Servers)-2].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-http", env.Servers[len(env.Servers)-2].Routes[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Services[0].Name, "Unexpected name for object")
-	assert.Equal(t, "server-config-kieserver2-2-ping", env.Servers[len(env.Servers)-1].Services[1].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2", env.Servers[len(env.Servers)-1].Routes[0].Name, "Unexpected name for object")
 	assert.Equal(t, "server-config-kieserver2-2-http", env.Servers[len(env.Servers)-1].Routes[1].Name, "Unexpected name for object")
 }
@@ -2407,9 +2943,8 @@ func TestDatabaseExternal(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2471,9 +3006,8 @@ func TestDatabaseH2(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2582,9 +3116,8 @@ func TestDatabaseH2Ephemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].DeploymentConfigs[0].Name)
 		assert.Equal(t, 2, len(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
@@ -2628,10 +3161,9 @@ func TestDatabaseMySQL(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -2683,10 +3215,9 @@ func TestDatabaseMySQLDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -2751,10 +3282,9 @@ func TestDatabaseMySQLTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-mysql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -2804,10 +3334,9 @@ func TestDatabasePostgresql(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -2859,10 +3388,9 @@ func TestDatabasePostgresqlDefaultSize(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -2925,10 +3453,9 @@ func TestDatabasePostgresqlTrialEphemeral(t *testing.T) {
 		if i > 0 {
 			idx = fmt.Sprintf("-%d", i+1)
 		}
-		assert.Equal(t, 2, len(env.Servers[i].Services))
+		assert.Equal(t, 1, len(env.Servers[i].Services))
 		assert.Equal(t, 1, len(env.Databases[i].Services))
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s", idx), env.Servers[i].Services[0].ObjectMeta.Name)
-		assert.Equal(t, fmt.Sprintf("test-kieserver%s-ping", idx), env.Servers[i].Services[1].ObjectMeta.Name)
 		assert.Equal(t, fmt.Sprintf("test-kieserver%s-postgresql", idx), env.Databases[i].Services[0].ObjectMeta.Name)
 		assert.Equal(t, 1, len(env.Servers[i].DeploymentConfigs))
 		assert.Equal(t, 1, len(env.Databases[i].DeploymentConfigs))
@@ -4572,6 +5099,42 @@ func TestJvmEmptyConsole(t *testing.T) {
 	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
+func TestJvmDefaultSmartRouter(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					Jvm: createJvmTestObjectWithoutJavaMaxMemRatio(),
+				},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestJvmEmptySmartRouter(t *testing.T) {
+	name := "test"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+	env, _ := GetEnvironment(cr, test.MockService())
+	testDefaultJvm(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+}
+
 func TestJvmDefaultServers(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
@@ -4712,7 +5275,10 @@ func TestResourcesDefault(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "1", "500m", "2", "1", "500m", "250m")
+	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
+		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
+		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -4746,10 +5312,13 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, "200", "100", "200", "100", "200", "100")
+	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, rMEMConsole, rMEMServers string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -4757,16 +5326,16 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 
 	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUServer.String() == lCPUServer) //1000m
+	assert.True(t, limitCPUServer.String() == lCPUServer)
 
 	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUServer.String() == rCPUServer)
 
 	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
-	assert.True(t, limitCPUConsole.String() == lCPUConsole) //2000m
+	assert.True(t, limitCPUConsole.String() == lCPUConsole)
 
 	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
-	assert.True(t, requestsCPUConsole.String() == rCPUConsole) //1000m
+	assert.True(t, requestsCPUConsole.String() == rCPUConsole)
 
 	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)
@@ -4947,6 +5516,353 @@ func testContext(t *testing.T, image, version, context, label string) {
 	if context != "" {
 		assert.Equal(t, context+"/"+constants.RhpamPrefix+"-"+label+constants.RhelVersion+":"+version, image)
 	} else {
-		assert.Equal(t, constants.PamContext+label+constants.RhelVersion+":"+version, image)
+		assert.Equal(t, constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
 	}
+}
+
+func TestClusterLabelsDefaultEnvironment(t *testing.T) {
+	consoleLabel := "jgrp.k8s.test-clusterlabel.rhpamcentr"
+	serverLabel := "jgrp.k8s.test-clusterlabel-kieserver"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-clusterlabel",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting environment")
+	consoleClusterLabel := env.Console.DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, consoleClusterLabel, consoleLabel)
+	serverClusterLabel := env.Servers[0].DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, serverClusterLabel, serverLabel)
+
+	consoleKubeLabelNSPresent, consoleKubeLabelPresent := checkKubePingEnvs(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], consoleLabel)
+	assert.True(t, consoleKubeLabelNSPresent)
+	assert.True(t, consoleKubeLabelPresent)
+
+	serverKubeLabelNSPresent, serverKubeLabelPresent := checkKubePingEnvs(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], serverLabel)
+	assert.True(t, serverKubeLabelNSPresent)
+	assert.True(t, serverKubeLabelPresent)
+
+}
+
+func checkKubePingEnvs(t *testing.T, container corev1.Container, kubeLabel string) (kubeLabelNSPresent bool, kubeLabelPresent bool) {
+	envs := container.Env
+	kubeLabelNSPresent = false
+	kubeLabelPresent = false
+	for _, env := range envs {
+		if env.Name == constants.KubeNS {
+			kubeLabelNSPresent = true
+			assert.True(t, env.ValueFrom.FieldRef.FieldPath == "metadata.namespace")
+		}
+
+		if env.Name == constants.KubeLabels {
+			kubeLabelPresent = true
+			assert.True(t, env.Value == "cluster="+kubeLabel)
+		}
+	}
+	return kubeLabelNSPresent, kubeLabelPresent
+}
+
+func TestClusterLabelsRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
+	dashLabel := "jgrp.k8s.test-labels-dash.rhpamdash"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-labels-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting dashbuilder environment")
+	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
+	checkClusterLabels(t, cr, env.Dashbuilder)
+	dashClusterLabel := env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
+	assert.Equal(t, dashClusterLabel, dashLabel)
+
+	dashKubeLabelNSPresent, dashKubeLabelPresent := checkKubePingEnvs(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], dashLabel)
+	assert.True(t, dashKubeLabelNSPresent)
+	assert.True(t, dashKubeLabelPresent)
+}
+
+func TestRhdmProdImmutableEnvironmentWithJbpmClusterEnabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						JbpmCluster: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(2), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+
+	cr.Spec.Objects.Servers[0].Replicas = Pint32(0)
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(0), env.Servers[0].DeploymentConfigs[0].Spec.Replicas, "a replica setting of zero in spec should not be overriden")
+
+	cr.Spec.Objects.Servers[0].Replicas = Pint32(1)
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(2), env.Servers[0].DeploymentConfigs[0].Spec.Replicas, "a user's setting in spec should only be overridden if set to 1")
+
+	cr.Spec.Objects.Servers[0].Replicas = Pint32(3)
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.True(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(3), env.Servers[0].DeploymentConfigs[0].Spec.Replicas, "a user's setting in spec should only be overridden if set to 1")
+}
+
+func TestRhdmProdImmutableEnvironmentWithJbpmClusterDisabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						JbpmCluster: false,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.False(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhdmProdImmutableEnvironmentWithoutJbpmCluster(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.False(t, cr.Status.Applied.Objects.Servers[0].JbpmCluster)
+	assert.Equal(t, int32(1), env.Servers[0].DeploymentConfigs[0].Spec.Replicas)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhdmEnvironmentWithKafkaExt(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Kafka: createKafkaExtObject(),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	assert.Len(t, cr.Spec.Objects.Servers[0].Kafka.Topics, 2)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	for _, env := range envs {
+
+		switch e := env.Name; e {
+		case "KIE_SERVER_KAFKA_EXT_ENABLED":
+			assert.Equal(t, env.Value, "true")
+
+		case "KIE_SERVER_KAFKA_EXT_GROUP_ID":
+			assert.Equal(t, env.Value, "my-kafka-group")
+
+		case "KIE_SERVER_KAFKA_EXT_ACKS":
+			assert.Equal(t, env.Value, "2")
+
+		case "KIE_SERVER_KAFKA_EXT_AUTOCREATE_TOPICS":
+			assert.Equal(t, env.Value, "true")
+
+		case "KIE_SERVER_KAFKA_EXT_MAX_BLOCK_MS":
+			assert.Equal(t, env.Value, "2100")
+
+		case "KIE_SERVER_KAFKA_EXT_CLIENT_ID":
+			assert.Equal(t, env.Value, "C1234567")
+
+		case "KIE_SERVER_KAFKA_EXT_BOOTSTRAP_SERVERS":
+			assert.Equal(t, env.Value, "localhost:9092")
+
+		case "KIE_SERVER_KAFKA_EXT_TOPICS":
+			assert.Equal(t, env.Value, "events=my-topics,errors=my-errs")
+		}
+	}
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_ENABLED"))
+	assert.Equal(t, "my-kafka-group", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_GROUP_ID"))
+	assert.Equal(t, "2", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_ACKS"))
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_AUTOCREATE_TOPICS"))
+	assert.Equal(t, "2100", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_MAX_BLOCK_MS"))
+	assert.Equal(t, "C1234567", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_CLIENT_ID"))
+	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_BOOTSTRAP_SERVERS"))
+	assert.Equal(t, "events=my-topics,errors=my-errs", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_TOPICS"))
+}
+
+func createKafkaExtObject() *api.KafkaExtObject {
+	kafkaExtObject := api.KafkaExtObject{
+		MaxBlockMs:       Pint32(2100),
+		AutocreateTopics: Pbool(true),
+		BootstrapServers: "localhost:9092",
+		GroupID:          "my-kafka-group",
+		Acks:             Pint(2),
+		Topics:           []string{"events=my-topics", "errors=my-errs"},
+		ClientID:         "C1234567",
+	}
+	return &kafkaExtObject
+}
+
+func TestRhdmEnvironmentWithKafkaExtDefault(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Name:  "Server-0",
+						Kafka: &api.KafkaExtObject{},
+					},
+					{
+						Name: "Server-1",
+					},
+					{
+						Name:  "Server-2",
+						Kafka: createKafkaExtObject(),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	extEnabled := false
+	for _, env := range envs {
+		if strings.HasPrefix(env.Value, "KIE_SERVER_KAFKA") {
+			extEnabled = true
+		}
+	}
+	assert.False(t, extEnabled)
+
+	assert.Equal(t, cr.Spec.Objects.Servers[0].Name, "Server-0")
+	kafkaSpec := cr.Spec.Objects.Servers[0].Kafka
+	assert.NotNil(t, kafkaSpec)
+	assert.Empty(t, kafkaSpec.ClientID)
+	assert.Nil(t, kafkaSpec.AutocreateTopics)
+	assert.Nil(t, kafkaSpec.Topics)
+	assert.Empty(t, kafkaSpec.BootstrapServers)
+	assert.Empty(t, kafkaSpec.GroupID)
+	assert.Nil(t, kafkaSpec.Acks)
+	assert.Nil(t, kafkaSpec.MaxBlockMs)
+
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[0].Name, "Server-0")
+	kafkaStatus := cr.Status.Applied.Objects.Servers[0].Kafka
+	assert.NotNil(t, kafkaStatus)
+	assert.Empty(t, kafkaStatus.ClientID)
+	assert.Equal(t, kafkaStatus.AutocreateTopics, Pbool(true))
+	assert.Nil(t, kafkaStatus.Topics)
+	assert.Equal(t, kafkaStatus.BootstrapServers, "localhost:9092")
+	assert.Equal(t, kafkaStatus.GroupID, "jbpm-consumer")
+	assert.Equal(t, kafkaStatus.Acks, Pint(1))
+	assert.Equal(t, kafkaStatus.MaxBlockMs, Pint32(2000))
+
+	assert.Equal(t, cr.Spec.Objects.Servers[1].Name, "Server-1")
+	kafkaSpecOne := cr.Spec.Objects.Servers[1].Kafka
+	assert.Nil(t, kafkaSpecOne)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name, "Server-1")
+	kafkaStatusOne := cr.Status.Applied.Objects.Servers[1].Kafka
+	assert.Nil(t, kafkaStatusOne)
+
+	assert.Equal(t, cr.Spec.Objects.Servers[2].Name, "Server-2")
+	kafkaSpecTwo := cr.Spec.Objects.Servers[2].Kafka
+	assert.NotNil(t, kafkaSpecTwo)
+	assert.Equal(t, kafkaSpecTwo.ClientID, "C1234567")
+	assert.True(t, *kafkaSpecTwo.AutocreateTopics)
+	assert.Len(t, kafkaSpecTwo.Topics, 2)
+	assert.Equal(t, kafkaSpecTwo.Topics[0], "events=my-topics")
+	assert.Equal(t, kafkaSpecTwo.Topics[1], "errors=my-errs")
+	assert.Equal(t, kafkaSpecTwo.BootstrapServers, "localhost:9092")
+	assert.Equal(t, kafkaSpecTwo.GroupID, "my-kafka-group")
+	assert.Equal(t, kafkaSpecTwo.Acks, Pint(2))
+	assert.Equal(t, kafkaSpecTwo.MaxBlockMs, Pint32(2100))
+
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[2].Name, "Server-2")
+	kafkaStatusTwo := cr.Status.Applied.Objects.Servers[2].Kafka
+	assert.Equal(t, kafkaStatusTwo.ClientID, "C1234567")
+	assert.True(t, *kafkaStatusTwo.AutocreateTopics)
+	assert.Len(t, kafkaStatusTwo.Topics, 2)
+	assert.Equal(t, kafkaStatusTwo.BootstrapServers, "localhost:9092")
+	assert.Equal(t, kafkaStatusTwo.GroupID, "my-kafka-group")
+	assert.Equal(t, kafkaStatusTwo.Acks, Pint(2))
+	assert.Equal(t, kafkaStatusTwo.MaxBlockMs, Pint32(2100))
+}
+
+func TestRhdmEnvironmentWithoutKafkaExt(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+	extEnabled := false
+	for _, env := range envs {
+		if strings.HasPrefix(env.Name, "KIE_SERVER_KAFKA") {
+			extEnabled, _ = strconv.ParseBool(env.Value)
+		}
+	}
+	assert.False(t, extEnabled)
+	assert.True(t, len(cr.Spec.Objects.Servers) == 0)
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Kafka)
 }

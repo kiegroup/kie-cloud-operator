@@ -22,6 +22,7 @@ func merge(baseline api.Environment, overwrite api.Environment) (api.Environment
 	var err error
 	env.Console = mergeCustomObject(baseline.Console, overwrite.Console)
 	env.SmartRouter = mergeCustomObject(baseline.SmartRouter, overwrite.SmartRouter)
+	env.Dashbuilder = mergeCustomObject(baseline.Dashbuilder, overwrite.Dashbuilder)
 	env.Others, err = mergeCustomObjects(baseline.Others, overwrite.Others)
 	if err != nil {
 		return api.Environment{}, err

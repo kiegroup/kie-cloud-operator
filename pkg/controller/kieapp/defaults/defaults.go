@@ -29,7 +29,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var log = logs.GetLogger("kieapp.defaults")
+var (
+	log          = logs.GetLogger("kieapp.defaults")
+	caOptsAppend = []string{
+		"-Djavax.net.ssl.trustStoreType=jks",
+		"-Djavax.net.ssl.trustStore=" + constants.TruststorePath + "/" + constants.TruststoreName,
+		"-Djavax.net.ssl.trustStorePassword=" + constants.TruststorePwd,
+	}
+)
 
 // GetEnvironment returns an Environment from merging the common config and the config
 // related to the environment set in the KieApp definition
@@ -110,6 +117,13 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		}
 	}
 
+	if cr.Status.Applied.Environment == api.RhpamStandaloneDashbuilder || cr.Status.Applied.Objects.Dashbuilder != nil {
+		mergedEnv, err = mergeDashbuilder(service, cr, mergedEnv, envTemplate)
+		if err != nil {
+			return api.Environment{}, err
+		}
+	}
+
 	mergedEnv, err = mergeDB(service, cr, mergedEnv, envTemplate)
 	if err != nil {
 		return api.Environment{}, err
@@ -122,42 +136,95 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	if err != nil {
 		return api.Environment{}, err
 	}
+
 	mergedEnv, err = mergeDBDeployment(service, cr, mergedEnv, envTemplate)
 	if err != nil {
 		return api.Environment{}, err
 	}
+	overrideKafkaTopicsEnv(cr, &mergedEnv)
 	setProductLabels(cr, &mergedEnv)
 	return mergedEnv, nil
 }
 
 func setProductLabels(cr *api.KieApp, env *api.Environment) {
-	setObjectLabels(cr, &env.Console, "business-central")
+	setObjectLabels(cr, &env.Console, getFormattedComponentName(cr, getConsoleName(cr)))
+	setObjectLabels(cr, &env.Dashbuilder, getFormattedComponentName(cr, constants.DashBuilder))
 	for index := range env.Servers {
-		setObjectLabels(cr, &env.Servers[index], "kie-server")
+		setObjectLabelsForServer(cr, &env.Servers[index])
 	}
-	setObjectLabels(cr, &env.SmartRouter, "smart-router")
-	setObjectLabels(cr, &env.ProcessMigration, "process-migration")
+	setObjectLabels(cr, &env.SmartRouter, getFormattedComponentName(cr, constants.Smartrouter))
+	setObjectLabels(cr, &env.ProcessMigration, getFormattedComponentName(cr, constants.ProcessMigration))
 }
 
-func setObjectLabels(cr *api.KieApp, object *api.CustomObject, component string) {
+func getConsoleName(cr *api.KieApp) string {
+	env := string(cr.Spec.Environment)
+	consoleName := ""
+	if strings.Contains(env, constants.RhdmPrefix) {
+		consoleName = constants.RhdmDecisionCentral
+	} else if strings.Contains(env, constants.RhpamPrefix) {
+
+		if strings.Contains(env, constants.Production) {
+			consoleName = constants.RhpamBusinessCentralMon
+		} else {
+			consoleName = constants.RhpamBusinessCentral
+		}
+	}
+	return consoleName
+}
+
+func getSubComponentTypeByImageName(imageName string) string {
+	retValue := constants.SUBCOMPONENT_TYPE_APP
+	if imageName == constants.RhpamSmartRouterImageName || imageName == constants.RhpamControllerImageName ||
+		imageName == constants.RhdmSmartRouterImageName || imageName == constants.RhdmControllerImageName {
+
+		retValue = constants.SUBCOMPONENT_TYPE_INFRA
+	}
+	return retValue
+}
+
+func setObjectLabels(cr *api.KieApp, object *api.CustomObject, subcomponent string) {
 	for index, obj := range object.DeploymentConfigs {
-		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 	for index, obj := range object.StatefulSets {
-		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, component)
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 }
 
-func setLabels(cr *api.KieApp, labels map[string]string, component string) map[string]string {
+func setObjectLabelsForServer(cr *api.KieApp, object *api.CustomObject) {
+	for index, obj := range object.DeploymentConfigs {
+		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
+		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+	for index, obj := range object.StatefulSets {
+		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
+		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
+	}
+}
+
+func getFormattedComponentName(cr *api.KieApp, name string) string {
+	return getPrefixEnv(cr) + "-" + name + constants.RhelVersion
+}
+
+func getPrefixEnv(cr *api.KieApp) string {
+	prefix := constants.RhpamPrefix
+	if strings.HasPrefix(string(cr.Status.Applied.Environment), constants.RhdmPrefix) {
+		prefix = constants.RhdmPrefix
+	}
+	return prefix
+}
+
+func setLabels(cr *api.KieApp, labels map[string]string, subcomponent string, subcomponentType string) map[string]string {
 	if labels == nil {
 		labels = map[string]string{}
 	}
 	labels[constants.LabelRHproductName] = constants.ProductName
 	labels[constants.LabelRHproductVersion] = cr.Status.Applied.Version
-	labels[constants.LabelRHcomponentName] = component
+	labels[constants.LabelRHcomponentName] = "PAM"
+	labels[constants.LabelRHsubcomponentName] = subcomponent
 	labels[constants.LabelRHcomponentVersion] = cr.Status.Applied.Version
-	labels[constants.LabelRHcomponentType] = "application"
-	labels[constants.LabelRHcompany] = "redhat"
+	labels[constants.LabelRHsubcomponentType] = subcomponentType
+	labels[constants.LabelRHcompany] = "Red_Hat"
 	return labels
 }
 
@@ -228,7 +295,6 @@ func findCustomObjectByName(template api.CustomObject, objects []api.CustomObjec
 }
 
 func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
-
 	SetDefaults(cr)
 	serversConfig, err := getServersConfig(cr)
 	if err != nil {
@@ -240,6 +306,18 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		SmartRouter: getSmartRouterTemplate(cr),
 		Constants:   *getTemplateConstants(cr),
 	}
+	if IsOcpCA(cr) {
+		envTemplate.OpenshiftCaBundle = cr.Status.Applied.Truststore.OpenshiftCaBundle
+	}
+
+	dashbuilderTemplate, err := getDashbuilderTemplate(cr, serversConfig, &envTemplate.Console)
+	if err != nil {
+		return envTemplate, err
+	}
+	if dashbuilderTemplate != nil {
+		envTemplate.Dashbuilder = *dashbuilderTemplate
+	}
+
 	processMigrationConfig, err := getProcessMigrationTemplate(cr, serversConfig)
 	if err != nil {
 		return envTemplate, err
@@ -348,7 +426,19 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				template.GitHooks.MountPath = constants.GitHooksDefaultDir
 			}
 		}
+
+		// Apply PV default size
+		template.PvSize = cr.Status.Applied.Objects.Console.PvSize
+		if len(template.PvSize) <= 0 {
+			if isImmutable(cr) || cr.Spec.Environment == api.RhpamProduction {
+				template.PvSize = constants.ConsoleProdPvSize
+			} else {
+				template.PvSize = constants.ConsolePvSize
+			}
+		}
+
 		// JVM configuration
+		cr.Status.Applied.Objects.Console.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.Console.Jvm)
 		if cr.Status.Applied.Objects.Console.Jvm != nil {
 			template.Jvm = *cr.Status.Applied.Objects.Console.Jvm.DeepCopy()
 		}
@@ -358,6 +448,95 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		}
 	}
 	return template
+}
+
+func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, console *api.ConsoleTemplate) (dashbuilderTemplate *api.DashbuilderTemplate, err error) {
+	if deployDashbuilder(cr) && cr.Status.Applied.Objects.Dashbuilder != nil {
+		dashbuilderTemplate = &api.DashbuilderTemplate{}
+
+		envConstants, hasEnv := constants.EnvironmentConstants[api.RhpamStandaloneDashbuilder]
+		if !hasEnv {
+			return dashbuilderTemplate, nil
+		}
+		replicas, denyScale := setReplicas(cr.Status.Applied.Objects.Dashbuilder.Replicas, envConstants.Replica.Dashbuilder, hasEnv)
+		if denyScale || cr.Status.Applied.Objects.Dashbuilder.Replicas == nil {
+			cr.Status.Applied.Objects.Dashbuilder.Replicas = Pint32(replicas)
+		}
+		dashbuilderTemplate.Replicas = *cr.Status.Applied.Objects.Dashbuilder.Replicas
+		dashbuilderTemplate.Name = envConstants.App.Prefix
+
+		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
+		dashbuilderTemplate.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		dashbuilderTemplate.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
+		if dashbuilderTemplate.KeystoreSecret == "" {
+			dashbuilderTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-"))
+		}
+
+		dashbuilderTemplate.StorageClassName = cr.Status.Applied.Objects.Dashbuilder.StorageClassName
+
+		if !cr.Status.Applied.UseImageTags {
+			if val, exists := os.LookupEnv(envConstants.App.ImageVar + cr.Status.Applied.Version); exists {
+				dashbuilderTemplate.ImageURL = val
+			}
+			dashbuilderTemplate.OmitImageStream = true
+		}
+		dashbuilderTemplate.Image, dashbuilderTemplate.ImageTag, dashbuilderTemplate.ImageContext = GetImage(dashbuilderTemplate.ImageURL)
+		if cr.Status.Applied.Objects.Dashbuilder.Image != "" {
+			dashbuilderTemplate.Image = cr.Status.Applied.Objects.Dashbuilder.Image
+			dashbuilderTemplate.ImageURL = dashbuilderTemplate.Image + ":" + dashbuilderTemplate.ImageTag
+			dashbuilderTemplate.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.Dashbuilder.ImageTag != "" {
+			dashbuilderTemplate.ImageTag = cr.Status.Applied.Objects.Dashbuilder.ImageTag
+			dashbuilderTemplate.ImageURL = dashbuilderTemplate.Image + ":" + dashbuilderTemplate.ImageTag
+			dashbuilderTemplate.OmitImageStream = false
+		}
+		if cr.Status.Applied.Objects.Dashbuilder.ImageContext != "" {
+			dashbuilderTemplate.ImageContext = cr.Status.Applied.Objects.Dashbuilder.ImageContext
+			dashbuilderTemplate.ImageURL = dashbuilderTemplate.ImageContext + "/" + dashbuilderTemplate.Image + ":" + dashbuilderTemplate.ImageTag
+			dashbuilderTemplate.OmitImageStream = false
+		}
+
+		// Dashbuilder configuration
+		applyDashbuilderConfig(dashbuilderTemplate, *cr, serversConfig, console)
+
+		// JVM configuration
+		cr.Status.Applied.Objects.Dashbuilder.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.Dashbuilder.Jvm)
+		if cr.Status.Applied.Objects.Dashbuilder.Jvm != nil {
+			dashbuilderTemplate.Jvm = *cr.Status.Applied.Objects.Dashbuilder.Jvm.DeepCopy()
+		}
+	}
+	return dashbuilderTemplate, nil
+}
+
+func applyDashbuilderConfig(template *api.DashbuilderTemplate, cr api.KieApp, serversConfig []api.ServerTemplate, console *api.ConsoleTemplate) {
+
+	if cr.Status.Applied.Objects.Dashbuilder.Config != nil {
+		if cr.Status.Applied.Objects.Dashbuilder.Config.EnableBusinessCentral {
+			log.Debugf("Setting dashbuilder console location to %s", console.DashbuilderLocation)
+			cr.Status.Applied.Objects.Dashbuilder.Config.RuntimeMultipleImport = Pbool(true)
+			console.DashbuilderLocation = fmt.Sprintf("http://%s:8080", template.Name)
+		}
+
+		if cr.Status.Applied.Objects.Dashbuilder.Config.EnableKieServer {
+			log.Debug("Enabling Dashbuilder integration with KIE Server.")
+			for _, server := range serversConfig {
+				cr.Status.Applied.Objects.Dashbuilder.Config.KieServerTemplates = append(cr.Status.Applied.Objects.Dashbuilder.Config.KieServerTemplates,
+					api.KieServerDataSetOrTemplate{
+						Name:     server.KieServerID,
+						Location: fmt.Sprintf("http://%s:8080/services/rest/server", server.KieName),
+						User:     cr.Status.Applied.CommonConfig.AdminUser,
+						Password: cr.Status.Applied.CommonConfig.AdminPassword,
+					})
+			}
+		}
+
+		if cr.Status.Applied.Objects.Dashbuilder.Config.PersistentConfigs == nil {
+			cr.Status.Applied.Objects.Dashbuilder.Config.PersistentConfigs = Pbool(true)
+		}
+
+		template.Config = *cr.Status.Applied.Objects.Dashbuilder.Config.DeepCopy()
+	}
 }
 
 func getSpecEnv(envs []corev1.EnvVar, name string) string {
@@ -418,6 +597,11 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
+		// JVM configuration
+		cr.Status.Applied.Objects.SmartRouter.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.SmartRouter.Jvm)
+		if cr.Status.Applied.Objects.SmartRouter.Jvm != nil {
+			template.Jvm = *cr.Status.Applied.Objects.SmartRouter.Jvm.DeepCopy()
+		}
 	}
 	return template
 }
@@ -438,6 +622,7 @@ func GetImage(imageURL string) (image, imageTag, imageContext string) {
 }
 
 func setReplicas(objectReplicas *int32, replicaConstant api.Replicas, hasEnv bool) (replicas int32, denyScale bool) {
+
 	if objectReplicas != nil {
 		if hasEnv && replicaConstant.DenyScale && *objectReplicas != replicaConstant.Replicas {
 			log.Warnf("scaling not allowed for this environment, setting to default of %d", replicaConstant.Replicas)
@@ -474,14 +659,29 @@ func serverSortBlanks(serverSets []api.KieServerSet) []api.KieServerSet {
 	return newSets
 }
 
+func setCAJavaAppend(cr *api.KieApp, jvm *api.JvmObject) *api.JvmObject {
+	if IsOcpCA(cr) {
+		if jvm == nil {
+			jvm = &api.JvmObject{}
+		}
+		for _, caOption := range caOptsAppend {
+			if !strings.Contains(jvm.JavaOptsAppend, caOption) {
+				jvm.JavaOptsAppend = strings.Join([]string{jvm.JavaOptsAppend, caOption}, " ")
+			}
+		}
+		jvm.JavaOptsAppend = strings.TrimSpace(jvm.JavaOptsAppend)
+	}
+	return jvm
+}
+
 // Returns the templates to use depending on whether the spec was defined with a common configuration
 // or a specific one.
 func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	var servers []api.ServerTemplate
-	serverReplicas := Pint32(1)
+	serverReplicas := int32(1)
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if hasEnv {
-		serverReplicas = &envConstants.Replica.Server.Replicas
+		serverReplicas = envConstants.Replica.Server.Replicas
 	}
 	product := GetProduct(cr.Status.Applied.Environment)
 	usedNames := map[string]bool{}
@@ -503,7 +703,9 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				Build:            getBuildConfig(product, cr, serverSet),
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
+				JbpmCluster:      serverSet.JbpmCluster,
 			}
+
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
 				template.OmitConsole = true
 			}
@@ -527,7 +729,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 
 			// Set replicas
 			if serverSet.Replicas == nil {
-				serverSet.Replicas = serverReplicas
+				serverSet.Replicas = &serverReplicas
+			}
+			// If JbpmCluster enabled and replicas set to 1, increase replicas to 2.
+			if serverSet.JbpmCluster && *serverSet.Replicas == int32(1) {
+				serverSet.Replicas = Pint32(2)
 			}
 			template.Replicas = *serverSet.Replicas
 
@@ -557,18 +763,24 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.Jms = *jmsConfig
 			}
 
-			instanceTemplate := template.DeepCopy()
-			if instanceTemplate.KeystoreSecret == "" {
-				instanceTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, instanceTemplate.KieName)
+			getKafkaConfig(serverSet.Kafka)
+			if serverSet.Kafka != nil {
+				template.Kafka = serverSet.Kafka
+			}
+
+			if template.KeystoreSecret == "" {
+				template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, template.KieName)
 			}
 
 			// JVM configuration
+			serverSet.Jvm = setCAJavaAppend(cr, serverSet.Jvm)
 			if serverSet.Jvm != nil {
-				instanceTemplate.Jvm = *serverSet.Jvm.DeepCopy()
+				template.Jvm = *serverSet.Jvm.DeepCopy()
 			}
 
-			servers = append(servers, *instanceTemplate)
+			servers = append(servers, template)
 		}
+
 	}
 	return servers, nil
 }
@@ -619,12 +831,21 @@ func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 	if cr.Status.Applied.Objects.Console != nil {
 		env.Console = ConstructObject(env.Console, cr.Status.Applied.Objects.Console.KieAppObject)
 	}
+	if cr.Status.Applied.Objects.Dashbuilder != nil {
+		env.Dashbuilder = ConstructObject(env.Dashbuilder, cr.Status.Applied.Objects.Dashbuilder.KieAppObject)
+	}
 	if cr.Status.Applied.Objects.SmartRouter != nil {
 		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Status.Applied.Objects.SmartRouter.KieAppObject)
 	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
 		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
+		// apply the build config envs provided through cr to the given kieSerever BuildConfig Spec envs
+		for bcindex := range env.Servers[index].BuildConfigs {
+			env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env = shared.EnvOverride(
+				env.Servers[index].BuildConfigs[bcindex].Spec.Strategy.SourceStrategy.Env,
+				serverSet.Build.Env)
+		}
 	}
 	return env
 }
@@ -698,10 +919,13 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 			GitHubWebhookSecret:          getWebhookSecret(api.GitHubWebhook, serverSet.Build.Webhooks),
 			GenericWebhookSecret:         getWebhookSecret(api.GenericWebhook, serverSet.Build.Webhooks),
 			KieServerContainerDeployment: serverSet.Build.KieServerContainerDeployment,
+			DisablePullDeps:              serverSet.Build.DisablePullDeps,
+			DisableKCVerification:        serverSet.Build.DisableKCVerification,
 			MavenMirrorURL:               serverSet.Build.MavenMirrorURL,
 			ArtifactDir:                  serverSet.Build.ArtifactDir,
 		}
 	}
+
 	buildTemplate.From, _, _ = getDefaultKieServerImage(product, cr, serverSet, true)
 	if serverSet.Build.From != nil {
 		buildTemplate.From = *serverSet.Build.From
@@ -828,6 +1052,27 @@ func getJmsConfig(environment api.EnvironmentType, jms *api.KieAppJmsObject) (*a
 	return jms, nil
 }
 
+func getKafkaConfig(kafka *api.KafkaExtObject) {
+	if kafka != nil {
+		//if something is missing we set mandatory defaults
+		if kafka.MaxBlockMs == nil {
+			kafka.MaxBlockMs = Pint32(2000)
+		}
+		if len(kafka.BootstrapServers) == 0 {
+			kafka.BootstrapServers = "localhost:9092"
+		}
+		if len(kafka.GroupID) == 0 {
+			kafka.GroupID = "jbpm-consumer"
+		}
+		if kafka.Acks == nil {
+			kafka.Acks = Pint(1)
+		}
+		if kafka.AutocreateTopics == nil {
+			kafka.AutocreateTopics = Pbool(true)
+		}
+	}
+}
+
 func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) string {
 	if append {
 		if jmsQueue == "" {
@@ -909,6 +1154,7 @@ func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	err = tmpl.Execute(&b, env)
 	if err != nil {
 		log.Error("Error applying Go template.")
+
 		return []byte{}, err
 	}
 
@@ -1034,6 +1280,10 @@ func SetDefaults(cr *api.KieApp) {
 		}
 	}
 
+	if deployDashbuilder(cr) && specApply.Objects.Dashbuilder == nil && specApply.Environment == api.RhpamStandaloneDashbuilder {
+		specApply.Objects.Dashbuilder = &api.DashbuilderObject{}
+	}
+
 	if len(specApply.Version) == 0 {
 		specApply.Version = constants.CurrentVersion
 		if len(cr.Status.Applied.Version) != 0 {
@@ -1061,16 +1311,26 @@ func SetDefaults(cr *api.KieApp) {
 		}
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
-		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersCPULimit, constants.ServersCPURequests)
+		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersLimits, constants.ServerRequests)
 	}
 
 	if specApply.Objects.Console != nil {
 		checkJvmOnConsole(specApply.Objects.Console)
-		setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleCPULimit, constants.ConsoleCPURequests)
+		if strings.Contains(string(specApply.Environment), "authoring") {
+			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleAuthoringLimits, constants.ConsoleAuthoringRequests)
+		} else if strings.Contains(string(specApply.Environment), "production") {
+			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleProdLimits, constants.ConsoleProdRequests)
+		}
+	}
+
+	if specApply.Objects.Dashbuilder != nil {
+		checkJvmOnDashbuilder(specApply.Objects.Dashbuilder)
+		setResourcesDefault(&specApply.Objects.Dashbuilder.KieAppObject, constants.DashbuilderLimits, constants.DashbuilderRequests)
 	}
 
 	if specApply.Objects.SmartRouter != nil {
-		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterCPULimit, constants.SmartRouterCPURequests)
+		checkJvmOnSmartRouter(specApply.Objects.SmartRouter)
+		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterLimits, constants.SmartRouterRequests)
 	}
 
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
@@ -1097,6 +1357,20 @@ func setJvmDefault(jvm *api.JvmObject) {
 	}
 }
 
+func checkJvmOnDashbuilder(dashbuilder *api.DashbuilderObject) {
+	if dashbuilder.Jvm == nil {
+		dashbuilder.Jvm = &api.JvmObject{}
+	}
+	setJvmDefault(dashbuilder.Jvm)
+}
+
+func checkJvmOnSmartRouter(smartrouter *api.SmartRouterObject) {
+	if smartrouter.Jvm == nil {
+		smartrouter.Jvm = &api.JvmObject{}
+	}
+	setJvmDefault(smartrouter.Jvm)
+}
+
 func checkJvmOnServer(server *api.KieServerSet) {
 	if server.Jvm == nil {
 		server.Jvm = &api.JvmObject{}
@@ -1104,21 +1378,27 @@ func checkJvmOnServer(server *api.KieServerSet) {
 	setJvmDefault(server.Jvm)
 }
 
-func setResourcesDefault(kieObject *api.KieAppObject, limits, requests string) {
+func setResourcesDefault(kieObject *api.KieAppObject, limits, requests map[string]string) {
 	if kieObject.Resources == nil {
 		kieObject.Resources = &corev1.ResourceRequirements{}
 	}
 	if kieObject.Resources.Limits == nil {
-		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits)}
+		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits["CPU"]), corev1.ResourceMemory: createResourceQuantity(limits["MEM"])}
 	}
 	if kieObject.Resources.Requests == nil {
-		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests)}
+		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests["CPU"]), corev1.ResourceMemory: createResourceQuantity(requests["MEM"])}
 	}
 	if kieObject.Resources.Limits.Cpu() == nil {
-		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits))
+		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits["CPU"]))
+	}
+	if kieObject.Resources.Limits.Memory() == nil {
+		kieObject.Resources.Limits.Memory().Add(createResourceQuantity(limits["MEM"]))
 	}
 	if kieObject.Resources.Requests.Cpu() == nil {
-		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests))
+		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests["CPU"]))
+	}
+	if kieObject.Resources.Requests.Memory() == nil {
+		kieObject.Resources.Requests.Memory().Add(createResourceQuantity(requests["MEM"]))
 	}
 }
 
@@ -1261,6 +1541,94 @@ func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, e
 	return env, nil
 }
 
+func mergeDashbuilder(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
+	var dashbuilderEnv api.Environment
+	if deployDashbuilder(cr) {
+		yamlBytes, err := loadYaml(service, "dashbuilder/rhpam-standalone-dashbuilder.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
+		if err != nil {
+			return api.Environment{}, err
+		}
+		err = yaml.Unmarshal(yamlBytes, &dashbuilderEnv)
+		if err != nil {
+			return api.Environment{}, err
+		}
+		if cr.Status.Applied.Environment == api.RhpamStandaloneDashbuilder {
+			env.Servers = []api.CustomObject{}
+			env.Console = api.CustomObject{Omit: true}
+		}
+
+		env.Dashbuilder = mergeCustomObject(env.Dashbuilder, dashbuilderEnv.Dashbuilder)
+
+	} else {
+		dashbuilderEnv.Dashbuilder.Omit = true
+	}
+
+	var cleanedEnvVar []corev1.EnvVar
+	if cr.Status.Applied.Objects.Dashbuilder.Config != nil {
+		var envVar []corev1.EnvVar
+		var dataSet []string
+		for _, dataset := range cr.Status.Applied.Objects.Dashbuilder.Config.KieServerDataSets {
+			dataSet = append(dataSet, dataset.Name)
+			datasetName := strings.Replace(dataset.Name, "-", "_", -1)
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_LOCATION", datasetName), Value: dataset.Location})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_USER", datasetName), Value: dataset.User})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_PASSWORD", datasetName), Value: dataset.Password})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_TOKEN", datasetName), Value: dataset.Token})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_REPLACE_QUERY", datasetName), Value: dataset.ReplaceQuery})
+		}
+		envVar = append(envVar, corev1.EnvVar{Name: "KIESERVER_DATASETS", Value: strings.Join(dataSet, ",")})
+
+		var tmpl []string
+		for _, template := range cr.Status.Applied.Objects.Dashbuilder.Config.KieServerTemplates {
+			tmpl = append(tmpl, template.Name)
+			serverTemplateName := strings.Replace(template.Name, "-", "_", -1)
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_LOCATION", serverTemplateName), Value: template.Location})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_USER", serverTemplateName), Value: template.User})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_PASSWORD", serverTemplateName), Value: template.Password})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_TOKEN", serverTemplateName), Value: template.Token})
+			envVar = append(envVar, corev1.EnvVar{Name: fmt.Sprintf("%s_REPLACE_QUERY", serverTemplateName), Value: template.ReplaceQuery})
+		}
+		envVar = append(envVar, corev1.EnvVar{Name: "KIESERVER_SERVER_TEMPLATES", Value: strings.Join(tmpl, ",")})
+
+		//clean empty envs
+		for _, e := range envVar {
+			if len(e.Value) > 0 {
+				cleanedEnvVar = append(cleanedEnvVar, e)
+			}
+		}
+	}
+
+	for _, dc := range dashbuilderEnv.Dashbuilder.DeploymentConfigs {
+		dc.Spec.Template.Spec.Containers[0].Env = append(dc.Spec.Template.Spec.Containers[0].Env, cleanedEnvVar...)
+	}
+
+	return env, nil
+}
+
+func overrideKafkaTopicsEnv(cr *api.KieApp, env *api.Environment) {
+	var topics []string
+	for index, server := range cr.Status.Applied.Objects.Servers {
+		if server.Kafka != nil {
+			for _, mapping := range server.Kafka.Topics {
+				topics = append(topics, mapping)
+			}
+			//We set a comma as a separator between topics' mappings
+			setKafkaTopics(&env.Servers[index], strings.Join(topics, ","))
+		}
+	}
+}
+
+func setKafkaTopics(object *api.CustomObject, value string) {
+	for index := range object.DeploymentConfigs {
+		for indexEnv, env := range object.DeploymentConfigs[index].Spec.Template.Spec.Containers[index].Env {
+			if env.Name == constants.KafkaTopicsEnv {
+				object.DeploymentConfigs[index].Spec.Template.Spec.Containers[index].Env[indexEnv] = corev1.EnvVar{Name: constants.KafkaTopicsEnv, Value: value}
+				return
+			}
+		}
+	}
+}
+
 func loadProcessMigrationFromFile(filename string, service kubernetes.PlatformService, cr *api.KieApp, envTemplate api.EnvTemplate) (api.Environment, error) {
 	var pimEnv api.Environment
 	yamlBytes, err := loadYaml(service, filename, cr.Status.Applied.Version, cr.Namespace, envTemplate)
@@ -1294,7 +1662,7 @@ func mergeProcessMigrationDB(service kubernetes.PlatformService, cr *api.KieApp,
 
 func isRHPAM(cr *api.KieApp) bool {
 	switch cr.Status.Applied.Environment {
-	case api.RhpamTrial, api.RhpamAuthoring, api.RhpamAuthoringHA, api.RhpamProduction, api.RhpamProductionImmutable:
+	case api.RhpamTrial, api.RhpamAuthoring, api.RhpamAuthoringHA, api.RhpamProduction, api.RhpamProductionImmutable, api.RhpamStandaloneDashbuilder:
 		return true
 	}
 	return false
@@ -1312,8 +1680,23 @@ func deployProcessMigration(cr *api.KieApp) bool {
 	return isGE78(cr) && cr.Status.Applied.Objects.ProcessMigration != nil && isRHPAM(cr)
 }
 
+func deployDashbuilder(cr *api.KieApp) bool {
+	return isGE710(cr) && isRHPAM(cr)
+	// && cr.Status.Applied.Objects.Dashbuilder != nil
+}
+
 func isGE78(cr *api.KieApp) bool {
 	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.8") >= 0
+}
+
+func isGE710(cr *api.KieApp) bool {
+	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.10") >= 0
+}
+
+func IsOcpCA(cr *api.KieApp) bool {
+	return cr.Status.Applied.Truststore != nil &&
+		cr.Status.Applied.Truststore.OpenshiftCaBundle &&
+		semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.11") >= 0
 }
 
 func getDatabaseDeploymentTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate,

@@ -1,10 +1,7 @@
 package kieapp
 
 import (
-	"bytes"
 	"context"
-	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -28,8 +25,7 @@ import (
 	consolev1 "github.com/openshift/api/console/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	operatorsv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
-	"github.com/pavel-v-chernykh/keystore-go"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -136,8 +132,17 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
+	caConfigMap := &corev1.ConfigMap{}
+	if defaults.IsOcpCA(instance) {
+		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-kieapp-ca-bundle", Namespace: instance.Namespace}, caConfigMap); err != nil {
+			if !errors.IsNotFound(err) {
+				return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, err
+			}
+		}
+	}
+
 	//With route hostnames now available, set remaining environment configuration:
-	env, err = reconciler.setEnvironmentProperties(instance, env, deployedRoutes)
+	env, err = reconciler.setEnvironmentProperties(instance, env, deployedRoutes, caConfigMap)
 	if err != nil {
 		// requeue if secret request throws an error
 		// we shouldn't reconcile the deployment with an incorrect or missing keystore secret
@@ -209,8 +214,8 @@ func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp,
 	return reconcile.Result{Requeue: requeue}, nil
 }
 
-func (reconciler *Reconciler) reconcileResources(instance *api.KieApp, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
-	writer := write.New(reconciler.Service).WithOwnerController(instance, reconciler.Service.GetScheme())
+func (reconciler *Reconciler) reconcileResources(ownerController metav1.Object, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
+	writer := write.New(reconciler.Service).WithOwnerController(ownerController, reconciler.Service.GetScheme())
 	//Compare what's deployed with what should be deployed
 	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
 	comparator := getComparator()
@@ -293,8 +298,10 @@ func getComparator() compare.MapComparator {
 		pairs = append(pairs, [2]interface{}{configMap1.Namespace, configMap2.Namespace})
 		pairs = append(pairs, [2]interface{}{configMap1.Labels, configMap2.Labels})
 		pairs = append(pairs, [2]interface{}{configMap1.Annotations, configMap2.Annotations})
-		pairs = append(pairs, [2]interface{}{configMap1.Data, configMap2.Data})
-		pairs = append(pairs, [2]interface{}{configMap1.BinaryData, configMap2.BinaryData})
+		if configMap1.Labels["config.openshift.io/inject-trusted-cabundle"] != "true" {
+			pairs = append(pairs, [2]interface{}{configMap1.Data, configMap2.Data})
+			pairs = append(pairs, [2]interface{}{configMap1.BinaryData, configMap2.BinaryData})
+		}
 		equal := compare.EqualPairs(pairs)
 		if !equal {
 			log.Info("Resources are not equal", "deployed", deployed, "requested", requested)
@@ -493,7 +500,19 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 	return deployedRoutes, nil
 }
 
-func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (api.Environment, error) {
+func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource, caConfigMap *corev1.ConfigMap) (api.Environment, error) {
+	if defaults.IsOcpCA(cr) {
+		secret, err := reconciler.generateTruststoreSecret(
+			cr.Status.Applied.CommonConfig.ApplicationName+constants.TruststoreSecret,
+			cr,
+			caConfigMap,
+		)
+		if err != nil {
+			return api.Environment{}, err
+		}
+		env.Others[0].Secrets = append(env.Others[0].Secrets, secret)
+	}
+
 	// console keystore generation
 	if !env.Console.Omit {
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
@@ -508,6 +527,23 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 				return api.Environment{}, err
 			}
 			env.Console.Secrets = append(env.Console.Secrets, secret)
+		}
+	}
+
+	// dashbuilder keystore generation
+	if cr.Status.Applied.Objects.Dashbuilder != nil {
+		consoleCN := reconciler.setConsoleHost(cr, env, routes)
+		defaults.ConfigureHostname(&env.Dashbuilder, cr, consoleCN)
+		if cr.Status.Applied.Objects.Dashbuilder.KeystoreSecret == "" {
+			secret, err := reconciler.generateKeystoreSecret(
+				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-")),
+				consoleCN,
+				cr,
+			)
+			if err != nil {
+				return api.Environment{}, err
+			}
+			env.Dashbuilder.Secrets = append(env.Dashbuilder.Secrets, secret)
 		}
 	}
 
@@ -574,15 +610,29 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 }
 
 func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (consoleCN string) {
-	for _, rt := range env.Console.Routes {
-		if checkTLS(rt.Spec.TLS) {
-			// use host of first tls route in env template
-			consoleCN = reconciler.GetRouteHost(rt, routes)
-			cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
-			log.Debug("Set console host to: ", cr.Status.ConsoleHost)
-			break
+
+	if cr.Status.Applied.Environment == api.RhpamStandaloneDashbuilder {
+		for _, rt := range env.Dashbuilder.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, routes)
+				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
+				log.Debug("Set dashbuilder console host to: ", cr.Status.ConsoleHost)
+				break
+			}
+		}
+	} else {
+		for _, rt := range env.Console.Routes {
+			if checkTLS(rt.Spec.TLS) {
+				// use host of first tls route in env template
+				consoleCN = reconciler.GetRouteHost(rt, routes)
+				cr.Status.ConsoleHost = fmt.Sprintf("https://%s", consoleCN)
+				log.Debug("Set console host to: ", cr.Status.ConsoleHost)
+				break
+			}
 		}
 	}
+
 	if consoleCN == "" {
 		consoleCN = cr.Status.Applied.CommonConfig.ApplicationName
 		cr.Status.ConsoleHost = fmt.Sprintf("http://%s", consoleCN)
@@ -645,6 +695,7 @@ func (reconciler *Reconciler) imageStreams(cr *api.KieApp, objects []api.CustomO
 func getCustomObjects(env api.Environment) []api.CustomObject {
 	var objects []api.CustomObject
 	objects = append(objects, env.Console)
+	objects = append(objects, env.Dashbuilder)
 	objects = append(objects, env.Servers...)
 	objects = append(objects, env.SmartRouter)
 	objects = append(objects, env.ProcessMigration)
@@ -664,15 +715,19 @@ func filterOmittedObjects(objects []api.CustomObject) []api.CustomObject {
 }
 
 func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN string, cr *api.KieApp) (secret corev1.Secret, err error) {
-	keyStorePassword := []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)
 	existingSecret := corev1.Secret{}
 	err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
 	if err != nil && !errors.IsNotFound(err) {
 		return secret, err
 	}
-	if isValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword) {
+	keyStorePassword := []byte(cr.Status.Applied.CommonConfig.KeyStorePassword)
+	if ok, _ := shared.IsValidKeyStoreSecret(existingSecret, keystoreCN, keyStorePassword); ok {
 		secret = existingSecret
 	} else {
+		keystoreByte, err := shared.GenerateKeystore(keystoreCN, keyStorePassword)
+		if err != nil {
+			return secret, err
+		}
 		secret = corev1.Secret{
 			Type: corev1.SecretTypeOpaque,
 			ObjectMeta: metav1.ObjectMeta{
@@ -683,39 +738,49 @@ func (reconciler *Reconciler) generateKeystoreSecret(secretName, keystoreCN stri
 				},
 			},
 			Data: map[string][]byte{
-				constants.KeystoreName: shared.GenerateKeystore(keystoreCN, keyStorePassword),
+				constants.KeystoreName: keystoreByte,
 			},
 		}
 		secret.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
 	}
+
 	return secret, nil
 }
 
-func isValidKeyStoreSecret(secret corev1.Secret, keystoreCN string, keyStorePassword []byte) bool {
-	if secret.Data[constants.KeystoreName] != nil {
-		b := bytes.NewReader(secret.Data[constants.KeystoreName])
-		existingKeyStore, err := keystore.Decode(b, keyStorePassword)
-		if err == nil {
-			entryJSON, err := json.Marshal(existingKeyStore[constants.KeystoreAlias])
+func (reconciler *Reconciler) generateTruststoreSecret(secretName string, cr *api.KieApp, caConfigMap *corev1.ConfigMap) (secret corev1.Secret, err error) {
+	// add truststore to secret if ca bundle exists in configmap
+	if len(caConfigMap.Data) > 0 && caConfigMap.Data[constants.CaBundleKey] != "" {
+		existingSecret := corev1.Secret{}
+		err = reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: cr.Namespace}, &existingSecret)
+		if err != nil && !errors.IsNotFound(err) {
+			return secret, err
+		}
+		caBundle := []byte(caConfigMap.Data[constants.CaBundleKey])
+		if ok, _ := shared.IsValidTruststoreSecret(existingSecret, caBundle); ok {
+			secret = existingSecret
+		} else {
+			truststoreByte, err := shared.GenerateTruststore(caBundle)
 			if err != nil {
-				log.Error(err)
+				return secret, err
 			}
-			keyEntry := keystore.PrivateKeyEntry{}
-			if err = json.Unmarshal(entryJSON, &keyEntry); err != nil {
-				log.Error(err)
+			secret = corev1.Secret{
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: secretName,
+					Labels: map[string]string{
+						"app":         cr.Status.Applied.CommonConfig.ApplicationName,
+						"application": cr.Status.Applied.CommonConfig.ApplicationName,
+					},
+				},
+				Data: map[string][]byte{
+					constants.TruststoreName: truststoreByte,
+				},
 			}
-			for _, certEntry := range keyEntry.CertChain {
-				cert, err := x509.ParseCertificate(certEntry.Content)
-				if err != nil {
-					log.Error(err)
-				}
-				if cert.Subject.CommonName == keystoreCN {
-					return true
-				}
-			}
+			secret.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Secret"))
 		}
 	}
-	return false
+
+	return secret, nil
 }
 
 // getCustomObjectResources returns all kubernetes resources that need to be created for the given CustomObject

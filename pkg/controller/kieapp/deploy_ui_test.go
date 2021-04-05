@@ -14,7 +14,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	"github.com/kiegroup/kie-cloud-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
-	operators "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operators "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,8 +26,8 @@ import (
 )
 
 func TestUpdateLink(t *testing.T) {
-	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
-	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.CsvVersion+"/manifests")
+	bytes, err := box.Find("businessautomation-operator.clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
@@ -37,8 +37,8 @@ func TestUpdateLink(t *testing.T) {
 }
 
 func TestUpdateExistingLink(t *testing.T) {
-	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.Version+"/manifests")
-	bytes, err := box.Find("businessautomation-operator." + version.Version + ".clusterserviceversion.yaml")
+	box := packr.New("CSV", "../../../deploy/olm-catalog/prod/"+version.CsvVersion+"/manifests")
+	bytes, err := box.Find("businessautomation-operator.clusterserviceversion.yaml")
 	assert.Nil(t, err, "Error reading CSV file")
 	csv := &operators.ClusterServiceVersion{}
 	err = yaml.Unmarshal(bytes, csv)
@@ -53,10 +53,6 @@ func TestProxyVersion(t *testing.T) {
 	checkConsoleProxySettings(t, "4.3.0")
 	checkConsoleProxySettings(t, "4.2.0")
 	checkConsoleProxySettings(t, "4.1.0")
-
-	// ocp 3.x versions should default to latest oauth3 image
-	checkConsoleProxySettings(t, "3.11.0")
-	checkConsoleProxySettings(t, "3.5.0")
 
 	// unknown ocp version should default to 'latest' proxy image
 	checkConsoleProxySettings(t, "7.3.5")
@@ -91,34 +87,22 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 	ocpVersion := semver.MajorMinor("v" + version)
 	pod := getPod(operator.Namespace, getImage(operator), "saName", ocpVersion, operator)
 	caBundlePath := "--openshift-ca=/etc/pki/ca-trust/extracted/crt/ca-bundle.crt"
-	if ocpMajor == "3" {
-		assert.NotContains(t, pod.Spec.Containers[0].Args, caBundlePath)
-		assert.Equal(t,
-			map[string]string{
-				"service.alpha.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
-			},
-			getService(pod.Namespace, ocpVersion).Annotations,
-			"should use service.alpha.openshift.io version of serving-cert-secret-name",
-		)
-		assert.Equal(t, constants.Oauth3ImageLatestURL, pod.Spec.Containers[0].Image)
+	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
+		assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
 	} else {
-		if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
-			assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
-		} else {
-			log.Warn(err)
-		}
-		assert.Equal(t,
-			map[string]string{
-				"service.beta.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
-			},
-			getService(pod.Namespace, ocpVersion).Annotations,
-			"should use service.beta.openshift.io version of serving-cert-secret-name",
-		)
-		if _, ok := shared.Find(constants.Ocp4Versions, fmt.Sprintf("%s.%s", ocpMajor, ocpMinor)); ok {
-			assert.Equal(t, constants.Oauth4ImageURL+":v"+fmt.Sprintf("%s.%s", ocpMajor, ocpMinor), pod.Spec.Containers[0].Image)
-		} else {
-			assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)
-		}
+		log.Warn(err)
+	}
+	assert.Equal(t,
+		map[string]string{
+			"service.beta.openshift.io/serving-cert-secret-name": operator.Name + "-proxy-tls",
+		},
+		getService(pod.Namespace, ocpVersion).Annotations,
+		"should use service.beta.openshift.io version of serving-cert-secret-name",
+	)
+	if _, ok := shared.Find(constants.Ocp4Versions, fmt.Sprintf("%s.%s", ocpMajor, ocpMinor)); ok {
+		assert.Equal(t, constants.Oauth4ImageURL+":v"+fmt.Sprintf("%s.%s", ocpMajor, ocpMinor), pod.Spec.Containers[0].Image)
+	} else {
+		assert.Equal(t, constants.Oauth4ImageLatestURL, pod.Spec.Containers[0].Image)
 	}
 	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 		assert.Contains(t, pod.Spec.Containers[0].Args, caBundlePath)
@@ -163,6 +147,7 @@ func checkCSV(t *testing.T, csv *operators.ClusterServiceVersion) {
 
 	link := getConsoleLink(updatedCSV)
 	assert.NotNil(t, link, "Found no console link in CSV")
+	assert.NotEmpty(t, updatedCSV.Spec.InstallModes, "Found no install modes in CSV")
 	assert.True(t, strings.Contains(updatedCSV.Spec.Description, constants.ConsoleDescription), "Found no information about link in description")
 	assert.Equal(t, fmt.Sprintf("https://%s", url), link.URL, "The console link did not have the expected value")
 }

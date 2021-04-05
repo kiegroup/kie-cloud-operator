@@ -1,7 +1,7 @@
 ###
 # This CR deploys 1 kie server set that will build an image containing the
 # library process deployed.
-# Besides it will deploy the resulting image and a monitoring console
+# Besides it will deploy the resulting image and a monitoring console if enabled
 ###
 apiVersion: app.kiegroup.org/v2
 kind: KieApp

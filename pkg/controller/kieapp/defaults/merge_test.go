@@ -24,10 +24,7 @@ func TestMergeServices(t *testing.T) {
 	service1.Labels["baseline"] = "true"
 	service2 := service1.DeepCopy()
 	service2.Name = service1.Name + "-2"
-	service4 := service1.DeepCopy()
-	service4.Name = service1.Name + "-4"
 	baseline.Console.Services = append(baseline.Console.Services, *service2)
-	baseline.Console.Services = append(baseline.Console.Services, *service4)
 
 	service1b := overwrite.Console.Services[0]
 	service1b.Labels["source"] = "overwrite"
@@ -46,22 +43,16 @@ func TestMergeServices(t *testing.T) {
 	overwrite.Console.Services = append(overwrite.Console.Services, *service5)
 
 	mergedEnv, _ := merge(baseline, *overwrite)
-	assert.Equal(t, 4, len(mergedEnv.Console.Services), "Expected 4 services")
+	assert.Equal(t, 3, len(mergedEnv.Console.Services), "Expected 3 services")
 	finalService1 := mergedEnv.Console.Services[0]
 	// ping service
-	finalService2 := mergedEnv.Console.Services[1]
-	finalService3 := mergedEnv.Console.Services[2]
-	finalService4 := mergedEnv.Console.Services[3]
+	finalService3 := mergedEnv.Console.Services[1]
 	assert.Equal(t, "true", finalService1.Labels["baseline"], "Expected the baseline label to be set")
 	assert.Equal(t, "true", finalService1.Labels["overwrite"], "Expected the overwrite label to also be set as part of the merge")
 	assert.Equal(t, "overwrite", finalService1.Labels["source"], "Expected the source label to have been overwritten by merge")
 	assert.Equal(t, "true", finalService3.Labels["baseline"], "Expected the baseline label to be set")
 	assert.Equal(t, "baseline", finalService3.Labels["source"], "Expected the source label to be baseline")
-	assert.Equal(t, "true", finalService4.Labels["overwrite"], "Expected the overwrite label to be set")
-	assert.Equal(t, "overwrite", finalService4.Labels["source"], "Expected the source label to be overwrite")
-	assert.Equal(t, "test-rhpamcentr-ping", finalService2.Name, "Second service must be ping.")
 	assert.Equal(t, "test-rhpamcentr-2", finalService3.Name, "Second service name should end with -2")
-	assert.Equal(t, "test-rhpamcentr-3", finalService4.Name, "Second service name should end with -3")
 }
 
 func TestMergeRoutes(t *testing.T) {
@@ -158,7 +149,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")
 	assert.True(t, mergedEnvCount > prodEnvCount, "Merged DC should have a higher number of environment variables than the server")
 
-	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
+	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 3, "Expecting 3 ports")
 
 }
 
@@ -196,7 +187,7 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")
 	assert.True(t, mergedEnvCount > prodEnvCount, "Merged DC should have a higher number of environment variables than the server")
 
-	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 4, "Expecting 4 ports")
+	assert.Len(t, mergedDCs[0].Spec.Template.Spec.Containers[0].Ports, 3, "Expecting 3 ports")
 }
 
 func TestMergeConfigsWithoutOverrides(t *testing.T) {
@@ -264,6 +255,9 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 					{
 						Build: &api.KieAppBuildObject{
 							KieServerContainerDeployment: "test",
+							GitSource: api.GitSource{
+								URI: "test-url",
+							},
 						},
 					},
 				},
@@ -286,7 +280,6 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 	assert.Equal(t, "test-kieserver", server.BuildConfigs[0].ObjectMeta.Name)
 	assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "test-kieserver", server.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 }
 
 func TestMergeDeploymentconfigs(t *testing.T) {

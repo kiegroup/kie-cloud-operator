@@ -66,9 +66,12 @@ func configureSSO(cr *api.KieApp, envTemplate *api.EnvTemplate) error {
 		}
 		cr.Status.Applied.Auth.SSO.PrincipalAttribute = constants.SSODefaultPrincipalAttribute
 	}
-	if cr.Status.Applied.Objects.Console.SSOClient != nil {
-		envTemplate.Console.SSOAuthClient = *cr.Status.Applied.Objects.Console.SSOClient.DeepCopy()
+	if cr.Status.Applied.Objects.Console != nil {
+		if cr.Status.Applied.Objects.Console.SSOClient != nil {
+			envTemplate.Console.SSOAuthClient = *cr.Status.Applied.Objects.Console.SSOClient.DeepCopy()
+		}
 	}
+
 	if cr.Status.Applied.Auth.SSO != nil {
 		envTemplate.Auth.SSO = *cr.Status.Applied.Auth.SSO.DeepCopy()
 		for index := range envTemplate.Servers {
