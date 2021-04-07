@@ -59,7 +59,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	if semver.Compare(reconciler.OcpVersion, "v4.2") >= 0 || reconciler.OcpVersion == "" {
 		existing := &corev1.ConfigMap{}
 		new := getCaConfigMap(namespace)
-		controllerutil.SetOwnerReference(operator, new, scheme)
+		controllerutil.SetControllerReference(operator, new, scheme)
 		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: new.Name, Namespace: new.Namespace}, existing); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("Creating ConfigMap ", new.Name)
@@ -72,7 +72,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 		} else {
 			if !reflect.DeepEqual(existing.Labels, new.Labels) {
 				existing.Labels = new.Labels
-				controllerutil.SetOwnerReference(operator, existing, scheme)
+				controllerutil.SetControllerReference(operator, existing, scheme)
 				log.Info("Updating ConfigMap ", existing.Name)
 				if err := reconciler.Service.Update(context.TODO(), existing); err != nil {
 					log.Error("failed to update configmap", err)
