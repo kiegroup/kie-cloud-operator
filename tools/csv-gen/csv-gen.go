@@ -49,7 +49,8 @@ var (
 			Registry:     "quay.io",
 			Context:      "kiegroup",
 			ImageName:    "kie-cloud-operator",
-			Tag:          version.Version,
+			Tag:          "7.8.2",
+			// Tag:          version.Version,
 		},
 		{
 			Name:         "businessautomation",
@@ -59,7 +60,8 @@ var (
 			Registry:     constants.ImageRegistry,
 			Context:      "rhpam-" + major,
 			ImageName:    "rhpam-rhel8-operator",
-			Tag:          constants.CurrentVersion,
+			Tag:          "7.8.2",
+			// Tag:          constants.CurrentVersion,
 		},
 	}
 )
@@ -124,7 +126,7 @@ func main() {
 		}
 		templateStruct.Spec.InstallStrategy.StrategySpecRaw = updatedStrat
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
-		csvVersionedName := operatorName + "." + version.Version
+		csvVersionedName := operatorName + "." + "7.8.2"
 		templateStruct.Name = csvVersionedName
 		templateStruct.Namespace = "placeholder"
 		descrip := "Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments."
@@ -152,9 +154,9 @@ func main() {
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
 		var opVersion olmversion.OperatorVersion
-		opVersion.Version = semver.MustParse(version.Version)
+		opVersion.Version = semver.MustParse("7.8.2")
 		templateStruct.Spec.Version = opVersion
-		templateStruct.Spec.Replaces = operatorName + "." + version.PriorVersion
+		templateStruct.Spec.Replaces = operatorName + "." + version.Version
 		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = maturity

@@ -4,7 +4,7 @@ spec:
   tags:
   - from:
       kind: DockerImage
-      name: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.1
+      name: registry.redhat.io/rhpam-7/rhpam-rhel8-operator:7.8.2
     name: rhpam-7-rhel8-operator-container
   - from:
       kind: DockerImage
