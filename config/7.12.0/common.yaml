@@ -979,6 +979,30 @@ servers:
                       #[[end]]
                     #[[end]]
                     ## JBPM Kafka Emitter END
+                    #[[if .Cors]]
+                    - name: FILTERS
+                      value: "[[.Cors.Filters]]"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowOriginName]]"
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowOriginValue]]"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowMethodsName]]"
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowMethodsValue]]"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowHeadersName]]"
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowHeadersValue]]"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowCredentialsName]]"
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowCredentialsValue]]"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.MaxAgeName]]"
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.MaxAgeValue]]"
+                    #[[end]]
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

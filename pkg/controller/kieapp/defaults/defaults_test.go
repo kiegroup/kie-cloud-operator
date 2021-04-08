@@ -6035,3 +6035,195 @@ func createKafkaJbpmObject(dateFormat string, tasksTopics string, casesTopics st
 	}
 	return &kafkaJBPMEventEmittersObject
 }
+
+func TestTrialEnvironmentWithoutCORS(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-without-cors",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	corsEnabled := isCORSEnabledFully(t, cr, getDefaultCORS())
+	assert.False(t, corsEnabled)
+	assert.Empty(t, cr.Spec.Objects.Servers)
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Cors)
+}
+
+func TestTrialEnvironmentWithCORS(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-cors",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Cors: getDefaultCORS(),
+					},
+				},
+			},
+		},
+	}
+	checkCORSAssertions(t, cr)
+}
+
+func TestTrialEnvironmentWithCORSEnabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-cors",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Cors: &api.CORSFiltersObject{
+							Enabled: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	checkCORSAssertions(t, cr)
+}
+
+func getDefaultCORS() *api.CORSFiltersObject {
+	object := api.CORSFiltersObject{
+		Enabled:               true,
+		Filters:               "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+		AllowOriginName:       "Access-Control-Allow-Origin",
+		AllowOriginValue:      "*",
+		AllowMethodsName:      "Access-Control-Allow-Methods",
+		AllowMethodsValue:     "GET, POST, OPTIONS, PUT",
+		AllowHeadersName:      "Access-Control-Allow-Headers",
+		AllowHeadersValue:     "Accept, Authorization, Content-Type, X-Requested-With",
+		AllowCredentialsName:  "Access-Control-Allow-Credentials",
+		AllowCredentialsValue: Pbool(true),
+		MaxAgeName:            "Access-Control-Max-Age",
+		MaxAgeValue:           Pint32(1),
+	}
+	return &object
+}
+
+func checkCors(t *testing.T, cors *api.CORSFiltersObject, corsDefault *api.CORSFiltersObject) {
+	assert.Equal(t, cors.Filters, corsDefault.Filters)
+	assert.Equal(t, cors.AllowOriginName, corsDefault.AllowOriginName)
+	assert.Equal(t, cors.AllowOriginValue, corsDefault.AllowOriginValue)
+	assert.Equal(t, cors.AllowMethodsName, corsDefault.AllowMethodsName)
+	assert.Equal(t, cors.AllowMethodsValue, corsDefault.AllowMethodsValue)
+	assert.Equal(t, cors.AllowHeadersName, corsDefault.AllowHeadersName)
+	assert.Equal(t, cors.AllowHeadersValue, cors.AllowHeadersValue)
+	assert.Equal(t, cors.AllowCredentialsName, corsDefault.AllowCredentialsName)
+	assert.Equal(t, cors.AllowCredentialsValue, corsDefault.AllowCredentialsValue)
+	assert.Equal(t, cors.MaxAgeName, corsDefault.MaxAgeName)
+	assert.Equal(t, cors.MaxAgeValue, corsDefault.MaxAgeValue)
+}
+
+func TestTrialEnvironmentWithCORSEmpty(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-cors-default",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Cors: &api.CORSFiltersObject{},
+					},
+				},
+			},
+		},
+	}
+
+	assert.False(t, isCORSEnabled(t, cr))
+}
+
+func checkCORSAssertions(t *testing.T, cr *api.KieApp) {
+	corsDefault := getDefaultCORS()
+	corsEnabled := isCORSEnabledFully(t, cr, corsDefault)
+	assert.True(t, corsEnabled)
+	assert.Len(t, cr.Spec.Objects.Servers, 1)
+	cors := cr.Status.Applied.Objects.Servers[0].Cors
+	assert.NotNil(t, cors)
+	checkCors(t, cors, corsDefault)
+}
+
+func isCORSEnabled(t *testing.T, cr *api.KieApp) bool {
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting CORS Test environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+	corsEnabled := false
+	for _, env := range envs {
+		if strings.HasPrefix(env.Name, "AC_ALLOW") || strings.HasPrefix(env.Name, "FILTERS") {
+			corsEnabled, _ = strconv.ParseBool(env.Value)
+		}
+	}
+	return corsEnabled
+}
+
+func isCORSEnabledFully(t *testing.T, cr *api.KieApp, cors *api.CORSFiltersObject) bool {
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting CORS Test environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+	corsEnabled := false
+	for _, env := range envs {
+		switch e := env.Name; e {
+		case "FILTERS":
+			assert.Equal(t, env.Value, cors.Filters)
+			corsEnabled = true
+
+		case "AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME":
+			assert.Equal(t, env.Value, cors.AllowOriginName)
+			corsEnabled = true
+
+		case "AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE":
+			assert.Equal(t, env.Value, cors.AllowOriginValue)
+			corsEnabled = true
+
+		case "AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME":
+			assert.Equal(t, env.Value, cors.AllowMethodsName)
+			corsEnabled = true
+
+		case "AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE":
+			assert.Equal(t, env.Value, cors.AllowMethodsValue)
+			corsEnabled = true
+
+		case "AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME":
+			assert.Equal(t, env.Value, cors.AllowHeadersName)
+			corsEnabled = true
+
+		case "AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE":
+			assert.Equal(t, env.Value, cors.AllowHeadersValue)
+			corsEnabled = true
+
+		case "AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME":
+			assert.Equal(t, env.Value, cors.AllowCredentialsName)
+			corsEnabled = true
+
+		case "AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE":
+			value := strconv.FormatBool(*cors.AllowCredentialsValue)
+			assert.Equal(t, env.Value, value)
+			corsEnabled = true
+
+		case "AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME":
+			assert.Equal(t, env.Value, cors.MaxAgeName)
+			corsEnabled = true
+
+		case "AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE":
+			assert.Equal(t, env.Value, strconv.FormatInt(int64(*cors.MaxAgeValue), 10))
+			corsEnabled = true
+		}
+	}
+	return corsEnabled
+}

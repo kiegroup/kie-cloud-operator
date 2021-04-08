@@ -141,6 +141,7 @@ type KieServerSet struct {
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -678,6 +679,7 @@ type ServerTemplate struct {
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -997,6 +999,37 @@ type KafkaJBPMEventEmittersObject struct {
 	TasksTopicName string `json:"tasksTopicName,omitempty"`
 	// The topic name for cases event messages. Set up to override the default value jbpm-cases-events.
 	CasesTopicName string `json:"casesTopicName,omitempty"`
+}
+
+type CORSFiltersObject struct {
+	//Enable corsConfiguration on the UI
+	Enabled bool `json:"enabled,omitempty"`
+	//Access control Response Headers Filters separated by comma
+	Filters string `json:"filters,omitempty"`
+
+	//Access Control Origin Response Header Filter Header Name
+	AllowOriginName string `json:"allowOriginName,omitempty"`
+	//Access Control Origin Response Header  Filter Header Value
+	AllowOriginValue string `json:"allowOriginValue,omitempty"`
+
+	//Access Control Allow Methods Response Header Filter Header Name
+	AllowMethodsName string `json:"allowMethodsName,omitempty"`
+	//Access Control Allow Methods Response Headers Filter Header Value
+	AllowMethodsValue string `json:"allowMethodsValue,omitempty"`
+
+	//Access Control Allow Headers Filter Header Name
+	AllowHeadersName string `json:"allowHeadersName,omitempty"`
+	//Access Control Allow Headers Filter Header Value
+	AllowHeadersValue string `json:"allowHeadersValue,omitempty"`
+
+	//Access Control Allow Credentials Filter Header Name
+	AllowCredentialsName string `json:"allowCredentialsName,omitempty"`
+	//Access Control Allow Credentials Filter Header Value
+	AllowCredentialsValue *bool `json:"allowCredentialsValue,omitempty"`
+
+	//Access Control Max Age Filter Header Value
+	MaxAgeName  string `json:"maxAgeName,omitempty"`
+	MaxAgeValue *int32 `json:"maxAgeValue,omitempty"`
 }
 
 func init() {

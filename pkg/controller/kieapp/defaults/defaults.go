@@ -782,6 +782,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.Jvm = *serverSet.Jvm.DeepCopy()
 			}
 
+			getCORSConfig(serverSet.Cors)
+			if serverSet.Cors != nil {
+				template.Cors = serverSet.Cors
+			}
+
 			servers = append(servers, template)
 		}
 
@@ -1793,4 +1798,72 @@ func isDeployDB(dbType api.DatabaseType) bool {
 		return true
 	}
 	return false
+}
+
+func getCORSConfig(cors *api.CORSFiltersObject) {
+	if cors != nil && cors.Enabled {
+		//if something is missing we set mandatory defaults
+		AcFilters(cors)
+		AcAllowOrigin(cors)
+		AcAllowMethods(cors)
+		AcAllowHeaders(cors)
+		AcAllowCredentials(cors)
+		AcMaxAge(cors)
+	}
+}
+
+func AcFilters(cors *api.CORSFiltersObject) {
+	if len(cors.Filters) < 1 {
+		cors.Filters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+	}
+}
+
+func AcAllowOrigin(cors *api.CORSFiltersObject) {
+	//AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER
+	if len(cors.AllowOriginName) < 1 {
+		cors.AllowOriginName = "Access-Control-Allow-Origin"
+	}
+	if len(cors.AllowOriginValue) == 0 {
+		cors.AllowOriginValue = "*"
+	}
+}
+
+func AcAllowMethods(cors *api.CORSFiltersObject) {
+	//AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER
+	if len(cors.AllowMethodsName) < 1 {
+		cors.AllowMethodsName = "Access-Control-Allow-Methods"
+	}
+	if len(cors.AllowMethodsValue) == 0 {
+		cors.AllowMethodsValue = "GET, POST, OPTIONS, PUT"
+	}
+}
+
+func AcAllowHeaders(cors *api.CORSFiltersObject) {
+	//AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER
+	if len(cors.AllowHeadersName) < 1 {
+		cors.AllowHeadersName = "Access-Control-Allow-Headers"
+	}
+	if len(cors.AllowHeadersValue) == 0 {
+		cors.AllowHeadersValue = "Accept, Authorization, Content-Type, X-Requested-With"
+	}
+}
+
+func AcAllowCredentials(cors *api.CORSFiltersObject) {
+	//AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER
+	if len(cors.AllowCredentialsName) < 1 {
+		cors.AllowCredentialsName = "Access-Control-Allow-Credentials"
+	}
+	if cors.AllowCredentialsValue == nil {
+		cors.AllowCredentialsValue = Pbool(true)
+	}
+}
+
+func AcMaxAge(cors *api.CORSFiltersObject) {
+	//AC_MAX_AGE_FILTER_RESPONSE_HEADER
+	if len(cors.MaxAgeName) < 1 {
+		cors.MaxAgeName = "Access-Control-Max-Age"
+	}
+	if cors.MaxAgeValue == nil {
+		cors.MaxAgeValue = Pint32(1)
+	}
 }
