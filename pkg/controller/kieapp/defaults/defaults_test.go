@@ -1292,7 +1292,7 @@ func TestExtensionImageBuildWithCustomConfiguration(t *testing.T) {
 	assert.Equal(t, "", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 }
 
-func TestKieAppContainerDeploymentWithoutS2i_BuildConfigNotSet(t *testing.T) {
+func TestKieAppContainerDeploymentWithoutS2iAndNotUseImageTags_BuildConfigNotSet(t *testing.T) {
 	serverName := "testing-name"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1305,7 +1305,7 @@ func TestKieAppContainerDeploymentWithoutS2i_BuildConfigNotSet(t *testing.T) {
 					{
 						Name: serverName,
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 						},
 					},
 				},
@@ -1317,8 +1317,42 @@ func TestKieAppContainerDeploymentWithoutS2i_BuildConfigNotSet(t *testing.T) {
 	// ConsolidateObjects
 	ConsolidateObjects(env, cr)
 
-	//// Since there is not Build section with GitSource
+	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
+	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+}
+
+func TestKieAppContainerDeploymentWithoutS2iAndWithImageTags_BuildConfigNotSet(t *testing.T) {
+	serverName := "testing-name"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			UseImageTags: true,
+			Environment:  api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Name: serverName,
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	// ConsolidateObjects
+	ConsolidateObjects(env, cr)
+
+	// Since there is not Build section with GitSource
+	assert.Len(t, env.Servers[0].BuildConfigs, 0)
+	assert.Equal(t, "openshift", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, "rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "ImageStreamTag", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 }
 
 func TestBuildConfiguration(t *testing.T) {
@@ -2699,7 +2733,6 @@ func TestSetKieServerFrom(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-
 	assert.Nil(t, err, "Error getting trial environment")
 	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
@@ -2708,6 +2741,33 @@ func TestSetKieServerFrom(t *testing.T) {
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
+	cr := getCRforTestKieServerFromBuild(false)
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.False(t, cr.Spec.UseImageTags)
+
+	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func TestSetKieServerFromBuildAndWithImageTags(t *testing.T) {
+	cr := getCRforTestKieServerFromBuild(true)
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.True(t, cr.Spec.UseImageTags)
+
+	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func getCRforTestKieServerFromBuild(useImageTags bool) *api.KieApp {
+
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -2731,19 +2791,22 @@ func TestSetKieServerFromBuild(t *testing.T) {
 								Name: byeRules,
 							},
 						},
-						Build: &api.KieAppBuildObject{},
+						Build: &api.KieAppBuildObject{
+							GitSource: api.GitSource{
+								URI: "https://test",
+							},
+						},
 					},
 				},
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, test.MockService())
 
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	if useImageTags {
+		cr.Spec.UseImageTags = true
+	}
+
+	return cr
 }
 
 func TestMultipleBuildConfigurations(t *testing.T) {

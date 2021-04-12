@@ -712,7 +712,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			if serverSet.ID != "" {
 				template.KieServerID = serverSet.ID
 			}
-			if serverSet.Build != nil {
+			if serverSet.Build != nil && (len(serverSet.Build.ExtensionImageStreamTag) > 0 || len(serverSet.Build.GitSource.URI) > 0) {
 				if *serverSet.Deployments > 1 {
 					return []api.ServerTemplate{}, fmt.Errorf("Cannot request %v deployments for a build", *serverSet.Deployments)
 				}
