@@ -36,7 +36,7 @@ replace (
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible // Required by OLM
 
 	// Pin RHsyseng library versions
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20210323180350-be2aa15abde0
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200929135808-85f5a6e442d9
 
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1
