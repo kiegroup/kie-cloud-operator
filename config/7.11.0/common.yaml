@@ -978,6 +978,12 @@ servers:
                       mountPath: "/etc/openshift-truststore-volume"
                       readOnly: true
                     #[[end]]
+                    #[[if .PersistRepos]]
+                    - name: "[[$.ApplicationName]]-m2-repository"
+                      mountPath: "/home/jboss/.m2/repository"
+                    - name: "[[$.ApplicationName]]-kie-repository"
+                      mountPath: "/home/jboss/.kie/repository"
+                    #[[end]]
                     #[[if $.Auth.RoleMapper.From]]
                     - name: "[[$.Constants.RoleMapperVolume]]"
                       mountPath: "[[$.Auth.RoleMapper.MountPath]]"
@@ -992,6 +998,16 @@ servers:
                   secret:
                     secretName: "[[$.ApplicationName]]-truststore"
                 #[[end]]
+
+                #[[if .PersistRepos]]
+                - name: "[[$.ApplicationName]]-m2-repository"
+                  persistentVolumeClaim:
+                    claimName: "[[$.ApplicationName]]-m2-repository-claim"
+                - name: "[[$.ApplicationName]]-kie-repository"
+                  persistentVolumeClaim:
+                    claimName: "[[$.ApplicationName]]-kie-repository-claim"
+                #[[end]]
+
                 #[[if $.Auth.RoleMapper.From]]
                 - name: "[[$.Constants.RoleMapperVolume]]"
                 #[[if eq $.Auth.RoleMapper.From.Kind "ConfigMap"]]
@@ -1009,6 +1025,39 @@ servers:
                 #[[end]]
                 #[[end]]
       ## KIE server deployment config END
+    ## KIE server pvc BEGIN
+    #[[if .PersistRepos]]
+    persistentVolumeClaims:
+      - metadata:
+          name: "[[$.ApplicationName]]-m2-repository-claim"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+        spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: "[[.ServersM2PvSize]]"
+      - metadata:
+          name: "[[$.ApplicationName]]-kie-repository-claim"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+        spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: "[[.ServersKiePvSize]]"
+    #[[end]]
+    ## KIE server pvc END
     ## KIE server services BEGIN
     services:
       - spec:

@@ -1919,6 +1919,8 @@ spec:
                         name:
                           description: Server name
                           type: string
+                        persistRepos:
+                          type: boolean
                         replicas:
                           description: Replicas to set for the DeploymentConfig
                           format: int32
@@ -1951,6 +1953,10 @@ spec:
                                 value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                               type: object
                           type: object
+                        serversKiePvSize:
+                          type: string
+                        serversM2PvSize:
+                          type: string
                         ssoClient:
                           description: SSOAuthClient Auth client to use for the SSO
                             integration
@@ -4216,6 +4222,8 @@ spec:
                             name:
                               description: Server name
                               type: string
+                            persistRepos:
+                              type: boolean
                             replicas:
                               description: Replicas to set for the DeploymentConfig
                               format: int32
@@ -4248,6 +4256,10 @@ spec:
                                     an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                                   type: object
                               type: object
+                            serversKiePvSize:
+                              type: string
+                            serversM2PvSize:
+                              type: string
                             ssoClient:
                               description: SSOAuthClient Auth client to use for the
                                 SSO integration

@@ -128,44 +128,21 @@ func TestMultipleServerDeployment(t *testing.T) {
 }
 
 func TestRHPAMTrialEnvironment(t *testing.T) {
-	deployments := 2
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
-			Objects: api.KieAppObjects{
-				Servers: []api.KieServerSet{
-					{Deployments: Pint(deployments)},
-				},
-			},
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-
-	assert.Nil(t, err, "Error getting trial environment")
-	wbServices := env.Console.Services
-	mainService := getService(wbServices, "test-rhpamcentr")
-	assert.NotNil(t, mainService, "rhpamcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamcentr service should have two ports")
-	assert.False(t, hasPort(mainService, 8001), "The rhpamcentr service should NOT listen on port 8001")
-
-	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, bcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
-	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+	runTrialEnvironmentTests(t, "rhpamcentr", api.RhpamTrial, bcImage)
 }
 
 func TestRHDMTrialEnvironment(t *testing.T) {
+	runTrialEnvironmentTests(t, "rhdmcentr", api.RhdmTrial, dcImage)
+}
+
+func runTrialEnvironmentTests(t *testing.T, consoleName string, environment api.EnvironmentType, consoleImage string) {
 	deployments := 2
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhdmTrial,
+			Environment: environment,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
 					{Deployments: Pint(deployments)},
@@ -177,14 +154,14 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 
 	assert.Nil(t, err, "Error getting trial environment")
 	wbServices := env.Console.Services
-	mainService := getService(wbServices, "test-rhdmcentr")
-	assert.NotNil(t, mainService, "rhdmcentr service not found")
-	assert.Len(t, mainService.Spec.Ports, 2, "The rhdmcentr service should have three ports")
-	assert.False(t, hasPort(mainService, 8001), "The rhdmcentr service should NOT listen on port 8001")
+	mainService := getService(wbServices, "test-"+consoleName)
+	assert.NotNil(t, mainService, consoleName+" service not found")
+	assert.Len(t, mainService.Spec.Ports, 2, "The "+consoleName+" service should have three ports")
+	assert.False(t, hasPort(mainService, 8001), "The "+consoleName+" service should NOT listen on port 8001")
 
 	assert.Equal(t, fmt.Sprintf("%s-kieserver-%d", cr.Name, len(env.Servers)), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
-	assert.Equal(t, dcImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "test-"+consoleName, env.Console.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, consoleImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -539,6 +516,198 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
 	assert.Nil(t, env.Console.DeploymentConfigs)
 	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func TestRhdmProdImmutableEnvironmentWithReposPersistedWithoutStorageClass(t *testing.T) {
+
+	cr := api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						PersistRepos: true,
+					},
+				},
+			},
+		},
+	}
+
+	cr.Spec.Environment = api.RhdmProductionImmutable
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
+
+	assert.Equal(t, fmt.Sprintf(rhdmkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
+}
+
+func TestRhdmProdImmutableEnvironmentWithReposPersistedWithStorageClassAndCustomPVSize(t *testing.T) {
+
+	cr := api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						PersistRepos:     true,
+						ServersM2PvSize:  "10Gi",
+						ServersKiePvSize: "150Mi",
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
+
+	assert.Equal(t, fmt.Sprintf(rhdmkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
+	runCommonAssertsForKieServerPersistentStoragePVCTests(t, cr, env, "10Gi", "150Mi")
+}
+
+func TestRhpamProdImmutableEnvironmentWithReposPersistedWithStorageClassAndDefaultPVSize(t *testing.T) {
+
+	cr := api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						PersistRepos: true,
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+
+	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
+
+	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
+	runCommonAssertsForKieServerPersistentStoragePVCTests(t, cr, env, "1Gi", "10Mi")
+}
+
+func runCommonAssertsForKieServerPersistentStoragePVCTests(t *testing.T, cr api.KieApp, env api.Environment, m2Size string, kieSize string) {
+	assert.Nil(t, env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	cr.Spec.Objects.Servers[0].StorageClassName = "silver"
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err)
+
+	assert.Equal(t, "test-m2-repository-claim", env.Servers[0].PersistentVolumeClaims[0].Name)
+	assert.Equal(t, "silver", *env.Servers[0].PersistentVolumeClaims[0].Spec.StorageClassName)
+	assert.Equal(t, m2Size, env.Servers[0].PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
+
+	assert.Equal(t, "test-kie-repository-claim", env.Servers[0].PersistentVolumeClaims[1].Name)
+	assert.Equal(t, "silver", *env.Servers[0].PersistentVolumeClaims[1].Spec.StorageClassName)
+	assert.Equal(t, kieSize, env.Servers[0].PersistentVolumeClaims[1].Spec.Resources.Requests.Storage().String())
+}
+
+func TestRhpamTrialWithReposPersistedWithStorageClass(t *testing.T) {
+
+	cr := api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						PersistRepos:     true,
+						ServersM2PvSize:  "2Gi",
+						ServersKiePvSize: "150Mi",
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	m2RepoVM, kieRepoVM, m2Vol, kieVol := kieServerPersistentStorageCommonConfig(&cr)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, m2RepoVM)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, kieRepoVM)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, m2Vol)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, kieVol)
+
+	// there shouldn't be any pvc on trial env
+	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
+}
+
+func runCommonAssertsForKieServerPersistentStorageVolumeMounts(t *testing.T, cr api.KieApp, env api.Environment) {
+	m2RepoVM, kieRepoVM, m2Vol, kieVol := kieServerPersistentStorageCommonConfig(&cr)
+
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, m2RepoVM)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, kieRepoVM)
+
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, m2Vol)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, kieVol)
+}
+
+func runCommonAssertsForKieServerPersistentStorageTests(t *testing.T, cr api.KieApp, env api.Environment) {
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.True(t, env.Console.Omit, "Business Central should be omitted")
+	assert.Nil(t, env.Console.PersistentVolumeClaims)
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
+	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
+}
+
+func kieServerPersistentStorageCommonConfig(cr *api.KieApp) (corev1.VolumeMount, corev1.VolumeMount, corev1.Volume, corev1.Volume) {
+
+	m2RepoVM := corev1.VolumeMount{
+		Name:      cr.Status.Applied.CommonConfig.ApplicationName + "-m2-repository",
+		MountPath: "/home/jboss/.m2/repository",
+	}
+	kieRepoVM := corev1.VolumeMount{
+		Name:      cr.Status.Applied.CommonConfig.ApplicationName + "-kie-repository",
+		MountPath: "/home/jboss/.kie/repository",
+	}
+
+	m2Vol := corev1.Volume{
+		Name: cr.Status.Applied.CommonConfig.ApplicationName + "-m2-repository",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: cr.Status.Applied.CommonConfig.ApplicationName + "-m2-repository-claim",
+			},
+		},
+	}
+	kieVol := corev1.Volume{
+		Name: cr.Status.Applied.CommonConfig.ApplicationName + "-kie-repository",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: cr.Status.Applied.CommonConfig.ApplicationName + "-kie-repository-claim",
+			},
+		},
+	}
+	return m2RepoVM, kieRepoVM, m2Vol, kieVol
 }
 
 func TestRhpamProdImmutableEnvironmentDisableKCVerification(t *testing.T) {

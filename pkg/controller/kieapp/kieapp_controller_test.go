@@ -57,6 +57,7 @@ func TestGenerateSecret(t *testing.T) {
 		},
 	}
 	env, err := defaults.GetEnvironment(cr, mockService)
+	fmt.Println(err)
 	assert.Nil(t, err, "Error getting a new environment")
 	assert.Len(t, env.Console.Secrets, 0, "No secret is available when reading the trial workbench from yaml files")
 

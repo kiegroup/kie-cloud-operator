@@ -138,8 +138,11 @@ type KieServerSet struct {
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster      bool            `json:"jbpmCluster,omitempty"`
+	PersistRepos     bool            `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string          `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string          `json:"serversKiePvSize,omitempty"`
+	Kafka            *KafkaExtObject `json:"kafka,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -674,8 +677,11 @@ type ServerTemplate struct {
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster      bool            `json:"jbpmCluster,omitempty"`
+	PersistRepos     bool            `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string          `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string          `json:"serversKiePvSize,omitempty"`
+	Kafka            *KafkaExtObject `json:"kafka,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
