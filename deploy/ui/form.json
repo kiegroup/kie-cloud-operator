@@ -129,6 +129,38 @@
               "type": "password"
             }
           ]
+        },
+        {
+          "label": "Startup Strategy",
+          "type": "fieldGroup",
+          "jsonPath": "$.spec.startupStrategy",
+          "visible": true,
+          "fields": [
+            {
+              "type": "dropDown",
+              "required": true,
+              "jsonPath": "$.spec.commonConfig.startupStrategy.strategyName",
+              "originalJsonPath": "$.spec.commonConfig.startupStrategy.strategyName",
+              "description": "Specify the StartupStrategy to use. Do not enable the Controller strategy in an environment with a high-availability Business Central.",
+              "default": "OpenShiftStartupStrategy",
+              "options": [
+                {
+                  "value": "ControllerBasedStartupStrategy",
+                  "label": "ControllerBasedStartupStrategy"
+                },
+                {
+                  "value": "OpenShiftStartupStrategy",
+                  "label": "OpenShiftStartupStrategy"
+                }
+              ]
+            },
+            {
+              "label": "Controller Template Cache TTL",
+              "type": "integer",
+              "jsonPath": "$.spec.commonConfig.startupStrategy.controllerTemplateCacheTTL",
+              "description": "If OpenShiftStartupStrategy is used this value is the Template Cache TTL, default is 5000"
+            }
+          ]
         }
       ]
     },

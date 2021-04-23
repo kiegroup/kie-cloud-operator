@@ -667,6 +667,7 @@ type ConsoleTemplate struct {
 	Simplified          bool              `json:"simplifed"`
 	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
 	Cors                CORSFiltersObject `json:"cors,omitempty"`
+	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -694,6 +695,7 @@ type ServerTemplate struct {
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
+	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -861,6 +863,8 @@ type CommonConfig struct {
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
 	// If set to true, plain text routes will be configured instead using SSL
 	DisableSsl bool `json:"disableSsl,omitempty"`
+	// Startup strategy for Console and Kieserver
+	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
 }
 
 // VersionConfigs ...
@@ -1050,6 +1054,20 @@ type CORSFiltersObject struct {
 	//Access Control Max Age Filter Header Value, default is: 1
 	MaxAgeValue *int32 `json:"maxAgeValue,omitempty"`
 }
+
+// StartupStrategy ...
+type StartupStrategy struct {
+	// StartupStrategy to use. When set to OpenShiftStartupStrategy, allows KIE server to start up independently used shared state from OpenShift API service, option is ControllerBasedStartupStrategy, default is OpenShiftStartupStrategy
+	StrategyName string `json:"strategyName,omitempty"`
+	// Controller Template Cache TTL to use when the OpenShiftStartupStrategy is choosed and Business Central is deployed, default is 5000
+	ControllerTemplateCacheTTL *int `json:"controllerTemplateCacheTTL,omitempty"`
+}
+
+// StartupStrategies supported values
+const (
+	OpenshiftStartupStrategy  = "OpenShiftStartupStrategy"
+	ControllerStartupStrategy = "ControllerBasedStartupStrategy"
+)
 
 func init() {
 	SchemeBuilder.Register(&KieApp{}, &KieAppList{})

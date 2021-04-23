@@ -307,6 +307,21 @@ spec:
                     description: The password to use for keystore generation.
                     format: password
                     type: string
+                  startupStrategy:
+                    description: Startup strategy for Console and Kieserver
+                    properties:
+                      controllerTemplateCacheTTL:
+                        description: Controller Template Cache TTL to use when the
+                          OpenShiftStartupStrategy is choosed and Business Central
+                          is deployed, default is 5000
+                        type: integer
+                      strategyName:
+                        description: StartupStrategy to use. When set to OpenShiftStartupStrategy,
+                          allows KIE server to start up independently used shared
+                          state from OpenShift API service, option is ControllerBasedStartupStrategy,
+                          default is OpenShiftStartupStrategy
+                        type: string
+                    type: object
                 type: object
               environment:
                 description: The name of the environment used as a baseline
@@ -2796,6 +2811,21 @@ spec:
                         description: The password to use for keystore generation.
                         format: password
                         type: string
+                      startupStrategy:
+                        description: Startup strategy for Console and Kieserver
+                        properties:
+                          controllerTemplateCacheTTL:
+                            description: Controller Template Cache TTL to use when
+                              the OpenShiftStartupStrategy is choosed and Business
+                              Central is deployed, default is 5000
+                            type: integer
+                          strategyName:
+                            description: StartupStrategy to use. When set to OpenShiftStartupStrategy,
+                              allows KIE server to start up independently used shared
+                              state from OpenShift API service, option is ControllerBasedStartupStrategy,
+                              default is OpenShiftStartupStrategy
+                            type: string
+                        type: object
                     type: object
                   environment:
                     description: The name of the environment used as a baseline
