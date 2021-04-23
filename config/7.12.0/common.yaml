@@ -98,7 +98,9 @@ console:
                   - name: KIE_DASHBUILDER_RUNTIME_LOCATION
                     value: "[[.Console.DashbuilderLocation]]"
                   #[[end]]
-                  ## OpenShift Enhancement BEGIN
+                  #[[if .Console.StartupStrategy ]]
+                    #[[if eq .Console.StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
+                    ## OpenShift Enhancement BEGIN
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
@@ -106,8 +108,18 @@ console:
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
-                    value: "5000"
-                  ## OpenShift Enhancement END
+                    value: "[[.Console.StartupStrategy.ControllerTemplateCacheTTL]]"
+                    ## OpenShift Enhancement END
+                    #[[end]]
+                    #[[if eq .Console.StartupStrategy.StrategyName "ControllerBasedStartupStrategy" ]]
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
+                    value: "false"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
+                    value: "false"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                    value: "false"
+                    #[[end]]
+                  #[[end]]
                   #[[if not .DisableSsl]]
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
@@ -774,7 +786,15 @@ servers:
                     - name: KIE_ADMIN_PWD
                       value: "[[$.AdminPassword]]"
                     - name: KIE_SERVER_STARTUP_STRATEGY
-                      value: "OpenShiftStartupStrategy"
+                      value: "[[.StartupStrategy.StrategyName]]"
+                    #[[if eq .StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
+                    - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
+                      value: "[[.StartupStrategy.ControllerTemplateCacheTTL]]"
+                    #[[end]]
+                    #[[if eq .StartupStrategy.StrategyName "ControllerBasedStartupStrategy" ]]
+                    - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
+                      value: "false"
+                    #[[end]]
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
                     - name: KIE_SERVER_MODE

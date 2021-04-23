@@ -6805,3 +6805,99 @@ func TestDashbuilderWithPartialCORS(t *testing.T) {
 	assert.NotNil(t, cors)
 	checkCustomCors(t, cors)
 }
+
+func TestOpenshitStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			CommonConfig: api.CommonConfig{
+				StartupStrategy: createStartupStrategy(api.OpenshiftStartupStrategy, 4000),
+			},
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+
+	assert.Equal(t, api.OpenshiftStartupStrategy, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"))
+	assert.Equal(t, "4000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL"))
+
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED"))
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED"))
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE"))
+	assert.Equal(t, "4000", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL"))
+}
+
+func TestDefaultStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+				Console: &api.ConsoleObject{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+
+	assert.Equal(t, api.OpenshiftStartupStrategy, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"))
+	assert.Equal(t, "5000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL"))
+
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED"))
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED"))
+	assert.Equal(t, "true", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE"))
+	assert.Equal(t, "5000", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL"))
+}
+
+func TestControllerStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			CommonConfig: api.CommonConfig{
+				StartupStrategy: createStartupStrategy(api.ControllerStartupStrategy, 5000),
+			},
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	assert.Equal(t, api.ControllerStartupStrategy, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"))
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL"))
+	checkConsoleControllerStrategyAssertions(t, cr)
+}
+
+func createStartupStrategy(strategyName string, ttl int) *api.StartupStrategy {
+	strategy := api.StartupStrategy{
+		StrategyName:               strategyName,
+		ControllerTemplateCacheTTL: Pint(ttl),
+	}
+	return &strategy
+}
+
+func checkConsoleControllerStrategyAssertions(t *testing.T, cr *api.KieApp) {
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	assert.Equal(t, "false", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED"))
+}
