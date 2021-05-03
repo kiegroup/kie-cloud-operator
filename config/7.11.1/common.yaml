@@ -940,6 +940,24 @@ servers:
                       value: "[[.Kafka.MaxBlockMs]]"
                       #[[end]]
                     #[[end]]
+                    #[[if .KafkaJbpm]]
+                      #[[if .KafkaJbpm.BootstrapServers]]
+                    - NAME: KIE_SERVER_KAFKA_JBPM_BOOTSTRAP_SERVERS
+                      value: "[[.KafkaJbpm.BootstrapServers]]"
+                      #[[end]]
+                      #[[if .KafkaJbpm.Acks]]
+                    - NAME: KIE_SERVER_KAFKA_JBPM_ACKS
+                      value: "[[.KafkaJbpm.Acks]]"
+                      #[[end]]
+                      #[[if .KafkaJbpm.ClientID]]
+                    - NAME: KIE_SERVER_KAFKA_JBPM_CLIENT_ID
+                      value: "[[.KafkaJbpm.ClientID]]"
+                      #[[end]]
+                      #[[if .KafkaJbpm.MaxBlockMs]]
+                    - NAME: KIE_SERVER_KAFKA_JBPM_MAX_BLOCK_MS
+                      value: "[[.KafkaJbpm.MaxBlockMs]]"
+                      #[[end]]
+                    #[[end]]
                     ## AMQ Streams END
                   livenessProbe:
                     httpGet:

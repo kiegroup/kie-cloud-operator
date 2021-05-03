@@ -1913,6 +1913,31 @@ spec:
                                 type: string
                               type: array
                           type: object
+                        kafkaJbpm:
+                          description: KafkaJBPMObject kafka configuration to be used
+                            by the KieApp for JBPM Emitter
+                          properties:
+                            acks:
+                              description: Jbpm Emitter, the number of acknowledgments
+                                the producer requires the leader to have received
+                                before considering a request complete.
+                              type: integer
+                            bootstrapServers:
+                              description: Jbpm emitter, a comma separated list of
+                                host/port pairs to use for establishing the initial
+                                connection to the Kafka cluster for Jbpm Emitter
+                              type: string
+                            clientID:
+                              description: Jbpm Emitter, identifier to pass to the
+                                server when making requests
+                              type: string
+                            maxBlockMs:
+                              description: Jbpm emitter, number of milliseconds that
+                                indicates how long publish method will bloc for jbpm
+                                emitter
+                              format: int32
+                              type: integer
+                          type: object
                         keystoreSecret:
                           description: Keystore secret name
                           type: string
@@ -4209,6 +4234,32 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                              type: object
+                            kafkaJbpm:
+                              description: KafkaJBPMObject kafka configuration to
+                                be used by the KieApp for JBPM Emitter
+                              properties:
+                                acks:
+                                  description: Jbpm Emitter, the number of acknowledgments
+                                    the producer requires the leader to have received
+                                    before considering a request complete.
+                                  type: integer
+                                bootstrapServers:
+                                  description: Jbpm emitter, a comma separated list
+                                    of host/port pairs to use for establishing the
+                                    initial connection to the Kafka cluster for Jbpm
+                                    Emitter
+                                  type: string
+                                clientID:
+                                  description: Jbpm Emitter, identifier to pass to
+                                    the server when making requests
+                                  type: string
+                                maxBlockMs:
+                                  description: Jbpm emitter, number of milliseconds
+                                    that indicates how long publish method will bloc
+                                    for jbpm emitter
+                                  format: int32
+                                  type: integer
                               type: object
                             keystoreSecret:
                               description: Keystore secret name

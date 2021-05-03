@@ -767,6 +767,10 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			if serverSet.Kafka != nil {
 				template.Kafka = serverSet.Kafka
 			}
+			getKafkaJBPMConfig(serverSet.Kafka, serverSet.KafkaJbpm)
+			if serverSet.KafkaJbpm != nil {
+				template.KafkaJbpm = serverSet.KafkaJbpm
+			}
 
 			if template.KeystoreSecret == "" {
 				template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, template.KieName)
@@ -1069,6 +1073,19 @@ func getKafkaConfig(kafka *api.KafkaExtObject) {
 		}
 		if kafka.AutocreateTopics == nil {
 			kafka.AutocreateTopics = Pbool(true)
+		}
+	}
+}
+
+func getKafkaJBPMConfig(kafkaExt *api.KafkaExtObject, kafka *api.KafkaJBPMObject) {
+	// The emitter is enabled only if the kafka extension is enabled
+	if kafkaExt != nil && kafka != nil {
+		//if something is missing we set mandatory defaults
+		if kafka.MaxBlockMs == nil {
+			kafka.MaxBlockMs = Pint32(2000)
+		}
+		if len(kafka.BootstrapServers) == 0 {
+			kafka.BootstrapServers = "localhost:9092"
 		}
 	}
 }
