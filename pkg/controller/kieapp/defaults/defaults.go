@@ -1379,35 +1379,56 @@ func checkJvmOnServer(server *api.KieServerSet) {
 }
 
 func setResourcesDefault(kieObject *api.KieAppObject, limits, requests map[string]string) {
+
+	var cpuL, memL, cpuR, memR string
+
 	if kieObject.Resources == nil {
 		kieObject.Resources = &corev1.ResourceRequirements{}
 	}
 	if kieObject.Resources.Limits == nil {
-		kieObject.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(limits["CPU"]), corev1.ResourceMemory: createResourceQuantity(limits["MEM"])}
+		cpuL = limits["CPU"]
+		memL = limits["MEM"]
 	}
 	if kieObject.Resources.Requests == nil {
-		kieObject.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: createResourceQuantity(requests["CPU"]), corev1.ResourceMemory: createResourceQuantity(requests["MEM"])}
+		cpuR = requests["CPU"]
+		memR = requests["MEM"]
 	}
-	if kieObject.Resources.Limits.Cpu() == nil {
-		kieObject.Resources.Limits.Cpu().Add(createResourceQuantity(limits["CPU"]))
-	}
-	if kieObject.Resources.Limits.Memory() == nil {
-		kieObject.Resources.Limits.Memory().Add(createResourceQuantity(limits["MEM"]))
-	}
-	if kieObject.Resources.Requests.Cpu() == nil {
-		kieObject.Resources.Requests.Cpu().Add(createResourceQuantity(requests["CPU"]))
-	}
-	if kieObject.Resources.Requests.Memory() == nil {
-		kieObject.Resources.Requests.Memory().Add(createResourceQuantity(requests["MEM"]))
-	}
-}
 
-func createResourceQuantity(constraint string) resource.Quantity {
-	item, err := resource.ParseQuantity(constraint)
-	if err != nil {
-		log.Error(err)
+	if kieObject.Resources.Limits.Cpu() == nil || kieObject.Resources.Limits.Cpu().IsZero() {
+		cpuL = limits["CPU"]
+	} else {
+		cpuL = kieObject.Resources.Limits.Cpu().String()
 	}
-	return item
+
+	if kieObject.Resources.Limits.Memory() == nil || kieObject.Resources.Limits.Memory().IsZero() {
+		memL = limits["MEM"]
+	} else {
+		memL = kieObject.Resources.Limits.Memory().String()
+	}
+	if kieObject.Resources.Requests.Cpu() == nil || kieObject.Resources.Requests.Cpu().IsZero() {
+		cpuR = requests["CPU"]
+	} else {
+		cpuR = kieObject.Resources.Requests.Cpu().String()
+	}
+
+	if kieObject.Resources.Requests.Memory() == nil || kieObject.Resources.Requests.Memory().IsZero() {
+		memR = requests["MEM"]
+	} else {
+		memR = kieObject.Resources.Requests.Memory().String()
+	}
+
+	normalized := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(cpuL),
+			corev1.ResourceMemory: resource.MustParse(memL),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(cpuR),
+			corev1.ResourceMemory: resource.MustParse(memR),
+		},
+	}
+	kieObject.Resources.Requests = normalized.Requests
+	kieObject.Resources.Limits = normalized.Limits
 }
 
 func addWebhookTypes(buildObject *api.KieAppBuildObject) {
