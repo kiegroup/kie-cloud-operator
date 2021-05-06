@@ -216,26 +216,11 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 
-	cpuL, _ := resource.ParseQuantity("1")
-	cpuR, _ := resource.ParseQuantity("750m")
-	memL, _ := resource.ParseQuantity("2Gi")
-	memR, _ := resource.ParseQuantity("1536Mi")
-	dashLimAndReq := &corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuL,
-			corev1.ResourceMemory: memL,
-		},
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuR,
-			corev1.ResourceMemory: memR,
-		},
-	}
-
 	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Resources)
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceCPU], *dashLimAndReq.Limits.Cpu())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceCPU], *dashLimAndReq.Requests.Cpu())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
+	assert.Equal(t, "1", cr.Status.Applied.Objects.Dashbuilder.Resources.Limits.Cpu().String())
+	assert.Equal(t, "750m", cr.Status.Applied.Objects.Dashbuilder.Resources.Requests.Cpu().String())
+	assert.Equal(t, "2Gi", cr.Status.Applied.Objects.Dashbuilder.Resources.Limits.Memory().String())
+	assert.Equal(t, "1536Mi", cr.Status.Applied.Objects.Dashbuilder.Resources.Requests.Memory().String())
 
 	checkClusterLabels(t, cr, env.Dashbuilder)
 	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
@@ -1841,15 +1826,21 @@ var sampleEnv = []corev1.EnvVar{
 	},
 }
 
-var sampleResources = &corev1.ResourceRequirements{
-	Limits: map[corev1.ResourceName]resource.Quantity{
-		"memory": *resource.NewQuantity(1, "Mi"),
-		"cpu":    *resource.NewQuantity(500, "m"),
-	},
-	Requests: map[corev1.ResourceName]resource.Quantity{
-		"memory": *resource.NewQuantity(1, "Mi"),
-		"cpu":    *resource.NewQuantity(500, "m"),
-	},
+func sampleResources() *corev1.ResourceRequirements {
+	cpuL, _ := resource.ParseQuantity("1")
+	cpuR, _ := resource.ParseQuantity("750m")
+	memL, _ := resource.ParseQuantity("2Gi")
+	memR, _ := resource.ParseQuantity("1536Mi")
+	return &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuL,
+			corev1.ResourceMemory: memL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuR,
+			corev1.ResourceMemory: memR,
+		},
+	}
 }
 
 func TestUnknownEnvironmentObjects(t *testing.T) {
@@ -2515,7 +2506,7 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
-						Resources: sampleResources,
+						Resources: sampleResources(),
 					},
 				},
 				Servers: []api.KieServerSet{
@@ -2523,14 +2514,14 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 						Deployments: Pint(deployments),
 						KieAppObject: api.KieAppObject{
 							Env:       sampleEnv,
-							Resources: sampleResources,
+							Resources: sampleResources(),
 						},
 					},
 				},
 				SmartRouter: &api.SmartRouterObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
-						Resources: sampleResources,
+						Resources: sampleResources(),
 					},
 				},
 			},
@@ -5911,4 +5902,108 @@ func TestRhdmEnvironmentWithoutKafkaExt(t *testing.T) {
 	assert.False(t, extEnabled)
 	assert.True(t, len(cr.Spec.Objects.Servers) == 0)
 	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Kafka)
+}
+
+func TestCRServerCPULimitAndRequestUsingMilicores(t *testing.T) {
+	cpuL, _ := resource.ParseQuantity("1500m")
+	cpuR, _ := resource.ParseQuantity("1000m")
+	cpu := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU: cpuL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU: cpuR,
+		},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kieapp-cpu-test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							Resources: cpu,
+							Replicas:  Pint32(1),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting environment")
+	assert.NotNil(t, env)
+
+	env = ConsolidateObjects(env, cr)
+	values := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU: resource.MustParse("1500m"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU: resource.MustParse("1"),
+		},
+	}
+	assert.Equal(t, values.Requests.Cpu(), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Resources.Requests.Cpu())
+	assert.Equal(t, values.Limits.Cpu(), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Resources.Limits.Cpu())
+}
+
+func TestRhdmEnvironmentWithKafkaJBPM(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testJbpmEmitter"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Kafka: createKafkaExtObject(), KafkaJbpmEventEmitters: createKafkaJbpmObject()},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.NotNil(t, env)
+	assert.Nil(t, err, "Error getting environment")
+
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+
+		checkJbpmKafkaEnvs(t, env)
+	}
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_ENABLED"))
+	assert.Equal(t, "3", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS"))
+	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS"))
+	assert.Equal(t, "D12345678", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID"))
+	assert.Equal(t, "2000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS"))
+}
+
+func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
+	switch e := env.Name; e {
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS":
+		assert.Equal(t, env.Value, "3")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS":
+		assert.Equal(t, env.Value, "localhost:9092")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID":
+		assert.Equal(t, env.Value, "D12345678")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS":
+		assert.Equal(t, env.Value, "2000")
+	}
+}
+
+func createKafkaJbpmObject() *api.KafkaJBPMEventEmittersObject {
+	kafkaJBPMEventEmittersObject := api.KafkaJBPMEventEmittersObject{
+		Acks:             Pint(3),
+		BootstrapServers: "localhost:9092",
+		ClientID:         "D12345678",
+		MaxBlockMs:       Pint32(2000),
+	}
+	return &kafkaJBPMEventEmittersObject
 }
