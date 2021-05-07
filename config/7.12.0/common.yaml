@@ -941,6 +941,32 @@ servers:
                       #[[end]]
                     #[[end]]
                     ## AMQ Streams END
+                    ## JBPM Kafka Emitter BEGIN
+                    #[[if .KafkaJbpmEventEmitters]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ENABLED
+                      value: "true"
+                      #[[if .KafkaJbpmEventEmitters.BootstrapServers]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS
+                      value: "[[.KafkaJbpmEventEmitters.BootstrapServers]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.Acks]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS
+                      value: "[[.KafkaJbpmEventEmitters.Acks]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.ClientID]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID
+                      value: "[[.KafkaJbpmEventEmitters.ClientID]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.MaxBlockMs]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS
+                      value: "[[.KafkaJbpmEventEmitters.MaxBlockMs]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.DateFormat]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT
+                      value: "[[.KafkaJbpmEventEmitters.DateFormat]]"
+                      #[[end]]
+                    #[[end]]
+                    ## JBPM Kafka Emitter END
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

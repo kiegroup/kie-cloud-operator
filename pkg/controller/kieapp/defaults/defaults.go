@@ -768,6 +768,10 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.Kafka = serverSet.Kafka
 			}
 
+			if serverSet.KafkaJbpmEventEmitters != nil {
+				template.KafkaJbpmEventEmitters = serverSet.KafkaJbpmEventEmitters
+			}
+
 			if template.KeystoreSecret == "" {
 				template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, template.KieName)
 			}

@@ -138,8 +138,9 @@ type KieServerSet struct {
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -674,8 +675,9 @@ type ServerTemplate struct {
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -975,6 +977,20 @@ type KafkaExtObject struct {
 	Acks *int `json:"acks,omitempty"`
 	// Number of milliseconds that indicates how long publish method will bloc
 	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
+}
+
+// KafkaJBPMEventEmittersObject kafka configuration to be used by the KieApp for JBPM Emitter
+type KafkaJBPMEventEmittersObject struct {
+	// Jbpm emitter, comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// Jbpm Emitter, this configuration allows users to set an ID to provide a logical application name for logging purposes. Not set by default.
+	ClientID string `json:"clientID,omitempty"`
+	// Jbpm Emitter, the number of acknowledgments the producer requires the leader to have received before considering a request complete. Not set by default
+	Acks *int `json:"acks,omitempty"`
+	// Jbpm emitter, value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds).
+	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
+	// Jbpm emitter, date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+	DateFormat string `json:"dateFormat,omitempty"`
 }
 
 func init() {

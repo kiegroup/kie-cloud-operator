@@ -1913,6 +1913,37 @@ spec:
                                 type: string
                               type: array
                           type: object
+                        kafkaJbpmEventEmitters:
+                          description: KafkaJBPMEventEmittersObject kafka configuration
+                            to be used by the KieApp for JBPM Emitter
+                          properties:
+                            acks:
+                              description: Jbpm Emitter, the number of acknowledgments
+                                the producer requires the leader to have received
+                                before considering a request complete. Not set by
+                                default
+                              type: integer
+                            bootstrapServers:
+                              description: Jbpm emitter, comma separated list of host/port
+                                pairs to use for establishing the initial connection
+                                to the Kafka cluster.
+                              type: string
+                            clientID:
+                              description: Jbpm Emitter, this configuration allows
+                                users to set an ID to provide a logical application
+                                name for logging purposes. Not set by default.
+                              type: string
+                            dateFormat:
+                              description: Jbpm emitter, date and time format to be
+                                sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+                              type: string
+                            maxBlockMs:
+                              description: Jbpm emitter, value in milliseconds that
+                                indicates how long the 'publish' method will block
+                                the operation. Default 2000 milliseconds (2 seconds).
+                              format: int32
+                              type: integer
+                          type: object
                         keystoreSecret:
                           description: Keystore secret name
                           type: string
@@ -4209,6 +4240,38 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                              type: object
+                            kafkaJbpmEventEmitters:
+                              description: KafkaJBPMEventEmittersObject kafka configuration
+                                to be used by the KieApp for JBPM Emitter
+                              properties:
+                                acks:
+                                  description: Jbpm Emitter, the number of acknowledgments
+                                    the producer requires the leader to have received
+                                    before considering a request complete. Not set
+                                    by default
+                                  type: integer
+                                bootstrapServers:
+                                  description: Jbpm emitter, comma separated list
+                                    of host/port pairs to use for establishing the
+                                    initial connection to the Kafka cluster.
+                                  type: string
+                                clientID:
+                                  description: Jbpm Emitter, this configuration allows
+                                    users to set an ID to provide a logical application
+                                    name for logging purposes. Not set by default.
+                                  type: string
+                                dateFormat:
+                                  description: Jbpm emitter, date and time format
+                                    to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+                                  type: string
+                                maxBlockMs:
+                                  description: Jbpm emitter, value in milliseconds
+                                    that indicates how long the 'publish' method will
+                                    block the operation. Default 2000 milliseconds
+                                    (2 seconds).
+                                  format: int32
+                                  type: integer
                               type: object
                             keystoreSecret:
                               description: Keystore secret name
