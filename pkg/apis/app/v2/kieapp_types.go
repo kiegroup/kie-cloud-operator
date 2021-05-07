@@ -138,8 +138,9 @@ type KieServerSet struct {
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -674,8 +675,9 @@ type ServerTemplate struct {
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
-	JbpmCluster bool            `json:"jbpmCluster,omitempty"`
-	Kafka       *KafkaExtObject `json:"kafka,omitempty"`
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -974,6 +976,18 @@ type KafkaExtObject struct {
 	// The number of acknowledgments the producer requires the leader to have received before considering a request complete.
 	Acks *int `json:"acks,omitempty"`
 	// Number of milliseconds that indicates how long publish method will bloc
+	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
+}
+
+// KafkaJBPMEventEmittersObject kafka configuration to be used by the KieApp for JBPM Emitter
+type KafkaJBPMEventEmittersObject struct {
+	// Jbpm emitter, a comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster for Jbpm Emitter
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// Jbpm Emitter, identifier to pass to the server when making requests
+	ClientID string `json:"clientID,omitempty"`
+	// Jbpm Emitter, the number of acknowledgments the producer requires the leader to have received before considering a request complete.
+	Acks *int `json:"acks,omitempty"`
+	// Jbpm emitter, number of milliseconds that indicates how long publish method will bloc for jbpm emitter
 	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
 }
 

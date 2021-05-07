@@ -1255,6 +1255,47 @@
                   ]
                 },
                 {
+                  "label": "Enable Kafka Emitter",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Bootstrap Servers",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
+                      "description": "A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
+                    },
+                    {
+                      "label": "Client ID",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
+                      "description": "An id string to pass to the server when making requests. Not passed by default (the purpose of this property is to provide a logical application name for logging)"
+                    },
+                    {
+                      "label": "Number of Acknowledgments ",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
+                      "description": "The number of acknowledgments the producer requires the leader to have received before considering a request complete. 1 by default, which means the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers"
+                    },
+                    {
+                      "label": "Max Block in Milliseconds",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
+                      "description": "Number of milliseconds that indicates how long publish method will block. Default 2000 (2 seconds)"
+                    }
+                  ]
+                },
+                {
                   "label": "Enable JMS integration",
                   "type": "checkbox",
                   "required": false,

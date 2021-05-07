@@ -5912,3 +5912,59 @@ func TestRhdmEnvironmentWithoutKafkaExt(t *testing.T) {
 	assert.True(t, len(cr.Spec.Objects.Servers) == 0)
 	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Kafka)
 }
+
+func TestRhdmEnvironmentWithKafkaJBPM(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testJbpmEmitter"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{Kafka: createKafkaExtObject(), KafkaJbpmEventEmitters: createKafkaJbpmObject()},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.NotNil(t, env)
+	assert.Nil(t, err, "Error getting environment")
+
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+
+		checkJbpmKafkaEnvs(t, env)
+	}
+
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_ENABLED"))
+	assert.Equal(t, "3", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS"))
+	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS"))
+	assert.Equal(t, "D12345678", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID"))
+	assert.Equal(t, "2000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS"))
+}
+
+func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
+	switch e := env.Name; e {
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS":
+		assert.Equal(t, env.Value, "3")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS":
+		assert.Equal(t, env.Value, "localhost:9092")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID":
+		assert.Equal(t, env.Value, "D12345678")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS":
+		assert.Equal(t, env.Value, "2000")
+	}
+}
+
+func createKafkaJbpmObject() *api.KafkaJBPMEventEmittersObject {
+	kafkaJBPMEventEmittersObject := api.KafkaJBPMEventEmittersObject{
+		Acks:             Pint(3),
+		BootstrapServers: "localhost:9092",
+		ClientID:         "D12345678",
+		MaxBlockMs:       Pint32(2000),
+	}
+	return &kafkaJBPMEventEmittersObject
+}
