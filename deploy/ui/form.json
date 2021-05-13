@@ -860,7 +860,7 @@
                   "description": "The secret name within the Java keystore used for https encryption. Generated if empty"
                 },
                 {
-                  "label": "Enable JBPM CLuster",
+                  "label": "Enable JBPM Cluster",
                   "type": "object",
                   "max": 1,
                   "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
