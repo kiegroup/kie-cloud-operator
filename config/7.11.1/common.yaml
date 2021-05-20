@@ -965,6 +965,18 @@ servers:
                     - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT
                       value: "[[.KafkaJbpmEventEmitters.DateFormat]]"
                       #[[end]]
+                     #[[if .KafkaJbpmEventEmitters.ProcessesTopicName]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME
+                      value: "[[.KafkaJbpmEventEmitters.ProcessesTopicName]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.TasksTopicName]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME
+                      value: "[[.KafkaJbpmEventEmitters.TasksTopicName]]"
+                      #[[end]]
+                      #[[if .KafkaJbpmEventEmitters.CasesTopicName]]
+                    - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME
+                      value: "[[.KafkaJbpmEventEmitters.CasesTopicName]]"
+                      #[[end]]
                     #[[end]]
                     ## JBPM Kafka Emitter END
                   livenessProbe:

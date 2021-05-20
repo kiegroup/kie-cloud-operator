@@ -6003,16 +6003,28 @@ func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT":
 		assert.Equal(t, env.Value, "dd-MM-yyyy'T'HH:mm:ss.SSSZ")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME":
+		assert.Equal(t, env.Value, "my-tasks-topic")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASE_TOPIC_NAME":
+		assert.Equal(t, env.Value, "my-cases-topic")
+
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESS_TOPIC_NAME":
+		assert.Equal(t, env.Value, "my-processes-topic")
 	}
 }
 
 func createKafkaJbpmObject() *api.KafkaJBPMEventEmittersObject {
 	kafkaJBPMEventEmittersObject := api.KafkaJBPMEventEmittersObject{
-		Acks:             Pint(3),
-		BootstrapServers: "localhost:9092",
-		ClientID:         "D12345678",
-		MaxBlockMs:       Pint32(2000),
-		DateFormat:       "dd-MM-yyyy'T'HH:mm:ss.SSSZ",
+		Acks:               Pint(3),
+		BootstrapServers:   "localhost:9092",
+		ClientID:           "D12345678",
+		MaxBlockMs:         Pint32(2000),
+		DateFormat:         "dd-MM-yyyy'T'HH:mm:ss.SSSZ",
+		CasesTopicName:     "my-cases-topic",
+		ProcessesTopicName: "my-processes-topic",
+		TasksTopicName:     "my-tasks-topic",
 	}
 	return &kafkaJBPMEventEmittersObject
 }

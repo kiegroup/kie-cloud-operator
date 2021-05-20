@@ -1258,7 +1258,7 @@
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
-                      "description": "A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
+                      "description": "Comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster."
                     },
                     {
                       "label": "Client ID",
@@ -1266,7 +1266,7 @@
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
-                      "description": "An id string to pass to the server when making requests. Not passed by default (the purpose of this property is to provide a logical application name for logging)"
+                      "description": "This configuration allows users to set an ID to provide a logical application name for logging purposes, not set by default."
                     },
                     {
                       "label": "Number of Acknowledgments ",
@@ -1274,7 +1274,7 @@
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
-                      "description": "The number of acknowledgments the producer requires the leader to have received before considering a request complete. 1 by default, which means the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers"
+                      "description": "The number of acknowledgments that the emitter requires the leader to have received before considering a request to be complete, not set by default."
                     },
                     {
                       "label": "Max Block in Milliseconds",
@@ -1282,7 +1282,7 @@
                       "required": false,
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
-                      "description": "Number of milliseconds that indicates how long publish method will block. Default 2000 (2 seconds)"
+                      "description": "Value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds)."
                     },
                     {
                       "label": "Date Format",
@@ -1291,6 +1291,30 @@
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.dateFormat",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.dateFormat",
                       "description": "Date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                    },
+                    {
+                      "label": "Processes Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.processesTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.processesTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-processes-events."
+                    },
+                    {
+                      "label": "Tasks Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.tasksTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.tasksTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-tasks-events."
+                    },
+                    {
+                      "label": "Cases Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-cases-events."
                     }
                   ]
                 },

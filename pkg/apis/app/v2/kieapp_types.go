@@ -979,18 +979,24 @@ type KafkaExtObject struct {
 	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
 }
 
-// KafkaJBPMEventEmittersObject kafka configuration to be used by the KieApp for JBPM Emitter
+// KafkaJBPMEventEmittersObject kafka configuration to be used by the KieApp for jBPM Emitter
 type KafkaJBPMEventEmittersObject struct {
-	// Jbpm emitter, comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+	// Comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
 	BootstrapServers string `json:"bootstrapServers,omitempty"`
-	// Jbpm Emitter, this configuration allows users to set an ID to provide a logical application name for logging purposes. Not set by default.
+	// This configuration allows users to set an ID to provide a logical application name for logging purposes, not set by default.
 	ClientID string `json:"clientID,omitempty"`
-	// Jbpm Emitter, the number of acknowledgments the producer requires the leader to have received before considering a request complete. Not set by default
+	// The number of acknowledgments that the emitter requires the leader to have received before considering a request to be complete, not set by default.
 	Acks *int `json:"acks,omitempty"`
-	// Jbpm emitter, value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds).
+	// Value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds).
 	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
-	// Jbpm emitter, date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+	// Date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
 	DateFormat string `json:"dateFormat,omitempty"`
+	// The topic name for processes event messages. Set up to override the default value jbpm-processes-events.
+	ProcessesTopicName string `json:"processesTopicName,omitempty"`
+	// The topic name for tasks event messages. Set up to override the default value jbpm-tasks-events.
+	TasksTopicName string `json:"tasksTopicName,omitempty"`
+	// The topic name for cases event messages. Set up to override the default value jbpm-cases-events.
+	CasesTopicName string `json:"casesTopicName,omitempty"`
 }
 
 func init() {
