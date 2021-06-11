@@ -1025,7 +1025,7 @@
                           "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
                           "required": true,
                           "description": "Branch to use in the git repository for S2I build.",
-                          "default": "master"
+                          "default": "main"
                         },
                         {
                           "label": "Context directory",
