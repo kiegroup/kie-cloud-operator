@@ -216,26 +216,11 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
 
-	cpuL, _ := resource.ParseQuantity("1")
-	cpuR, _ := resource.ParseQuantity("750m")
-	memL, _ := resource.ParseQuantity("2Gi")
-	memR, _ := resource.ParseQuantity("1536Mi")
-	dashLimAndReq := &corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuL,
-			corev1.ResourceMemory: memL,
-		},
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    cpuR,
-			corev1.ResourceMemory: memR,
-		},
-	}
-
 	assert.NotNil(t, cr.Status.Applied.Objects.Dashbuilder.Resources)
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceCPU], *dashLimAndReq.Limits.Cpu())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceCPU], *dashLimAndReq.Requests.Cpu())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Limits[corev1.ResourceMemory], *dashLimAndReq.Limits.Memory())
-	assert.Equal(t, cr.Status.Applied.Objects.Dashbuilder.Resources.Requests[corev1.ResourceMemory], *dashLimAndReq.Requests.Memory())
+	assert.Equal(t, "1", cr.Status.Applied.Objects.Dashbuilder.Resources.Limits.Cpu().String())
+	assert.Equal(t, "750m", cr.Status.Applied.Objects.Dashbuilder.Resources.Requests.Cpu().String())
+	assert.Equal(t, "2Gi", cr.Status.Applied.Objects.Dashbuilder.Resources.Limits.Memory().String())
+	assert.Equal(t, "1536Mi", cr.Status.Applied.Objects.Dashbuilder.Resources.Requests.Memory().String())
 
 	checkClusterLabels(t, cr, env.Dashbuilder)
 	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
@@ -1319,7 +1304,11 @@ func TestKieAppContainerDeploymentWithoutS2iAndNotUseImageTags_BuildConfigNotSet
 
 	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
+<<<<<<< HEAD
 	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.11.0", env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+=======
+	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+>>>>>>> upstream/main
 }
 
 func TestKieAppContainerDeploymentWithoutS2iAndWithImageTags_BuildConfigNotSet(t *testing.T) {
@@ -1351,7 +1340,11 @@ func TestKieAppContainerDeploymentWithoutS2iAndWithImageTags_BuildConfigNotSet(t
 	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
 	assert.Equal(t, "openshift", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+<<<<<<< HEAD
 	assert.Equal(t, "rhpam-kieserver-rhel8:7.11.0", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+=======
+	assert.Equal(t, "rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+>>>>>>> upstream/main
 	assert.Equal(t, "ImageStreamTag", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 }
 
@@ -1841,15 +1834,21 @@ var sampleEnv = []corev1.EnvVar{
 	},
 }
 
-var sampleResources = &corev1.ResourceRequirements{
-	Limits: map[corev1.ResourceName]resource.Quantity{
-		"memory": *resource.NewQuantity(1, "Mi"),
-		"cpu":    *resource.NewQuantity(500, "m"),
-	},
-	Requests: map[corev1.ResourceName]resource.Quantity{
-		"memory": *resource.NewQuantity(1, "Mi"),
-		"cpu":    *resource.NewQuantity(500, "m"),
-	},
+func sampleResources() *corev1.ResourceRequirements {
+	cpuL, _ := resource.ParseQuantity("1")
+	cpuR, _ := resource.ParseQuantity("750m")
+	memL, _ := resource.ParseQuantity("2Gi")
+	memR, _ := resource.ParseQuantity("1536Mi")
+	return &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuL,
+			corev1.ResourceMemory: memL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuR,
+			corev1.ResourceMemory: memR,
+		},
+	}
 }
 
 func TestUnknownEnvironmentObjects(t *testing.T) {
@@ -2186,23 +2185,6 @@ func TestOpenshiftCA(t *testing.T) {
 	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
 	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, smartRouterVar)
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envVar)
-
-	cr.Spec.Version = "7.10.1"
-	env, err = GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err)
-
-	assert.False(t, IsOcpCA(cr))
-	assert.Equal(t, smartOptsAppend, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
-	assert.Empty(t, env.Others[0].ConfigMaps)
-	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, trustVolMnt)
-
-	assert.Empty(t, cr.Status.Applied.Objects.Console.Jvm.JavaOptsAppend)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.Dashbuilder.Jvm.JavaOptsAppend)
-	assert.NotEmpty(t, cr.Status.Applied.Objects.SmartRouter.Jvm.JavaOptsAppend)
-	assert.Empty(t, cr.Status.Applied.Objects.Servers[0].Jvm.JavaOptsAppend)
 }
 func TestMergeTrialAndCommonConfig(t *testing.T) {
 	cr := &api.KieApp{
@@ -2532,7 +2514,7 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
-						Resources: sampleResources,
+						Resources: sampleResources(),
 					},
 				},
 				Servers: []api.KieServerSet{
@@ -2540,14 +2522,14 @@ func buildKieApp(name string, deployments int) *api.KieApp {
 						Deployments: Pint(deployments),
 						KieAppObject: api.KieAppObject{
 							Env:       sampleEnv,
-							Resources: sampleResources,
+							Resources: sampleResources(),
 						},
 					},
 				},
 				SmartRouter: &api.SmartRouterObject{
 					KieAppObject: api.KieAppObject{
 						Env:       sampleEnv,
-						Resources: sampleResources,
+						Resources: sampleResources(),
 					},
 				},
 			},
@@ -2758,6 +2740,33 @@ func TestSetKieServerFrom(t *testing.T) {
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
+	cr := getCRforTestKieServerFromBuild(false)
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.False(t, cr.Spec.UseImageTags)
+
+	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func TestSetKieServerFromBuildAndWithImageTags(t *testing.T) {
+	cr := getCRforTestKieServerFromBuild(true)
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.True(t, cr.Spec.UseImageTags)
+
+	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+}
+
+func getCRforTestKieServerFromBuild(useImageTags bool) *api.KieApp {
+
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -2791,56 +2800,13 @@ func TestSetKieServerFromBuild(t *testing.T) {
 			},
 		},
 	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-}
 
-func TestSetKieServerFromBuildAndWithImageTags(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment:  api.RhpamProductionImmutable,
-			UseImageTags: true,
-			Objects: api.KieAppObjects{
-				Servers: []api.KieServerSet{
-					{
-						From: &api.ImageObjRef{
-							Kind: "ImageStreamTag",
-							ObjectReference: api.ObjectReference{
-								Name: helloRules,
-							},
-						},
-					},
-					{
-						From: &api.ImageObjRef{
-							Kind: "ImageStreamTag",
-							ObjectReference: api.ObjectReference{
-								Name: byeRules,
-							},
-						},
-						Build: &api.KieAppBuildObject{
-							GitSource: api.GitSource{
-								URI: "https://test",
-							},
-						},
-					},
-				},
-			},
-		},
+
+	if useImageTags {
+		cr.Spec.UseImageTags = true
 	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
 
-	assert.Equal(t, helloRules, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	return cr
 }
 
 func TestMultipleBuildConfigurations(t *testing.T) {
@@ -5945,4 +5911,52 @@ func TestRhdmEnvironmentWithoutKafkaExt(t *testing.T) {
 	assert.False(t, extEnabled)
 	assert.True(t, len(cr.Spec.Objects.Servers) == 0)
 	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Kafka)
+}
+
+func TestCRServerCPULimitAndRequestUsingMilicores(t *testing.T) {
+	cpuL, _ := resource.ParseQuantity("1500m")
+	cpuR, _ := resource.ParseQuantity("1000m")
+	cpu := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU: cpuL,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU: cpuR,
+		},
+	}
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kieapp-cpu-test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							Resources: cpu,
+							Replicas:  Pint32(1),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting environment")
+	assert.NotNil(t, env)
+
+	env = ConsolidateObjects(env, cr)
+	values := &corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU: resource.MustParse("1500m"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU: resource.MustParse("1"),
+		},
+	}
+	assert.Equal(t, values.Requests.Cpu(), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Resources.Requests.Cpu())
+	assert.Equal(t, values.Limits.Cpu(), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Resources.Limits.Cpu())
 }
