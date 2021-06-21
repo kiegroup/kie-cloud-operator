@@ -1304,11 +1304,7 @@ func TestKieAppContainerDeploymentWithoutS2iAndNotUseImageTags_BuildConfigNotSet
 
 	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
-<<<<<<< HEAD
-	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.11.0", env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-=======
 	assert.Equal(t, "registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
->>>>>>> upstream/main
 }
 
 func TestKieAppContainerDeploymentWithoutS2iAndWithImageTags_BuildConfigNotSet(t *testing.T) {
@@ -1340,11 +1336,7 @@ func TestKieAppContainerDeploymentWithoutS2iAndWithImageTags_BuildConfigNotSet(t
 	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
 	assert.Equal(t, "openshift", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-<<<<<<< HEAD
-	assert.Equal(t, "rhpam-kieserver-rhel8:7.11.0", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-=======
 	assert.Equal(t, "rhpam-kieserver-rhel8:"+constants.CurrentVersion, env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
->>>>>>> upstream/main
 	assert.Equal(t, "ImageStreamTag", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Kind)
 }
 
@@ -2800,7 +2792,6 @@ func getCRforTestKieServerFromBuild(useImageTags bool) *api.KieApp {
 			},
 		},
 	}
-
 
 	if useImageTags {
 		cr.Spec.UseImageTags = true
