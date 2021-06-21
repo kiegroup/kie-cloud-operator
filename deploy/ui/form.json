@@ -490,6 +490,7 @@
       "subPages": [
         {
           "label": "Console",
+          "visible": true,
           "fields": [
             {
               "label": "Image Context",
@@ -861,21 +862,11 @@
                 },
                 {
                   "label": "Enable JBPM Cluster",
-                  "type": "object",
-                  "max": 1,
+                  "required": false,
                   "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
-                  "visible": true,
-                  "fields": [
-                    {
-                      "label": "JBPM Cluster",
-                      "required": false,
-                      "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
-                      "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
-                      "type": "checkbox",
-                      "checked": "true",
-                      "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers"
-                    }
-                  ]
+                  "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "type": "checkbox",
+                  "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers"
                 },
                 {
                   "label": "Replicas",
@@ -1034,7 +1025,7 @@
                           "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
                           "required": true,
                           "description": "Branch to use in the git repository for S2I build.",
-                          "default": "master"
+                          "default": "main"
                         },
                         {
                           "label": "Context directory",
@@ -1755,6 +1746,7 @@
         },
         {
           "label": "Dashbuilder",
+          "visible": true,
           "fields": [
             {
               "label": "Dashbuilder",
@@ -2243,6 +2235,7 @@
         },
         {
           "label": "Smart Router",
+          "visible": true,
           "fields": [
             {
               "label": "Smart Router",
@@ -2479,6 +2472,7 @@
         },
         {
           "label": "Process Instance Migration",
+          "visible": true,
           "fields": [
             {
               "label": "Process Instance Migration",
