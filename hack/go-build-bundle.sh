@@ -19,15 +19,18 @@ if [[ ${LOCAL} != true ]]; then
     fi
 fi
 
-echo ${CFLAGS}
+echo "Cekit build flags : ${CFLAGS}"
 
 OLMDIR=deploy/olm-catalog/prod
 CSV=businessautomation-operator.clusterserviceversion.yaml
 if [[ ${DEV} == true ]]; then
     OLMDIR=deploy/olm-catalog/dev
-    BUNDLE_NAME=quay.io/tchughesiv/${BUNDLE}
+    BUNDLE_NAME=quay.io/${USERNAME}/${BUNDLE}
 fi
 VERDIR=${OLMDIR}/${CSVVERSION}
+
+echo "Building bundle operator image version ${CSVVERSION}"
+
 
 CRD=kieapp.crd.yaml
 #if (( $(echo "${VERSION} 7.9.0" | awk '{print ($1 < $2)}') )); then
