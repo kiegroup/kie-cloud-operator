@@ -23,24 +23,32 @@ docker push quay.io/kiegroup/kie-cloud-operator:<version>
 
 ## Deploy to OpenShift 4.5+ using OLM
 
-To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) instructions for Operator Courier to obtain an account token. This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
+To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create
+an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) 
+instructions for Operator Courier to obtain an account token. 
+This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
 
-If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
+If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. 
+Also note that the push command does not overwrite an existing repository, 
+and it needs to be deleted before a new version can be built and uploaded. 
+Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) 
+to load your operator bundle in OpenShift.
 
 **Create your own index image**
 
 Requires [opm](https://github.com/operator-framework/operator-registry/releases) v1.15.3+ -
 
 ```bash
-$ make bundle-dev
 USERNAME=tchughesiv
 VERSION=$(go run getversion.go -csv)
 IMAGE=quay.io/${USERNAME}/rhpam-operator-bundle
 BUNDLE=${IMAGE}:${VERSION}
+$ make bundle-dev
+
 
 $ docker push ${BUNDLE}
 BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
-INDEX_VERSION=v4.6
+INDEX_VERSION=v4.7
 INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
 INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go -csvPrior)
 INDEX_TO=${INDEX_IMAGE}_${VERSION}
@@ -68,11 +76,13 @@ spec:
 EOF
 ```
 
-It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
+It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. 
+It can be easily found by filtering the provider type to _Custom_.
 
 ### Trigger a KieApp deployment
 
-Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, use the console to `Create KieApp` or create one manually as seen below.
+Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, 
+use the console to `Create KieApp` or create one manually as seen below.
 
 ```bash
 $ oc create -f deploy/crs/v2/kieapp_rhpam_trial.yaml
