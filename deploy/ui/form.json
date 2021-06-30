@@ -1589,15 +1589,15 @@
                           "visible": false,
                           "fields": [
                             {
-                              "label": "Enable Extension image stream",
+                              "label": "Use JDBC Extension Image",
                               "type": "checkbox",
                               "required": false,
-                              "description": "When set to true will configure the KIE Server with Extension Image Stream.",
+                              "description": "When set to true will configure the KIE Server with JDBC Extension Image.",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
                               "originalJsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
                               "fields": [
                                 {
-                                  "label": "Enable Extension image stream",
+                                  "label": "Use JDBC Extension Image",
                                   "type": "fieldGroup",
                                   "jsonPath": "$.spec.objects.servers[*].build",
                                   "originalJsonPath": "$.spec.objects.servers[*].build",
@@ -1605,25 +1605,25 @@
                                   "visible": false,
                                   "fields": [
                                     {
-                                      "label": "Extension image stream tag",
+                                      "label": "JDBC Extension Image imagestream tag",
                                       "type": "text",
                                       "required": true,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageStreamTag",
                                       "description": "ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0."
                                     },
                                     {
-                                      "label": "Extension image stream namespace",
+                                      "label": "JDBC Extension Image imagestream namespace",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageStreamTagNamespace",
-                                      "description": "Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace."
+                                      "description": "Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to 'openshift' namespace."
                                     },
                                     {
-                                      "label": "Extension image install directory",
+                                      "label": "JDBC Extension Image install directory",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageInstallDir",
-                                      "description": "Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.)."
+                                      "description": "Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.). Defaults to '/extension'. Do not change it unless it is necessary."
                                     }
                                   ]
                                 }
