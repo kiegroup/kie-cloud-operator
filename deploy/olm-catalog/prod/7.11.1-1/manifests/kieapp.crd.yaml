@@ -1309,7 +1309,8 @@ spec:
                             extensionImageInstallDir:
                               description: Full path to the directory within the extensions
                                 image where the extensions are located (e.g. install.sh,
-                                modules/, etc.).
+                                modules/, etc.).  Defaults to '/extension'. Do not
+                                change it unless it is necessary.
                               type: string
                             extensionImageStreamTag:
                               description: ImageStreamTag definition for the image
@@ -3583,7 +3584,8 @@ spec:
                                 extensionImageInstallDir:
                                   description: Full path to the directory within the
                                     extensions image where the extensions are located
-                                    (e.g. install.sh, modules/, etc.).
+                                    (e.g. install.sh, modules/, etc.).  Defaults to
+                                    '/extension'. Do not change it unless it is necessary.
                                   type: string
                                 extensionImageStreamTag:
                                   description: ImageStreamTag definition for the image
