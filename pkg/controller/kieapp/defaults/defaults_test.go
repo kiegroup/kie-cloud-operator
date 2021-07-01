@@ -5984,6 +5984,9 @@ func testEnvironmentWithKafkaJBPM(t *testing.T, cr *api.KieApp) {
 	assert.Equal(t, "D12345678", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID"))
 	assert.Equal(t, "2000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS"))
 	assert.Equal(t, "dd-MM-yyyy'T'HH:mm:ss.SSSZ", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT"))
+	assert.Equal(t, "my-tasks-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME"))
+	assert.Equal(t, "my-cases-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME"))
+	assert.Equal(t, "my-processes-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME"))
 }
 
 func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
@@ -6007,10 +6010,10 @@ func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME":
 		assert.Equal(t, env.Value, "my-tasks-topic")
 
-	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASE_TOPIC_NAME":
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME":
 		assert.Equal(t, env.Value, "my-cases-topic")
 
-	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESS_TOPIC_NAME":
+	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME":
 		assert.Equal(t, env.Value, "my-processes-topic")
 	}
 }
