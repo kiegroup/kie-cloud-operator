@@ -5953,13 +5953,17 @@ func TestCRServerCPULimitAndRequestUsingMilicores(t *testing.T) {
 }
 
 func TestRhpamEnvironmentWithKafkaJBPM(t *testing.T) {
+	const dateFormat = "dd-MM-yyyy'T'HH:mm:ss.SSSZ"
+	const tasksTopics = "my-tasks-topic"
+	const casesTopics = "my-cases-topic"
+	const processesTopics = "my-processes-topic"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{Name: "testJbpmEmitter"},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProductionImmutable,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
-					{Kafka: createKafkaExtObject(), KafkaJbpmEventEmitters: createKafkaJbpmObject()},
+					{Kafka: createKafkaExtObject(), KafkaJbpmEventEmitters: createKafkaJbpmObject(dateFormat, tasksTopics, casesTopics, processesTopics)},
 				},
 			},
 		},
@@ -5972,10 +5976,13 @@ func testEnvironmentWithKafkaJBPM(t *testing.T, cr *api.KieApp) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.NotNil(t, env)
 	assert.Nil(t, err, "Error getting environment")
-
+	const dateFormat = "dd-MM-yyyy'T'HH:mm:ss.SSSZ"
+	const tasksTopics = "my-tasks-topic"
+	const casesTopics = "my-cases-topic"
+	const processesTopics = "my-processes-topic"
 	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
 
-		checkJbpmKafkaEnvs(t, env)
+		checkJbpmKafkaEnvs(t, env, dateFormat, tasksTopics, casesTopics, processesTopics)
 	}
 
 	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_EXT_ENABLED"))
@@ -5983,13 +5990,13 @@ func testEnvironmentWithKafkaJBPM(t *testing.T, cr *api.KieApp) {
 	assert.Equal(t, "localhost:9092", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_BOOTSTRAP_SERVERS"))
 	assert.Equal(t, "D12345678", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CLIENT_ID"))
 	assert.Equal(t, "2000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_MAX_BLOCK_MS"))
-	assert.Equal(t, "dd-MM-yyyy'T'HH:mm:ss.SSSZ", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT"))
-	assert.Equal(t, "my-tasks-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME"))
-	assert.Equal(t, "my-cases-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME"))
-	assert.Equal(t, "my-processes-topic", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME"))
+	assert.Equal(t, dateFormat, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT"))
+	assert.Equal(t, tasksTopics, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME"))
+	assert.Equal(t, casesTopics, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME"))
+	assert.Equal(t, processesTopics, getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME"))
 }
 
-func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
+func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar, dateFormat string, tasksTopic string, casesTopic string, processesTopic string) {
 	switch e := env.Name; e {
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ACKS":
@@ -6005,29 +6012,29 @@ func checkJbpmKafkaEnvs(t *testing.T, env corev1.EnvVar) {
 		assert.Equal(t, env.Value, "2000")
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT":
-		assert.Equal(t, env.Value, "dd-MM-yyyy'T'HH:mm:ss.SSSZ")
+		assert.Equal(t, env.Value, dateFormat)
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_TASKS_TOPIC_NAME":
-		assert.Equal(t, env.Value, "my-tasks-topic")
+		assert.Equal(t, env.Value, tasksTopic)
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_CASES_TOPIC_NAME":
-		assert.Equal(t, env.Value, "my-cases-topic")
+		assert.Equal(t, env.Value, casesTopic)
 
 	case "KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME":
-		assert.Equal(t, env.Value, "my-processes-topic")
+		assert.Equal(t, env.Value, processesTopic)
 	}
 }
 
-func createKafkaJbpmObject() *api.KafkaJBPMEventEmittersObject {
+func createKafkaJbpmObject(dateFormat string, tasksTopics string, casesTopics string, processesTopics string) *api.KafkaJBPMEventEmittersObject {
 	kafkaJBPMEventEmittersObject := api.KafkaJBPMEventEmittersObject{
 		Acks:               Pint(3),
 		BootstrapServers:   "localhost:9092",
 		ClientID:           "D12345678",
 		MaxBlockMs:         Pint32(2000),
-		DateFormat:         "dd-MM-yyyy'T'HH:mm:ss.SSSZ",
-		CasesTopicName:     "my-cases-topic",
-		ProcessesTopicName: "my-processes-topic",
-		TasksTopicName:     "my-tasks-topic",
+		DateFormat:         dateFormat,
+		CasesTopicName:     casesTopics,
+		ProcessesTopicName: processesTopics,
+		TasksTopicName:     tasksTopics,
 	}
 	return &kafkaJBPMEventEmittersObject
 }

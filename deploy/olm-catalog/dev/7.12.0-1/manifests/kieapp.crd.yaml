@@ -1915,34 +1915,45 @@ spec:
                           type: object
                         kafkaJbpmEventEmitters:
                           description: KafkaJBPMEventEmittersObject kafka configuration
-                            to be used by the KieApp for JBPM Emitter
+                            to be used by the KieApp for jBPM Emitter
                           properties:
                             acks:
-                              description: Jbpm Emitter, the number of acknowledgments
-                                the producer requires the leader to have received
-                                before considering a request complete. Not set by
-                                default
+                              description: The number of acknowledgments that the
+                                emitter requires the leader to have received before
+                                considering a request to be complete, not set by default.
                               type: integer
                             bootstrapServers:
-                              description: Jbpm emitter, comma separated list of host/port
-                                pairs to use for establishing the initial connection
-                                to the Kafka cluster.
+                              description: Comma separated list of host/port pairs
+                                to use for establishing the initial connection to
+                                the Kafka cluster.
+                              type: string
+                            casesTopicName:
+                              description: The topic name for cases event messages.
+                                Set up to override the default value jbpm-cases-events.
                               type: string
                             clientID:
-                              description: Jbpm Emitter, this configuration allows
-                                users to set an ID to provide a logical application
-                                name for logging purposes. Not set by default.
+                              description: This configuration allows users to set
+                                an ID to provide a logical application name for logging
+                                purposes, not set by default.
                               type: string
                             dateFormat:
-                              description: Jbpm emitter, date and time format to be
-                                sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+                              description: Date and time format to be sent to Kafka.
+                                Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
                               type: string
                             maxBlockMs:
-                              description: Jbpm emitter, value in milliseconds that
-                                indicates how long the 'publish' method will block
-                                the operation. Default 2000 milliseconds (2 seconds).
+                              description: Value in milliseconds that indicates how
+                                long the 'publish' method will block the operation.
+                                Default 2000 milliseconds (2 seconds).
                               format: int32
                               type: integer
+                            processesTopicName:
+                              description: The topic name for processes event messages.
+                                Set up to override the default value jbpm-processes-events.
+                              type: string
+                            tasksTopicName:
+                              description: The topic name for tasks event messages.
+                                Set up to override the default value jbpm-tasks-events.
+                              type: string
                           type: object
                         keystoreSecret:
                           description: Keystore secret name
@@ -4243,35 +4254,47 @@ spec:
                               type: object
                             kafkaJbpmEventEmitters:
                               description: KafkaJBPMEventEmittersObject kafka configuration
-                                to be used by the KieApp for JBPM Emitter
+                                to be used by the KieApp for jBPM Emitter
                               properties:
                                 acks:
-                                  description: Jbpm Emitter, the number of acknowledgments
-                                    the producer requires the leader to have received
-                                    before considering a request complete. Not set
-                                    by default
+                                  description: The number of acknowledgments that
+                                    the emitter requires the leader to have received
+                                    before considering a request to be complete, not
+                                    set by default.
                                   type: integer
                                 bootstrapServers:
-                                  description: Jbpm emitter, comma separated list
-                                    of host/port pairs to use for establishing the
-                                    initial connection to the Kafka cluster.
+                                  description: Comma separated list of host/port pairs
+                                    to use for establishing the initial connection
+                                    to the Kafka cluster.
+                                  type: string
+                                casesTopicName:
+                                  description: The topic name for cases event messages.
+                                    Set up to override the default value jbpm-cases-events.
                                   type: string
                                 clientID:
-                                  description: Jbpm Emitter, this configuration allows
-                                    users to set an ID to provide a logical application
-                                    name for logging purposes. Not set by default.
+                                  description: This configuration allows users to
+                                    set an ID to provide a logical application name
+                                    for logging purposes, not set by default.
                                   type: string
                                 dateFormat:
-                                  description: Jbpm emitter, date and time format
-                                    to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+                                  description: Date and time format to be sent to
+                                    Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
                                   type: string
                                 maxBlockMs:
-                                  description: Jbpm emitter, value in milliseconds
-                                    that indicates how long the 'publish' method will
-                                    block the operation. Default 2000 milliseconds
-                                    (2 seconds).
+                                  description: Value in milliseconds that indicates
+                                    how long the 'publish' method will block the operation.
+                                    Default 2000 milliseconds (2 seconds).
                                   format: int32
                                   type: integer
+                                processesTopicName:
+                                  description: The topic name for processes event
+                                    messages. Set up to override the default value
+                                    jbpm-processes-events.
+                                  type: string
+                                tasksTopicName:
+                                  description: The topic name for tasks event messages.
+                                    Set up to override the default value jbpm-tasks-events.
+                                  type: string
                               type: object
                             keystoreSecret:
                               description: Keystore secret name
