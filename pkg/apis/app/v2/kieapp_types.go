@@ -289,7 +289,7 @@ type KieAppBuildObject struct {
 	ExtensionImageStreamTag string `json:"extensionImageStreamTag,omitempty"`
 	// Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
 	ExtensionImageStreamTagNamespace string `json:"extensionImageStreamTagNamespace,omitempty"`
-	// Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).
+	// Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).  Defaults to '/extension'. Do not change it unless it is necessary.
 	ExtensionImageInstallDir string `json:"extensionImageInstallDir,omitempty"`
 }
 
