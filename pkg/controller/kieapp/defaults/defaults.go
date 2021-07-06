@@ -907,7 +907,7 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 		if serverSet.Build.ExtensionImageInstallDir == "" {
 			serverSet.Build.ExtensionImageInstallDir = constants.DefaultExtensionImageInstallDir
 		} else {
-			log.Debugf("Extension Image Install Dir set to %s, be cautions when updating this parameter.", serverSet.Build.ExtensionImageInstallDir)
+			log.Debugf("Extension Image Install Dir set to %s, be cautious when updating this parameter.", serverSet.Build.ExtensionImageInstallDir)
 		}
 		// JDBC extension image build template
 		buildTemplate = api.BuildTemplate{
