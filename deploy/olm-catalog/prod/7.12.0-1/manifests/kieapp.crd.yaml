@@ -1414,6 +1414,54 @@ spec:
                               minItems: 1
                               type: array
                           type: object
+                        cors:
+                          properties:
+                            allowCredentialsName:
+                              description: Access Control Allow Credentials Filter
+                                Header Name
+                              type: string
+                            allowCredentialsValue:
+                              description: Access Control Allow Credentials Filter
+                                Header Value
+                              type: boolean
+                            allowHeadersName:
+                              description: Access Control Allow Headers Filter Header
+                                Name
+                              type: string
+                            allowHeadersValue:
+                              description: Access Control Allow Headers Filter Header
+                                Value
+                              type: string
+                            allowMethodsName:
+                              description: Access Control Allow Methods Response Header
+                                Filter Header Name
+                              type: string
+                            allowMethodsValue:
+                              description: Access Control Allow Methods Response Headers
+                                Filter Header Value
+                              type: string
+                            allowOriginName:
+                              description: Access Control Origin Response Header Filter
+                                Header Name
+                              type: string
+                            allowOriginValue:
+                              description: Access Control Origin Response Header  Filter
+                                Header Value
+                              type: string
+                            enabled:
+                              description: Enable corsConfiguration on the UI
+                              type: boolean
+                            filters:
+                              description: Access control Response Headers Filters
+                                separated by comma
+                              type: string
+                            maxAgeName:
+                              description: Access Control Max Age Filter Header Value
+                              type: string
+                            maxAgeValue:
+                              format: int32
+                              type: integer
+                          type: object
                         database:
                           description: DatabaseObject Defines how a KieServer will
                             manage and create a new Database or connect to an existing
@@ -3736,6 +3784,55 @@ spec:
                                     type: object
                                   minItems: 1
                                   type: array
+                              type: object
+                            cors:
+                              properties:
+                                allowCredentialsName:
+                                  description: Access Control Allow Credentials Filter
+                                    Header Name
+                                  type: string
+                                allowCredentialsValue:
+                                  description: Access Control Allow Credentials Filter
+                                    Header Value
+                                  type: boolean
+                                allowHeadersName:
+                                  description: Access Control Allow Headers Filter
+                                    Header Name
+                                  type: string
+                                allowHeadersValue:
+                                  description: Access Control Allow Headers Filter
+                                    Header Value
+                                  type: string
+                                allowMethodsName:
+                                  description: Access Control Allow Methods Response
+                                    Header Filter Header Name
+                                  type: string
+                                allowMethodsValue:
+                                  description: Access Control Allow Methods Response
+                                    Headers Filter Header Value
+                                  type: string
+                                allowOriginName:
+                                  description: Access Control Origin Response Header
+                                    Filter Header Name
+                                  type: string
+                                allowOriginValue:
+                                  description: Access Control Origin Response Header  Filter
+                                    Header Value
+                                  type: string
+                                enabled:
+                                  description: Enable corsConfiguration on the UI
+                                  type: boolean
+                                filters:
+                                  description: Access control Response Headers Filters
+                                    separated by comma
+                                  type: string
+                                maxAgeName:
+                                  description: Access Control Max Age Filter Header
+                                    Value
+                                  type: string
+                                maxAgeValue:
+                                  format: int32
+                                  type: integer
                               type: object
                             database:
                               description: DatabaseObject Defines how a KieServer

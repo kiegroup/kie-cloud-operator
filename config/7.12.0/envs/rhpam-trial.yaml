@@ -52,29 +52,6 @@ servers:
             spec:
               containers:
                 - name: "[[.KieName]]"
-                  env:
-                    - name: FILTERS
-                      value: "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
-                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Origin"
-                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
-                      value: "*"
-                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Methods"
-                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "GET, POST, OPTIONS, PUT"
-                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Headers"
-                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "Accept, Authorization, Content-Type, X-Requested-With"
-                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Allow-Credentials"
-                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
-                      value: "true"
-                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
-                      value: "Access-Control-Max-Age"
-                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
-                      value: "1"
                   resources:
                     limits:
                       memory: 1Gi

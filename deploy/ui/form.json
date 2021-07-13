@@ -1812,6 +1812,23 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "label": "CORS Filters configuration",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].cors",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Enable CORS",
+                      "type": "checkbox",
+                      "checked": true,
+                      "jsonPath": "$.spec.objects.servers[*].cors.enabled",
+                      "originalJsonPath": "$.spec.objects.servers[*].cors.enabled",
+                      "description": "Configure CORS with default values"
+                    }
+                  ]
                 }
               ]
             }
