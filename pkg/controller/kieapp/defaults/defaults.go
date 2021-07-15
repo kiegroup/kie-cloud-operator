@@ -446,6 +446,29 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		if enabled, err := strconv.ParseBool(getSpecEnv(cr.Status.Applied.Objects.Console.Env, "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED")); err == nil {
 			template.Simplified = enabled
 		}
+
+		// Console StartupStrategy
+		if cr.Status.Applied.Objects.Console.StartupStrategy != nil {
+
+			if cr.Status.Applied.Objects.Console.StartupStrategy.StrategyName == api.OpenshiftStartupStrategy {
+
+				template.StartupStrategy.StrategyName = cr.Status.Applied.Objects.Console.StartupStrategy.StrategyName
+
+				if cr.Status.Applied.Objects.Console.StartupStrategy.ControllerTemplateCacheTTL == nil {
+					template.StartupStrategy.ControllerTemplateCacheTTL = Pint(5000)
+				} else {
+					template.StartupStrategy.ControllerTemplateCacheTTL = cr.Status.Applied.Objects.Console.StartupStrategy.ControllerTemplateCacheTTL
+				}
+			} else {
+
+				template.StartupStrategy.StrategyName = api.ControllerStartupStrategy
+			}
+
+		} else {
+			template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
+			template.StartupStrategy.ControllerTemplateCacheTTL = Pint(5000)
+		}
+
 	}
 	return template
 }
@@ -704,6 +727,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
 				JbpmCluster:      serverSet.JbpmCluster,
+				StartupStrategy:  serverSet.StartupStrategy,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -780,6 +804,18 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			serverSet.Jvm = setCAJavaAppend(cr, serverSet.Jvm)
 			if serverSet.Jvm != nil {
 				template.Jvm = *serverSet.Jvm.DeepCopy()
+			}
+
+			if serverSet.StartupStrategy != nil {
+
+				if serverSet.StartupStrategy.StrategyName != "" {
+					template.StartupStrategy.StrategyName = serverSet.StartupStrategy.StrategyName
+				} else {
+					template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
+				}
+
+			} else {
+				template.StartupStrategy = &api.StartupStrategy{StrategyName: api.OpenshiftStartupStrategy}
 			}
 
 			servers = append(servers, template)
@@ -1277,7 +1313,7 @@ func SetDefaults(cr *api.KieApp) {
 	// retain certain items from status... e.g. version, usernames, passwords, etc
 	// everything else in status should be recreated with each reconcile.
 	specApply := cr.Spec.DeepCopy()
-
+	
 	if !isImmutable(cr) && specApply.Objects.Console == nil {
 		specApply.Objects.Console = &api.ConsoleObject{
 			KieAppObject: api.KieAppObject{},

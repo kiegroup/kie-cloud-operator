@@ -6035,3 +6035,209 @@ func createKafkaJbpmObject(dateFormat string, tasksTopics string, casesTopics st
 	}
 	return &kafkaJBPMEventEmittersObject
 }
+
+func createStartupStrategy(strategyName string, ttl int) *api.StartupStrategy {
+	strategy := api.StartupStrategy{
+		StrategyName:               strategyName,
+		ControllerTemplateCacheTTL: Pint(ttl),
+	}
+	return &strategy
+}
+
+func TestKieServerOpenshiftStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						StartupStrategy: createStartupStrategy(api.OpenshiftStartupStrategy, 5000),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+	assert.True(t, checkEnvsKieserverStartupStrategy(t, envs, api.OpenshiftStartupStrategy))
+}
+
+func checkEnvsKieserverStartupStrategy(t *testing.T, envs []corev1.EnvVar, strategy string) bool {
+	strategyEnabled := false
+	for _, env := range envs {
+		if strings.HasPrefix(env.Name, "KIE_SERVER_STARTUP_STRATEGY") {
+			assert.Equal(t, env.Value, strategy)
+			strategyEnabled = true
+		}
+	}
+	return strategyEnabled
+}
+
+func TestKieServerControllerStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						StartupStrategy: createStartupStrategy(api.ControllerStartupStrategy, 0),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	assert.True(t, checkEnvsKieserverStartupStrategy(t, envs, api.ControllerStartupStrategy))
+}
+
+func TestKieServerDefaultStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	assert.True(t, checkEnvsKieserverStartupStrategy(t, envs, api.OpenshiftStartupStrategy))
+}
+
+func TestConsoleDefaultStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	openshiftStrategyEnabled := false
+	openshiftStrategyDiscoveryEnabled := false
+	openshiftStrategyPreferEnabled := false
+	openshiftStrategyCacheTTL := false
+	openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL = checkConsoleEnvsWihtOpenshiftStartupStrategy(t, envs, openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL)
+	assert.True(t, openshiftStrategyEnabled)
+	assert.True(t, openshiftStrategyDiscoveryEnabled)
+	assert.True(t, openshiftStrategyPreferEnabled)
+	assert.True(t, openshiftStrategyCacheTTL)
+}
+
+func checkConsoleEnvsWihtOpenshiftStartupStrategy(t *testing.T, envs []corev1.EnvVar, openshiftStrategyEnabled bool, openshiftStrategyDiscoveryEnabled bool, openshiftStrategyPreferEnabled bool, openshiftStrategyCacheTTL bool) (bool, bool, bool, bool) {
+	for _, env := range envs {
+
+		if strings.HasPrefix(env.Name, "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED") {
+			assert.Equal(t, env.Value, "true")
+			openshiftStrategyEnabled = true
+		}
+
+		if strings.HasPrefix(env.Name, "KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED") {
+			assert.Equal(t, env.Value, "true")
+			openshiftStrategyDiscoveryEnabled = true
+		}
+
+		if strings.HasPrefix(env.Name, "KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE") {
+			assert.Equal(t, env.Value, "true")
+			openshiftStrategyPreferEnabled = true
+		}
+
+		if strings.HasPrefix(env.Name, "KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL") {
+			assert.Equal(t, env.Value, "5000")
+			openshiftStrategyCacheTTL = true
+		}
+	}
+	return openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL
+}
+
+func TestConsoleOpenshitStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					StartupStrategy: createStartupStrategy(api.OpenshiftStartupStrategy, 5000),
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	openshiftStrategyEnabled := false
+	openshiftStrategyDiscoveryEnabled := false
+	openshiftStrategyPreferEnabled := false
+	openshiftStrategyCacheTTL := false
+	openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL = checkConsoleEnvsWihtOpenshiftStartupStrategy(t, envs, openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL)
+	assert.True(t, openshiftStrategyEnabled)
+	assert.True(t, openshiftStrategyDiscoveryEnabled)
+	assert.True(t, openshiftStrategyPreferEnabled)
+	assert.True(t, openshiftStrategyCacheTTL)
+}
+
+func TestConsoleControllerStartupStrategyConfiguration(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					StartupStrategy: createStartupStrategy(api.ControllerStartupStrategy, 5000),
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env)
+	envs := env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env
+
+	openshiftStrategyEnabled := false
+	openshiftStrategyDiscoveryEnabled := false
+	openshiftStrategyPreferEnabled := false
+	openshiftStrategyCacheTTL := false
+	openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL = checkConsoleEnvsWihtOpenshiftStartupStrategy(t, envs, openshiftStrategyEnabled, openshiftStrategyDiscoveryEnabled, openshiftStrategyPreferEnabled, openshiftStrategyCacheTTL)
+	assert.False(t, openshiftStrategyEnabled)
+	assert.False(t, openshiftStrategyDiscoveryEnabled)
+	assert.False(t, openshiftStrategyPreferEnabled)
+	assert.False(t, openshiftStrategyCacheTTL)
+}

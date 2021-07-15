@@ -799,6 +799,38 @@
                   "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
                 }
               ]
+            },
+            {
+              "label": "Startup Strategy",
+              "type": "fieldGroup",
+              "jsonPath": "$.spec.objects.console.startupStrategy",
+              "visible": true,
+              "fields": [
+                {
+                  "type": "dropDown",
+                  "required": true,
+                  "jsonPath": "$.spec.objects.console.startupStrategy.strategyName",
+                  "originalJsonPath": "$.spec.objects.console.startupStrategy.strategyName",
+                  "description": "Specify the StartupStrategy to use.",
+                  "default": "OpenShiftStartupStrategy",
+                  "options": [
+                    {
+                      "value": "ControllerBasedStartupStrategy",
+                      "label": "ControllerBasedStartupStrategy"
+                    },
+                    {
+                      "value": "OpenShiftStartupStrategy",
+                      "label": "OpenShiftStartupStrategy"
+                    }
+                  ]
+                },
+                {
+                  "label": "Controller Template Cache TTL",
+                  "type": "integer",
+                  "jsonPath": "$.spec.objects.console.startupStrategy.controllerTemplateCacheTTL",
+                  "description": "If Controller Startup Strategy is used this value is the Template Cache TTL, default is 5000"
+                }
+              ]
             }
           ]
         },
@@ -1810,6 +1842,25 @@
                           ]
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Startup Strategy",
+                  "type": "dropDown",
+                  "required": true,
+                  "jsonPath": "$.spec.objects.servers[*].startupStrategy.strategyName",
+                  "originalJsonPath": "$.spec.objects.servers[*].startupStrategy.strategyName",
+                  "description": "Specify the StartupStrategy to use.",
+                  "default": "OpenShiftStartupStrategy",
+                  "options": [
+                    {
+                      "value": "ControllerBasedStartupStrategy",
+                      "label": "ControllerBasedStartupStrategy"
+                    },
+                    {
+                      "value": "OpenShiftStartupStrategy",
+                      "label": "OpenShiftStartupStrategy"
                     }
                   ]
                 }
