@@ -826,6 +826,50 @@
                   "description": "The name to use for this KIE Server."
                 },
                 {
+                  "label": "Enable Persistent Storage for kie and maven repositories",
+                  "type": "checkbox",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "originalJsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively.",
+                  "fields": [
+                    {
+                      "label": "Enable Persistent Storage for kie and maven repositories",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*]",
+                      "originalJsonPath": "$.spec.objects.servers[*]",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "StorageClass Name",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "originalJsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "type": "text",
+                          "description": "The storageClassName to use for KIE Server pvc's."
+                        },
+                        {
+                          "label": "KIE Server Maven Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.m2 pvc's. Example 10Gi, default value is 1Gi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        },
+                        {
+                          "label": "KIE Server Kie Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversKiePvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].ServersKiePvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.kie pvc's. Example 512Mi, default value is 10Mi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   "label": "Image Context",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].imageContext",
@@ -858,7 +902,7 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].keystoreSecret",
                   "type": "text",
-                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty"
+                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty."
                 },
                 {
                   "label": "Enable JBPM Cluster",
@@ -866,7 +910,7 @@
                   "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
                   "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
                   "type": "checkbox",
-                  "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers"
+                  "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers."
                 },
                 {
                   "label": "Replicas",

@@ -87,6 +87,7 @@ tags
 
 ### IntelliJ ###
 .idea
+*.iml
 
 # vendor exceptions
 !vendor/**

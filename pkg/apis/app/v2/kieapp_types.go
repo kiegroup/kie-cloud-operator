@@ -129,14 +129,17 @@ type KieServerSet struct {
 	// Server name
 	Name string `json:"name,omitempty"`
 	// Server ID
-	ID           string             `json:"id,omitempty"`
-	From         *ImageObjRef       `json:"from,omitempty"`
-	Build        *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
-	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
-	KieAppObject `json:",inline"`
-	Database     *DatabaseObject  `json:"database,omitempty"`
-	Jms          *KieAppJmsObject `json:"jms,omitempty"`
-	Jvm          *JvmObject       `json:"jvm,omitempty"`
+	ID               string             `json:"id,omitempty"`
+	From             *ImageObjRef       `json:"from,omitempty"`
+	Build            *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
+	SSOClient        *SSOAuthClient     `json:"ssoClient,omitempty"`
+	KieAppObject     `json:",inline"`
+	Database         *DatabaseObject  `json:"database,omitempty"`
+	Jms              *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm              *JvmObject       `json:"jvm,omitempty"`
+	PersistRepos     bool             `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string           `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string           `json:"serversKiePvSize,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
@@ -678,6 +681,9 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	PersistRepos     bool              `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string            `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string            `json:"serversKiePvSize,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`

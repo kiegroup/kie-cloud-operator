@@ -704,6 +704,9 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KeystoreSecret:   serverSet.KeystoreSecret,
 				StorageClassName: serverSet.StorageClassName,
 				JbpmCluster:      serverSet.JbpmCluster,
+				PersistRepos:     serverSet.PersistRepos,
+				ServersM2PvSize:  serverSet.ServersM2PvSize,
+				ServersKiePvSize: serverSet.ServersKiePvSize,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -736,6 +739,18 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				serverSet.Replicas = Pint32(2)
 			}
 			template.Replicas = *serverSet.Replicas
+
+			// Apply PV default size
+			if isTrial(cr) {
+				template.PersistRepos = false
+			} else {
+				if len(template.ServersM2PvSize) <= 0 {
+					template.ServersM2PvSize = constants.ServersM2PvSize
+				}
+				if len(template.ServersKiePvSize) <= 0 {
+					template.ServersKiePvSize = constants.ServersKiePvSize
+				}
+			}
 
 			// if, SmartRouter object is nil, ignore it
 			// get smart router protocol configuration
@@ -1696,6 +1711,14 @@ func isRHPAM(cr *api.KieApp) bool {
 func isImmutable(cr *api.KieApp) bool {
 	switch cr.Status.Applied.Environment {
 	case api.RhdmProductionImmutable, api.RhpamProductionImmutable:
+		return true
+	}
+	return false
+}
+
+func isTrial(cr *api.KieApp) bool {
+	switch cr.Status.Applied.Environment {
+	case api.RhdmTrial, api.RhpamTrial:
 		return true
 	}
 	return false
