@@ -1452,7 +1452,13 @@ spec:
                                     as a connectionErrorOccurred.
                                   type: string
                                 host:
-                                  description: Database Host. For example, mydb.example.com
+                                  description: Database Host. For example, mydb.example.com.
+                                    Host is intended to be used with databases running
+                                    on OCP where the host will correspond to the kubernetes
+                                    added env *_SERVICE_HOST, it is mostly likely
+                                    used with PostgreSQL and MySQL variants running
+                                    on OCP. For Databases Running outside OCP use
+                                    jdbcUrl instead.
                                   type: string
                                 jdbcURL:
                                   description: Database JDBC URL. For example, jdbc:mysql:mydb.example.com:3306/rhpam
@@ -1478,7 +1484,13 @@ spec:
                                   format: password
                                   type: string
                                 port:
-                                  description: Database Port. For example, 3306
+                                  description: Database Port. For example, 3306. Port
+                                    is intended to be used with databases running
+                                    on OCP where the post will correspond to the kubernetes
+                                    added env *_SERVICE_PORT, these are mostly likely
+                                    used with PostgreSQL and MySQL variants running
+                                    on OCP. For Databases Running outside OCP use
+                                    jdbcUrl instead.
                                   type: string
                                 username:
                                   description: External database username
@@ -3776,7 +3788,13 @@ spec:
                                         as a connectionErrorOccurred.
                                       type: string
                                     host:
-                                      description: Database Host. For example, mydb.example.com
+                                      description: Database Host. For example, mydb.example.com.
+                                        Host is intended to be used with databases
+                                        running on OCP where the host will correspond
+                                        to the kubernetes added env *_SERVICE_HOST,
+                                        it is mostly likely used with PostgreSQL and
+                                        MySQL variants running on OCP. For Databases
+                                        Running outside OCP use jdbcUrl instead.
                                       type: string
                                     jdbcURL:
                                       description: Database JDBC URL. For example,
@@ -3803,7 +3821,13 @@ spec:
                                       format: password
                                       type: string
                                     port:
-                                      description: Database Port. For example, 3306
+                                      description: Database Port. For example, 3306.
+                                        Port is intended to be used with databases
+                                        running on OCP where the post will correspond
+                                        to the kubernetes added env *_SERVICE_PORT,
+                                        these are mostly likely used with PostgreSQL
+                                        and MySQL variants running on OCP. For Databases
+                                        Running outside OCP use jdbcUrl instead.
                                       type: string
                                     username:
                                       description: External database username

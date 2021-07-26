@@ -1729,14 +1729,14 @@
                               "label": "Host",
                               "type": "text",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.host",
-                              "description": "Database hostname.",
+                              "description": "Database hostname. Host is intended to be used with databases running on OCP. For Databases Running outside OCP use jdbcUrl instead.",
                               "default": "10.10.10.1"
                             },
                             {
                               "label": "Port",
                               "type": "text",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.port",
-                              "description": "Database port.",
+                              "description": "Database port. Port is intended to be used with databases running on OCP. For Databases Running outside OCP use jdbcUrl instead.",
                               "default": "4312"
                             },
                             {

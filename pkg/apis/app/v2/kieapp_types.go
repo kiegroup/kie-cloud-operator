@@ -542,9 +542,13 @@ type ExternalDatabaseObject struct {
 	Dialect string `json:"dialect"`
 	// Database Name. For example, rhpam
 	Name string `json:"name,omitempty"`
-	// Database Host. For example, mydb.example.com
+	// Database Host. For example, mydb.example.com. Host is intended to be used with databases running on OCP
+	// where the host will correspond to the kubernetes added env *_SERVICE_HOST, it is mostly likely used
+	// with PostgreSQL and MySQL variants running on OCP. For Databases Running outside OCP use jdbcUrl instead.
 	Host string `json:"host,omitempty"`
-	// Database Port. For example, 3306
+	// Database Port. For example, 3306. Port is intended to be used with databases running on OCP
+	// where the post will correspond to the kubernetes added env *_SERVICE_PORT, these are mostly likely used
+	// with PostgreSQL and MySQL variants running on OCP. For Databases Running outside OCP use jdbcUrl instead.
 	Port string `json:"port,omitempty"`
 	// Sets the datasources type. It can be XA or NONXA. For non XA set it to true. Default value is false.
 	NonXA                string `json:"nonXA,omitempty"`
