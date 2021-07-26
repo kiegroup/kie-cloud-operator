@@ -342,6 +342,63 @@ spec:
                   console:
                     description: ConsoleObject configuration of the RHPAM workbench
                     properties:
+                      cors:
+                        description: CORS Cross Origin Resource Sharing configuration
+                          to be used by the KieApp for the KIE Server, workbench and
+                          RHPAM Dashbuilder
+                        properties:
+                          allowCredentialsName:
+                            description: 'Access Control Allow Credentials Filter
+                              Header Name, default is: Access-Control-Allow-Credentials'
+                            type: string
+                          allowCredentialsValue:
+                            description: 'Access Control Allow Credentials Filter
+                              Header Value, default is: true'
+                            type: boolean
+                          allowHeadersName:
+                            description: 'Access Control Allow Headers Filter Header
+                              Name, default is: Access-Control-Allow-Headers'
+                            type: string
+                          allowHeadersValue:
+                            description: 'Access Control Allow Headers Filter Header
+                              Value, default is: Accept, Authorization, Content-Type,
+                              X-Requested-With'
+                            type: string
+                          allowMethodsName:
+                            description: 'Access Control Allow Methods Response Header
+                              Filter Header Name, default is: Access-Control-Allow-Methods'
+                            type: string
+                          allowMethodsValue:
+                            description: 'Access Control Allow Methods Response Headers
+                              Filter Header Value, default is: GET, POST, OPTIONS,
+                              PUT'
+                            type: string
+                          allowOriginName:
+                            description: Access Control Origin Response Header Filter
+                              Header Name, default is Access-Control-Allow-Origin
+                            type: string
+                          allowOriginValue:
+                            description: 'Access Control Origin Response Header  Filter
+                              Header Value, default is: *'
+                            type: string
+                          default:
+                            description: Enable CORS setting with the default values,
+                              default is false
+                            type: boolean
+                          filters:
+                            description: 'Access control Response Headers Filters
+                              separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                            type: string
+                          maxAgeName:
+                            description: 'Access Control Max Age Filter Header Name,
+                              default is: Access-Control-Max-Age'
+                            type: string
+                          maxAgeValue:
+                            description: 'Access Control Max Age Filter Header Value,
+                              default is: 1'
+                            format: int32
+                            type: integer
+                        type: object
                       env:
                         items:
                           description: EnvVar represents an environment variable present
@@ -792,6 +849,63 @@ spec:
                             description: Limits the size of uploaded dashboards (in
                               kb). Default value is 10485760 kb.
                             format: int64
+                            type: integer
+                        type: object
+                      cors:
+                        description: CORS Cross Origin Resource Sharing configuration
+                          to be used by the KieApp for the KIE Server, workbench and
+                          RHPAM Dashbuilder
+                        properties:
+                          allowCredentialsName:
+                            description: 'Access Control Allow Credentials Filter
+                              Header Name, default is: Access-Control-Allow-Credentials'
+                            type: string
+                          allowCredentialsValue:
+                            description: 'Access Control Allow Credentials Filter
+                              Header Value, default is: true'
+                            type: boolean
+                          allowHeadersName:
+                            description: 'Access Control Allow Headers Filter Header
+                              Name, default is: Access-Control-Allow-Headers'
+                            type: string
+                          allowHeadersValue:
+                            description: 'Access Control Allow Headers Filter Header
+                              Value, default is: Accept, Authorization, Content-Type,
+                              X-Requested-With'
+                            type: string
+                          allowMethodsName:
+                            description: 'Access Control Allow Methods Response Header
+                              Filter Header Name, default is: Access-Control-Allow-Methods'
+                            type: string
+                          allowMethodsValue:
+                            description: 'Access Control Allow Methods Response Headers
+                              Filter Header Value, default is: GET, POST, OPTIONS,
+                              PUT'
+                            type: string
+                          allowOriginName:
+                            description: Access Control Origin Response Header Filter
+                              Header Name, default is Access-Control-Allow-Origin
+                            type: string
+                          allowOriginValue:
+                            description: 'Access Control Origin Response Header  Filter
+                              Header Value, default is: *'
+                            type: string
+                          default:
+                            description: Enable CORS setting with the default values,
+                              default is false
+                            type: boolean
+                          filters:
+                            description: 'Access control Response Headers Filters
+                              separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                            type: string
+                          maxAgeName:
+                            description: 'Access Control Max Age Filter Header Name,
+                              default is: Access-Control-Max-Age'
+                            type: string
+                          maxAgeValue:
+                            description: 'Access Control Max Age Filter Header Value,
+                              default is: 1'
+                            format: int32
                             type: integer
                         type: object
                       env:
@@ -1417,6 +1531,63 @@ spec:
                                 type: object
                               minItems: 1
                               type: array
+                          type: object
+                        cors:
+                          description: CORS Cross Origin Resource Sharing configuration
+                            to be used by the KieApp for the KIE Server, workbench
+                            and RHPAM Dashbuilder
+                          properties:
+                            allowCredentialsName:
+                              description: 'Access Control Allow Credentials Filter
+                                Header Name, default is: Access-Control-Allow-Credentials'
+                              type: string
+                            allowCredentialsValue:
+                              description: 'Access Control Allow Credentials Filter
+                                Header Value, default is: true'
+                              type: boolean
+                            allowHeadersName:
+                              description: 'Access Control Allow Headers Filter Header
+                                Name, default is: Access-Control-Allow-Headers'
+                              type: string
+                            allowHeadersValue:
+                              description: 'Access Control Allow Headers Filter Header
+                                Value, default is: Accept, Authorization, Content-Type,
+                                X-Requested-With'
+                              type: string
+                            allowMethodsName:
+                              description: 'Access Control Allow Methods Response
+                                Header Filter Header Name, default is: Access-Control-Allow-Methods'
+                              type: string
+                            allowMethodsValue:
+                              description: 'Access Control Allow Methods Response
+                                Headers Filter Header Value, default is: GET, POST,
+                                OPTIONS, PUT'
+                              type: string
+                            allowOriginName:
+                              description: Access Control Origin Response Header Filter
+                                Header Name, default is Access-Control-Allow-Origin
+                              type: string
+                            allowOriginValue:
+                              description: 'Access Control Origin Response Header  Filter
+                                Header Value, default is: *'
+                              type: string
+                            default:
+                              description: Enable CORS setting with the default values,
+                                default is false
+                              type: boolean
+                            filters:
+                              description: 'Access control Response Headers Filters
+                                separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                              type: string
+                            maxAgeName:
+                              description: 'Access Control Max Age Filter Header Name,
+                                default is: Access-Control-Max-Age'
+                              type: string
+                            maxAgeValue:
+                              description: 'Access Control Max Age Filter Header Value,
+                                default is: 1'
+                              format: int32
+                              type: integer
                           type: object
                         database:
                           description: DatabaseObject Defines how a KieServer will
@@ -2660,6 +2831,63 @@ spec:
                       console:
                         description: ConsoleObject configuration of the RHPAM workbench
                         properties:
+                          cors:
+                            description: CORS Cross Origin Resource Sharing configuration
+                              to be used by the KieApp for the KIE Server, workbench
+                              and RHPAM Dashbuilder
+                            properties:
+                              allowCredentialsName:
+                                description: 'Access Control Allow Credentials Filter
+                                  Header Name, default is: Access-Control-Allow-Credentials'
+                                type: string
+                              allowCredentialsValue:
+                                description: 'Access Control Allow Credentials Filter
+                                  Header Value, default is: true'
+                                type: boolean
+                              allowHeadersName:
+                                description: 'Access Control Allow Headers Filter
+                                  Header Name, default is: Access-Control-Allow-Headers'
+                                type: string
+                              allowHeadersValue:
+                                description: 'Access Control Allow Headers Filter
+                                  Header Value, default is: Accept, Authorization,
+                                  Content-Type, X-Requested-With'
+                                type: string
+                              allowMethodsName:
+                                description: 'Access Control Allow Methods Response
+                                  Header Filter Header Name, default is: Access-Control-Allow-Methods'
+                                type: string
+                              allowMethodsValue:
+                                description: 'Access Control Allow Methods Response
+                                  Headers Filter Header Value, default is: GET, POST,
+                                  OPTIONS, PUT'
+                                type: string
+                              allowOriginName:
+                                description: Access Control Origin Response Header
+                                  Filter Header Name, default is Access-Control-Allow-Origin
+                                type: string
+                              allowOriginValue:
+                                description: 'Access Control Origin Response Header  Filter
+                                  Header Value, default is: *'
+                                type: string
+                              default:
+                                description: Enable CORS setting with the default
+                                  values, default is false
+                                type: boolean
+                              filters:
+                                description: 'Access control Response Headers Filters
+                                  separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                                type: string
+                              maxAgeName:
+                                description: 'Access Control Max Age Filter Header
+                                  Name, default is: Access-Control-Max-Age'
+                                type: string
+                              maxAgeValue:
+                                description: 'Access Control Max Age Filter Header
+                                  Value, default is: 1'
+                                format: int32
+                                type: integer
+                            type: object
                           env:
                             items:
                               description: EnvVar represents an environment variable
@@ -3122,6 +3350,63 @@ spec:
                                 description: Limits the size of uploaded dashboards
                                   (in kb). Default value is 10485760 kb.
                                 format: int64
+                                type: integer
+                            type: object
+                          cors:
+                            description: CORS Cross Origin Resource Sharing configuration
+                              to be used by the KieApp for the KIE Server, workbench
+                              and RHPAM Dashbuilder
+                            properties:
+                              allowCredentialsName:
+                                description: 'Access Control Allow Credentials Filter
+                                  Header Name, default is: Access-Control-Allow-Credentials'
+                                type: string
+                              allowCredentialsValue:
+                                description: 'Access Control Allow Credentials Filter
+                                  Header Value, default is: true'
+                                type: boolean
+                              allowHeadersName:
+                                description: 'Access Control Allow Headers Filter
+                                  Header Name, default is: Access-Control-Allow-Headers'
+                                type: string
+                              allowHeadersValue:
+                                description: 'Access Control Allow Headers Filter
+                                  Header Value, default is: Accept, Authorization,
+                                  Content-Type, X-Requested-With'
+                                type: string
+                              allowMethodsName:
+                                description: 'Access Control Allow Methods Response
+                                  Header Filter Header Name, default is: Access-Control-Allow-Methods'
+                                type: string
+                              allowMethodsValue:
+                                description: 'Access Control Allow Methods Response
+                                  Headers Filter Header Value, default is: GET, POST,
+                                  OPTIONS, PUT'
+                                type: string
+                              allowOriginName:
+                                description: Access Control Origin Response Header
+                                  Filter Header Name, default is Access-Control-Allow-Origin
+                                type: string
+                              allowOriginValue:
+                                description: 'Access Control Origin Response Header  Filter
+                                  Header Value, default is: *'
+                                type: string
+                              default:
+                                description: Enable CORS setting with the default
+                                  values, default is false
+                                type: boolean
+                              filters:
+                                description: 'Access control Response Headers Filters
+                                  separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                                type: string
+                              maxAgeName:
+                                description: 'Access Control Max Age Filter Header
+                                  Name, default is: Access-Control-Max-Age'
+                                type: string
+                              maxAgeValue:
+                                description: 'Access Control Max Age Filter Header
+                                  Value, default is: 1'
+                                format: int32
                                 type: integer
                             type: object
                           env:
@@ -3762,6 +4047,63 @@ spec:
                                     type: object
                                   minItems: 1
                                   type: array
+                              type: object
+                            cors:
+                              description: CORS Cross Origin Resource Sharing configuration
+                                to be used by the KieApp for the KIE Server, workbench
+                                and RHPAM Dashbuilder
+                              properties:
+                                allowCredentialsName:
+                                  description: 'Access Control Allow Credentials Filter
+                                    Header Name, default is: Access-Control-Allow-Credentials'
+                                  type: string
+                                allowCredentialsValue:
+                                  description: 'Access Control Allow Credentials Filter
+                                    Header Value, default is: true'
+                                  type: boolean
+                                allowHeadersName:
+                                  description: 'Access Control Allow Headers Filter
+                                    Header Name, default is: Access-Control-Allow-Headers'
+                                  type: string
+                                allowHeadersValue:
+                                  description: 'Access Control Allow Headers Filter
+                                    Header Value, default is: Accept, Authorization,
+                                    Content-Type, X-Requested-With'
+                                  type: string
+                                allowMethodsName:
+                                  description: 'Access Control Allow Methods Response
+                                    Header Filter Header Name, default is: Access-Control-Allow-Methods'
+                                  type: string
+                                allowMethodsValue:
+                                  description: 'Access Control Allow Methods Response
+                                    Headers Filter Header Value, default is: GET,
+                                    POST, OPTIONS, PUT'
+                                  type: string
+                                allowOriginName:
+                                  description: Access Control Origin Response Header
+                                    Filter Header Name, default is Access-Control-Allow-Origin
+                                  type: string
+                                allowOriginValue:
+                                  description: 'Access Control Origin Response Header  Filter
+                                    Header Value, default is: *'
+                                  type: string
+                                default:
+                                  description: Enable CORS setting with the default
+                                    values, default is false
+                                  type: boolean
+                                filters:
+                                  description: 'Access control Response Headers Filters
+                                    separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE'
+                                  type: string
+                                maxAgeName:
+                                  description: 'Access Control Max Age Filter Header
+                                    Name, default is: Access-Control-Max-Age'
+                                  type: string
+                                maxAgeValue:
+                                  description: 'Access Control Max Age Filter Header
+                                    Value, default is: 1'
+                                  format: int32
+                                  type: integer
                               type: object
                             database:
                               description: DatabaseObject Defines how a KieServer

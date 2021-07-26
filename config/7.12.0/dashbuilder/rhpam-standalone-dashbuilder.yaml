@@ -295,6 +295,54 @@ dashbuilder:
                     value: "[[.Dashbuilder.Jvm.GcContainerOptions]]"
                   #[[end]]
                   ## Jvm config END
+                  ## CORS BEGIN
+                  #[[if .Dashbuilder.Cors]]
+                    #[[if .Dashbuilder.Cors.Filters]]
+                  - name: FILTERS
+                    value: "[[.Dashbuilder.Cors.Filters]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowOriginName]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowOriginName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowOriginValue]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowOriginValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowMethodsName]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowMethodsName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowMethodsValue]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowMethodsValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowHeadersName]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowHeadersName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowHeadersValue]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowHeadersValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowCredentialsName]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowCredentialsName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowCredentialsValue]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowCredentialsValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.MaxAgeName]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.MaxAgeName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.MaxAgeValue]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.MaxAgeValue]]"
+                    #[[end]]
+                  #[[end]]
+                  ## CORS END
                 volumeMounts:
                   #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
