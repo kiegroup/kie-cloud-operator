@@ -455,6 +455,11 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		if enabled, err := strconv.ParseBool(getSpecEnv(cr.Status.Applied.Objects.Console.Env, "ORG_APPFORMER_SIMPLIFIED_MONITORING_ENABLED")); err == nil {
 			template.Simplified = enabled
 		}
+		// CORS
+		getCORSConfig(cr.Status.Applied.Objects.Console.Cors)
+		if cr.Status.Applied.Objects.Console.Cors != nil {
+			template.Cors = *cr.Status.Applied.Objects.Console.Cors
+		}
 	}
 	return template
 }
@@ -514,6 +519,13 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		if cr.Status.Applied.Objects.Dashbuilder.Jvm != nil {
 			dashbuilderTemplate.Jvm = *cr.Status.Applied.Objects.Dashbuilder.Jvm.DeepCopy()
 		}
+
+		// CORS
+		getCORSConfig(cr.Status.Applied.Objects.Dashbuilder.Cors)
+		if cr.Status.Applied.Objects.Dashbuilder.Cors != nil {
+			dashbuilderTemplate.Cors = *cr.Status.Applied.Objects.Dashbuilder.Cors
+		}
+
 	}
 	return dashbuilderTemplate, nil
 }
@@ -807,6 +819,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			serverSet.Jvm = setCAJavaAppend(cr, serverSet.Jvm)
 			if serverSet.Jvm != nil {
 				template.Jvm = *serverSet.Jvm.DeepCopy()
+			}
+
+			getCORSConfig(serverSet.Cors)
+			if serverSet.Cors != nil {
+				template.Cors = serverSet.Cors
 			}
 
 			servers = append(servers, template)
@@ -1825,4 +1842,92 @@ func isDeployDB(dbType api.DatabaseType) bool {
 		return true
 	}
 	return false
+}
+
+func getCORSConfig(cors *api.CORSFiltersObject) {
+	if cors != nil {
+		if cors.Default {
+			setDefaultCors(cors)
+		} else {
+			cors.Default = false
+			//AC_ALLOW_ORIGIN
+			if strings.Contains(cors.Filters, "AC_ALLOW_ORIGIN") {
+				if len(cors.AllowOriginName) < 1 {
+					cors.AllowOriginName = "Access-Control-Allow-Origin"
+				}
+				if len(cors.AllowOriginValue) == 0 {
+					cors.AllowOriginValue = "*"
+				}
+			} else {
+				cors.AllowOriginName = ""
+				cors.AllowOriginValue = ""
+			}
+
+			//AC_ALLOW_METHODS
+			if strings.Contains(cors.Filters, "AC_ALLOW_METHODS") {
+				if len(cors.AllowMethodsName) < 1 {
+					cors.AllowMethodsName = "Access-Control-Allow-Methods"
+				}
+				if len(cors.AllowMethodsValue) == 0 {
+					cors.AllowMethodsValue = "GET, POST, OPTIONS, PUT"
+				}
+			} else {
+				cors.AllowMethodsName = ""
+				cors.AllowMethodsValue = ""
+			}
+
+			//AC_ALLOW_HEADERS
+			if strings.Contains(cors.Filters, "AC_ALLOW_HEADERS") {
+				if len(cors.AllowHeadersName) < 1 {
+					cors.AllowHeadersName = "Access-Control-Allow-Headers"
+				}
+				if len(cors.AllowHeadersValue) == 0 {
+					cors.AllowHeadersValue = "Accept, Authorization, Content-Type, X-Requested-With"
+				}
+			} else {
+				cors.AllowHeadersName = ""
+				cors.AllowHeadersValue = ""
+			}
+
+			//AC_ALLOW_CREDENTIALS
+			if strings.Contains(cors.Filters, "AC_ALLOW_CREDENTIALS") {
+				if len(cors.AllowCredentialsName) < 1 {
+					cors.AllowCredentialsName = "Access-Control-Allow-Credentials"
+				}
+				if cors.AllowCredentialsValue == nil {
+					cors.AllowCredentialsValue = Pbool(true)
+				}
+			} else {
+				cors.AllowCredentialsValue = nil
+				cors.AllowCredentialsValue = Pbool(false)
+			}
+
+			//AC_MAX_AGE
+			if strings.Contains(cors.Filters, "AC_MAX_AGE") {
+				if len(cors.MaxAgeName) < 1 {
+					cors.MaxAgeName = "Access-Control-Max-Age"
+				}
+				if cors.MaxAgeValue == nil {
+					cors.MaxAgeValue = Pint32(1)
+				}
+			} else {
+				cors.MaxAgeName = ""
+				cors.MaxAgeValue = Pint32(0)
+			}
+		}
+	}
+}
+
+func setDefaultCors(cors *api.CORSFiltersObject) {
+	cors.Filters = constants.ACFilters
+	cors.AllowOriginName = "Access-Control-Allow-Origin"
+	cors.AllowOriginValue = "*"
+	cors.AllowMethodsName = "Access-Control-Allow-Methods"
+	cors.AllowMethodsValue = "GET, POST, OPTIONS, PUT"
+	cors.AllowHeadersName = "Access-Control-Allow-Headers"
+	cors.AllowHeadersValue = "Accept, Authorization, Content-Type, X-Requested-With"
+	cors.AllowCredentialsName = "Access-Control-Allow-Credentials"
+	cors.AllowCredentialsValue = Pbool(true)
+	cors.MaxAgeName = "Access-Control-Max-Age"
+	cors.MaxAgeValue = Pint32(1)
 }

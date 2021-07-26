@@ -276,6 +276,9 @@ const (
 
 	//Kafka
 	KafkaTopicsEnv = "KIE_SERVER_KAFKA_EXT_TOPICS"
+
+	//CORS
+	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
