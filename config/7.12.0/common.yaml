@@ -55,7 +55,7 @@ console:
                     path: /rest/healthy
                     port: 8080
                     scheme: HTTP
-                  initialDelaySeconds: 180
+                  initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 15
                   successThreshold: 1
