@@ -1,0 +1,17 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: server-persist-kie-repositories
+  annotations:
+    consoleName: snippet-server-persist-kie-repositories
+    consoleTitle: Configure the KIE and Maven repositories to be persisted on a Persistent Volume
+    consoleDesc: Use this snippet to configure persistence for kie and maven repositories
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - name: test-kie-persistence
+        persistRepos: true
+        serversM2PvSize: "10Gi"
+        serversKiePvSize: "150Mi"
+

@@ -239,6 +239,8 @@ const (
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
 	ServersMemRequests          = "1Gi"
+	ServersM2PvSize             = "1Gi"
+	ServersKiePvSize            = "10Mi"
 	SmartRouterCPULimit         = "500m"
 	SmartRouterMemLimit         = "1Gi"
 	SmartRouterCPURequests      = "250m"
