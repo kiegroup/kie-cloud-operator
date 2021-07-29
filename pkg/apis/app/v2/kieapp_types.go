@@ -618,6 +618,7 @@ type EnvTemplate struct {
 	Databases         []DatabaseTemplate       `json:"databases,omitempty"`
 	Constants         TemplateConstants        `json:"constants,omitempty"`
 	OpenshiftCaBundle bool                     `json:"openshiftCaBundle,omitempty"`
+	RouteProtocol     string                   `json:"routeProtocol,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -852,6 +853,8 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	// If set to true, plain text routes will be configured instead using SSL
+	DisableSsl bool `json:"disableSsl,omitempty"`
 }
 
 // VersionConfigs ...

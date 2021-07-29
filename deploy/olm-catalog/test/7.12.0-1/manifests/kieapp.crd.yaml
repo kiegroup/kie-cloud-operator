@@ -299,6 +299,10 @@ spec:
                     description: The password to use for databases.
                     format: password
                     type: string
+                  disableSsl:
+                    description: If set to true, plain text routes will be configured
+                      instead using SSL
+                    type: boolean
                   keyStorePassword:
                     description: The password to use for keystore generation.
                     format: password
@@ -2613,6 +2617,10 @@ spec:
                         description: The password to use for databases.
                         format: password
                         type: string
+                      disableSsl:
+                        description: If set to true, plain text routes will be configured
+                          instead using SSL
+                        type: boolean
                       keyStorePassword:
                         description: The password to use for keystore generation.
                         format: password

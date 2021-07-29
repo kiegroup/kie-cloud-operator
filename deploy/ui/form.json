@@ -56,6 +56,14 @@
           "originalJsonPath": "$.spec.useImageTags"
         },
         {
+          "label": "Disable SSL Routes",
+          "type": "checkbox",
+          "required": false,
+          "description": "If checked, external routes to the services will use plain text communication (http).",
+          "jsonPath": "$.spec.disableSsl",
+          "originalJsonPath": "$.spec.disableSsl"
+        },
+        {
           "label": "Truststore",
           "type": "fieldGroup",
           "required": false,
@@ -1483,7 +1491,7 @@
                           "description": "AMQ broker broker comma separated queues, if empty the values from default queues will be used."
                         },
                         {
-                          "label": "Enable SSL integration",
+                          "label": "Enable JMS with SSL",
                           "type": "checkbox",
                           "required": false,
                           "description": "When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.",
@@ -1491,7 +1499,7 @@
                           "originalJsonPath": "$.spec.objects.servers[*].jms.amqEnableSSL",
                           "fields": [
                             {
-                              "label": "Enable SSL integration",
+                              "label": "Enable JMS with SSL",
                               "type": "fieldGroup",
                               "jsonPath": "$.spec.objects.servers[*].jms",
                               "originalJsonPath": "$.spec.objects.servers[*].jms",

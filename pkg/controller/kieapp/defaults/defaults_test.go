@@ -40,6 +40,24 @@ var (
 	kieServerName        = "test-kieserver"
 	rhpamKieserverAndTag = "rhpam-kieserver-rhel8:%s"
 	pimImage             = constants.RhpamPrefix + "-process-migration" + constants.RhelVersion
+	bcKeySecret          = fmt.Sprintf(constants.KeystoreSecret, "test-businesscentral")
+)
+
+const (
+	bcKeystoreVolume         = "/etc/businesscentral-secret-volume"
+	bcKeyStoreVolumeName     = "test-rhpamcentr-keystore-volume"
+	bcHttpsRouteDescription  = "Route for Business Central's https service."
+	bcHttpRouteDescription   = "Route for Business Central's http service."
+	dashHttpsRouteDescrition = "Route for Dashbuilder's https service."
+	dashHttpRouteDescrition  = "Route for Dashbuilder's http service."
+	dashKeyStoreVolume       = "/etc/dashbuilder-secret-volume"
+	dashKeyStoreVolumeName   = "test-dash-rhpamdash-keystore-volume"
+	dashName                 = "test-dash-rhpamdash"
+	dcKeyStoreVolumeName     = "test-rhdmcentr-keystore-volume"
+	ksHttpsRouteDescription  = "Route for KIE server's https service."
+	ksHttpRouteDescription   = "Route for KIE server's http service."
+	routeBalanceAnnotation   = "haproxy.router.openshift.io/balance"
+	smartrouterKeyStore      = "smartrouter-keystore-volume"
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -164,6 +182,39 @@ func runTrialEnvironmentTests(t *testing.T, consoleName string, environment api.
 	assert.Equal(t, consoleImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+
+	routeAnnotations := getRouteAnnotations(bcHttpsRouteDescription)
+
+	assert.Equal(t, 2, len(env.Console.Routes))
+	assert.Equal(t, "test-"+consoleName, env.Console.Routes[0].Name)
+	assert.NotNil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Console.Routes[0].Spec.Port.TargetPort)
+
+	routeAnnotations["description"] = bcHttpRouteDescription
+	assert.Equal(t, "test-"+consoleName+"-http", env.Console.Routes[1].Name)
+	assert.Nil(t, env.Console.Routes[1].Spec.TLS)
+	delete(routeAnnotations, routeBalanceAnnotation)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[1].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Console.Routes[1].Spec.Port.TargetPort)
+
+	assertContainBCAndKSVolumes(t, "test-"+consoleName+"-keystore-volume", env)
+
+	assert.Equal(t, 2, len(env.Servers[0].Routes))
+	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.NotNil(t, env.Servers[0].Routes[0].Spec.TLS)
+	routeAnnotations["description"] = ksHttpsRouteDescription
+	routeAnnotations[routeBalanceAnnotation] = "source"
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+
+	assert.Equal(t, kieServerName+"-http", env.Servers[0].Routes[1].Name)
+	assert.Nil(t, env.Servers[0].Routes[1].Spec.TLS)
+	routeAnnotations["description"] = ksHttpRouteDescription
+	delete(routeAnnotations, routeBalanceAnnotation)
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[1].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Servers[0].Routes[1].Spec.Port.TargetPort)
+
 }
 
 func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
@@ -177,17 +228,94 @@ func TestRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting dashbuilder environment")
+	assert.Nil(t, err, "Error getting dashbuilder default environment")
 
+	commonDashbuilderAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(dashHttpsRouteDescrition)
+
+	assert.Equal(t, 1, len(env.Dashbuilder.Routes))
+	assert.Equal(t, dashName, env.Dashbuilder.Routes[0].Name)
+	assert.NotNil(t, env.Dashbuilder.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Dashbuilder.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+
+	dashVolumeMountSecret, dashVolume := getDashKeyAndVolume()
+
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, dashVolumeMountSecret)
+	assert.Contains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, dashVolume)
+
+	// ssl envs
+	assertHTTPSEnvs(t, dashKeyStoreVolume, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+
+}
+
+func TestRHPAMDashbuilderDefaultEnvironmentWithSSLDisabled(t *testing.T) {
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-dash",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			CommonConfig: api.CommonConfig{
+				DisableSsl: true,
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting dashbuilder default with ssl disabled environment")
+
+	commonDashbuilderAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(dashHttpRouteDescrition)
+	delete(routeAnnotations, routeBalanceAnnotation)
+
+	assert.Equal(t, 1, len(env.Dashbuilder.Routes))
+	assert.Equal(t, dashName, env.Dashbuilder.Routes[0].Name)
+	assert.Nil(t, env.Dashbuilder.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Dashbuilder.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+
+	dashVolumeMountSecret, dashVolume := getDashKeyAndVolume()
+
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, dashVolumeMountSecret)
+	assert.NotContains(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Volumes, dashVolume)
+
+	// ssl envs
+	assertHTTPEmpty(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+}
+
+func getDashKeyAndVolume() (corev1.VolumeMount, corev1.Volume) {
+	dashVolumeMountSecret, _ := getVolumeMountSecret(dashKeyStoreVolumeName, dashKeyStoreVolume)
+	dashVolume, _ := getVolumes(dashKeyStoreVolumeName, "test-dash-dashbuilder-app-secret")
+	return dashVolumeMountSecret, dashVolume
+}
+
+func assertHTTPEmpty(t *testing.T, container corev1.Container) {
+	assert.Empty(t, getEnvVariable(container, "HTTPS_KEYSTORE_DIR"))
+	assert.Empty(t, getEnvVariable(container, "HTTPS_KEYSTORE"))
+	assert.Empty(t, getEnvVariable(container, "HTTPS_NAME"))
+	assert.Empty(t, getEnvVariable(container, "HTTPS_PASSWORD"))
+}
+
+func assertHTTPSEnvs(t *testing.T, keystoreVolumeName string, container corev1.Container) {
+	assert.Equal(t, keystoreVolumeName, getEnvVariable(container, "HTTPS_KEYSTORE_DIR"))
+	assert.Equal(t, constants.KeystoreName, getEnvVariable(container, "HTTPS_KEYSTORE"))
+	assert.Equal(t, "jboss", getEnvVariable(container, "HTTPS_NAME"))
+	assert.Empty(t, "", getEnvVariable(container, "HTTPS_PASSWORD"))
+}
+
+func commonDashbuilderAssertions(t *testing.T, env api.Environment, cr *api.KieApp) {
 	dashServices := env.Dashbuilder.Services
-	mainService := getService(dashServices, "test-dash-rhpamdash")
+	mainService := getService(dashServices, dashName)
 
 	assert.NotNil(t, mainService, "rhpamdash service not found")
 	assert.Len(t, mainService.Spec.Ports, 2, "The rhpamdash service should have two ports")
 	assert.False(t, hasPort(mainService, 8001), "The rhpamdash service should NOT listen on port 8001")
 	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
 
-	assert.Equal(t, "test-dash-rhpamdash", env.Dashbuilder.DeploymentConfigs[0].ObjectMeta.Name)
+	assert.Equal(t, dashName, env.Dashbuilder.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, dashImage+":"+cr.Status.Applied.Version, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, getLivenessReadiness("/rest/ready"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/rest/healthy"), env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
@@ -772,13 +900,16 @@ func TestRhpamProdImmutableEnvironmentEnableKCVerification(t *testing.T) {
 	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DISABLE_KC_PULL_DEPS"), "Variable should exist and be false")
 }
 
-func TestRhpamProdWithSmartRouter(t *testing.T) {
+func TestRhpamProdWithSmartRouterWithSSLDisabled(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
+				DisableSsl: true,
+			},
 			Objects: api.KieAppObjects{
 				SmartRouter: &api.SmartRouterObject{},
 			},
@@ -802,6 +933,26 @@ func TestRhpamProdWithSmartRouter(t *testing.T) {
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
 	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, env.Console.DeploymentConfigs[0].Spec.Strategy.RollingParams.MaxSurge)
+
+	routeAnnotations := make(map[string]string)
+	routeAnnotations["description"] = "Route for Smart Router's http service."
+
+	assert.Equal(t, 1, len(env.SmartRouter.Routes))
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.Routes[0].Name)
+	assert.Nil(t, env.SmartRouter.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.SmartRouter.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+
+	smVolumeMountSecret, _ := getVolumeMountSecret(smartrouterKeyStore, "/etc/smartrouter-secret-volume")
+	smVolume, _ := getVolumes(smartrouterKeyStore, "test-smartrouter-app-secret")
+
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, smVolumeMountSecret)
+	assert.NotContains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, smVolume)
+
+	// ssl envs
+	assert.Empty(t, getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE"))
+	assert.Empty(t, getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS"))
+	assert.Empty(t, getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD"))
 }
 
 func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
@@ -813,7 +964,6 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 			Environment: api.RhpamProduction,
 			Objects: api.KieAppObjects{
 				SmartRouter: &api.SmartRouterObject{
-					Protocol:         "https",
 					UseExternalRoute: true,
 				},
 			},
@@ -830,6 +980,27 @@ func TestRhpamProdSmartRouterWithSSL(t *testing.T) {
 	assert.Equal(t, "test-smartrouter", env.SmartRouter.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, "test-smartrouter", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_ROUTE_NAME"), "Variable should exist")
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
+	routeAnnotations := make(map[string]string)
+	routeAnnotations["description"] = "Route for Smart Router's https service."
+	routeAnnotations[routeBalanceAnnotation] = "source"
+
+	assert.Equal(t, 1, len(env.SmartRouter.Routes))
+	assert.Equal(t, "test-smartrouter", env.SmartRouter.Routes[0].Name)
+	assert.NotNil(t, env.SmartRouter.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.SmartRouter.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+
+	smVolumeMountSecret, _ := getVolumeMountSecret(smartrouterKeyStore, "/etc/smartrouter-secret-volume")
+	smVolume, _ := getVolumes(smartrouterKeyStore, "test-smartrouter-app-secret")
+
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, smVolumeMountSecret)
+	assert.Contains(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes, smVolume)
+
+	// ssl envs
+	assert.Equal(t, "/etc/smartrouter-secret-volume/keystore.jks", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE"))
+	assert.Equal(t, "jboss", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS"))
+	assert.Empty(t, "", getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD"))
 }
 
 func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
@@ -1738,7 +1909,7 @@ func hasPort(service corev1.Service, portNum int32) bool {
 	return false
 }
 
-func TestAuthoringEnvironment(t *testing.T) {
+func TestRhpamAuthoringEnvironment(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -1751,8 +1922,79 @@ func TestAuthoringEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error rhpam getting authoring environment")
+
+	commonRhpamAuthoringAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(bcHttpsRouteDescription)
+
+	assert.Equal(t, 1, len(env.Console.Routes))
+	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
+	assert.NotNil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Console.Routes[0].Spec.Port.TargetPort)
+
+	assertContainBCAndKSVolumes(t, bcKeyStoreVolumeName, env)
+
+	assert.Equal(t, 1, len(env.Servers[0].Routes))
+	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.NotNil(t, env.Servers[0].Routes[0].Spec.TLS)
+	routeAnnotations["description"] = ksHttpsRouteDescription
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+
+	// bc ssl envs
+	assertHTTPSEnvs(t, bcKeystoreVolume, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+
+	// ks ssl envs
+	assertHTTPSEnvs(t, "/etc/kieserver-secret-volume", env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+}
+
+func TestRhpamAuthoringEnvironmentWithSSLDisabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoring,
+			CommonConfig: api.CommonConfig{
+				DBPassword: "Database",
+				DisableSsl: true,
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting rhpam authoring environment with SSL disabled.")
+
+	commonRhpamAuthoringAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(bcHttpRouteDescription)
+	delete(routeAnnotations, routeBalanceAnnotation)
+
+	assert.Equal(t, 1, len(env.Console.Routes))
+	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
+	assert.Nil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Console.Routes[0].Spec.Port.TargetPort)
+
+	assertNotContainBCAndKSVolumes(t, env)
+
+	assert.Equal(t, 1, len(env.Servers[0].Routes))
+	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.Nil(t, env.Servers[0].Routes[0].Spec.TLS)
+	routeAnnotations["description"] = ksHttpRouteDescription
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+
+	// bc ssl envs
+	assertHTTPEmpty(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+
+	// ks ssl envs
+	assertHTTPEmpty(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0])
+}
+
+func commonRhpamAuthoringAssertions(t *testing.T, env api.Environment, cr *api.KieApp) {
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
-	assert.Nil(t, err, "Error getting authoring environment")
 	dbPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
@@ -1760,7 +2002,7 @@ func TestAuthoringEnvironment(t *testing.T) {
 	assert.Equal(t, "Database", dbPassword, "Expected provided password to take effect, but found %v", dbPassword)
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
 	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
-	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
+	assert.NotEqual(t, api.Environment{}, env, "Rhpam Authoring Environment should not be empty.")
 
 	assert.Equal(t, "test-rhpamcentr", env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
@@ -1768,6 +2010,144 @@ func TestAuthoringEnvironment(t *testing.T) {
 	// test kieserver probes
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/readycheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
 	assert.Equal(t, getLivenessReadiness("/services/rest/server/healthcheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+
+}
+
+func TestRhdmAuthoringEnvironment(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmAuthoring,
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting rhdm authoring environment")
+
+	commonRhdmAuthoringAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(bcHttpsRouteDescription)
+
+	assert.Equal(t, 1, len(env.Console.Routes))
+	assert.Equal(t, "test-rhdmcentr", env.Console.Routes[0].Name)
+	assert.NotNil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Console.Routes[0].Spec.Port.TargetPort)
+
+	assertContainBCAndKSVolumes(t, dcKeyStoreVolumeName, env)
+
+	assert.Equal(t, 1, len(env.Servers[0].Routes))
+	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.NotNil(t, env.Servers[0].Routes[0].Spec.TLS)
+	routeAnnotations["description"] = ksHttpsRouteDescription
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestRhdmAuthoringEnvironmentWithSSLDisabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhdmAuthoring,
+			CommonConfig: api.CommonConfig{
+				DisableSsl: true,
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting authoring environment")
+
+	commonRhdmAuthoringAssertions(t, env, cr)
+
+	routeAnnotations := getRouteAnnotations(bcHttpRouteDescription)
+	delete(routeAnnotations, routeBalanceAnnotation)
+
+	assert.Equal(t, 1, len(env.Console.Routes))
+	assert.Equal(t, "test-rhdmcentr", env.Console.Routes[0].Name)
+	assert.Nil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Console.Routes[0].Spec.Port.TargetPort)
+
+	assertNotContainBCAndKSVolumes(t, env)
+
+	assert.Equal(t, 1, len(env.Servers[0].Routes))
+	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.Nil(t, env.Servers[0].Routes[0].Spec.TLS)
+	routeAnnotations["description"] = ksHttpRouteDescription
+	assert.Equal(t, routeAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func assertContainBCAndKSVolumes(t *testing.T, keyStoreVolumeName string, env api.Environment) {
+	bcVolumeMountSecret, ksVolumeMountSecret := getVolumeMountSecret(keyStoreVolumeName, bcKeystoreVolume)
+	bcVolume, ksVolume := getVolumes(keyStoreVolumeName, bcKeySecret)
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, bcVolumeMountSecret)
+	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, bcVolume)
+
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, ksVolumeMountSecret)
+	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, ksVolume)
+}
+
+func assertNotContainBCAndKSVolumes(t *testing.T, env api.Environment) {
+	bcVolumeMountSecret, ksVolumeMountSecret := getVolumeMountSecret(dcKeyStoreVolumeName, bcKeystoreVolume)
+	bcVolume, ksVolume := getVolumes(dcKeyStoreVolumeName, bcKeySecret)
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, bcVolumeMountSecret)
+	assert.NotContains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, bcVolume)
+
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, ksVolumeMountSecret)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, ksVolume)
+}
+
+func commonRhdmAuthoringAssertions(t *testing.T, env api.Environment, cr *api.KieApp) {
+	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
+	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
+	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
+	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
+	assert.Equal(t, string(appsv1.DeploymentStrategyTypeRolling), string(env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Strategy.Type), "The DC should use a Rolling strategy when using the H2 DB")
+	assert.NotEqual(t, api.Environment{}, env, "Rhdm Authoring Environment should not be empty.")
+
+	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
+
+	// test kieserver probes
+	assert.Equal(t, getLivenessReadiness("/services/rest/server/readycheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadiness("/services/rest/server/healthcheck"), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+}
+
+func getVolumeMountSecret(consoleVolumeMountName string, mountPath string) (bc corev1.VolumeMount, ks corev1.VolumeMount) {
+	return corev1.VolumeMount{
+			Name:      consoleVolumeMountName,
+			ReadOnly:  true,
+			MountPath: mountPath,
+		},
+		corev1.VolumeMount{
+			Name:      "kieserver-keystore-volume",
+			ReadOnly:  true,
+			MountPath: "/etc/kieserver-secret-volume",
+		}
+}
+
+func getVolumes(consoleVolumeName string, consoleSecretName string) (console corev1.Volume, ks corev1.Volume) {
+	return corev1.Volume{
+			Name: consoleVolumeName,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: consoleSecretName,
+				},
+			},
+		},
+		corev1.Volume{
+			Name: "kieserver-keystore-volume",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "test-kieserver-app-secret",
+				},
+			},
+		}
 }
 
 func TestAuthoringHAEnvironment(t *testing.T) {
@@ -1783,7 +2163,7 @@ func TestAuthoringHAEnvironment(t *testing.T) {
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.Nil(t, err, "Error getting authoring-ha environment")
 	assert.Equal(t, fmt.Sprintf("%s-kieserver", cr.Name), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Name, "the container name should have incremented")
-	assert.NotEqual(t, api.Environment{}, env, "Environment should not be empty")
+	assert.NotEqual(t, api.Environment{}, env, "Authoring HA Environment should not be empty")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -2362,11 +2742,34 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	assert.Equal(t, 2, len(env.Console.Routes), "Expected 2 routes. rhpamcentr (http + https)")
 	assert.Equal(t, 2, len(env.Servers[0].Routes), "Expected 2 routes. kieserver[0] (http + https)")
 
+	bcHttpsAnnotations := getRouteAnnotations(bcHttpsRouteDescription)
+
 	assert.Equal(t, "test-rhpamcentr", env.Console.Routes[0].Name)
+	assert.NotNil(t, env.Console.Routes[0].Spec.TLS)
+	assert.Equal(t, bcHttpsAnnotations, env.Console.Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Console.Routes[0].Spec.Port.TargetPort)
 	assert.Equal(t, "test-rhpamcentr-http", env.Console.Routes[1].Name)
+	assert.Nil(t, env.Console.Routes[1].Spec.TLS)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Console.Routes[1].Spec.Port.TargetPort)
+
+	delete(bcHttpsAnnotations, routeBalanceAnnotation)
+	bcHttpsAnnotations["description"] = "Route for Business Central's http service."
+	assert.Equal(t, bcHttpsAnnotations, env.Console.Routes[1].Annotations)
+
+	serverHttpsAnnotations := getRouteAnnotations(ksHttpsRouteDescription)
 
 	assert.Equal(t, kieServerName, env.Servers[0].Routes[0].Name)
+	assert.NotNil(t, env.Servers[0].Routes[0].Spec.TLS)
+	assert.Equal(t, serverHttpsAnnotations, env.Servers[0].Routes[0].Annotations)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "https"}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
 	assert.Equal(t, "test-kieserver-http", env.Servers[0].Routes[1].Name)
+	assert.Nil(t, env.Servers[0].Routes[1].Spec.TLS)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "http"}, env.Servers[0].Routes[1].Spec.Port.TargetPort)
+
+	delete(serverHttpsAnnotations, routeBalanceAnnotation)
+
+	serverHttpsAnnotations["description"] = ksHttpRouteDescription
+	assert.Equal(t, serverHttpsAnnotations, env.Servers[0].Routes[1].Annotations)
 
 	// Env vars overrides
 	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -2721,7 +3124,7 @@ func TestPartialTemplateConfig(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
-	assert.Nil(t, err, "Error getting authoring environment")
+	assert.Nil(t, err, "Error getting partial trial environment")
 	adminUser := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
 	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
 	assert.Equal(t, cr.Spec.CommonConfig.AdminUser, adminUser, "Expected provided user to take effect, but found %v", adminUser)
@@ -4646,7 +5049,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 	}
 }
 
-func TestProcessMigrationRoutes(t *testing.T) {
+func TestProcessMigrationRoute(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4659,10 +5062,15 @@ func TestProcessMigrationRoutes(t *testing.T) {
 			},
 		},
 	}
+
+	routeAnnotations := make(map[string]string)
+	routeAnnotations["description"] = "Route for Process Migration https service."
+
 	env, _ := GetEnvironment(cr, test.MockService())
 	assert.Equal(t, 1, len(env.ProcessMigration.Routes))
 	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
 	assert.NotNil(t, env.ProcessMigration.Routes[0].Spec.TLS)
+	assert.Equal(t, routeAnnotations, env.ProcessMigration.Routes[0].Annotations)
 
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -4676,11 +5084,11 @@ func TestProcessMigrationRoutes(t *testing.T) {
 		},
 	}
 	env, _ = GetEnvironment(cr, test.MockService())
-	assert.Equal(t, 2, len(env.ProcessMigration.Routes))
+
+	routeAnnotations["description"] = "Route for Process Migration http service."
+	assert.Equal(t, 1, len(env.ProcessMigration.Routes))
 	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
-	assert.NotNil(t, env.ProcessMigration.Routes[0].Spec.TLS)
-	assert.Equal(t, "test-process-migration-http", env.ProcessMigration.Routes[1].ObjectMeta.Name)
-	assert.Nil(t, env.ProcessMigration.Routes[1].Spec.TLS)
+	assert.Nil(t, env.ProcessMigration.Routes[0].Spec.TLS)
 }
 
 func TestMergeProcessMigrationDB(t *testing.T) {
@@ -5782,7 +6190,7 @@ func TestClusterLabelsRHPAMDashbuilderDefaultEnvironment(t *testing.T) {
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting dashbuilder environment")
+	assert.Nil(t, err, "Error getting dashbuilder rhpam default environment environment")
 	checkObjectLabels(t, cr, env.Dashbuilder, "PAM", "rhpam-dashbuilder-rhel8")
 	checkClusterLabels(t, cr, env.Dashbuilder)
 	dashClusterLabel := env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Labels[constants.ClusterLabel]
@@ -6202,4 +6610,12 @@ func createKafkaJbpmObject(dateFormat string, tasksTopics string, casesTopics st
 		TasksTopicName:     tasksTopics,
 	}
 	return &kafkaJBPMEventEmittersObject
+}
+
+func getRouteAnnotations(routeDescription string) map[string]string {
+	routeAnnotation := make(map[string]string)
+	routeAnnotation["description"] = routeDescription
+	routeAnnotation[routeBalanceAnnotation] = "source"
+	routeAnnotation["haproxy.router.openshift.io/timeout"] = "60s"
+	return routeAnnotation
 }

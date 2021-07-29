@@ -139,6 +139,7 @@ dashbuilder:
                   - name: DASHBUILDER_CONFIG_MAP_PROPS
                     value: "[[.Dashbuilder.Config.ConfigMapProps]]"
                   #[[end]]
+                  #[[if not .DisableSsl]]
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/dashbuilder-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -147,6 +148,7 @@ dashbuilder:
                     value: "jboss"
                   - name: HTTPS_PASSWORD
                     value: "[[.KeyStorePassword]]"
+                  #[[end]]
                   - name: KUBERNETES_NAMESPACE
                     valueFrom:
                       fieldRef:
@@ -294,9 +296,11 @@ dashbuilder:
                   #[[end]]
                   ## Jvm config END
                 volumeMounts:
+                  #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/dashbuilder-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -307,9 +311,11 @@ dashbuilder:
                     mountPath: "/opt/kie/dashbuilder"
                   #[[end]]
             volumes:
+              #[[if not .DisableSsl]]
               - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Dashbuilder.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -339,8 +345,9 @@ dashbuilder:
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         annotations:
           description: All the Dashbuilder web server's ports.
+  ## TODO update dashbuilder routes
   routes:
-    - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-https"
+    - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         labels:
@@ -348,15 +355,20 @@ dashbuilder:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         annotations:
-          description: Route for Dashbuilder's https service.
+          description: Route for Dashbuilder's [[.RouteProtocol]] service.
           haproxy.router.openshift.io/timeout: 60s
+          #[[if not .DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
         host: ""
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 
