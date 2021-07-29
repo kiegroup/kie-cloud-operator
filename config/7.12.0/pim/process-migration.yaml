@@ -113,7 +113,7 @@ processMigration:
         annotations:
           description: Process Migration web server's port.
   routes:
-    - id: "[[.ApplicationName]]-process-migration-https"
+    - id: "[[.ApplicationName]]-process-migration-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-process-migration"
         labels:
@@ -121,14 +121,16 @@ processMigration:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-process-migration"
         annotations:
-          description: Route for Process Migration https service.
+          description: "Route for Process Migration [[.RouteProtocol]] service."
       spec:
         to:
           kind: Service
           name: "[[.ApplicationName]]-process-migration"
         port:
           targetPort: http
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: edge
+        #[[end]]
 ## KIE ProcessMigration END
