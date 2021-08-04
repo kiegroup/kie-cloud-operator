@@ -65,6 +65,15 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		return api.Environment{}, err
 	}
 
+	envTemplate.DisableSsl = cr.Status.Applied.CommonConfig.DisableSsl
+	if cr.Status.Applied.CommonConfig.DisableSsl && !isTrial(cr) {
+		log.Debug("Disabling SSL routes")
+		envTemplate.RouteProtocol = constants.HttpProtocol
+	} else {
+		log.Debug("Using SSL routes")
+		envTemplate.RouteProtocol = constants.HttpsProtocol
+	}
+
 	var common api.Environment
 	yamlBytes, err := loadYaml(service, "common.yaml", cr.Status.Applied.Version, cr.Namespace, envTemplate)
 	if err != nil {
@@ -393,7 +402,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
 		template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
-		if template.KeystoreSecret == "" {
+		if template.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
 		}
 
@@ -468,7 +477,7 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
 		dashbuilderTemplate.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		dashbuilderTemplate.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
-		if dashbuilderTemplate.KeystoreSecret == "" {
+		if dashbuilderTemplate.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			dashbuilderTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-"))
 		}
 
@@ -548,6 +557,19 @@ func getSpecEnv(envs []corev1.EnvVar, name string) string {
 	return ""
 }
 
+func getSmartRouterProtocol(cr *api.KieApp) string {
+	if cr.Status.Applied.Objects.SmartRouter != nil {
+		if len(cr.Status.Applied.Objects.SmartRouter.Protocol) == 0 && cr.Status.Applied.CommonConfig.DisableSsl {
+			return constants.HttpProtocol
+		} else if len(cr.Status.Applied.Objects.SmartRouter.Protocol) == 0 && !cr.Status.Applied.CommonConfig.DisableSsl {
+			return constants.HttpsProtocol
+		} else {
+			return cr.Status.Applied.Objects.SmartRouter.Protocol
+		}
+	}
+	return constants.HttpProtocol
+}
+
 func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 	template := api.SmartRouterTemplate{}
 	if cr.Status.Applied.Objects.SmartRouter != nil {
@@ -560,16 +582,14 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			cr.Status.Applied.Objects.SmartRouter.Replicas = &envConstants.Replica.SmartRouter.Replicas
 		}
 		template.Replicas = *cr.Status.Applied.Objects.SmartRouter.Replicas
-		if cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
+		if cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-"))
 		} else {
 			template.KeystoreSecret = cr.Status.Applied.Objects.SmartRouter.KeystoreSecret
 		}
-		if cr.Status.Applied.Objects.SmartRouter.Protocol == "" {
-			template.Protocol = constants.SmartRouterProtocol
-		} else {
-			template.Protocol = cr.Status.Applied.Objects.SmartRouter.Protocol
-		}
+
+		template.Protocol = getSmartRouterProtocol(cr)
+
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
 		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
@@ -752,15 +772,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				}
 			}
 
-			// if, SmartRouter object is nil, ignore it
-			// get smart router protocol configuration
-			if cr.Status.Applied.Objects.SmartRouter != nil {
-				if cr.Status.Applied.Objects.SmartRouter.Protocol == "" {
-					template.SmartRouter.Protocol = constants.SmartRouterProtocol
-				} else {
-					template.SmartRouter.Protocol = cr.Status.Applied.Objects.SmartRouter.Protocol
-				}
-			}
+			template.SmartRouter.Protocol = getSmartRouterProtocol(cr)
 
 			dbConfig, err := getDatabaseConfig(cr.Status.Applied.Environment, serverSet.Database)
 			if err != nil {
@@ -787,7 +799,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.KafkaJbpmEventEmitters = serverSet.KafkaJbpmEventEmitters
 			}
 
-			if template.KeystoreSecret == "" {
+			if template.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 				template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, template.KieName)
 			}
 
@@ -1558,6 +1570,9 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
 	var processMigrationEnv api.Environment
 	if deployProcessMigration(cr) {
+		if api.RhpamTrial == cr.Spec.Environment {
+			envTemplate.CommonConfig.DisableSsl = true
+		}
 		processMigrationEnv, err := loadProcessMigrationFromFile("pim/process-migration.yaml", service, cr, envTemplate)
 		if err != nil {
 			return api.Environment{}, err
@@ -1567,13 +1582,7 @@ func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, e
 		if err != nil {
 			return api.Environment{}, nil
 		}
-		if api.RhpamTrial == cr.Spec.Environment {
-			pimEnv, err := loadProcessMigrationFromFile("pim/process-migration-trial.yaml", service, cr, envTemplate)
-			if err != nil {
-				return api.Environment{}, nil
-			}
-			env.ProcessMigration = mergeCustomObject(env.ProcessMigration, pimEnv.ProcessMigration)
-		}
+
 	} else {
 		processMigrationEnv.ProcessMigration.Omit = true
 	}

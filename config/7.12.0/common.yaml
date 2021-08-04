@@ -108,6 +108,7 @@ console:
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
                     value: "5000"
                   ## OpenShift Enhancement END
+                  #[[if not .DisableSsl]]
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -116,6 +117,7 @@ console:
                     value: "jboss"
                   - name: HTTPS_PASSWORD
                     value: "[[.KeyStorePassword]]"
+                  #[[end]]
                   - name: WORKBENCH_ROUTE_NAME
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: JGROUPS_PING_PROTOCOL
@@ -266,9 +268,11 @@ console:
                   #[[end]]
                   ## Jvm config END
                 volumeMounts:
+                  #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -293,9 +297,11 @@ console:
                     mountPath: "/home/jboss/.ssh"
                   #[[end]]
             volumes:
+              #[[if not .DisableSsl]]
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -385,7 +391,7 @@ console:
         annotations:
           description: All the Business Central web server's ports.
   routes:
-    - id: "[[.ApplicationName]]-[[.Console.Name]]-https"
+    - id: "[[.ApplicationName]]-[[.Console.Name]]-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
@@ -393,17 +399,22 @@ console:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
-          description: Route for Business Central's https service.
+          description: "Route for Business Central's [[.RouteProtocol]] service."
           haproxy.router.openshift.io/timeout: 60s
+          #[[if not .DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
         host: ""
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 ## KIE smartrouter BEGIN
 smartRouter:
   persistentVolumeClaims:
@@ -492,12 +503,14 @@ smartRouter:
                   #[[end]]
                   - name: KIE_SERVER_ROUTER_SERVICE
                     value: "[[.ApplicationName]]-smartrouter"
+                  #[[if not .DisableSsl]]
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
                     value: "jboss"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
                     value: "[[.KeyStorePassword]]"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
+                  #[[end]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
@@ -567,9 +580,11 @@ smartRouter:
                 volumeMounts:
                   - name: "[[.ApplicationName]]-smartrouter"
                     mountPath: "/opt/[[.Constants.Product]]-smartrouter/data"
+                  #[[if not .DisableSsl]]
                   - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -579,9 +594,11 @@ smartRouter:
               - name: "[[.ApplicationName]]-smartrouter"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-smartrouter-claim"
+              #[[if not .DisableSsl]]
               - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                 secret:
                   secretName: "[[.SmartRouter.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -607,7 +624,7 @@ smartRouter:
         annotations:
       description: The smart router server http and https ports.
   routes:
-    - id: "[[.ApplicationName]]-smartrouter-https"
+    - id: "[[.ApplicationName]]-smartrouter-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-smartrouter"
         labels:
@@ -615,16 +632,21 @@ smartRouter:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
         annotations:
-          description: Route for Smart Router's https service.
+          description: Route for Smart Router's [[.RouteProtocol]] service.
+          #[[if not $.DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
         host: ""
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 ## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
@@ -735,6 +757,7 @@ servers:
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
+                    #[[if not $.DisableSsl]]
                     - name: HTTPS_KEYSTORE_DIR
                       value: "/etc/kieserver-secret-volume"
                     - name: HTTPS_KEYSTORE
@@ -743,6 +766,7 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "[[$.KeyStorePassword]]"
+                    #[[end]]
                     - name: JGROUPS_PING_PROTOCOL
                       value: "kubernetes.KUBE_PING"
                     - name: KUBERNETES_NAMESPACE
@@ -1008,9 +1032,11 @@ servers:
                       containerPort: 8443
                       protocol: TCP
                   volumeMounts:
+                    #[[if not $.DisableSsl]]
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
+                    #[[end]]
                     #[[if $.OpenshiftCaBundle]]
                     - name: "[[$.ApplicationName]]-truststore"
                       mountPath: "/etc/openshift-truststore-volume"
@@ -1028,9 +1054,11 @@ servers:
                       readOnly: true
                     #[[end]]
               volumes:
+                #[[if not $.DisableSsl]]
                 - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
+                #[[end]]
                 #[[if $.OpenshiftCaBundle]]
                 - name: "[[$.ApplicationName]]-truststore"
                   secret:
@@ -1120,7 +1148,7 @@ servers:
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "[[.KieName]]-https"
+      - id: "[[.KieName]]-[[$.RouteProtocol]]"
         metadata:
           name: "[[.KieName]]"
           labels:
@@ -1128,16 +1156,21 @@ servers:
             application: "[[$.ApplicationName]]"
             service: "[[.KieName]]"
           annotations:
-            description: Route for KIE server's https service.
+            description: Route for KIE server's [[$.RouteProtocol]] service.
             haproxy.router.openshift.io/timeout: 60s
+            #[[if not $.DisableSsl]]
+            haproxy.router.openshift.io/balance: source
+            #[[end]]
         spec:
           to:
             name: "[[.KieName]]"
           port:
-            targetPort: https
+            targetPort: [[$.RouteProtocol]]
+          #[[if not $.DisableSsl]]
           tls:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
+          #[[end]]
       ## KIE server routes END
 #[[end]]
 ## RANGE ends

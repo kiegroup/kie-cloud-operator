@@ -130,6 +130,10 @@ const (
 	TruststorePwd = "changeit"
 	// CaBundleKey ...
 	CaBundleKey = "ca-bundle.crt"
+	// HttpProtocol ...
+	HttpProtocol = "http"
+	// HttpsProtocol ...
+	HttpsProtocol = "https"
 	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
@@ -140,8 +144,6 @@ const (
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
 	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
-	// SmartRouterProtocol - default SmartRouter protocol
-	SmartRouterProtocol = "http"
 	// GitHooksDefaultDir Default path where to mount the GitHooks volume
 	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
 	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
@@ -278,31 +280,31 @@ const (
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
 
-// Console Resource Limits for BC Monitoring in Prod Env
+// ConsoleProdLimits Console Resource Limits for BC Monitoring in Prod Env
 var ConsoleProdLimits = map[string]string{
 	"CPU": ConsoleProdCPULimit,
 	"MEM": ConsoleProdMemLimit,
 }
 
-// Console Resource Limits for BC in Authoring Env
+// ConsoleAuthoringLimits Resource Limits for BC in Authoring Env
 var ConsoleAuthoringLimits = map[string]string{
 	"CPU": ConsoleAuthoringCPULimit,
 	"MEM": ConsoleAuthoringMemLimit,
 }
 
-// Dashbuilder Resource Limits for Dasubuilder deployment
+// DashbuilderLimits Resource Limits for Dasubuilder
 var DashbuilderLimits = map[string]string{
 	"CPU": DashbuilderCPULimit,
 	"MEM": DashbuilderMemLimit,
 }
 
-// Server Limits for every Env
+// ServersLimits Resource Limits for KIE Servers
 var ServersLimits = map[string]string{
 	"CPU": ServersCPULimit,
 	"MEM": ServersMemLimit,
 }
 
-// SmartRouter Limits for every Env
+// SmartRouterLimits defines resource limits for Smart Router
 var SmartRouterLimits = map[string]string{
 	"CPU": SmartRouterCPULimit,
 	"MEM": SmartRouterMemLimit,
@@ -320,7 +322,7 @@ var ConsoleProdRequests = map[string]string{
 	"MEM": ConsoleProdMemRequests,
 }
 
-// Dashbuilder defines requests Dasubuilder deployment
+// DashbuilderRequests defines requests Dasubuilder deployment
 var DashbuilderRequests = map[string]string{
 	"CPU": DashbuilderCPURequests,
 	"MEM": DashbuilderMemRequests,

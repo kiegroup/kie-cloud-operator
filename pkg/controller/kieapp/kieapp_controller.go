@@ -517,7 +517,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 	if !env.Console.Omit {
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Console, cr, consoleCN)
-		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" {
+		if cr.Status.Applied.Objects.Console.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-")),
 				consoleCN,
@@ -531,7 +531,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 	}
 
 	// dashbuilder keystore generation
-	if cr.Status.Applied.Objects.Dashbuilder != nil {
+	if cr.Status.Applied.Objects.Dashbuilder != nil && !cr.Status.Applied.CommonConfig.DisableSsl {
 		consoleCN := reconciler.setConsoleHost(cr, env, routes)
 		defaults.ConfigureHostname(&env.Dashbuilder, cr, consoleCN)
 		if cr.Status.Applied.Objects.Dashbuilder.KeystoreSecret == "" {
@@ -565,7 +565,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		}
 		defaults.ConfigureHostname(&server, cr, serverCN)
 		serverSet, kieDeploymentName := defaults.GetServerSet(cr, i)
-		if serverSet.KeystoreSecret == "" {
+		if serverSet.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, kieDeploymentName),
 				serverCN,
@@ -594,7 +594,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 		}
 
 		defaults.ConfigureHostname(&env.SmartRouter, cr, smartCN)
-		if cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "" {
+		if (cr.Status.Applied.Objects.SmartRouter == nil || cr.Status.Applied.Objects.SmartRouter.KeystoreSecret == "") && !cr.Status.Applied.CommonConfig.DisableSsl {
 			secret, err := reconciler.generateKeystoreSecret(
 				fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "smartrouter"}, "-")),
 				smartCN,
