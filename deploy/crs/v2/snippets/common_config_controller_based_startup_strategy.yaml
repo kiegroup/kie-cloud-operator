@@ -9,8 +9,5 @@ metadata:
     consoleSnippet: true
 spec:
   commonConfig:
-    # By default is the cr.Name
-    applicationName: other
-    adminPassword: example
     startupStrategy:
       strategyName: "ControllerBasedStartupStrategy"
