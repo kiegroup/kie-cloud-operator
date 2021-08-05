@@ -807,6 +807,141 @@
                   "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
                 }
               ]
+            },
+            {
+              "label": "CORS Filters configuration",
+              "type": "dropDown",
+              "required": false,
+              "jsonPath": "",
+              "default": "default",
+              "options": [
+                {
+                  "value": "default",
+                  "label": "Default configuration"
+                },
+                {
+                  "value": "custom",
+                  "label": "Custom configuration"
+                }
+              ],
+              "fields": [
+                {
+                  "label": "default",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "default",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "Enable CORS with Default values",
+                      "type": "checkbox",
+                      "checked": false,
+                      "jsonPath": "$.spec.objects.console.cors.default",
+                      "originalJsonPath": "$.spec.objects.console.cors.default",
+                      "description": "Configure CORS with default values and skip manual configuration"
+                    }
+                  ]
+                },
+                {
+                  "label": "custom",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "custom",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "Filters",
+                      "type": "text",
+                      "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                      "jsonPath": "$.spec.objects.console.cors.filters",
+                      "originalJsonPath": "$.spec.objects.console.cors.filters",
+                      "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                    },
+                    {
+                      "label": "Access Control Allow origin name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Origin",
+                      "jsonPath": "$.spec.objects.console.cors.allowOriginName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowOriginName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                    },
+                    {
+                      "label": "Access Control Allow origin value filter",
+                      "type": "text",
+                      "default": "*",
+                      "jsonPath": "$.spec.objects.console.cors.allowOriginValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowOriginValue",
+                      "description": "Value, suggested default is: *"
+                    },
+                    {
+                      "label": "Access Control Allow methods name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Methods",
+                      "jsonPath": "$.spec.objects.console.cors.allowMethodsName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowMethodsName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                    },
+                    {
+                      "label": "Access Control Allow methods value filter",
+                      "type": "text",
+                      "default": "GET, POST, OPTIONS, PUT",
+                      "jsonPath": "$.spec.objects.console.cors.allowMethodsValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowMethodsValue",
+                      "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                    },
+                    {
+                      "label": "Access Control Allow headers name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Headers",
+                      "jsonPath": "$.spec.objects.console.cors.allowHeadersName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowHeadersName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                    },
+                    {
+                      "label": "Access Control Allow origin headers value filter",
+                      "type": "text",
+                      "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                      "jsonPath": "$.spec.objects.console.cors.allowHeadersValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowHeadersValue",
+                      "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                    },
+                    {
+                      "label": "Access Control Allow credentials name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Credentials",
+                      "jsonPath": "$.spec.objects.console.cors.allowCredentialsName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowCredentialsName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                    },
+                    {
+                      "label": "Access Control Allow credentials value filter",
+                      "type": "checkbox",
+                      "checked": true,
+                      "jsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
+                      "description": "Value, suggested default is: true "
+                    },
+                    {
+                      "label": "Access Control Max Age name filter",
+                      "type": "text",
+                      "default": "Access-Control-Max-Age",
+                      "jsonPath": "$.spec.objects.console.cors.maxAgeName",
+                      "originalJsonPath": "$.spec.objects.console.cors.maxAgeName",
+                      "description": "Name, suggested default is: Access-Control-Max-Age"
+                    },
+                    {
+                      "label": "Access Control Max Age value filter",
+                      "type": "integer",
+                      "default": "1",
+                      "jsonPath": "$.spec.objects.console.cors.maxAgeValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.maxAgeValue",
+                      "description": "Value, suggested default is: 1"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -1864,6 +1999,141 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "label": "CORS Filters configuration",
+                  "type": "dropDown",
+                  "required": false,
+                  "jsonPath": "",
+                  "default": "default",
+                  "options": [
+                    {
+                      "value": "default",
+                      "label": "Default configuration"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "default",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "default",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Enable CORS with Default values",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.servers[*].cors.default",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.default",
+                          "description": "Configure CORS with default values and skip manual configuration"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "custom",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "custom",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Filters",
+                          "type": "text",
+                          "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                          "jsonPath": "$.spec.objects.servers[*].cors.filters",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.filters",
+                          "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                        },
+                        {
+                          "label": "Access Control Allow origin name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Origin",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowOriginName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowOriginName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                        },
+                        {
+                          "label": "Access Control Allow origin value filter",
+                          "type": "text",
+                          "default": "*",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowOriginValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowOriginValue",
+                          "description": "Value, suggested default is: *"
+                        },
+                        {
+                          "label": "Access Control Allow methods name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Methods",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowMethodsName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowMethodsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                        },
+                        {
+                          "label": "Access Control Allow methods value filter",
+                          "type": "text",
+                          "default": "GET, POST, OPTIONS, PUT",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowMethodsValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowMethodsValue",
+                          "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                        },
+                        {
+                          "label": "Access Control Allow headers name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Headers",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowHeadersName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowHeadersName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                        },
+                        {
+                          "label": "Access Control Allow origin headers value filter",
+                          "type": "text",
+                          "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowHeadersValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowHeadersValue",
+                          "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                        },
+                        {
+                          "label": "Access Control Allow credentials name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Credentials",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowCredentialsName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowCredentialsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                        },
+                        {
+                          "label": "Access Control Allow credentials value filter",
+                          "type": "checkbox",
+                          "checked": true,
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
+                          "description": "Value, suggested default is: true "
+                        },
+                        {
+                          "label": "Access Control Max Age name filter",
+                          "type": "text",
+                          "default": "Access-Control-Max-Age",
+                          "jsonPath": "$.spec.objects.servers[*].cors.maxAgeName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.maxAgeName",
+                          "description": "Name, suggested default is: Access-Control-Max-Age"
+                        },
+                        {
+                          "label": "Access Control Max Age value filter",
+                          "type": "integer",
+                          "default": "1",
+                          "jsonPath": "$.spec.objects.servers[*].cors.maxAgeValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.maxAgeValue",
+                          "description": "Value, suggested default is: 1"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -2351,6 +2621,141 @@
                       "type": "text",
                       "jsonPath": "$.spec.objects.dashbuilder.ssoClient.hostnameHTTPS",
                       "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
+                    }
+                  ]
+                },
+                {
+                  "label": "CORS Filters configuration",
+                  "type": "dropDown",
+                  "required": false,
+                  "jsonPath": "",
+                  "default": "default",
+                  "options": [
+                    {
+                      "value": "default",
+                      "label": "Default configuration"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "default",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "default",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Enable CORS with Default values",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.default",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.default",
+                          "description": "Configure CORS with default values and skip manual configuration"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "custom",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "custom",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Filters",
+                          "type": "text",
+                          "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.filters",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.filters",
+                          "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                        },
+                        {
+                          "label": "Access Control Allow origin name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Origin",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowOriginName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowOriginName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                        },
+                        {
+                          "label": "Access Control Allow origin value filter",
+                          "type": "text",
+                          "default": "*",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowOriginValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowOriginValue",
+                          "description": "Value, suggested default is: *"
+                        },
+                        {
+                          "label": "Access Control Allow methods name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Methods",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                        },
+                        {
+                          "label": "Access Control Allow methods value filter",
+                          "type": "text",
+                          "default": "GET, POST, OPTIONS, PUT",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsValue",
+                          "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                        },
+                        {
+                          "label": "Access Control Allow headers name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Headers",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                        },
+                        {
+                          "label": "Access Control Allow origin headers value filter",
+                          "type": "text",
+                          "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersValue",
+                          "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                        },
+                        {
+                          "label": "Access Control Allow credentials name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Credentials",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                        },
+                        {
+                          "label": "Access Control Allow credentials value filter",
+                          "type": "checkbox",
+                          "checked": true,
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
+                          "description": "Value, suggested default is: true "
+                        },
+                        {
+                          "label": "Access Control Max Age name filter",
+                          "type": "text",
+                          "default": "Access-Control-Max-Age",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.maxAgeName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.maxAgeName",
+                          "description": "Name, suggested default is: Access-Control-Max-Age"
+                        },
+                        {
+                          "label": "Access Control Max Age value filter",
+                          "type": "integer",
+                          "default": "1",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.maxAgeValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.maxAgeValue",
+                          "description": "Value, suggested default is: 1"
+                        }
+                      ]
                     }
                   ]
                 }

@@ -144,15 +144,17 @@ type KieServerSet struct {
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
 type ConsoleObject struct {
 	KieAppObject `json:",inline"`
-	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
-	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm          *JvmObject      `json:"jvm,omitempty"`
-	PvSize       string          `json:"pvSize,omitempty"`
+	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
+	GitHooks     *GitHooksVolume    `json:"gitHooks,omitempty"`
+	Jvm          *JvmObject         `json:"jvm,omitempty"`
+	PvSize       string             `json:"pvSize,omitempty"`
+	Cors         *CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -161,6 +163,7 @@ type DashbuilderObject struct {
 	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
 	Jvm          *JvmObject         `json:"jvm,omitempty"`
 	Config       *DashbuilderConfig `json:"config,omitempty"`
+	Cors         *CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // SmartRouterObject configuration of the RHPAM smart router
@@ -648,21 +651,22 @@ type TemplateConstants struct {
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	OmitImageStream     bool           `json:"omitImageStream"`
-	SSOAuthClient       SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name                string         `json:"name,omitempty"`
-	Replicas            int32          `json:"replicas,omitempty"`
-	ImageContext        string         `json:"imageContext,omitempty"`
-	Image               string         `json:"image,omitempty"`
-	ImageTag            string         `json:"imageTag,omitempty"`
-	ImageURL            string         `json:"imageURL,omitempty"`
-	KeystoreSecret      string         `json:"keystoreSecret,omitempty"`
-	GitHooks            GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm                 JvmObject      `json:"jvm,omitempty"`
-	StorageClassName    string         `json:"storageClassName,omitempty"`
-	PvSize              string         `json:"pvSize,omitempty"`
-	Simplified          bool           `json:"simplifed"`
-	DashbuilderLocation string         `json:"dashbuilderLocation,omitempty"`
+	OmitImageStream     bool              `json:"omitImageStream"`
+	SSOAuthClient       SSOAuthClient     `json:"ssoAuthClient,omitempty"`
+	Name                string            `json:"name,omitempty"`
+	Replicas            int32             `json:"replicas,omitempty"`
+	ImageContext        string            `json:"imageContext,omitempty"`
+	Image               string            `json:"image,omitempty"`
+	ImageTag            string            `json:"imageTag,omitempty"`
+	ImageURL            string            `json:"imageURL,omitempty"`
+	KeystoreSecret      string            `json:"keystoreSecret,omitempty"`
+	GitHooks            GitHooksVolume    `json:"gitHooks,omitempty"`
+	Jvm                 JvmObject         `json:"jvm,omitempty"`
+	StorageClassName    string            `json:"storageClassName,omitempty"`
+	PvSize              string            `json:"pvSize,omitempty"`
+	Simplified          bool              `json:"simplifed"`
+	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
+	Cors                CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -689,6 +693,7 @@ type ServerTemplate struct {
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -706,6 +711,7 @@ type DashbuilderTemplate struct {
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
 	Config           DashbuilderConfig `json:"config,omitempty"`
+	Cors             CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // DashbuilderConfig holds all configurations that can be applied to the Dashbuilder env
@@ -1010,6 +1016,39 @@ type KafkaJBPMEventEmittersObject struct {
 	TasksTopicName string `json:"tasksTopicName,omitempty"`
 	// The topic name for cases event messages. Set up to override the default value jbpm-cases-events.
 	CasesTopicName string `json:"casesTopicName,omitempty"`
+}
+
+// CORS Cross Origin Resource Sharing configuration to be used by the KieApp for the KIE Server, workbench and RHPAM Dashbuilder
+type CORSFiltersObject struct {
+	//Enable CORS setting with the default values, default is false
+	Default bool `json:"default,omitempty"`
+	//Access control Response Headers Filters separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE
+	Filters string `json:"filters,omitempty"`
+
+	//Access Control Origin Response Header Filter Header Name, default is Access-Control-Allow-Origin
+	AllowOriginName string `json:"allowOriginName,omitempty"`
+	//Access Control Origin Response Header  Filter Header Value, default is: *
+	AllowOriginValue string `json:"allowOriginValue,omitempty"`
+
+	//Access Control Allow Methods Response Header Filter Header Name, default is: Access-Control-Allow-Methods
+	AllowMethodsName string `json:"allowMethodsName,omitempty"`
+	//Access Control Allow Methods Response Headers Filter Header Value, default is: GET, POST, OPTIONS, PUT
+	AllowMethodsValue string `json:"allowMethodsValue,omitempty"`
+
+	//Access Control Allow Headers Filter Header Name, default is: Access-Control-Allow-Headers
+	AllowHeadersName string `json:"allowHeadersName,omitempty"`
+	//Access Control Allow Headers Filter Header Value, default is: Accept, Authorization, Content-Type, X-Requested-With
+	AllowHeadersValue string `json:"allowHeadersValue,omitempty"`
+
+	//Access Control Allow Credentials Filter Header Name, default is: Access-Control-Allow-Credentials
+	AllowCredentialsName string `json:"allowCredentialsName,omitempty"`
+	//Access Control Allow Credentials Filter Header Value, default is: true
+	AllowCredentialsValue *bool `json:"allowCredentialsValue,omitempty"`
+
+	//Access Control Max Age Filter Header Name, default is: Access-Control-Max-Age
+	MaxAgeName string `json:"maxAgeName,omitempty"`
+	//Access Control Max Age Filter Header Value, default is: 1
+	MaxAgeValue *int32 `json:"maxAgeValue,omitempty"`
 }
 
 func init() {

@@ -267,6 +267,54 @@ console:
                     value: "[[.Console.Jvm.GcContainerOptions]]"
                   #[[end]]
                   ## Jvm config END
+                  ## CORS BEGIN
+                  #[[if .Console.Cors]]
+                    #[[if .Console.Cors.Filters]]
+                  - name: FILTERS
+                    value: "[[.Console.Cors.Filters]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowOriginName]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowOriginName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowOriginValue]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowOriginValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowMethodsName]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowMethodsName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowMethodsValue]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowMethodsValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowHeadersName]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowHeadersName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowHeadersValue]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowHeadersValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowCredentialsName]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowCredentialsName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowCredentialsValue]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowCredentialsValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.MaxAgeName]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.MaxAgeName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.MaxAgeValue]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.MaxAgeValue]]"
+                    #[[end]]
+                  #[[end]]
+                  ## CORS END
                 volumeMounts:
                   #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
@@ -1003,6 +1051,54 @@ servers:
                       #[[end]]
                     #[[end]]
                     ## JBPM Kafka Emitter END
+                    ## CORS BEGIN
+                    #[[if .Cors]]
+                      #[[if .Cors.Filters]]
+                    - name: FILTERS
+                      value: "[[.Cors.Filters]]"
+                      #[[end]]
+                      #[[if .Cors.AllowOriginName]]
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowOriginName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowOriginValue]]
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowOriginValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowMethodsName]]
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowMethodsName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowMethodsValue]]
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowMethodsValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowHeadersName]]
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowHeadersName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowHeadersValue]]
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowHeadersValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowCredentialsName]]
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowCredentialsName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowCredentialsValue]]
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowCredentialsValue]]"
+                      #[[end]]
+                      #[[if .Cors.MaxAgeName]]
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.MaxAgeName]]"
+                      #[[end]]
+                      #[[if .Cors.MaxAgeValue]]
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.MaxAgeValue]]"
+                      #[[end]]
+                  #[[end]]
+                  ## CORS END
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

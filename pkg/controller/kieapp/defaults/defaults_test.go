@@ -2184,6 +2184,7 @@ func TestConstructConsoleObject(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Console.Replicas)
+	assert.Nil(t, cr.Status.Applied.Objects.Console.Cors)
 
 	cr.Spec.Objects = api.KieAppObjects{Console: &api.ConsoleObject{}}
 	env, err = GetEnvironment(cr, test.MockService())
@@ -2235,6 +2236,7 @@ func TestConstructDashbuilderObject(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
 	assert.Equal(t, Pint32(1), cr.Status.Applied.Objects.Dashbuilder.Replicas)
+	assert.Nil(t, cr.Status.Applied.Objects.Dashbuilder.Cors)
 
 	cr.Spec.Objects = api.KieAppObjects{Dashbuilder: &api.DashbuilderObject{}}
 	env, err = GetEnvironment(cr, test.MockService())
@@ -2305,6 +2307,7 @@ func TestConstructServerObject(t *testing.T) {
 		assert.NotNil(t, cr.Status.Applied.Objects.Servers)
 		assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Replicas)
 		assert.Equal(t, cr.Spec.Objects.Servers[0].Resources, cr.Status.Applied.Objects.Servers[0].Resources)
+		assert.Nil(t, cr.Status.Applied.Objects.Servers[0].Cors)
 
 		env = ConsolidateObjects(env, cr)
 		assert.Equal(t, fmt.Sprintf("%s-kieserver", name), env.Servers[0].DeploymentConfigs[0].Name)
@@ -6618,4 +6621,187 @@ func getRouteAnnotations(routeDescription string) map[string]string {
 	routeAnnotation[routeBalanceAnnotation] = "source"
 	routeAnnotation["haproxy.router.openshift.io/timeout"] = "60s"
 	return routeAnnotation
+}
+
+func getPartialCors() *api.CORSFiltersObject {
+	return &api.CORSFiltersObject{
+		Filters:          "AC_ALLOW_ORIGIN",
+		AllowOriginName:  "Access-Control-Allow-Origin-custom-test",
+		AllowOriginValue: "custom-test-value",
+	}
+}
+
+func checkCors(t *testing.T, cors *api.CORSFiltersObject) {
+	assert.Equal(t, cors.Filters, constants.ACFilters)
+	assert.Equal(t, cors.AllowOriginName, "Access-Control-Allow-Origin")
+	assert.Equal(t, cors.AllowOriginValue, "*")
+	assert.Equal(t, cors.AllowMethodsName, "Access-Control-Allow-Methods")
+	assert.Equal(t, cors.AllowMethodsValue, "GET, POST, OPTIONS, PUT")
+	assert.Equal(t, cors.AllowHeadersName, "Access-Control-Allow-Headers")
+	assert.Equal(t, cors.AllowHeadersValue, "Accept, Authorization, Content-Type, X-Requested-With")
+	assert.Equal(t, cors.AllowCredentialsName, "Access-Control-Allow-Credentials")
+	assert.True(t, *cors.AllowCredentialsValue)
+	assert.Equal(t, cors.MaxAgeName, "Access-Control-Max-Age")
+	assert.Equal(t, cors.MaxAgeValue, Pint32(1))
+}
+
+func checkCustomCors(t *testing.T, cors *api.CORSFiltersObject) {
+	assert.Equal(t, cors.Filters, "AC_ALLOW_ORIGIN")
+	checkCustomAcAllowOrigin(t, cors)
+	assert.Empty(t, cors.AllowMethodsName)
+	assert.Empty(t, cors.AllowMethodsValue)
+
+}
+
+func checkCustomAcAllowOrigin(t *testing.T, cors *api.CORSFiltersObject) {
+	assert.Equal(t, cors.AllowOriginName, "Access-Control-Allow-Origin-custom-test")
+	assert.Equal(t, cors.AllowOriginValue, "custom-test-value")
+}
+
+func checkConsoleCORSAssertions(t *testing.T, cr *api.KieApp, env api.Environment) {
+	corsEnabled := isCORSEnabled(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	assert.True(t, corsEnabled)
+	assert.NotNil(t, cr.Spec.Objects.Console)
+	cors := cr.Status.Applied.Objects.Console.Cors
+	assert.NotNil(t, cors)
+	checkCors(t, cors)
+}
+
+func checkConsoleCustomCORSAssertions(t *testing.T, cr *api.KieApp, env api.Environment) {
+	corsEnabled := isCORSEnabled(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	assert.True(t, corsEnabled)
+	assert.NotNil(t, cr.Spec.Objects.Console)
+	cors := cr.Status.Applied.Objects.Console.Cors
+	assert.NotNil(t, cors)
+	checkCustomCors(t, cors)
+}
+
+func checkEnvCORSAssertions(t *testing.T, env []corev1.EnvVar) {
+	corsEnabled := isCORSEnabled(env)
+	assert.True(t, corsEnabled)
+}
+
+func isCORSEnabled(envs []corev1.EnvVar) bool {
+	corsEnabled := false
+	for _, env := range envs {
+		if strings.HasPrefix(env.Name, "AC_ALLOW") || strings.HasPrefix(env.Name, "FILTERS") {
+			if env.Name == "FILTERS" && len(env.Value) > 9 { //AC_ALLOW_
+				corsEnabled = true
+			} else if env.Name != "FILTERS" && env.Value != "<nil>" && len(env.Value) > 1 {
+				corsEnabled = true
+			}
+		}
+	}
+	return corsEnabled
+}
+
+func TestEnvironmentWithCORS(t *testing.T) {
+	const name = "test-cors"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					Cors: &api.CORSFiltersObject{Default: true},
+				},
+				Servers: []api.KieServerSet{
+					{
+						Cors: &api.CORSFiltersObject{Default: true},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting test-cors Test environment")
+	assert.NotNil(t, env)
+	assert.Len(t, cr.Spec.Objects.Servers, 1)
+	checkEnvCORSAssertions(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	cors := cr.Status.Applied.Objects.Servers[0].Cors
+	assert.NotNil(t, cors)
+	checkCors(t, cors)
+	checkConsoleCORSAssertions(t, cr, env)
+}
+
+func TestEnvironmentWithPartialCORS(t *testing.T) {
+	const name = "test-cors"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					Cors: getPartialCors(),
+				},
+				Servers: []api.KieServerSet{
+					{
+						Cors: getPartialCors(),
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting test-cors Test environment")
+	assert.NotNil(t, env)
+	checkEnvCORSAssertions(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	cors := cr.Status.Applied.Objects.Servers[0].Cors
+	assert.NotNil(t, cors)
+	checkCustomCors(t, cors)
+	checkConsoleCustomCORSAssertions(t, cr, env)
+}
+
+func TestDashbuilderWithCORS(t *testing.T) {
+	const name = "test-cors-dashbuilder"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Cors: &api.CORSFiltersObject{Default: true},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting test-cors-dashbuilder Test environment")
+	assert.NotNil(t, env)
+	assert.NotNil(t, cr.Spec.Objects.Dashbuilder)
+	checkEnvCORSAssertions(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	cors := cr.Status.Applied.Objects.Dashbuilder.Cors
+	assert.NotNil(t, cors)
+	checkCors(t, cors)
+}
+
+func TestDashbuilderWithPartialCORS(t *testing.T) {
+	const name = "test-cors-dashbuilder"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					Cors: getPartialCors(),
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting test-cors-dashbuilder Test environment")
+	assert.NotNil(t, env)
+	assert.NotNil(t, cr.Spec.Objects.Dashbuilder)
+	checkEnvCORSAssertions(t, env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	cors := cr.Status.Applied.Objects.Dashbuilder.Cors
+	assert.NotNil(t, cors)
+	checkCustomCors(t, cors)
 }
