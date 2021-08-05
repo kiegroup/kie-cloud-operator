@@ -5,7 +5,7 @@ metadata:
   annotations:
     consoleName: snippet-common-config-controller_based_startup_strategy
     consoleTitle: Use Controller Startup Strategy rather than OpenShift's
-    consoleDesc: Use this snippet to specify common configs
+    consoleDesc: Use this snippet to switch the to the Controller Startup Strategy
     consoleSnippet: true
 spec:
   commonConfig:
