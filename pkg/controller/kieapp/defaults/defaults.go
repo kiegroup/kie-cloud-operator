@@ -460,6 +460,20 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		if cr.Status.Applied.Objects.Console.Cors != nil {
 			template.Cors = *cr.Status.Applied.Objects.Console.Cors
 		}
+
+		// Console StartupStrategy
+		if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName == api.OpenshiftStartupStrategy || cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName == api.ControllerStartupStrategy {
+
+			template.StartupStrategy.StrategyName = cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName
+
+			if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName == api.OpenshiftStartupStrategy {
+				if cr.Status.Applied.CommonConfig.StartupStrategy.ControllerTemplateCacheTTL != nil {
+					template.StartupStrategy.ControllerTemplateCacheTTL = cr.Status.Applied.CommonConfig.StartupStrategy.ControllerTemplateCacheTTL
+				} else {
+					template.StartupStrategy.ControllerTemplateCacheTTL = Pint(5000)
+				}
+			}
+		}
 	}
 	return template
 }
@@ -739,6 +753,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				PersistRepos:     serverSet.PersistRepos,
 				ServersM2PvSize:  serverSet.ServersM2PvSize,
 				ServersKiePvSize: serverSet.ServersKiePvSize,
+				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -824,6 +839,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			getCORSConfig(serverSet.Cors)
 			if serverSet.Cors != nil {
 				template.Cors = serverSet.Cors
+			}
+
+			if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName != "" {
+				template.StartupStrategy.StrategyName = cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName
+			} else {
+				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
 			}
 
 			servers = append(servers, template)
@@ -1346,6 +1367,10 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	if len(specApply.CommonConfig.AdminUser) == 0 {
 		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
+	}
+
+	if specApply.CommonConfig.StartupStrategy == nil {
+		specApply.CommonConfig.StartupStrategy = &api.StartupStrategy{StrategyName: api.OpenshiftStartupStrategy, ControllerTemplateCacheTTL: Pint(5000)}
 	}
 	if len(specApply.Objects.Servers) == 0 {
 		specApply.Objects.Servers = []api.KieServerSet{{Deployments: Pint(constants.DefaultKieDeployments)}}
