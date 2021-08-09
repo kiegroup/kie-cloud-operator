@@ -393,7 +393,6 @@ dashbuilder:
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         annotations:
           description: All the Dashbuilder web server's ports.
-  ## TODO update dashbuilder routes
   routes:
     - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.RouteProtocol]]"
       metadata:
@@ -409,7 +408,7 @@ dashbuilder:
           haproxy.router.openshift.io/balance: source
           #[[end]]
       spec:
-        host: ""
+        host: "[[.Dashbuilder.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:

@@ -587,16 +587,16 @@ spec:
                             type: string
                         type: object
                       image:
-                        description: The image to use e.g. rhpam-<app>-rhel8, this
-                          param is optional for custom image.
+                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                          this param is optional for custom image.
                         type: string
                       imageContext:
-                        description: The image context to use  e.g. rhpam-7, this
-                          param is optional for custom image.
+                        description: ImageContext The image context to use  e.g. rhpam-7,
+                          this param is optional for custom image.
                         type: string
                       imageTag:
-                        description: The image tag to use e.g. 7.9.0, this param is
-                          optional for custom image.
+                        description: ImageTag The image tag to use e.g. 7.9.0, this
+                          param is optional for custom image.
                         type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
@@ -698,7 +698,7 @@ spec:
                             type: string
                         type: object
                       keystoreSecret:
-                        description: Keystore secret name
+                        description: KeystoreSecret secret name
                         type: string
                       pvSize:
                         type: string
@@ -734,6 +734,10 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                             type: object
                         type: object
+                      routeHostname:
+                        description: RouteHostname will define the route.spec.host
+                          value
+                        type: string
                       ssoClient:
                         description: SSOAuthClient Auth client to use for the SSO
                           integration
@@ -753,7 +757,7 @@ spec:
                             type: string
                         type: object
                       storageClassName:
-                        description: The storageClassName to use
+                        description: StorageClassName The storageClassName to use
                         type: string
                     type: object
                   dashbuilder:
@@ -1036,16 +1040,16 @@ spec:
                           type: object
                         type: array
                       image:
-                        description: The image to use e.g. rhpam-<app>-rhel8, this
-                          param is optional for custom image.
+                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                          this param is optional for custom image.
                         type: string
                       imageContext:
-                        description: The image context to use  e.g. rhpam-7, this
-                          param is optional for custom image.
+                        description: ImageContext The image context to use  e.g. rhpam-7,
+                          this param is optional for custom image.
                         type: string
                       imageTag:
-                        description: The image tag to use e.g. 7.9.0, this param is
-                          optional for custom image.
+                        description: ImageTag The image tag to use e.g. 7.9.0, this
+                          param is optional for custom image.
                         type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
@@ -1147,7 +1151,7 @@ spec:
                             type: string
                         type: object
                       keystoreSecret:
-                        description: Keystore secret name
+                        description: KeystoreSecret secret name
                         type: string
                       replicas:
                         description: Replicas to set for the DeploymentConfig
@@ -1181,6 +1185,10 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                             type: object
                         type: object
+                      routeHostname:
+                        description: RouteHostname will define the route.spec.host
+                          value
+                        type: string
                       ssoClient:
                         description: SSOAuthClient Auth client to use for the SSO
                           integration
@@ -1200,7 +1208,7 @@ spec:
                             type: string
                         type: object
                       storageClassName:
-                        description: The storageClassName to use
+                        description: StorageClassName The storageClassName to use
                         type: string
                     type: object
                   processMigration:
@@ -1296,6 +1304,8 @@ spec:
                       imageTag:
                         description: The image tag to use for Process Instance Migration
                           e.g. 7.9.0, this param is optional for custom image.
+                        type: string
+                      routeHostname:
                         type: string
                     type: object
                   servers:
@@ -1875,16 +1885,16 @@ spec:
                           description: Server ID
                           type: string
                         image:
-                          description: The image to use e.g. rhpam-<app>-rhel8, this
-                            param is optional for custom image.
+                          description: Image The image to use e.g. rhpam-<app>-rhel8,
+                            this param is optional for custom image.
                           type: string
                         imageContext:
-                          description: The image context to use  e.g. rhpam-7, this
-                            param is optional for custom image.
+                          description: ImageContext The image context to use  e.g.
+                            rhpam-7, this param is optional for custom image.
                           type: string
                         imageTag:
-                          description: The image tag to use e.g. 7.9.0, this param
-                            is optional for custom image.
+                          description: ImageTag The image tag to use e.g. 7.9.0, this
+                            param is optional for custom image.
                           type: string
                         jbpmCluster:
                           description: JbpmCluster Enable the KIE Server Jbpm clustering
@@ -2159,7 +2169,7 @@ spec:
                               type: string
                           type: object
                         keystoreSecret:
-                          description: Keystore secret name
+                          description: KeystoreSecret secret name
                           type: string
                         name:
                           description: Server name
@@ -2198,6 +2208,10 @@ spec:
                                 value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                               type: object
                           type: object
+                        routeHostname:
+                          description: RouteHostname will define the route.spec.host
+                            value
+                          type: string
                         serversKiePvSize:
                           type: string
                         serversM2PvSize:
@@ -2221,7 +2235,7 @@ spec:
                               type: string
                           type: object
                         storageClassName:
-                          description: The storageClassName to use
+                          description: StorageClassName The storageClassName to use
                           type: string
                       type: object
                     type: array
@@ -2342,16 +2356,16 @@ spec:
                           type: object
                         type: array
                       image:
-                        description: The image to use e.g. rhpam-<app>-rhel8, this
-                          param is optional for custom image.
+                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                          this param is optional for custom image.
                         type: string
                       imageContext:
-                        description: The image context to use  e.g. rhpam-7, this
-                          param is optional for custom image.
+                        description: ImageContext The image context to use  e.g. rhpam-7,
+                          this param is optional for custom image.
                         type: string
                       imageTag:
-                        description: The image tag to use e.g. 7.9.0, this param is
-                          optional for custom image.
+                        description: ImageTag The image tag to use e.g. 7.9.0, this
+                          param is optional for custom image.
                         type: string
                       jvm:
                         description: JvmObject JVM specification to be used by the
@@ -2453,7 +2467,7 @@ spec:
                             type: string
                         type: object
                       keystoreSecret:
-                        description: Keystore secret name
+                        description: KeystoreSecret secret name
                         type: string
                       protocol:
                         description: Smart Router protocol, if no value is provided,
@@ -2494,8 +2508,12 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                             type: object
                         type: object
+                      routeHostname:
+                        description: RouteHostname will define the route.spec.host
+                          value
+                        type: string
                       storageClassName:
-                        description: The storageClassName to use
+                        description: StorageClassName The storageClassName to use
                         type: string
                       useExternalRoute:
                         description: If enabled, Business Central will use the external
@@ -3097,16 +3115,16 @@ spec:
                                 type: string
                             type: object
                           image:
-                            description: The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel8,
                               this param is optional for custom image.
                             type: string
                           imageContext:
-                            description: The image context to use  e.g. rhpam-7, this
-                              param is optional for custom image.
+                            description: ImageContext The image context to use  e.g.
+                              rhpam-7, this param is optional for custom image.
                             type: string
                           imageTag:
-                            description: The image tag to use e.g. 7.9.0, this param
-                              is optional for custom image.
+                            description: ImageTag The image tag to use e.g. 7.9.0,
+                              this param is optional for custom image.
                             type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
@@ -3209,7 +3227,7 @@ spec:
                                 type: string
                             type: object
                           keystoreSecret:
-                            description: Keystore secret name
+                            description: KeystoreSecret secret name
                             type: string
                           pvSize:
                             type: string
@@ -3245,6 +3263,10 @@ spec:
                                   value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                                 type: object
                             type: object
+                          routeHostname:
+                            description: RouteHostname will define the route.spec.host
+                              value
+                            type: string
                           ssoClient:
                             description: SSOAuthClient Auth client to use for the
                               SSO integration
@@ -3264,7 +3286,8 @@ spec:
                                 type: string
                             type: object
                           storageClassName:
-                            description: The storageClassName to use
+                            description: StorageClassName The storageClassName to
+                              use
                             type: string
                         type: object
                       dashbuilder:
@@ -3553,16 +3576,16 @@ spec:
                               type: object
                             type: array
                           image:
-                            description: The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel8,
                               this param is optional for custom image.
                             type: string
                           imageContext:
-                            description: The image context to use  e.g. rhpam-7, this
-                              param is optional for custom image.
+                            description: ImageContext The image context to use  e.g.
+                              rhpam-7, this param is optional for custom image.
                             type: string
                           imageTag:
-                            description: The image tag to use e.g. 7.9.0, this param
-                              is optional for custom image.
+                            description: ImageTag The image tag to use e.g. 7.9.0,
+                              this param is optional for custom image.
                             type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
@@ -3665,7 +3688,7 @@ spec:
                                 type: string
                             type: object
                           keystoreSecret:
-                            description: Keystore secret name
+                            description: KeystoreSecret secret name
                             type: string
                           replicas:
                             description: Replicas to set for the DeploymentConfig
@@ -3699,6 +3722,10 @@ spec:
                                   value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                                 type: object
                             type: object
+                          routeHostname:
+                            description: RouteHostname will define the route.spec.host
+                              value
+                            type: string
                           ssoClient:
                             description: SSOAuthClient Auth client to use for the
                               SSO integration
@@ -3718,7 +3745,8 @@ spec:
                                 type: string
                             type: object
                           storageClassName:
-                            description: The storageClassName to use
+                            description: StorageClassName The storageClassName to
+                              use
                             type: string
                         type: object
                       processMigration:
@@ -3816,6 +3844,8 @@ spec:
                             description: The image tag to use for Process Instance
                               Migration e.g. 7.9.0, this param is optional for custom
                               image.
+                            type: string
+                          routeHostname:
                             type: string
                         type: object
                       servers:
@@ -4413,16 +4443,16 @@ spec:
                               description: Server ID
                               type: string
                             image:
-                              description: The image to use e.g. rhpam-<app>-rhel8,
+                              description: Image The image to use e.g. rhpam-<app>-rhel8,
                                 this param is optional for custom image.
                               type: string
                             imageContext:
-                              description: The image context to use  e.g. rhpam-7,
-                                this param is optional for custom image.
+                              description: ImageContext The image context to use  e.g.
+                                rhpam-7, this param is optional for custom image.
                               type: string
                             imageTag:
-                              description: The image tag to use e.g. 7.9.0, this param
-                                is optional for custom image.
+                              description: ImageTag The image tag to use e.g. 7.9.0,
+                                this param is optional for custom image.
                               type: string
                             jbpmCluster:
                               description: JbpmCluster Enable the KIE Server Jbpm
@@ -4709,7 +4739,7 @@ spec:
                                   type: string
                               type: object
                             keystoreSecret:
-                              description: Keystore secret name
+                              description: KeystoreSecret secret name
                               type: string
                             name:
                               description: Server name
@@ -4748,6 +4778,10 @@ spec:
                                     an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                                   type: object
                               type: object
+                            routeHostname:
+                              description: RouteHostname will define the route.spec.host
+                                value
+                              type: string
                             serversKiePvSize:
                               type: string
                             serversM2PvSize:
@@ -4772,7 +4806,8 @@ spec:
                                   type: string
                               type: object
                             storageClassName:
-                              description: The storageClassName to use
+                              description: StorageClassName The storageClassName to
+                                use
                               type: string
                           type: object
                         type: array
@@ -4894,16 +4929,16 @@ spec:
                               type: object
                             type: array
                           image:
-                            description: The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel8,
                               this param is optional for custom image.
                             type: string
                           imageContext:
-                            description: The image context to use  e.g. rhpam-7, this
-                              param is optional for custom image.
+                            description: ImageContext The image context to use  e.g.
+                              rhpam-7, this param is optional for custom image.
                             type: string
                           imageTag:
-                            description: The image tag to use e.g. 7.9.0, this param
-                              is optional for custom image.
+                            description: ImageTag The image tag to use e.g. 7.9.0,
+                              this param is optional for custom image.
                             type: string
                           jvm:
                             description: JvmObject JVM specification to be used by
@@ -5006,7 +5041,7 @@ spec:
                                 type: string
                             type: object
                           keystoreSecret:
-                            description: Keystore secret name
+                            description: KeystoreSecret secret name
                             type: string
                           protocol:
                             description: Smart Router protocol, if no value is provided,
@@ -5047,8 +5082,13 @@ spec:
                                   value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                                 type: object
                             type: object
+                          routeHostname:
+                            description: RouteHostname will define the route.spec.host
+                              value
+                            type: string
                           storageClassName:
-                            description: The storageClassName to use
+                            description: StorageClassName The storageClassName to
+                              use
                             type: string
                           useExternalRoute:
                             description: If enabled, Business Central will use the

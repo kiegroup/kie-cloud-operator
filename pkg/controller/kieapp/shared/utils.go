@@ -8,12 +8,16 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	kvalidation "k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"math/big"
 	"math/rand"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
+
 	"github.com/pavel-v-chernykh/keystore-go/v4"
 	"github.com/prometheus/common/log"
 	corev1 "k8s.io/api/core/v1"
@@ -306,4 +310,28 @@ func Find(slice []string, val string) (int, bool) {
 		}
 	}
 	return -1, false
+}
+
+// ValidateRouteHostname validates the hostname provided by the user
+// see: https://github.com/openshift/router/blob/release-4.6/pkg/router/controller/unique_host.go#L231
+func ValidateRouteHostname(r string) field.ErrorList {
+	specPath := field.NewPath("spec")
+	hostPath := specPath.Child("host")
+	result := field.ErrorList{}
+	if len(r) < 1 {
+		log.Debugf("%s is empty, no custom hostname will be configured", hostPath)
+		return result
+	}
+
+	if len(kvalidation.IsDNS1123Subdomain(r)) != 0 {
+		result = append(result, field.Invalid(hostPath, r, "host must conform to DNS 952 subdomain conventions"))
+	}
+	segments := strings.Split(r, ".")
+	for _, s := range segments {
+		errs := kvalidation.IsDNS1123Label(s)
+		for _, e := range errs {
+			result = append(result, field.Invalid(hostPath, r, e))
+		}
+	}
+	return result
 }

@@ -6796,6 +6796,7 @@ func TestDashbuilderWithPartialCORS(t *testing.T) {
 			},
 		},
 	}
+
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting test-cors-dashbuilder Test environment")
 	assert.NotNil(t, env)
@@ -6900,4 +6901,164 @@ func checkConsoleControllerStrategyAssertions(t *testing.T, cr *api.KieApp) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.NotNil(t, env)
 	assert.Equal(t, "false", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED"))
+}
+
+func TestRhpamTrialInvalidRouteHostname(t *testing.T) {
+
+	cr := getRhpamTrialRouteHostnameWithCR(
+		"server-test random,123.st.com",
+		"console-test random,123.st.com",
+		"dashbuilder-test random,123.st.com",
+		"dashbuilder-test random,123.st.com",
+		"process-migration-test random,123.st.com")
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestRhpamTrialInvalidRouteHostname environment")
+
+	assertRouteHostnameEmpty(t, env)
+	assert.Empty(t, env.ProcessMigration.Routes[0].Spec.Host)
+}
+
+func TestRhpamTrialValidRouteHostname(t *testing.T) {
+
+	cr := getRhpamTrialRouteHostnameWithCR(
+		"server-my-custom-route.openshift.com",
+		"console-my-custom-route.openshift.com",
+		"dashbuilder-my-custom-route.openshift.com",
+		"smartrouter-my-custom-route.openshift.com",
+		"process-migration-my-custom-route.openshift.com")
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestRhpamTrialValidRouteHostname environment")
+	assert.Equal(t, "server-my-custom-route.openshift.com", env.Servers[0].Routes[0].Spec.Host)
+	assert.Equal(t, "console-my-custom-route.openshift.com", env.Console.Routes[0].Spec.Host)
+	assert.Equal(t, "smartrouter-my-custom-route.openshift.com", env.SmartRouter.Routes[0].Spec.Host)
+	assert.Equal(t, "dashbuilder-my-custom-route.openshift.com", env.Dashbuilder.Routes[0].Spec.Host)
+	assert.Equal(t, "process-migration-my-custom-route.openshift.com", env.ProcessMigration.Routes[0].Spec.Host)
+}
+
+func TestRhpamTrialInvalidRouteHostnameUsingEnvs(t *testing.T) {
+
+	cr := getRhpamTrialRouteHostnameWithEnv(
+		"server-test random,123.st.com",
+		"console-test random,123.st.com",
+		"dashbuilder-test random,123.st.com",
+		"smartrouter-test random,123.st.com")
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestRhpamTrialInvalidRouteHostnameUsingEnvs environment")
+	assertRouteHostnameEmpty(t, env)
+}
+
+func TestRhpamTrialValidRouteHostnameUsingEnvs(t *testing.T) {
+	cr := getRhpamTrialRouteHostnameWithEnv(
+		"server-env-var.test.com",
+		"console-env-var.test.com",
+		"dashbuilder-env-var.test.com",
+		"smartrouter-env-var.test.com")
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestRhpamTrialValidRouteHostnameUsingEnvs environment")
+	assert.Equal(t, "server-env-var.test.com", env.Servers[0].Routes[0].Spec.Host)
+	assert.Equal(t, "console-env-var.test.com", env.Console.Routes[0].Spec.Host)
+	assert.Equal(t, "smartrouter-env-var.test.com", env.SmartRouter.Routes[0].Spec.Host)
+	assert.Equal(t, "dashbuilder-env-var.test.com", env.Dashbuilder.Routes[0].Spec.Host)
+}
+
+func getRhpamTrialRouteHostnameWithCR(server string, console string, dash string, smartR string, processM string) *api.KieApp {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							RouteHostname: server,
+						},
+					},
+				},
+				Console: &api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						RouteHostname: console,
+					},
+				},
+				SmartRouter: createSmartRouter(),
+				Dashbuilder: &api.DashbuilderObject{
+					KieAppObject: api.KieAppObject{
+						RouteHostname: dash,
+					},
+				},
+				ProcessMigration: &api.ProcessMigrationObject{
+					RouteHostname: processM,
+				},
+			},
+		},
+	}
+	cr.Spec.Objects.SmartRouter.RouteHostname = smartR
+	return cr
+}
+
+func getRhpamTrialRouteHostnameWithEnv(server string, console string, dashB string, smartR string) *api.KieApp {
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						KieAppObject: api.KieAppObject{
+							Env: []corev1.EnvVar{
+								{
+									Name:  constants.ServersRouteEnv,
+									Value: server,
+								},
+							},
+						},
+					},
+				},
+				Console: &api.ConsoleObject{
+					KieAppObject: api.KieAppObject{
+						Env: []corev1.EnvVar{
+							{
+								Name:  constants.ConsoleRouteEnv,
+								Value: console,
+							},
+						},
+					},
+				},
+				SmartRouter: createSmartRouter(),
+				Dashbuilder: &api.DashbuilderObject{
+					KieAppObject: api.KieAppObject{
+						Env: []corev1.EnvVar{
+							{
+								Name:  constants.DashbuilderRouteEnv,
+								Value: dashB,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cr.Spec.Objects.SmartRouter.Env = []corev1.EnvVar{{
+		Name:  constants.SmartRouterRouteEnv,
+		Value: smartR,
+	}}
+
+	return cr
+}
+func assertRouteHostnameEmpty(t *testing.T, env api.Environment) {
+	assert.Empty(t, env.Servers[0].Routes[0].Spec.Host)
+	assert.Empty(t, env.Console.Routes[0].Spec.Host)
+	assert.Empty(t, env.SmartRouter.Routes[0].Spec.Host)
+	assert.Empty(t, env.Dashbuilder.Routes[0].Spec.Host)
 }

@@ -49,7 +49,7 @@ const (
 	RhpamAuthoring EnvironmentType = "rhpam-authoring"
 	// RhpamAuthoringHA RHPAM Authoring HA environment
 	RhpamAuthoringHA EnvironmentType = "rhpam-authoring-ha"
-	// RhpamDashbuilder RHPAM Standalone Dashbuilder environment
+	// RhpamStandaloneDashbuilder RHPAM Standalone Dashbuilder environment
 	RhpamStandaloneDashbuilder EnvironmentType = "rhpam-standalone-dashbuilder"
 	// RhdmTrial RHDM Trial environment
 	RhdmTrial EnvironmentType = "rhdm-trial"
@@ -261,16 +261,18 @@ type KieAppObject struct {
 	// Replicas to set for the DeploymentConfig
 	Replicas  *int32                       `json:"replicas,omitempty"`
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
-	// Keystore secret name
+	// KeystoreSecret secret name
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
-	// The image context to use  e.g. rhpam-7, this param is optional for custom image.
+	// ImageContext The image context to use  e.g. rhpam-7, this param is optional for custom image.
 	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use e.g. rhpam-<app>-rhel8, this param is optional for custom image.
+	// Image The image to use e.g. rhpam-<app>-rhel8, this param is optional for custom image.
 	Image string `json:"image,omitempty"`
-	// The image tag to use e.g. 7.9.0, this param is optional for custom image.
+	// ImageTag The image tag to use e.g. 7.9.0, this param is optional for custom image.
 	ImageTag string `json:"imageTag,omitempty"`
-	// The storageClassName to use
+	// StorageClassName The storageClassName to use
 	StorageClassName string `json:"storageClassName,omitempty"`
+	// RouteHostname will define the route.spec.host value
+	RouteHostname string `json:"routeHostname,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
@@ -663,6 +665,7 @@ type ConsoleTemplate struct {
 	GitHooks            GitHooksVolume    `json:"gitHooks,omitempty"`
 	Jvm                 JvmObject         `json:"jvm,omitempty"`
 	StorageClassName    string            `json:"storageClassName,omitempty"`
+	RouteHostname       string            `json:"routeHostname,omitempty"`
 	PvSize              string            `json:"pvSize,omitempty"`
 	Simplified          bool              `json:"simplifed"`
 	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
@@ -687,6 +690,7 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	RouteHostname    string            `json:"routeHostname,omitempty"`
 	PersistRepos     bool              `json:"persistRepos,omitempty"`
 	ServersM2PvSize  string            `json:"serversM2PvSize,omitempty"`
 	ServersKiePvSize string            `json:"serversKiePvSize,omitempty"`
@@ -712,6 +716,7 @@ type DashbuilderTemplate struct {
 	Database         DatabaseObject    `json:"database,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	RouteHostname    string            `json:"routeHostname,omitempty"`
 	Config           DashbuilderConfig `json:"config,omitempty"`
 	Cors             CORSFiltersObject `json:"cors,omitempty"`
 }
@@ -805,6 +810,7 @@ type SmartRouterTemplate struct {
 	ImageTag         string    `json:"imageTag,omitempty"`
 	ImageURL         string    `json:"imageURL,omitempty"`
 	StorageClassName string    `json:"storageClassName,omitempty"`
+	RouteHostname    string    `json:"routeHostname,omitempty"`
 	Jvm              JvmObject `json:"jvm,omitempty"`
 }
 
@@ -908,8 +914,9 @@ type ProcessMigrationObject struct {
 	// The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image.
 	Image string `json:"image,omitempty"`
 	// The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.
-	ImageTag string                         `json:"imageTag,omitempty"`
-	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	ImageTag      string                         `json:"imageTag,omitempty"`
+	Database      ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	RouteHostname string                         `json:"routeHostname,omitempty"`
 }
 
 // ProcessMigrationTemplate ...
@@ -921,6 +928,7 @@ type ProcessMigrationTemplate struct {
 	ImageURL         string                         `json:"imageURL,omitempty"`
 	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
 	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	RouteHostname    string                         `json:"routeHostname,omitempty"`
 }
 
 // KieServerClient ...

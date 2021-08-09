@@ -166,6 +166,24 @@ const (
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
 	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
+	// ClusterLabel for Kube_ping
+	ClusterLabel = "cluster"
+	// ClusterLabelPrefix for Kube_ping
+	ClusterLabelPrefix = "jgrp.k8s."
+	// KubeNS Env name
+	KubeNS         = "KUBERNETES_NAMESPACE"
+	KubeLabels     = "KUBERNETES_LABELS"
+	KafkaTopicsEnv = "KIE_SERVER_KAFKA_EXT_TOPICS"
+	// ConsoleRouteEnv for backwards compatibility with Application Templates
+	ConsoleRouteEnv = "BUSINESS_CENTRAL_HOSTNAME_HTTP"
+	// ServersRouteEnv for backwards compatibility with Application Templates
+	ServersRouteEnv = "KIE_SERVER_HOSTNAME_HTTP"
+	// SmartRouterRouteEnv for backwards compatibility with Application Templates
+	SmartRouterRouteEnv = "SMART_ROUTER_HOSTNAME_HTTP"
+	// DashbuilderRouteEnv for backwards compatibility, similar to Console and Servers
+	DashbuilderRouteEnv = "DASHBUILDER_HOSTNAME_HTTP"
+	// ACFilters Default filters for CORS
+	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 
 	relatedImageVar = "RELATED_IMAGE_"
 
@@ -265,20 +283,6 @@ const (
 
 	SUBCOMPONENT_TYPE_APP   = "application"
 	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
-
-	//Labels for Kube_ping
-	ClusterLabel       = "cluster"
-	ClusterLabelPrefix = "jgrp.k8s."
-
-	//Envs
-	KubeNS     = "KUBERNETES_NAMESPACE"
-	KubeLabels = "KUBERNETES_LABELS"
-
-	//Kafka
-	KafkaTopicsEnv = "KIE_SERVER_KAFKA_EXT_TOPICS"
-
-	//CORS
-	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
