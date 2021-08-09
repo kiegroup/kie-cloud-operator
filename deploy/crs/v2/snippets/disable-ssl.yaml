@@ -1,7 +1,7 @@
 apiVersion: app.kiegroup.org/v2
 kind: KieApp
 metadata:
-  name: common-config
+  name: disble-ssl
   annotations:
     consoleName: snippet-disable-ssl
     consoleTitle: Use plain text HTTP Routes

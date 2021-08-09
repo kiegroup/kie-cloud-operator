@@ -583,6 +583,12 @@
               "description": "The size of the Business Central's Persistent Volume. Examples: 1Gi, 512Mi."
             },
             {
+              "label": "Custom hostname to be used on the Business Central external Route.",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.routeHostname",
+              "type": "text"
+            },
+            {
               "label": "GitHooks",
               "required": false,
               "jsonPath": "$.spec.objects.console.gitHooks",
@@ -1093,6 +1099,12 @@
                   "jsonPath": "$.spec.objects.servers[*].replicas",
                   "type": "integer",
                   "description": "The number of replicas for this KIE Server set."
+                },
+                {
+                  "label": "Custom hostname to be used on the KIE Server external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].routeHostname",
+                  "type": "text"
                 },
                 {
                   "label": "KIE Server image",
@@ -2430,6 +2442,12 @@
                   "type": "text"
                 },
                 {
+                  "label": "Custom hostname to be used on the Dashbuilder external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.routeHostname",
+                  "type": "text"
+                },
+                {
                   "label": "Replicas",
                   "default": "1",
                   "required": false,
@@ -2835,6 +2853,12 @@
                   "type": "text"
                 },
                 {
+                  "label": "Custom hostname to be used on the Smart Router external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.routeHostname",
+                  "type": "text"
+                },
+                {
                   "label": "Replicas",
                   "required": true,
                   "jsonPath": "$.spec.objects.smartRouter.replicas",
@@ -3062,6 +3086,12 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.imageTag",
                   "description": "The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Custom hostname to be used on the Process Migration external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.routeHostname",
                   "type": "text"
                 },
                 {

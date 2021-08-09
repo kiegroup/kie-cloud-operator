@@ -1,0 +1,26 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: custom-route-hostname
+  annotations:
+    consoleName: snippet-custom-route-hostname
+    consoleTitle: Use plain text HTTP Routes
+    consoleDesc: Use this snippet to configure custom route hostnames
+    consoleSnippet: true
+spec:
+  environment: rhpam-trial
+  objects:
+    console:
+      routeHostname: console.my-openshift-cluster.mydomain.com
+    servers:
+      - routeHostname: server1.my-openshift-cluster.mydomain.com
+      - routeHostname: server2.my-openshift-cluster.mydomain.com
+    dashbuilder:
+      routeHostname: dashbuilder.my-openshift-cluster.mydomain.com
+    smartRouter:
+      routeHostname: smartrouter.my-openshift-cluster.mydomain.com
+      replicas: 1
+    processMigration:
+      routeHostname: processmigration.my-openshift-cluster.mydomain.com
+
+
