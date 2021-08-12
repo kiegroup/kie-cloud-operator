@@ -465,7 +465,7 @@ console:
           haproxy.router.openshift.io/balance: source
           #[[end]]
       spec:
-        host: ""
+        host: "[[.Console.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
@@ -697,7 +697,7 @@ smartRouter:
           haproxy.router.openshift.io/balance: source
           #[[end]]
       spec:
-        host: ""
+        host: "[[.SmartRouter.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
@@ -1278,6 +1278,7 @@ servers:
             haproxy.router.openshift.io/balance: source
             #[[end]]
         spec:
+          host: "[[.RouteHostname]]"
           to:
             name: "[[.KieName]]"
           port:

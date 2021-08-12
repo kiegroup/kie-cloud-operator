@@ -446,6 +446,9 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 			}
 		}
 
+		// route hostname, if invalid it will not be set
+		template.RouteHostname = getRouteHostname(cr.Status.Applied.Objects.Console)
+
 		// JVM configuration
 		cr.Status.Applied.Objects.Console.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.Console.Jvm)
 		if cr.Status.Applied.Objects.Console.Jvm != nil {
@@ -524,6 +527,9 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 			dashbuilderTemplate.ImageURL = dashbuilderTemplate.ImageContext + "/" + dashbuilderTemplate.Image + ":" + dashbuilderTemplate.ImageTag
 			dashbuilderTemplate.OmitImageStream = false
 		}
+
+		// route hostname, if invalid it will not be set
+		dashbuilderTemplate.RouteHostname = getRouteHostname(cr.Status.Applied.Objects.Dashbuilder)
 
 		// Dashbuilder configuration
 		applyDashbuilderConfig(dashbuilderTemplate, *cr, serversConfig, console)
@@ -643,6 +649,10 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
+
+		// route hostname, if invalid it will not be set
+		template.RouteHostname = getRouteHostname(cr.Status.Applied.Objects.SmartRouter)
+
 		// JVM configuration
 		cr.Status.Applied.Objects.SmartRouter.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.SmartRouter.Jvm)
 		if cr.Status.Applied.Objects.SmartRouter.Jvm != nil {
@@ -800,6 +810,9 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 
 			template.SmartRouter.Protocol = getSmartRouterProtocol(cr)
+
+			// route hostname, if invalid it will not be set
+			template.RouteHostname = getRouteHostname(serverSet)
 
 			dbConfig, err := getDatabaseConfig(cr.Status.Applied.Environment, serverSet.Database)
 			if err != nil {
@@ -1605,6 +1618,10 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 		} else {
 			processMigrationTemplate.Database = *cr.Status.Applied.Objects.ProcessMigration.Database.DeepCopy()
 		}
+
+		// route hostname, if invalid it will not be set
+		processMigrationTemplate.RouteHostname = getRouteHostname(cr.Status.Applied.Objects.ProcessMigration)
+
 	}
 	return processMigrationTemplate, nil
 }
@@ -1781,7 +1798,6 @@ func deployProcessMigration(cr *api.KieApp) bool {
 
 func deployDashbuilder(cr *api.KieApp) bool {
 	return isGE710(cr) && isRHPAM(cr)
-	// && cr.Status.Applied.Objects.Dashbuilder != nil
 }
 
 func isGE78(cr *api.KieApp) bool {
@@ -1955,4 +1971,49 @@ func setDefaultCors(cors *api.CORSFiltersObject) {
 	cors.AllowCredentialsValue = Pbool(true)
 	cors.MaxAgeName = "Access-Control-Max-Age"
 	cors.MaxAgeValue = Pint32(1)
+}
+
+func getRouteHostname(obj interface{}) (host string) {
+
+	switch o := obj.(type) {
+	case *api.KieServerSet:
+		if len(o.RouteHostname) > 0 {
+			host = o.RouteHostname
+		} else {
+			host = getSpecEnv(o.Env, constants.ServersRouteEnv)
+		}
+
+	case *api.ConsoleObject:
+		if len(o.RouteHostname) > 0 {
+			host = o.RouteHostname
+		} else {
+			host = getSpecEnv(o.Env, constants.ConsoleRouteEnv)
+		}
+
+	case *api.SmartRouterObject:
+		if len(o.RouteHostname) > 0 {
+			host = o.RouteHostname
+		} else {
+			host = getSpecEnv(o.Env, constants.SmartRouterRouteEnv)
+		}
+
+	case *api.DashbuilderObject:
+		if len(o.RouteHostname) > 0 {
+			host = o.RouteHostname
+		} else {
+			host = getSpecEnv(o.Env, constants.DashbuilderRouteEnv)
+		}
+
+	case *api.ProcessMigrationObject:
+		host = o.RouteHostname
+
+	default:
+		host = ""
+	}
+	res := shared.ValidateRouteHostname(host)
+	if len(res) > 0 {
+		log.Warnf("%v", res.ToAggregate())
+		host = ""
+	}
+	return host
 }
