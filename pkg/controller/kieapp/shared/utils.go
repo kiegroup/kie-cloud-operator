@@ -2,12 +2,15 @@ package shared
 
 import (
 	"bytes"
+	"crypto/md5"
 	crand "crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
+	"fmt"
 	kvalidation "k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"math/big"
@@ -334,4 +337,11 @@ func ValidateRouteHostname(r string) field.ErrorList {
 		}
 	}
 	return result
+}
+
+// GeneratedPimPwdMd5 to mask the process instance password
+func GeneratedPimPwdMd5(username string, password string) string {
+	text := fmt.Sprintf("%s:pim-file:%s", username, password)
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
 }

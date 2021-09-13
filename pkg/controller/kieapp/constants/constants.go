@@ -268,6 +268,10 @@ const (
 	SmartRouterMemLimit         = "1Gi"
 	SmartRouterCPURequests      = "250m"
 	SmartRouterMemRequests      = "1Gi"
+	ProcessMigrationCPULimit    = "500m"
+	ProcessMigrationMemLimit    = "512Mi"
+	ProcessMigrationCPURequests = "250m"
+	ProcessMigrationMemRequests = "512Mi"
 
 	//ImageNames for metering labels
 	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
@@ -320,6 +324,12 @@ var SmartRouterLimits = map[string]string{
 	"MEM": SmartRouterMemLimit,
 }
 
+// ProcessMigrationLimits defines resource limits for PIM
+var ProcessMigrationLimits = map[string]string{
+	"CPU": ProcessMigrationCPULimit,
+	"MEM": ProcessMigrationMemLimit,
+}
+
 // ConsoleAuthoringRequests defines requests in Authoring environment
 var ConsoleAuthoringRequests = map[string]string{
 	"CPU": ConsoleAuthoringCPURequests,
@@ -348,6 +358,12 @@ var ServerRequests = map[string]string{
 var SmartRouterRequests = map[string]string{
 	"CPU": SmartRouterCPURequests,
 	"MEM": SmartRouterMemRequests,
+}
+
+// ProcessMigrationRequests defines the requests for PIM deployment
+var ProcessMigrationRequests = map[string]string{
+	"CPU": ProcessMigrationCPURequests,
+	"MEM": ProcessMigrationMemRequests,
 }
 
 var Images = []ImageEnv{
