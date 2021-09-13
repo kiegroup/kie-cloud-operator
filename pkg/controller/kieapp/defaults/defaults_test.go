@@ -4819,15 +4819,26 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:        "test-pim-image",
-								ImageContext: "test-context",
-								ImageTag:     "test-pim-image-tag",
+								Username:       "testpim-user",
+								Password:       "test-pim-pwd",
+								ExtraClassPath: "/tmp/test.jar",
+								KieAppObject: api.KieAppObject{
+									Replicas:     Pint32(5),
+									Image:        "test-pim-image",
+									ImageContext: "test-context",
+									ImageTag:     "test-pim-image-tag",
+								},
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type:             api.DatabaseMySQL,
 										StorageClassName: "gold",
 										Size:             "32Gi",
 									},
+								},
+								Jvm: &api.JvmObject{
+									JavaOptsAppend:      "-Dmy-property=value",
+									JavaMaxMemRatio:     Pint32(20),
+									JavaInitialMemRatio: Pint32(25),
 								},
 							},
 						},
@@ -4843,10 +4854,16 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:        "test-pim-image",
-				ImageContext: "test-context",
-				ImageTag:     "test-pim-image-tag",
-				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
+				Username:       "testpim-user",
+				Password:       "2491032541ee362db900f11af2f8fe0a",
+				ExtraClassPath: "/tmp/test.jar",
+				KieAppObject: api.KieAppObject{
+					Replicas:     Pint32(5),
+					Image:        "test-pim-image",
+					ImageContext: "test-context",
+					ImageTag:     "test-pim-image-tag",
+				},
+				ImageURL: "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -4865,6 +4882,11 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						StorageClassName: "gold",
 						Size:             "32Gi",
 					},
+				},
+				Jvm: api.JvmObject{
+					JavaOptsAppend:      "-Dmy-property=value",
+					JavaMaxMemRatio:     Pint32(20),
+					JavaInitialMemRatio: Pint32(25),
 				},
 			},
 			false,
@@ -4885,10 +4907,17 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:        pimImage,
-				ImageTag:     constants.CurrentVersion,
-				ImageContext: constants.RhpamPrefix + "-7",
-				ImageURL:     constants.ProcessMigrationDefaultImageURL + ":" + constants.CurrentVersion,
+				// empty credentials provided, in this case the common.AdminUser and password will be used
+				// and the password will be hashed using md5.
+				Username: "adminUser",
+				Password: "a2d11c9699448828d6fc052bddc37fe6",
+				KieAppObject: api.KieAppObject{
+					Replicas:     Pint32(1),
+					Image:        pimImage,
+					ImageTag:     constants.CurrentVersion,
+					ImageContext: constants.RhpamPrefix + "-7",
+				},
+				ImageURL: constants.ProcessMigrationDefaultImageURL + ":" + constants.CurrentVersion,
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -4900,6 +4929,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					InternalDatabaseObject: api.InternalDatabaseObject{
 						Type: api.DatabaseH2,
 					},
+				},
+				Jvm: api.JvmObject{
+					JavaMaxMemRatio:     Pint32(80),
+					JavaInitialMemRatio: Pint32(25),
 				},
 			},
 			false,
@@ -4931,9 +4964,11 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:        "test-pim-image",
-								ImageContext: "test-context",
-								ImageTag:     "test-pim-image-tag",
+								KieAppObject: api.KieAppObject{
+									Image:        "test-pim-image",
+									ImageContext: "test-context",
+									ImageTag:     "test-pim-image-tag",
+								},
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
@@ -4963,9 +4998,11 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Image:        "test-pim-image",
-								ImageContext: "test-context",
-								ImageTag:     "test-pim-image-tag",
+								KieAppObject: api.KieAppObject{
+									Image:        "test-pim-image",
+									ImageContext: "test-context",
+									ImageTag:     "test-pim-image-tag",
+								},
 								Database: api.ProcessMigrationDatabaseObject{
 									InternalDatabaseObject: api.InternalDatabaseObject{
 										Type: api.DatabaseExternal,
@@ -4999,10 +5036,17 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Image:        "test-pim-image",
-				ImageTag:     "test-pim-image-tag",
-				ImageContext: "test-context",
-				ImageURL:     "test-context/test-pim-image:test-pim-image-tag",
+				// empty credentials provided, in this case the common.AdminUser and password will be used
+				// and the password will be hashed using md5.
+				Username: "testuser",
+				Password: "288252a54f57c3d846d613868f8165f3",
+				KieAppObject: api.KieAppObject{
+					Replicas:     Pint32(1),
+					Image:        "test-pim-image",
+					ImageTag:     "test-pim-image-tag",
+					ImageContext: "test-context",
+				},
+				ImageURL: "test-context/test-pim-image:test-pim-image-tag",
 				KieServerClients: []api.KieServerClient{
 					{
 						Host:     "http://kieserver1:8080/services/rest/server",
@@ -5034,6 +5078,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						},
 					},
 				},
+				Jvm: api.JvmObject{
+					JavaMaxMemRatio:     Pint32(80),
+					JavaInitialMemRatio: Pint32(25),
+				},
 			},
 			false,
 		},
@@ -5052,7 +5100,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 	}
 }
 
-func TestProcessMigrationRoute(t *testing.T) {
+func TestProcessMigrationRouteCustomConfig(t *testing.T) {
 	name := "test"
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -5061,7 +5109,22 @@ func TestProcessMigrationRoute(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamAuthoring,
 			Objects: api.KieAppObjects{
-				ProcessMigration: &api.ProcessMigrationObject{},
+				ProcessMigration: &api.ProcessMigrationObject{
+					Username:       "testpim",
+					Password:       "testpimpwd",
+					Jvm:            createJvmTestObjectWithoutJavaMaxMemRatio(),
+					ExtraClassPath: "/tmp/test.jar",
+					KieAppObject: api.KieAppObject{
+						Replicas: Pint32(3),
+
+						Env: []corev1.EnvVar{
+							{
+								Name:  "SCRIPT_DEBUG",
+								Value: "true",
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -5070,10 +5133,32 @@ func TestProcessMigrationRoute(t *testing.T) {
 	routeAnnotations["description"] = "Route for Process Migration https service."
 
 	env, _ := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
+
 	assert.Equal(t, 1, len(env.ProcessMigration.Routes))
 	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
-	assert.NotNil(t, env.ProcessMigration.Routes[0].Spec.TLS)
+	assert.Nil(t, env.ProcessMigration.Routes[0].Spec.TLS)
 	assert.Equal(t, routeAnnotations, env.ProcessMigration.Routes[0].Annotations)
+	assert.Equal(t, *Pint32(3), env.ProcessMigration.DeploymentConfigs[0].Spec.Replicas)
+
+	assert.Equal(t, "testpim", cr.Status.Applied.Objects.ProcessMigration.Username)
+	assert.Equal(t, "c6b08e2600dd7bb5ae5c8755b25ef45d", cr.Status.Applied.Objects.ProcessMigration.Password)
+	assert.Equal(t, "c6b08e2600dd7bb5ae5c8755b25ef45d", cr.Spec.Objects.ProcessMigration.Password)
+
+	assert.Equal(t, 3, len(env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
+
+	assert.Equal(t, "/opt/rhpam-process-migration/quarkus-app/config/application.yaml", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
+	assert.Equal(t, "application.yaml", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
+
+	assert.Equal(t, "/opt/rhpam-process-migration/quarkus-app/config/application-users.properties", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
+	assert.Equal(t, "application-users.properties", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
+
+	assert.Equal(t, "/opt/rhpam-process-migration/quarkus-app/config/application-roles.properties", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[2].MountPath)
+	assert.Equal(t, "application-roles.properties", env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts[2].SubPath)
+
+	assert.Equal(t, "true", getEnvVariable(env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "SCRIPT_DEBUG"))
+	assert.Equal(t, "/tmp/test.jar", getEnvVariable(env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "JBOSS_KIE_EXTRA_CLASSPATH"))
+	testJvmObjectWithoutJavaMaxMemRatio(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 
 	cr = &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -5092,6 +5177,10 @@ func TestProcessMigrationRoute(t *testing.T) {
 	assert.Equal(t, 1, len(env.ProcessMigration.Routes))
 	assert.Equal(t, "test-process-migration", env.ProcessMigration.Routes[0].ObjectMeta.Name)
 	assert.Nil(t, env.ProcessMigration.Routes[0].Spec.TLS)
+	assert.Equal(t, *Pint32(1), env.ProcessMigration.DeploymentConfigs[0].Spec.Replicas)
+	// check default jvm settings
+	testDefaultJvm(t, env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+
 }
 
 func TestMergeProcessMigrationDB(t *testing.T) {
@@ -5695,7 +5784,7 @@ func TestJvmDefaultConsole(t *testing.T) {
 		},
 	}
 	env, _ := GetEnvironment(cr, test.MockService())
-	testDefaultJvm(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	testJvmObjectWithoutJavaMaxMemRatio(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestJvmEmptyConsole(t *testing.T) {
@@ -5731,7 +5820,7 @@ func TestJvmDefaultSmartRouter(t *testing.T) {
 		},
 	}
 	env, _ := GetEnvironment(cr, test.MockService())
-	testDefaultJvm(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	testJvmObjectWithoutJavaMaxMemRatio(t, env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestJvmEmptySmartRouter(t *testing.T) {
@@ -5769,7 +5858,7 @@ func TestJvmDefaultServers(t *testing.T) {
 		},
 	}
 	env, _ := GetEnvironment(cr, test.MockService())
-	testDefaultJvm(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	testJvmObjectWithoutJavaMaxMemRatio(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestJvmEmptyServer(t *testing.T) {
@@ -5821,6 +5910,21 @@ func createJvmTestObjectWithoutJavaMaxMemRatio() *api.JvmObject {
 		GcContainerOptions:         "-XX:+UseG1GC",
 	}
 	return &jvmObject
+}
+
+func testJvmObjectWithoutJavaMaxMemRatio(t *testing.T, envs []corev1.EnvVar) {
+
+	assert.Equal(t, "-Dsome.property=foo", getSpecEnv(envs, "JAVA_OPTS_APPEND"))
+	assert.Equal(t, "4096", getSpecEnv(envs, "JAVA_MAX_INITIAL_MEM"))
+	assert.Equal(t, "true", getSpecEnv(envs, "JAVA_DIAGNOSTICS"))
+	assert.Equal(t, "true", getSpecEnv(envs, "JAVA_DEBUG"))
+	assert.Equal(t, "8787", getSpecEnv(envs, "JAVA_DEBUG_PORT"))
+	assert.Equal(t, "20", getSpecEnv(envs, "GC_MIN_HEAP_FREE_RATIO"))
+	assert.Equal(t, "40", getSpecEnv(envs, "GC_MAX_HEAP_FREE_RATIO"))
+	assert.Equal(t, "4", getSpecEnv(envs, "GC_TIME_RATIO"))
+	assert.Equal(t, "90", getSpecEnv(envs, "GC_ADAPTIVE_SIZE_POLICY_WEIGHT"))
+	assert.Equal(t, "100", getSpecEnv(envs, "GC_MAX_METASPACE_SIZE"))
+	assert.Equal(t, "-XX:+UseG1GC", getSpecEnv(envs, "GC_CONTAINER_OPTIONS"))
 }
 
 func TestSimplifiedMonitoringSwitch(t *testing.T) {
@@ -5887,6 +5991,9 @@ func TestResourcesDefault(t *testing.T) {
 						KieAppObject: api.KieAppObject{},
 					},
 				},
+				ProcessMigration: &api.ProcessMigrationObject{
+					KieAppObject: api.KieAppObject{},
+				},
 			},
 		},
 	}
@@ -5894,7 +6001,7 @@ func TestResourcesDefault(t *testing.T) {
 	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
 		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
 		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
-		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
+		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"])
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -5924,6 +6031,11 @@ func TestResourcesOverrideServers(t *testing.T) {
 						},
 					},
 				},
+				ProcessMigration: &api.ProcessMigrationObject{
+					KieAppObject: api.KieAppObject{
+						Resources: sampleLimitAndRequestsResources,
+					},
+				},
 			},
 		},
 	}
@@ -5931,15 +6043,16 @@ func TestResourcesOverrideServers(t *testing.T) {
 	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String()) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, rMEMConsole, rMEMServers string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration, rCPUProcessMigration string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
 	assert.NotNil(t, cr.Status.Applied.Objects.Console.Resources)
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.ProcessMigration.Resources)
 
 	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUServer.String() == lCPUServer)
@@ -5958,6 +6071,12 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 
 	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUSmartRouter.String() == rCPUSmartRouter)
+
+	limitCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceCPU]
+	assert.True(t, limitCPUProcessMigration.String() == lCPUProcessMigration)
+
+	requestsCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceCPU]
+	assert.True(t, requestsCPUProcessMigration.String() == rCPUProcessMigration)
 }
 
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
@@ -6119,7 +6238,9 @@ func TestProcessMigrationWithImageContext(t *testing.T) {
 			Environment: api.RhpamAuthoringHA,
 			Objects: api.KieAppObjects{
 				ProcessMigration: &api.ProcessMigrationObject{
-					ImageContext: "rhpam-43",
+					KieAppObject: api.KieAppObject{
+						ImageContext: "rhpam-43",
+					},
 				},
 			},
 		},

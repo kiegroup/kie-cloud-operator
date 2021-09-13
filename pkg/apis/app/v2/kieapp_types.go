@@ -909,26 +909,35 @@ type RoleMapperTemplate struct {
 
 // ProcessMigrationObject configuration of the RHPAM PIM
 type ProcessMigrationObject struct {
-	// The image context to use for Process Instance Migration  e.g. rhpam-7, this param is optional for custom image.
-	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image.
-	Image string `json:"image,omitempty"`
-	// The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.
-	ImageTag      string                         `json:"imageTag,omitempty"`
+	KieAppObject  `json:",inline"`
+	Jvm           *JvmObject                     `json:"jvm,omitempty"`
 	Database      ProcessMigrationDatabaseObject `json:"database,omitempty"`
 	RouteHostname string                         `json:"routeHostname,omitempty"`
+	// If empty the CommonConfig.AdminUser will be used
+	Username string `json:"username,omitempty"`
+	// If empty the CommonConfig.AdminPassword will be used
+	Password string `json:"password,omitempty"`
+	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
+	// on the image before.
+	ExtraClassPath string `json:"extraClassPath,omitempty"`
 }
 
 // ProcessMigrationTemplate ...
 type ProcessMigrationTemplate struct {
+	KieAppObject     `json:",inline"`
 	OmitImageStream  bool                           `json:"omitImageStream"`
-	ImageContext     string                         `json:"imageContext,omitempty"`
-	Image            string                         `json:"image,omitempty"`
-	ImageTag         string                         `json:"imageTag,omitempty"`
 	ImageURL         string                         `json:"imageURL,omitempty"`
 	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
+	Jvm              JvmObject                      `json:"jvm,omitempty"`
 	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
 	RouteHostname    string                         `json:"routeHostname,omitempty"`
+	// PIM Admin username. If empty the CommonConfig.AdminUser will be used
+	Username string `json:"username,omitempty"`
+	// PIM Admin password. If empty the CommonConfig.AdminPassword will be used
+	Password string `json:"password,omitempty"`
+	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
+	// on the image before.
+	ExtraClassPath string `json:"extraClassPath,omitempty"`
 }
 
 // KieServerClient ...
