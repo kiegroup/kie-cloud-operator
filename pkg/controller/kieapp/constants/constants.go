@@ -230,8 +230,8 @@ const (
 	Datagrid73Image     = "datagrid73-openshift"
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
-    Datagrid8Image     = "datagrid-8-rhel8"
-    Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
+	Datagrid8Image     = "datagrid-8-rhel8"
+	Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
 
 	Datagrid73ImageTag16 = "1.6"
 	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16

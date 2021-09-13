@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.12.0
-    createdAt: "2021-07-29 18:22:39"
+    createdAt: "2021-09-13 14:23:45"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.12.0-1-dev-qnbgtbfwch
+  name: businessautomation-operator.7.12.0-1-dev-2fzj4qphlv
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -195,7 +195,7 @@ spec:
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.0
                   value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_7.12.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.2
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.12.0
                   value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.11.1
@@ -401,7 +401,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.12.0-1-dev-qnbgtbfwch
+    operated-by: businessautomation-operator.7.12.0-1-dev-2fzj4qphlv
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -417,5 +417,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.12.0-1-dev-qnbgtbfwch
-  version: 7.12.0-1+qnbgtbfwch
+      operated-by: businessautomation-operator.7.12.0-1-dev-2fzj4qphlv
+  version: 7.12.0-1+2fzj4qphlv
