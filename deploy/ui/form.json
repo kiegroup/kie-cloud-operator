@@ -850,7 +850,7 @@
               "label": "CORS Filters configuration",
               "type": "dropDown",
               "required": false,
-              "jsonPath": "",
+              "jsonPath": "$.spec.objects.console.cors",
               "default": "default",
               "options": [
                 {
@@ -2048,7 +2048,7 @@
                   "label": "CORS Filters configuration",
                   "type": "dropDown",
                   "required": false,
-                  "jsonPath": "",
+                  "jsonPath": "$.spec.objects.servers.cors",
                   "default": "default",
                   "options": [
                     {
@@ -2678,7 +2678,7 @@
                   "label": "CORS Filters configuration",
                   "type": "dropDown",
                   "required": false,
-                  "jsonPath": "",
+                  "jsonPath": "$.spec.objects.dashbuilder.cors",
                   "default": "default",
                   "options": [
                     {
