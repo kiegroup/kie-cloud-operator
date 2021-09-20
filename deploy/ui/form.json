@@ -3089,6 +3089,24 @@
                   "type": "text"
                 },
                 {
+                  "label": "Process Instance Migration Admin Username, if empty the common AdminUser will be used.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.username",
+                  "type": "text"
+                },
+                {
+                  "label": "Process Instance Migration Admin Password, if empty the common AdminPassword will be used.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.password",
+                  "type": "password"
+                },
+                {
+                  "label": "Process Instance Migration ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted on the image before.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.extraClassPath",
+                  "type": "text"
+                },
+                {
                   "label": "Custom hostname to be used on the Process Migration external Route.",
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.routeHostname",

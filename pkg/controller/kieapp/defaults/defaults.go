@@ -919,6 +919,9 @@ func ConsolidateObjects(env api.Environment, cr *api.KieApp) api.Environment {
 	if cr.Status.Applied.Objects.SmartRouter != nil {
 		env.SmartRouter = ConstructObject(env.SmartRouter, cr.Status.Applied.Objects.SmartRouter.KieAppObject)
 	}
+	if cr.Status.Applied.Objects.ProcessMigration != nil {
+		env.ProcessMigration = ConstructObject(env.ProcessMigration, cr.Status.Applied.Objects.ProcessMigration.KieAppObject)
+	}
 	for index := range env.Servers {
 		serverSet, _ := GetServerSet(cr, index)
 		env.Servers[index] = ConstructObject(env.Servers[index], serverSet.KieAppObject)
@@ -1419,6 +1422,11 @@ func SetDefaults(cr *api.KieApp) {
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterLimits, constants.SmartRouterRequests)
 	}
 
+	if specApply.Objects.ProcessMigration != nil {
+		checkJvmOnProcessMigration(specApply.Objects.ProcessMigration)
+		setResourcesDefault(&specApply.Objects.ProcessMigration.KieAppObject, constants.ProcessMigrationLimits, constants.ProcessMigrationRequests)
+	}
+
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
 	setPasswords(specApply, isTrialEnv)
 
@@ -1455,6 +1463,13 @@ func checkJvmOnSmartRouter(smartrouter *api.SmartRouterObject) {
 		smartrouter.Jvm = &api.JvmObject{}
 	}
 	setJvmDefault(smartrouter.Jvm)
+}
+
+func checkJvmOnProcessMigration(pim *api.ProcessMigrationObject) {
+	if pim.Jvm == nil {
+		pim.Jvm = &api.JvmObject{}
+	}
+	setJvmDefault(pim.Jvm)
 }
 
 func checkJvmOnServer(server *api.KieServerSet) {
@@ -1583,6 +1598,13 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 	if deployProcessMigration(cr) {
 		processMigrationTemplate = &api.ProcessMigrationTemplate{}
 		processMigrationTemplate.ImageURL = constants.ProcessMigrationDefaultImageURL + ":" + cr.Status.Applied.Version
+
+		// Set replicas
+		if cr.Status.Applied.Objects.ProcessMigration.Replicas == nil {
+			cr.Status.Applied.Objects.ProcessMigration.Replicas = Pint32(1)
+		}
+		processMigrationTemplate.Replicas = cr.Status.Applied.Objects.ProcessMigration.Replicas
+
 		if val, exists := os.LookupEnv(constants.PamProcessMigrationVar + cr.Status.Applied.Version); exists && !cr.Status.Applied.UseImageTags {
 			processMigrationTemplate.ImageURL = val
 			processMigrationTemplate.OmitImageStream = true
@@ -1619,8 +1641,38 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.Database = *cr.Status.Applied.Objects.ProcessMigration.Database.DeepCopy()
 		}
 
+		if len(cr.Spec.Objects.ProcessMigration.Username) == 0 {
+			cr.Status.Applied.Objects.ProcessMigration.Username = cr.Status.Applied.CommonConfig.AdminUser
+
+		} else {
+			cr.Status.Applied.Objects.ProcessMigration.Username = cr.Spec.Objects.ProcessMigration.Username
+		}
+
+		if len(cr.Spec.Objects.ProcessMigration.Password) == 0 {
+			cr.Status.Applied.Objects.ProcessMigration.Password = shared.GeneratedPimPwdMd5(
+				cr.Status.Applied.Objects.ProcessMigration.Username,
+				cr.Status.Applied.CommonConfig.AdminPassword)
+		} else {
+			cr.Status.Applied.Objects.ProcessMigration.Password = shared.GeneratedPimPwdMd5(
+				cr.Status.Applied.Objects.ProcessMigration.Username,
+				cr.Spec.Objects.ProcessMigration.Password)
+			// reset the spec to hide the password
+			cr.Spec.Objects.ProcessMigration.Password = cr.Status.Applied.Objects.ProcessMigration.Password
+		}
+
+		processMigrationTemplate.Username = cr.Status.Applied.Objects.ProcessMigration.Username
+		processMigrationTemplate.Password = cr.Status.Applied.Objects.ProcessMigration.Password
+
+		processMigrationTemplate.ExtraClassPath = cr.Status.Applied.Objects.ProcessMigration.ExtraClassPath
+
 		// route hostname, if invalid it will not be set
 		processMigrationTemplate.RouteHostname = getRouteHostname(cr.Status.Applied.Objects.ProcessMigration)
+
+		// JVM configuration
+		cr.Status.Applied.Objects.ProcessMigration.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.ProcessMigration.Jvm)
+		if cr.Status.Applied.Objects.ProcessMigration.Jvm != nil {
+			processMigrationTemplate.Jvm = *cr.Status.Applied.Objects.ProcessMigration.Jvm.DeepCopy()
+		}
 
 	}
 	return processMigrationTemplate, nil
