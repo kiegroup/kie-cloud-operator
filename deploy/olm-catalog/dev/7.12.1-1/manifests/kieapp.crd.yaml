@@ -1575,6 +1575,9 @@ spec:
                       description: KieServerSet KIE Server configuration for a single
                         set, or for multiple sets if deployments is set to >1
                       properties:
+                        MDBMaxSession:
+                          description: MDBMax number of KieExecutor' sessions
+                          type: integer
                         build:
                           description: KieAppBuildObject Data to define how to build
                             an application from source
@@ -4380,6 +4383,9 @@ spec:
                             single set, or for multiple sets if deployments is set
                             to >1
                           properties:
+                            MDBMaxSession:
+                              description: MDBMax number of KieExecutor' sessions
+                              type: integer
                             build:
                               description: KieAppBuildObject Data to define how to
                                 build an application from source

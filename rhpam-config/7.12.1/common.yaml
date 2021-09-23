@@ -1119,6 +1119,10 @@ servers:
                       #[[end]]
                   #[[end]]
                   ## CORS END
+                  #[[if .MDBMaxSession]]
+                    - name: JBOSS_MDB_MAX_SESSIONS
+                      value: "[[.MDBMaxSession]]"
+                  #[[end]]
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

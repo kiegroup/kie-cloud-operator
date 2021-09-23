@@ -764,6 +764,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				ServersM2PvSize:  serverSet.ServersM2PvSize,
 				ServersKiePvSize: serverSet.ServersKiePvSize,
 				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
+				MDBMaxSession:    serverSet.MDBMaxSession,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -852,6 +853,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			getCORSConfig(serverSet.Cors)
 			if serverSet.Cors != nil {
 				template.Cors = serverSet.Cors
+			}
+
+			// KieExecutorMDB
+			if serverSet.MDBMaxSession != nil {
+				template.MDBMaxSession = serverSet.MDBMaxSession
 			}
 
 			if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName != "" {

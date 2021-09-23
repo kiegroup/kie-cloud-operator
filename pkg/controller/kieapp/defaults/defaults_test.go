@@ -7183,3 +7183,57 @@ func assertRouteHostnameEmpty(t *testing.T, env api.Environment) {
 	assert.Empty(t, env.SmartRouter.Routes[0].Spec.Host)
 	assert.Empty(t, env.Dashbuilder.Routes[0].Spec.Host)
 }
+
+func TestKieExecutorMDB(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testKieExecutorMDB"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{MDBMaxSession: Pint(40)},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestKieExecutorMDB environment")
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
+	mdbMaxSessionPassed := false
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
+			if env.Name != "JBOSS_MDB_MAX_SESSION" && env.Value == "40" {
+				mdbMaxSessionPassed = true
+			}
+		}
+	}
+	assert.True(t, mdbMaxSessionPassed)
+}
+
+func TestKieExecutorMDBEmpty(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testKieExecutorMDB"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestKieExecutorMDBEmpty environment")
+
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
+	mdbMaxSessionNotPassed := true
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
+			if env.Name != "JBOSS_MDB_MAX_SESSION" {
+				mdbMaxSessionNotPassed = false
+			}
+		}
+	}
+	assert.True(t, mdbMaxSessionNotPassed)
+}
