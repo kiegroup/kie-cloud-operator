@@ -956,7 +956,7 @@
                     {
                       "label": "Access Control Allow credentials value filter",
                       "type": "checkbox",
-                      "checked": true,
+                      "checked": false,
                       "jsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
                       "originalJsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
                       "description": "Value, suggested default is: true "
@@ -2154,7 +2154,7 @@
                         {
                           "label": "Access Control Allow credentials value filter",
                           "type": "checkbox",
-                          "checked": true,
+                          "checked": false,
                           "jsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
                           "originalJsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
                           "description": "Value, suggested default is: true "
@@ -2784,7 +2784,7 @@
                         {
                           "label": "Access Control Allow credentials value filter",
                           "type": "checkbox",
-                          "checked": true,
+                          "checked": false,
                           "jsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
                           "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
                           "description": "Value, suggested default is: true "
