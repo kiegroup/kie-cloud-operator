@@ -22,7 +22,7 @@ console:
 servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
-    ## KIE server deployment config BEGIN
+  ## KIE server deployment config BEGIN
   - deploymentConfigs:
       - metadata:
           name: "[[.KieName]]"

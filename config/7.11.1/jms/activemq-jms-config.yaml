@@ -1,169 +1,169 @@
 ## KIE Servers BEGIN
 servers:
-## RANGE BEGINS
-#[[ range $index, $Map := .Servers ]]
-## KIE server deployment config BEGIN
+  ## RANGE BEGINS
+  #[[ range $index, $Map := .Servers ]]
+  ## KIE server deployment config BEGIN
   - deploymentConfigs:
-    - metadata:
-        name: "[[.KieName]]"
-      spec:
-        template:
-          spec:
-            containers:
-              - name: "[[.KieName]]"
-                env:
-                  # JMS config BEGIN
-                  - name: KIE_SERVER_EXECUTOR_JMS
-                    value: "[[.Jms.Executor]]"
-                  - name: KIE_SERVER_EXECUTOR_JMS_TRANSACTED
-                    value: "[[.Jms.ExecutorTransacted]]"
-                  - name: KIE_SERVER_JMS_QUEUE_REQUEST
-                    value: "[[.Jms.QueueRequest]]"
-                  - name: KIE_SERVER_JMS_QUEUE_RESPONSE
-                    value: "[[.Jms.QueueResponse]]"
-                  - name: KIE_SERVER_JMS_QUEUE_EXECUTOR
-                    value: "[[.Jms.QueueExecutor]]"
-                  - name: KIE_SERVER_JMS_ENABLE_SIGNAL
-                    value: "[[.Jms.EnableSignal]]"
-                    # [[ if .Jms.EnableSignal]]
-                  - name: KIE_SERVER_JMS_QUEUE_SIGNAL
-                    value: "[[.Jms.QueueSignal]]"
-                    # [[end]]
-                  - name: KIE_SERVER_JMS_ENABLE_AUDIT
-                    value: "[[.Jms.EnableAudit]]"
-                    # [[ if .Jms.EnableAudit]]
-                  - name: KIE_SERVER_JMS_QUEUE_AUDIT
-                    value: "[[.Jms.QueueAudit]]"
-                    # [[end]]
-                  - name: KIE_SERVER_JMS_AUDIT_TRANSACTED
-                    value: "[[.Jms.AuditTransacted]]"
-                  - name: MQ_SERVICE_PREFIX_MAPPING
-                    value: "[[.KieName]]-amq7=AMQ"
-                  - name: AMQ_USERNAME
-                    value: "[[.Jms.Username]]"
-                  - name: AMQ_PASSWORD
-                    value: "[[.Jms.Password]]"
-                  - name: AMQ_PROTOCOL
-                    value: "tcp"
-                  - name: AMQ_QUEUES
-                    value: "[[.Jms.AMQQueues]]"
-                  # JMS config END
-    ## KIE server deployment config END
-    ## AMQ deployment BEGIN
-    - metadata:
-        name: "[[.KieName]]-amq"
-        labels:
-          app: "[[$.ApplicationName]]"
-          application: "[[$.ApplicationName]]"
-          service: "[[.KieName]]-amq"
-        annotations:
-          template.alpha.openshift.io/wait-for-ready: "true"
-      spec:
-        strategy:
-          rollingParams:
-            maxSurge: 100%
-            maxUnavailable: 0
-          type: Rolling
-        triggers:
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "[[.KieName]]-amq"
-              from:
-                kind: ImageStreamTag
-                name: "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
-                namespace: "openshift"
-          - type: ConfigChange
-        replicas: 1
-        selector:
-          deploymentConfig: "[[.KieName]]-amq"
-        template:
-          metadata:
-            name: "[[.KieName]]-amq"
-            labels:
-              app: "[[$.ApplicationName]]"
-              application: "[[$.ApplicationName]]"
-              deploymentConfig: "[[.KieName]]-amq"
-              service: "[[.KieName]]-amq"
-          spec:
-            terminationGracePeriodSeconds: 60
-            containers:
-            - name: "[[.KieName]]-amq"
-              image: "[[$.Constants.BrokerImage]]"
-              imagePullPolicy: Always
-              readinessProbe:
-                exec:
-                  command:
-                  - "/bin/bash"
-                  - "-c"
-                  - "/opt/amq/bin/readinessProbe.sh"
-              ports:
-                - containerPort: 8161
-                  name: console-jolokia
-                  protocol: TCP
-                - containerPort: 5672
-                  name: amqp
-                  protocol: TCP
-                - containerPort: 5671
-                  name: amqp-ssl
-                  protocol: TCP
-                - containerPort: 1883
-                  name: mqtt
-                  protocol: TCP
-                - containerPort: 8883
-                  name: mqtt-ssl
-                  protocol: TCP
-                - containerPort: 61613
-                  name: stomp
-                  protocol: TCP
-                - containerPort: 61612
-                  name: stomp-ssl
-                  protocol: TCP
-                - containerPort: 61616
-                  name: artemis
-                  protocol: TCP
-                - containerPort: 61617
-                  name: amq-tcp-ssl
-                  protocol: TCP
-              env:
-                - name: AMQ_USER
-                  value: "[[.Jms.Username]]"
-                - name: AMQ_PASSWORD
-                  value: "[[.Jms.Password]]"
-                  # maybe turn it in a parameter and defaults to admin if empty?
-                - name: AMQ_ROLE
-                  value: "admin"
-                - name: AMQ_NAME
-                  value: "broker"
-                - name: AMQ_TRANSPORTS
-                  value: "openwire"
-                - name: AMQ_QUEUES
-                  value: "[[.Jms.AMQQueues]]"
-                - name: AMQ_REQUIRE_LOGIN
-                  value: "true"
-                - name: AMQ_ANYCAST_PREFIX
-                - name: AMQ_MULTICAST_PREFIX
-            # [[ if .Jms.AMQEnableSSL]]
-                - name: AMQ_KEYSTORE_TRUSTSTORE_DIR
-                  value: "/etc/amq-secret-volume"
-                - name: AMQ_TRUSTSTORE
-                  value: '[[.Jms.AMQTruststoreName ]]'
-                - name: AMQ_TRUSTSTORE_PASSWORD
-                  value: '[[.Jms.AMQTruststorePassword ]]'
-                - name: AMQ_KEYSTORE
-                  value: '[[.Jms.AMQKeystoreName ]]'
-                - name: AMQ_KEYSTORE_PASSWORD
-                  value: '[[.Jms.AMQKeystorePassword ]]'
-              volumeMounts:
+      - metadata:
+          name: "[[.KieName]]"
+        spec:
+          template:
+            spec:
+              containers:
+                - name: "[[.KieName]]"
+                  env:
+                    # JMS config BEGIN
+                    - name: KIE_SERVER_EXECUTOR_JMS
+                      value: "[[.Jms.Executor]]"
+                    - name: KIE_SERVER_EXECUTOR_JMS_TRANSACTED
+                      value: "[[.Jms.ExecutorTransacted]]"
+                    - name: KIE_SERVER_JMS_QUEUE_REQUEST
+                      value: "[[.Jms.QueueRequest]]"
+                    - name: KIE_SERVER_JMS_QUEUE_RESPONSE
+                      value: "[[.Jms.QueueResponse]]"
+                    - name: KIE_SERVER_JMS_QUEUE_EXECUTOR
+                      value: "[[.Jms.QueueExecutor]]"
+                    - name: KIE_SERVER_JMS_ENABLE_SIGNAL
+                      value: "[[.Jms.EnableSignal]]"
+                      # [[ if .Jms.EnableSignal]]
+                    - name: KIE_SERVER_JMS_QUEUE_SIGNAL
+                      value: "[[.Jms.QueueSignal]]"
+                      # [[end]]
+                    - name: KIE_SERVER_JMS_ENABLE_AUDIT
+                      value: "[[.Jms.EnableAudit]]"
+                      # [[ if .Jms.EnableAudit]]
+                    - name: KIE_SERVER_JMS_QUEUE_AUDIT
+                      value: "[[.Jms.QueueAudit]]"
+                      # [[end]]
+                    - name: KIE_SERVER_JMS_AUDIT_TRANSACTED
+                      value: "[[.Jms.AuditTransacted]]"
+                    - name: MQ_SERVICE_PREFIX_MAPPING
+                      value: "[[.KieName]]-amq7=AMQ"
+                    - name: AMQ_USERNAME
+                      value: "[[.Jms.Username]]"
+                    - name: AMQ_PASSWORD
+                      value: "[[.Jms.Password]]"
+                    - name: AMQ_PROTOCOL
+                      value: "tcp"
+                    - name: AMQ_QUEUES
+                      value: "[[.Jms.AMQQueues]]"
+                    # JMS config END
+      ## KIE server deployment config END
+      ## AMQ deployment BEGIN
+      - metadata:
+          name: "[[.KieName]]-amq"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.KieName]]-amq"
+          annotations:
+            template.alpha.openshift.io/wait-for-ready: "true"
+        spec:
+          strategy:
+            rollingParams:
+              maxSurge: 100%
+              maxUnavailable: 0
+            type: Rolling
+          triggers:
+            - type: ImageChange
+              imageChangeParams:
+                automatic: true
+                containerNames:
+                  - "[[.KieName]]-amq"
+                from:
+                  kind: ImageStreamTag
+                  name: "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
+                  namespace: "openshift"
+            - type: ConfigChange
+          replicas: 1
+          selector:
+            deploymentConfig: "[[.KieName]]-amq"
+          template:
+            metadata:
+              name: "[[.KieName]]-amq"
+              labels:
+                app: "[[$.ApplicationName]]"
+                application: "[[$.ApplicationName]]"
+                deploymentConfig: "[[.KieName]]-amq"
+                service: "[[.KieName]]-amq"
+            spec:
+              terminationGracePeriodSeconds: 60
+              containers:
+                - name: "[[.KieName]]-amq"
+                  image: "[[$.Constants.BrokerImage]]"
+                  imagePullPolicy: Always
+                  readinessProbe:
+                    exec:
+                      command:
+                        - "/bin/bash"
+                        - "-c"
+                        - "/opt/amq/bin/readinessProbe.sh"
+                  ports:
+                    - containerPort: 8161
+                      name: console-jolokia
+                      protocol: TCP
+                    - containerPort: 5672
+                      name: amqp
+                      protocol: TCP
+                    - containerPort: 5671
+                      name: amqp-ssl
+                      protocol: TCP
+                    - containerPort: 1883
+                      name: mqtt
+                      protocol: TCP
+                    - containerPort: 8883
+                      name: mqtt-ssl
+                      protocol: TCP
+                    - containerPort: 61613
+                      name: stomp
+                      protocol: TCP
+                    - containerPort: 61612
+                      name: stomp-ssl
+                      protocol: TCP
+                    - containerPort: 61616
+                      name: artemis
+                      protocol: TCP
+                    - containerPort: 61617
+                      name: amq-tcp-ssl
+                      protocol: TCP
+                  env:
+                    - name: AMQ_USER
+                      value: "[[.Jms.Username]]"
+                    - name: AMQ_PASSWORD
+                      value: "[[.Jms.Password]]"
+                      # maybe turn it in a parameter and defaults to admin if empty?
+                    - name: AMQ_ROLE
+                      value: "admin"
+                    - name: AMQ_NAME
+                      value: "broker"
+                    - name: AMQ_TRANSPORTS
+                      value: "openwire"
+                    - name: AMQ_QUEUES
+                      value: "[[.Jms.AMQQueues]]"
+                    - name: AMQ_REQUIRE_LOGIN
+                      value: "true"
+                    - name: AMQ_ANYCAST_PREFIX
+                    - name: AMQ_MULTICAST_PREFIX
+                    # [[ if .Jms.AMQEnableSSL]]
+                    - name: AMQ_KEYSTORE_TRUSTSTORE_DIR
+                      value: "/etc/amq-secret-volume"
+                    - name: AMQ_TRUSTSTORE
+                      value: '[[.Jms.AMQTruststoreName ]]'
+                    - name: AMQ_TRUSTSTORE_PASSWORD
+                      value: '[[.Jms.AMQTruststorePassword ]]'
+                    - name: AMQ_KEYSTORE
+                      value: '[[.Jms.AMQKeystoreName ]]'
+                    - name: AMQ_KEYSTORE_PASSWORD
+                      value: '[[.Jms.AMQKeystorePassword ]]'
+                  volumeMounts:
+                    - name: broker-secret-volume
+                      mountPath: "/etc/amq-secret-volume"
+                      readOnly: true
+              volumes:
                 - name: broker-secret-volume
-                  mountPath: "/etc/amq-secret-volume"
-                  readOnly: true
-            volumes:
-              - name: broker-secret-volume
-                secret:
-                  secretName: '[[.Jms.AMQSecretName ]]'
-           # [[end]]
+                  secret:
+                    secretName: '[[.Jms.AMQSecretName ]]'
+              # [[end]]
 
     ## AMQ deployment END
     services:
@@ -361,7 +361,7 @@ servers:
             name: "[[.KieName]]-amq-jolokia"
       # [[end]]
 
-#[[end]]
-## RANGE ends
-## KIE Servers END
+  #[[end]]
+  ## RANGE ends
+  ## KIE Servers END
 

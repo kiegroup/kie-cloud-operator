@@ -12,9 +12,9 @@ servers:
               initContainers:
                 - command:
                     [
-                      "/bin/bash",
-                      "-c",
-                      ">-
+                        "/bin/bash",
+                        "-c",
+                        ">-
                        replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-mysql; replicas=$(oc get dc [[.KieName]]-mysql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
                   image: "[[$.Constants.OseCliImageURL]]"

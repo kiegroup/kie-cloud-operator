@@ -37,6 +37,36 @@ spec:
           value: "true"
         - name: DEBUG
           value: "false"
+        - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.12.1
+          value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.1
+        - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.12.1
+          value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.12.1
+        - name: RELATED_IMAGE_DM_DC_IMAGE_7.12.1
+          value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_BC_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.12.1
+        - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.12.1
+          value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.12.1
+        - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.12.1
+          value: registry.redhat.io/openshift4/ose-cli:v4.7
+        - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.12.1
+          value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+        - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.1
+          value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+        - name: RELATED_IMAGE_DATAGRID_IMAGE_7.12.1
+          value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.2
+        - name: RELATED_IMAGE_BROKER_IMAGE_7.12.1
+          value: registry.redhat.io/amq7/amq-broker:7.8
         - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.12.0
           value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.0
         - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.12.0
@@ -64,38 +94,8 @@ spec:
         - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.0
           value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
         - name: RELATED_IMAGE_DATAGRID_IMAGE_7.12.0
-          value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.2
-        - name: RELATED_IMAGE_BROKER_IMAGE_7.12.0
-          value: registry.redhat.io/amq7/amq-broker:7.8
-        - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.11.1
-          value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.11.1
-        - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.11.1
-          value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.11.1
-        - name: RELATED_IMAGE_DM_DC_IMAGE_7.11.1
-          value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_BC_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.11.1
-        - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.11.1
-          value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.11.1
-        - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.11.1
-          value: registry.redhat.io/openshift4/ose-cli:v4.7
-        - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.11.1
-          value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-        - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.11.1
-          value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-        - name: RELATED_IMAGE_DATAGRID_IMAGE_7.11.1
           value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
-        - name: RELATED_IMAGE_BROKER_IMAGE_7.11.1
+        - name: RELATED_IMAGE_BROKER_IMAGE_7.12.0
           value: registry.redhat.io/amq7/amq-broker:7.8
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
@@ -103,7 +103,7 @@ spec:
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
-        image: quay.io/kiegroup/kie-cloud-operator:7.12.0
+        image: quay.io/kiegroup/kie-cloud-operator:7.12.1
         imagePullPolicy: Always
         name: business-automation-operator
         resources: {}
