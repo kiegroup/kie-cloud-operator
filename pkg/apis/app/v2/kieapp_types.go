@@ -27,6 +27,8 @@ type KieAppSpec struct {
 	Upgrades KieAppUpgrades `json:"upgrades,omitempty"`
 	// Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
 	UseImageTags bool `json:"useImageTags,omitempty"`
+	// Defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder
+	Truststore *KieAppTruststore `json:"truststore,omitempty"`
 	// The version of the application deployment.
 	Version      string            `json:"version,omitempty"`
 	CommonConfig CommonConfig      `json:"commonConfig,omitempty"`
@@ -47,7 +49,7 @@ const (
 	RhpamAuthoring EnvironmentType = "rhpam-authoring"
 	// RhpamAuthoringHA RHPAM Authoring HA environment
 	RhpamAuthoringHA EnvironmentType = "rhpam-authoring-ha"
-	// RhpamDashbuilder RHPAM Standalone Dashbuilder environment
+	// RhpamStandaloneDashbuilder RHPAM Standalone Dashbuilder environment
 	RhpamStandaloneDashbuilder EnvironmentType = "rhpam-standalone-dashbuilder"
 	// RhdmTrial RHDM Trial environment
 	RhdmTrial EnvironmentType = "rhdm-trial"
@@ -65,6 +67,12 @@ type KieAppRegistry struct {
 	Registry string `json:"registry,omitempty"`
 	// A flag used to indicate the specified registry is insecure. Defaults to 'false'.
 	Insecure bool `json:"insecure,omitempty"`
+}
+
+// KieAppTruststore defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder
+type KieAppTruststore struct {
+	// Set true to use Openshift's CA Bundle as a truststore, instead of java's cacert.
+	OpenshiftCaBundle bool `json:"openshiftCaBundle,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -121,23 +129,32 @@ type KieServerSet struct {
 	// Server name
 	Name string `json:"name,omitempty"`
 	// Server ID
-	ID           string             `json:"id,omitempty"`
-	From         *ImageObjRef       `json:"from,omitempty"`
-	Build        *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
-	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
-	KieAppObject `json:",inline"`
-	Database     *DatabaseObject  `json:"database,omitempty"`
-	Jms          *KieAppJmsObject `json:"jms,omitempty"`
-	Jvm          *JvmObject       `json:"jvm,omitempty"`
+	ID               string             `json:"id,omitempty"`
+	From             *ImageObjRef       `json:"from,omitempty"`
+	Build            *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
+	SSOClient        *SSOAuthClient     `json:"ssoClient,omitempty"`
+	KieAppObject     `json:",inline"`
+	Database         *DatabaseObject  `json:"database,omitempty"`
+	Jms              *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm              *JvmObject       `json:"jvm,omitempty"`
+	PersistRepos     bool             `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string           `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string           `json:"serversKiePvSize,omitempty"`
+	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
 type ConsoleObject struct {
 	KieAppObject `json:",inline"`
-	SSOClient    *SSOAuthClient  `json:"ssoClient,omitempty"`
-	GitHooks     *GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm          *JvmObject      `json:"jvm,omitempty"`
-	PvSize       string          `json:"pvSize,omitempty"`
+	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
+	GitHooks     *GitHooksVolume    `json:"gitHooks,omitempty"`
+	Jvm          *JvmObject         `json:"jvm,omitempty"`
+	PvSize       string             `json:"pvSize,omitempty"`
+	Cors         *CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -146,6 +163,7 @@ type DashbuilderObject struct {
 	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
 	Jvm          *JvmObject         `json:"jvm,omitempty"`
 	Config       *DashbuilderConfig `json:"config,omitempty"`
+	Cors         *CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // SmartRouterObject configuration of the RHPAM smart router
@@ -155,7 +173,8 @@ type SmartRouterObject struct {
 	// Smart Router protocol, if no value is provided, http is the default protocol.
 	Protocol string `json:"protocol,omitempty"`
 	// If enabled, Business Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
-	UseExternalRoute bool `json:"useExternalRoute,omitempty"`
+	UseExternalRoute bool       `json:"useExternalRoute,omitempty"`
+	Jvm              *JvmObject `json:"jvm,omitempty"`
 }
 
 // KieAppJmsObject messaging specification to be used by the KieApp
@@ -242,16 +261,18 @@ type KieAppObject struct {
 	// Replicas to set for the DeploymentConfig
 	Replicas  *int32                       `json:"replicas,omitempty"`
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
-	// Keystore secret name
+	// KeystoreSecret secret name
 	KeystoreSecret string `json:"keystoreSecret,omitempty"`
-	// The image context to use  e.g. rhpam-7, this param is optional for custom image.
+	// ImageContext The image context to use  e.g. rhpam-7, this param is optional for custom image.
 	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use e.g. rhpam-<app>-rhel8, this param is optional for custom image.
+	// Image The image to use e.g. rhpam-<app>-rhel8, this param is optional for custom image.
 	Image string `json:"image,omitempty"`
-	// The image tag to use e.g. 7.9.0, this param is optional for custom image.
+	// ImageTag The image tag to use e.g. 7.9.0, this param is optional for custom image.
 	ImageTag string `json:"imageTag,omitempty"`
-	// The storageClassName to use
+	// StorageClassName The storageClassName to use
 	StorageClassName string `json:"storageClassName,omitempty"`
+	// RouteHostname will define the route.spec.host value
+	RouteHostname string `json:"routeHostname,omitempty"`
 }
 
 // KieAppBuildObject Data to define how to build an application from source
@@ -259,8 +280,12 @@ type KieAppBuildObject struct {
 	// Env set environment variables for BuildConfigs
 	Env []corev1.EnvVar `json:"env,omitempty"`
 	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
-	KieServerContainerDeployment string    `json:"kieServerContainerDeployment,omitempty"`
-	GitSource                    GitSource `json:"gitSource,omitempty"`
+	KieServerContainerDeployment string `json:"kieServerContainerDeployment,omitempty"`
+	// Disable Maven pull dependencies for immutable KIE Server configurations for S2I and pre built kjars. Useful for pre-compiled kjar.
+	DisablePullDeps bool `json:"disablePullDeps,omitempty"`
+	// Disable Maven KIE Jar verification. It is recommended to test the kjar manually before disabling this verification.
+	DisableKCVerification bool      `json:"disableKCVerification,omitempty"`
+	GitSource             GitSource `json:"gitSource,omitempty"`
 	// Maven mirror to use for S2I builds
 	MavenMirrorURL string `json:"mavenMirrorURL,omitempty"`
 	// List of directories from which archives will be copied into the deployment folder. If unspecified, all archives in /target will be copied.
@@ -272,7 +297,7 @@ type KieAppBuildObject struct {
 	ExtensionImageStreamTag string `json:"extensionImageStreamTag,omitempty"`
 	// Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace.
 	ExtensionImageStreamTagNamespace string `json:"extensionImageStreamTagNamespace,omitempty"`
-	// Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).
+	// Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.).  Defaults to '/extension'. Do not change it unless it is necessary.
 	ExtensionImageInstallDir string `json:"extensionImageInstallDir,omitempty"`
 }
 
@@ -525,9 +550,13 @@ type ExternalDatabaseObject struct {
 	Dialect string `json:"dialect"`
 	// Database Name. For example, rhpam
 	Name string `json:"name,omitempty"`
-	// Database Host. For example, mydb.example.com
+	// Database Host. For example, mydb.example.com. Host is intended to be used with databases running on OCP
+	// where the host will correspond to the kubernetes added env *_SERVICE_HOST, it is mostly likely used
+	// with PostgreSQL and MySQL variants running on OCP. For Databases Running outside OCP use jdbcUrl instead.
 	Host string `json:"host,omitempty"`
-	// Database Port. For example, 3306
+	// Database Port. For example, 3306. Port is intended to be used with databases running on OCP
+	// where the post will correspond to the kubernetes added env *_SERVICE_PORT, these are mostly likely used
+	// with PostgreSQL and MySQL variants running on OCP. For Databases Running outside OCP use jdbcUrl instead.
 	Port string `json:"port,omitempty"`
 	// Sets the datasources type. It can be XA or NONXA. For non XA set it to true. Default value is false.
 	NonXA                string `json:"nonXA,omitempty"`
@@ -584,15 +613,17 @@ type OpenShiftObject interface {
 }
 
 type EnvTemplate struct {
-	*CommonConfig    `json:",inline"`
-	Console          ConsoleTemplate          `json:"console,omitempty"`
-	Servers          []ServerTemplate         `json:"servers,omitempty"`
-	SmartRouter      SmartRouterTemplate      `json:"smartRouter,omitempty"`
-	Auth             AuthTemplate             `json:"auth,omitempty"`
-	ProcessMigration ProcessMigrationTemplate `json:"processMigration,omitempty"`
-	Dashbuilder      DashbuilderTemplate      `json:"dashbuilder,omitempty"`
-	Databases        []DatabaseTemplate       `json:"databases,omitempty"`
-	Constants        TemplateConstants        `json:"constants,omitempty"`
+	*CommonConfig     `json:",inline"`
+	Console           ConsoleTemplate          `json:"console,omitempty"`
+	Servers           []ServerTemplate         `json:"servers,omitempty"`
+	SmartRouter       SmartRouterTemplate      `json:"smartRouter,omitempty"`
+	Auth              AuthTemplate             `json:"auth,omitempty"`
+	ProcessMigration  ProcessMigrationTemplate `json:"processMigration,omitempty"`
+	Dashbuilder       DashbuilderTemplate      `json:"dashbuilder,omitempty"`
+	Databases         []DatabaseTemplate       `json:"databases,omitempty"`
+	Constants         TemplateConstants        `json:"constants,omitempty"`
+	OpenshiftCaBundle bool                     `json:"openshiftCaBundle,omitempty"`
+	RouteProtocol     string                   `json:"routeProtocol,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -622,21 +653,24 @@ type TemplateConstants struct {
 
 // ConsoleTemplate contains all the variables used in the yaml templates
 type ConsoleTemplate struct {
-	OmitImageStream     bool           `json:"omitImageStream"`
-	SSOAuthClient       SSOAuthClient  `json:"ssoAuthClient,omitempty"`
-	Name                string         `json:"name,omitempty"`
-	Replicas            int32          `json:"replicas,omitempty"`
-	ImageContext        string         `json:"imageContext,omitempty"`
-	Image               string         `json:"image,omitempty"`
-	ImageTag            string         `json:"imageTag,omitempty"`
-	ImageURL            string         `json:"imageURL,omitempty"`
-	KeystoreSecret      string         `json:"keystoreSecret,omitempty"`
-	GitHooks            GitHooksVolume `json:"gitHooks,omitempty"`
-	Jvm                 JvmObject      `json:"jvm,omitempty"`
-	StorageClassName    string         `json:"storageClassName,omitempty"`
-	PvSize              string         `json:"pvSize,omitempty"`
-	Simplified          bool           `json:"simplifed"`
-	DashbuilderLocation string         `json:"dashbuilderLocation,omitempty"`
+	OmitImageStream     bool              `json:"omitImageStream"`
+	SSOAuthClient       SSOAuthClient     `json:"ssoAuthClient,omitempty"`
+	Name                string            `json:"name,omitempty"`
+	Replicas            int32             `json:"replicas,omitempty"`
+	ImageContext        string            `json:"imageContext,omitempty"`
+	Image               string            `json:"image,omitempty"`
+	ImageTag            string            `json:"imageTag,omitempty"`
+	ImageURL            string            `json:"imageURL,omitempty"`
+	KeystoreSecret      string            `json:"keystoreSecret,omitempty"`
+	GitHooks            GitHooksVolume    `json:"gitHooks,omitempty"`
+	Jvm                 JvmObject         `json:"jvm,omitempty"`
+	StorageClassName    string            `json:"storageClassName,omitempty"`
+	RouteHostname       string            `json:"routeHostname,omitempty"`
+	PvSize              string            `json:"pvSize,omitempty"`
+	Simplified          bool              `json:"simplifed"`
+	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
+	Cors                CORSFiltersObject `json:"cors,omitempty"`
+	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -656,6 +690,16 @@ type ServerTemplate struct {
 	SmartRouter      SmartRouterObject `json:"smartRouter,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	RouteHostname    string            `json:"routeHostname,omitempty"`
+	PersistRepos     bool              `json:"persistRepos,omitempty"`
+	ServersM2PvSize  string            `json:"serversM2PvSize,omitempty"`
+	ServersKiePvSize string            `json:"serversKiePvSize,omitempty"`
+	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
+	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
+	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
+	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
+	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
+	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -672,7 +716,9 @@ type DashbuilderTemplate struct {
 	Database         DatabaseObject    `json:"database,omitempty"`
 	Jvm              JvmObject         `json:"jvm,omitempty"`
 	StorageClassName string            `json:"storageClassName,omitempty"`
+	RouteHostname    string            `json:"routeHostname,omitempty"`
 	Config           DashbuilderConfig `json:"config,omitempty"`
+	Cors             CORSFiltersObject `json:"cors,omitempty"`
 }
 
 // DashbuilderConfig holds all configurations that can be applied to the Dashbuilder env
@@ -754,16 +800,18 @@ type DatabaseTemplate struct {
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
-	OmitImageStream  bool   `json:"omitImageStream"`
-	Replicas         int32  `json:"replicas,omitempty"`
-	KeystoreSecret   string `json:"keystoreSecret,omitempty"`
-	Protocol         string `json:"protocol,omitempty"`
-	UseExternalRoute bool   `json:"useExternalRoute,omitempty"`
-	ImageContext     string `json:"imageContext,omitempty"`
-	Image            string `json:"image,omitempty"`
-	ImageTag         string `json:"imageTag,omitempty"`
-	ImageURL         string `json:"imageURL,omitempty"`
-	StorageClassName string `json:"storageClassName,omitempty"`
+	OmitImageStream  bool      `json:"omitImageStream"`
+	Replicas         int32     `json:"replicas,omitempty"`
+	KeystoreSecret   string    `json:"keystoreSecret,omitempty"`
+	Protocol         string    `json:"protocol,omitempty"`
+	UseExternalRoute bool      `json:"useExternalRoute,omitempty"`
+	ImageContext     string    `json:"imageContext,omitempty"`
+	Image            string    `json:"image,omitempty"`
+	ImageTag         string    `json:"imageTag,omitempty"`
+	ImageURL         string    `json:"imageURL,omitempty"`
+	StorageClassName string    `json:"storageClassName,omitempty"`
+	RouteHostname    string    `json:"routeHostname,omitempty"`
+	Jvm              JvmObject `json:"jvm,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -787,6 +835,8 @@ type BuildTemplate struct {
 	GitHubWebhookSecret          string      `json:"githubWebhookSecret,omitempty"`
 	GenericWebhookSecret         string      `json:"genericWebhookSecret,omitempty"`
 	KieServerContainerDeployment string      `json:"kieServerContainerDeployment,omitempty"`
+	DisablePullDeps              bool        `json:"disablePullDeps,omitempty"`
+	DisableKCVerification        bool        `json:"disableKCVerification,omitempty"`
 	MavenMirrorURL               string      `json:"mavenMirrorURL,omitempty"`
 	ArtifactDir                  string      `json:"artifactDir,omitempty"`
 	// Extension image configuration which provides custom jdbc drivers to be used
@@ -817,6 +867,10 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	// If set to true, plain text routes will be configured instead using SSL
+	DisableSsl bool `json:"disableSsl,omitempty"`
+	// Startup strategy for Console and Kieserver
+	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
 }
 
 // VersionConfigs ...
@@ -855,24 +909,35 @@ type RoleMapperTemplate struct {
 
 // ProcessMigrationObject configuration of the RHPAM PIM
 type ProcessMigrationObject struct {
-	// The image context to use for Process Instance Migration  e.g. rhpam-7, this param is optional for custom image.
-	ImageContext string `json:"imageContext,omitempty"`
-	// The image to use for Process Instance Migration e.g. rhpam-process-migration-rhel8, this param is optional for custom image.
-	Image string `json:"image,omitempty"`
-	// The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.
-	ImageTag string                         `json:"imageTag,omitempty"`
-	Database ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	KieAppObject  `json:",inline"`
+	Jvm           *JvmObject                     `json:"jvm,omitempty"`
+	Database      ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	RouteHostname string                         `json:"routeHostname,omitempty"`
+	// If empty the CommonConfig.AdminUser will be used
+	Username string `json:"username,omitempty"`
+	// If empty the CommonConfig.AdminPassword will be used
+	Password string `json:"password,omitempty"`
+	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
+	// on the image before.
+	ExtraClassPath string `json:"extraClassPath,omitempty"`
 }
 
 // ProcessMigrationTemplate ...
 type ProcessMigrationTemplate struct {
+	KieAppObject     `json:",inline"`
 	OmitImageStream  bool                           `json:"omitImageStream"`
-	ImageContext     string                         `json:"imageContext,omitempty"`
-	Image            string                         `json:"image,omitempty"`
-	ImageTag         string                         `json:"imageTag,omitempty"`
 	ImageURL         string                         `json:"imageURL,omitempty"`
 	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
+	Jvm              JvmObject                      `json:"jvm,omitempty"`
 	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
+	RouteHostname    string                         `json:"routeHostname,omitempty"`
+	// PIM Admin username. If empty the CommonConfig.AdminUser will be used
+	Username string `json:"username,omitempty"`
+	// PIM Admin password. If empty the CommonConfig.AdminPassword will be used
+	Password string `json:"password,omitempty"`
+	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
+	// on the image before.
+	ExtraClassPath string `json:"extraClassPath,omitempty"`
 }
 
 // KieServerClient ...
@@ -935,6 +1000,91 @@ type ObjectReference struct {
 	// +optional
 	FieldPath string `json:"fieldPath,omitempty" protobuf:"bytes,7,opt,name=fieldPath"`
 }
+
+// KafkaExtObject kafka configuration to be used by the KieApp
+type KafkaExtObject struct {
+	// Contains the mapping message/signal=topicName for every topic that needs to be mapped globally
+	Topics []string `json:"topics,omitempty"`
+	// A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// Identifier to pass to the server when making requests
+	ClientID string `json:"clientID,omitempty"`
+	// Allow automatic topic creation.
+	AutocreateTopics *bool `json:"autocreateTopics,omitempty"`
+	// Group identifier the group this consumer belongs
+	GroupID string `json:"groupID,omitempty"`
+	// The number of acknowledgments the producer requires the leader to have received before considering a request complete.
+	Acks *int `json:"acks,omitempty"`
+	// Number of milliseconds that indicates how long publish method will bloc
+	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
+}
+
+// KafkaJBPMEventEmittersObject kafka configuration to be used by the KieApp for jBPM Emitter
+type KafkaJBPMEventEmittersObject struct {
+	// Comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// This configuration allows users to set an ID to provide a logical application name for logging purposes, not set by default.
+	ClientID string `json:"clientID,omitempty"`
+	// The number of acknowledgments that the emitter requires the leader to have received before considering a request to be complete, not set by default.
+	Acks *int `json:"acks,omitempty"`
+	// Value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds).
+	MaxBlockMs *int32 `json:"maxBlockMs,omitempty"`
+	// Date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ
+	DateFormat string `json:"dateFormat,omitempty"`
+	// The topic name for processes event messages. Set up to override the default value jbpm-processes-events.
+	ProcessesTopicName string `json:"processesTopicName,omitempty"`
+	// The topic name for tasks event messages. Set up to override the default value jbpm-tasks-events.
+	TasksTopicName string `json:"tasksTopicName,omitempty"`
+	// The topic name for cases event messages. Set up to override the default value jbpm-cases-events.
+	CasesTopicName string `json:"casesTopicName,omitempty"`
+}
+
+// CORS Cross Origin Resource Sharing configuration to be used by the KieApp for the KIE Server, workbench and RHPAM Dashbuilder
+type CORSFiltersObject struct {
+	//Enable CORS setting with the default values, default is false
+	Default bool `json:"default,omitempty"`
+	//Access control Response Headers Filters separated by comma, default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE
+	Filters string `json:"filters,omitempty"`
+
+	//Access Control Origin Response Header Filter Header Name, default is Access-Control-Allow-Origin
+	AllowOriginName string `json:"allowOriginName,omitempty"`
+	//Access Control Origin Response Header  Filter Header Value, default is: *
+	AllowOriginValue string `json:"allowOriginValue,omitempty"`
+
+	//Access Control Allow Methods Response Header Filter Header Name, default is: Access-Control-Allow-Methods
+	AllowMethodsName string `json:"allowMethodsName,omitempty"`
+	//Access Control Allow Methods Response Headers Filter Header Value, default is: GET, POST, OPTIONS, PUT
+	AllowMethodsValue string `json:"allowMethodsValue,omitempty"`
+
+	//Access Control Allow Headers Filter Header Name, default is: Access-Control-Allow-Headers
+	AllowHeadersName string `json:"allowHeadersName,omitempty"`
+	//Access Control Allow Headers Filter Header Value, default is: Accept, Authorization, Content-Type, X-Requested-With
+	AllowHeadersValue string `json:"allowHeadersValue,omitempty"`
+
+	//Access Control Allow Credentials Filter Header Name, default is: Access-Control-Allow-Credentials
+	AllowCredentialsName string `json:"allowCredentialsName,omitempty"`
+	//Access Control Allow Credentials Filter Header Value, default is: true
+	AllowCredentialsValue *bool `json:"allowCredentialsValue,omitempty"`
+
+	//Access Control Max Age Filter Header Name, default is: Access-Control-Max-Age
+	MaxAgeName string `json:"maxAgeName,omitempty"`
+	//Access Control Max Age Filter Header Value, default is: 1
+	MaxAgeValue *int32 `json:"maxAgeValue,omitempty"`
+}
+
+// StartupStrategy ...
+type StartupStrategy struct {
+	// StartupStrategy to use. When set to OpenShiftStartupStrategy, allows KIE server to start up independently used shared state from OpenShift API service, option is ControllerBasedStartupStrategy, default is OpenShiftStartupStrategy
+	StrategyName string `json:"strategyName,omitempty"`
+	// Controller Template Cache TTL to use when the OpenShiftStartupStrategy is choosed and Business Central is deployed, default is 5000
+	ControllerTemplateCacheTTL *int `json:"controllerTemplateCacheTTL,omitempty"`
+}
+
+// StartupStrategies supported values
+const (
+	OpenshiftStartupStrategy  = "OpenShiftStartupStrategy"
+	ControllerStartupStrategy = "ControllerBasedStartupStrategy"
+)
 
 func init() {
 	SchemeBuilder.Register(&KieApp{}, &KieAppList{})

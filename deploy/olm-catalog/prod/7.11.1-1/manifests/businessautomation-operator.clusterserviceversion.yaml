@@ -1,0 +1,421 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
+    capabilities: Seamless Upgrades
+    categories: Integration & Delivery
+    certified: "true"
+    containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.11.1
+    createdAt: "2021-06-30 18:10:56"
+    description: Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
+    repository: https://github.com/kiegroup/kie-cloud-operator
+    support: Red Hat
+    tectonic-visibility: ocs
+  labels:
+    operator-businessautomation: "true"
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/os.linux: supported
+  name: businessautomation-operator.7.11.1-1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: A project prescription running an RHPAM/RHDM environment.
+      displayName: KieApp
+      kind: KieApp
+      name: kieapps.app.kiegroup.org
+      resources:
+      - kind: DeploymentConfig
+        name: ""
+        version: apps.openshift.io/v1
+      - kind: StatefulSet
+        name: ""
+        version: apps/v1
+      - kind: Role
+        name: ""
+        version: rbac.authorization.k8s.io/v1
+      - kind: RoleBinding
+        name: ""
+        version: rbac.authorization.k8s.io/v1
+      - kind: Route
+        name: ""
+        version: route.openshift.io/v1
+      - kind: BuildConfig
+        name: ""
+        version: build.openshift.io/v1
+      - kind: ImageStream
+        name: ""
+        version: image.openshift.io/v1
+      - kind: Secret
+        name: ""
+        version: v1
+      - kind: PersistentVolumeClaim
+        name: ""
+        version: v1
+      - kind: ServiceAccount
+        name: ""
+        version: v1
+      - kind: Service
+        name: ""
+        version: v1
+      specDescriptors:
+      - description: Set true to enable automatic micro version product upgrades, it is disabled by default.
+        displayName: Enable Upgrades
+        path: upgrades.enabled
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
+        displayName: Include minor version upgrades
+        path: upgrades.minor
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
+        displayName: Use Image Tags
+        path: useImageTags
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Environment deployed.
+        displayName: Environment
+        path: environment
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:label
+      statusDescriptors:
+      - description: Product version installed.
+        displayName: Version
+        path: version
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:label
+      - description: Current phase.
+        displayName: Status
+        path: phase
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:label
+      - description: The address for accessing Business Central, if it is deployed.
+        displayName: Business/Decision Central URL
+        path: consoleHost
+        x-descriptors:
+        - urn:alm:descriptor:org.w3:link
+      - description: Deployments for the KieApp environment.
+        displayName: Deployments
+        path: deployments
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podStatuses
+      version: v2
+  description: |-
+    Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
+
+    * **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
+
+     * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.
+
+    [See more](https://www.redhat.com/en/products/process-automation).
+  displayName: Business Automation
+  icon:
+  - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjEuMTUgNzIxLjE1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2RkMzkyNjt9LmNscy0ye2ZpbGw6I2NjMzQyNzt9LmNscy0ze2ZpbGw6I2ZmZjt9LmNscy00e2ZpbGw6I2U1ZTVlNDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlByb2R1Y3RfSWNvbi1SZWRfSGF0LUF1dG9tYXRpb24tUkdCPC90aXRsZT48Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjM2MC41NyIgY3k9IjM2MC41NyIgcj0iMzU4LjU4Ii8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNjEzLjc4LDEwNy4wOSwxMDYuNzIsNjE0LjE2YzE0MC4xNCwxMzguNjIsMzY2LjExLDEzOC4xNiw1MDUuNjctMS40Uzc1Mi40LDI0Ny4yNCw2MTMuNzgsMTA3LjA5WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIzNzguOTcgMzI3LjQ4IDQ2MS43NyAxNTkuNTcgMjU5LjY3IDE1OS40OSAyNTkuNjcgNDEzLjEgMzA2Ljk3IDQxMy43OCAzOTMuMjcgMzI3LjQ3IDM3OC45NyAzMjcuNDgiLz48cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iMzU5LjYgNTc4LjA2IDQ4Mi41NSAzMjcuNDUgMzkzLjI3IDMyNy40NyAzMDYuOTcgNDEzLjc4IDM1OS42IDQxNC41MiAzNTkuNiA1NzguMDYiLz48L3N2Zz4=
+    mediatype: image/svg+xml
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consolelinks
+          - consoleyamlsamples
+          verbs:
+          - get
+          - create
+          - update
+          - delete
+        serviceAccountName: business-automation-operator
+      deployments:
+      - name: business-automation-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: business-automation-operator
+          strategy:
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 1
+            type: RollingUpdate
+          template:
+            metadata:
+              labels:
+                name: business-automation-operator
+            spec:
+              containers:
+              - command:
+                - kie-cloud-operator
+                env:
+                - name: OPERATOR_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['name']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: OPERATOR_UI
+                  value: "true"
+                - name: DEBUG
+                  value: "false"
+                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.11.1
+                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-controller-rhel8:7.11.1
+                - name: RELATED_IMAGE_DM_DC_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-controller-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.11.1
+                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.11.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.11.1
+                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.11.1
+                  value: registry.redhat.io/openshift4/ose-cli:v4.7
+                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.11.1
+                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.11.1
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.11.1
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                - name: RELATED_IMAGE_BROKER_IMAGE_7.11.1
+                  value: registry.redhat.io/amq7/amq-broker:7.8
+                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.11.0
+                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.11.0
+                - name: RELATED_IMAGE_DM_DC_IMAGE_7.11.0
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.11.0
+                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.11.0
+                  value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.11.0
+                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.11.0
+                  value: registry.redhat.io/openshift4/ose-cli:v4.7
+                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.11.0
+                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.11.0
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.11.0
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                - name: RELATED_IMAGE_BROKER_IMAGE_7.11.0
+                  value: registry.redhat.io/amq7/amq-broker:7.8
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
+                image: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.11.1
+                imagePullPolicy: Always
+                name: business-automation-operator
+                resources: {}
+              serviceAccountName: business-automation-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          - pods
+          - services
+          - services/finalizers
+          - serviceaccounts
+          - persistentvolumeclaims
+          - secrets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - deployments/finalizers
+          - replicasets
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - build.openshift.io
+          resources:
+          - buildconfigs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - image.openshift.io
+          resources:
+          - images
+          - imagestreams
+          - imagestreamimages
+          - imagestreamtags
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - app.kiegroup.org
+          resources:
+          - kieapps
+          - kieapps/status
+          - kieapps/finalizers
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions
+          - subscriptions
+          verbs:
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: business-automation-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - kieapp
+  - pam
+  - decision
+  - kie
+  - cloud
+  - bpm
+  - process
+  - automation
+  - operator
+  labels:
+    alm-owner-businessautomation: businessautomation-operator
+    operated-by: businessautomation-operator.7.11.1-1
+  links:
+  - name: Product Page
+    url: https://access.redhat.com/products/red-hat-process-automation-manager
+  - name: Documentation
+    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.11/#category-deploying-red-hat-process-automation-manager-on-openshift
+  maintainers:
+  - email: bsig-cloud@redhat.com
+    name: Red Hat
+  maturity: stable
+  provider:
+    name: Red Hat
+  replaces: businessautomation-operator.7.11.0-2
+  selector:
+    matchLabels:
+      alm-owner-businessautomation: businessautomation-operator
+      operated-by: businessautomation-operator.7.11.1-1
+  version: 7.11.1-1

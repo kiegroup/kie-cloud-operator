@@ -31,7 +31,8 @@ import (
 )
 
 var consoleName = "console-cr-form"
-var operatorName string
+var operatorName = os.Getenv(constants.OpNameEnv)
+var caConfigMapName = operatorName + "-trusted-cabundle"
 
 func shouldDeployConsole() bool {
 	shouldDeploy := os.Getenv(constants.OpUIEnv)
@@ -46,7 +47,6 @@ func shouldDeployConsole() bool {
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	log.Debugf("Checking operator-ui deployment")
 	namespace := os.Getenv(constants.NameSpaceEnv)
-	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
@@ -210,12 +210,6 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	} else if val, exists := os.LookupEnv(constants.OauthVar + "LATEST"); exists {
 		oauthImage = val
 	}
-	if ocpMajor == "3" {
-		oauthImage = constants.Oauth3ImageLatestURL
-		if val, exists := os.LookupEnv(constants.OauthVar + "3"); exists {
-			oauthImage = val
-		}
-	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
 	httpsPort := int32(8443)
@@ -285,7 +279,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
 	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 		caVolume := corev1.Volume{
-			Name: operatorName + "-trusted-cabundle",
+			Name: caConfigMapName,
 		}
 		caVolume.ConfigMap = &corev1.ConfigMapVolumeSource{
 			Items: []corev1.KeyToPath{{Key: "ca-bundle.crt", Path: "ca-bundle.crt"}},
@@ -329,9 +323,6 @@ func getService(namespace, ocpVersion string) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	if semver.Major(ocpVersion) == "v3" {
-		svc.Annotations = map[string]string{"service.alpha.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"}
-	}
 	return svc
 }
 
@@ -365,7 +356,7 @@ func getCaConfigMap(namespace string) *corev1.ConfigMap {
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      operatorName + "-trusted-cabundle",
+			Name:      caConfigMapName,
 			Namespace: namespace,
 			Labels:    labels,
 		},

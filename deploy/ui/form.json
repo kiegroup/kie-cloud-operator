@@ -56,6 +56,32 @@
           "originalJsonPath": "$.spec.useImageTags"
         },
         {
+          "label": "Disable SSL Routes",
+          "type": "checkbox",
+          "required": false,
+          "description": "If checked, external routes to the services will use plain text communication (http).",
+          "jsonPath": "$.spec.disableSsl",
+          "originalJsonPath": "$.spec.disableSsl"
+        },
+        {
+          "label": "Truststore",
+          "type": "fieldGroup",
+          "required": false,
+          "description": "Defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder.",
+          "jsonPath": "$.spec.truststore",
+          "visible": true,
+          "fields": [
+            {
+              "label": "Use Openshift CA Bundle",
+              "type": "checkbox",
+              "required": false,
+              "description": "Set true to use Openshift's CA Bundle as a truststore, instead of java's cacert.",
+              "jsonPath": "$.spec.truststore.openshiftCaBundle",
+              "originalJsonPath": "$.spec.truststore.openshiftCaBundle"
+            }
+          ]
+        },
+        {
           "label": "Custom registry",
           "type": "fieldGroup",
           "required": false,
@@ -101,6 +127,38 @@
               "description": "Administrative password to use instead of generating default value",
               "jsonPath": "$.spec.commonConfig.adminPassword",
               "type": "password"
+            }
+          ]
+        },
+        {
+          "label": "Startup Strategy",
+          "type": "fieldGroup",
+          "jsonPath": "$.spec.startupStrategy",
+          "visible": true,
+          "fields": [
+            {
+              "type": "dropDown",
+              "required": true,
+              "jsonPath": "$.spec.commonConfig.startupStrategy.strategyName",
+              "originalJsonPath": "$.spec.commonConfig.startupStrategy.strategyName",
+              "description": "Specify the StartupStrategy to use. Do not enable the Controller strategy in an environment with a high-availability Business Central.",
+              "default": "OpenShiftStartupStrategy",
+              "options": [
+                {
+                  "value": "ControllerBasedStartupStrategy",
+                  "label": "ControllerBasedStartupStrategy"
+                },
+                {
+                  "value": "OpenShiftStartupStrategy",
+                  "label": "OpenShiftStartupStrategy"
+                }
+              ]
+            },
+            {
+              "label": "Controller Template Cache TTL",
+              "type": "integer",
+              "jsonPath": "$.spec.commonConfig.startupStrategy.controllerTemplateCacheTTL",
+              "description": "If OpenShiftStartupStrategy is used this value is the Template Cache TTL, default is 5000"
             }
           ]
         }
@@ -472,6 +530,7 @@
       "subPages": [
         {
           "label": "Console",
+          "visible": true,
           "fields": [
             {
               "label": "Image Context",
@@ -522,6 +581,12 @@
               "jsonPath": "$.spec.objects.console.pvSize",
               "type": "text",
               "description": "The size of the Business Central's Persistent Volume. Examples: 1Gi, 512Mi."
+            },
+            {
+              "label": "Custom hostname to be used on the Business Central external Route.",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.routeHostname",
+              "type": "text"
             },
             {
               "label": "GitHooks",
@@ -780,6 +845,141 @@
                   "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
                 }
               ]
+            },
+            {
+              "label": "CORS Filters configuration",
+              "type": "dropDown",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.cors",
+              "default": "default",
+              "options": [
+                {
+                  "value": "default",
+                  "label": "Default configuration"
+                },
+                {
+                  "value": "custom",
+                  "label": "Custom configuration"
+                }
+              ],
+              "fields": [
+                {
+                  "label": "default",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "default",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "Enable CORS with Default values",
+                      "type": "checkbox",
+                      "checked": false,
+                      "jsonPath": "$.spec.objects.console.cors.default",
+                      "originalJsonPath": "$.spec.objects.console.cors.default",
+                      "description": "Configure CORS with default values and skip manual configuration"
+                    }
+                  ]
+                },
+                {
+                  "label": "custom",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "custom",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "Filters",
+                      "type": "text",
+                      "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                      "jsonPath": "$.spec.objects.console.cors.filters",
+                      "originalJsonPath": "$.spec.objects.console.cors.filters",
+                      "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                    },
+                    {
+                      "label": "Access Control Allow origin name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Origin",
+                      "jsonPath": "$.spec.objects.console.cors.allowOriginName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowOriginName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                    },
+                    {
+                      "label": "Access Control Allow origin value filter",
+                      "type": "text",
+                      "default": "*",
+                      "jsonPath": "$.spec.objects.console.cors.allowOriginValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowOriginValue",
+                      "description": "Value, suggested default is: *"
+                    },
+                    {
+                      "label": "Access Control Allow methods name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Methods",
+                      "jsonPath": "$.spec.objects.console.cors.allowMethodsName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowMethodsName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                    },
+                    {
+                      "label": "Access Control Allow methods value filter",
+                      "type": "text",
+                      "default": "GET, POST, OPTIONS, PUT",
+                      "jsonPath": "$.spec.objects.console.cors.allowMethodsValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowMethodsValue",
+                      "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                    },
+                    {
+                      "label": "Access Control Allow headers name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Headers",
+                      "jsonPath": "$.spec.objects.console.cors.allowHeadersName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowHeadersName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                    },
+                    {
+                      "label": "Access Control Allow origin headers value filter",
+                      "type": "text",
+                      "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                      "jsonPath": "$.spec.objects.console.cors.allowHeadersValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowHeadersValue",
+                      "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                    },
+                    {
+                      "label": "Access Control Allow credentials name filter",
+                      "type": "text",
+                      "default": "Access-Control-Allow-Credentials",
+                      "jsonPath": "$.spec.objects.console.cors.allowCredentialsName",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowCredentialsName",
+                      "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                    },
+                    {
+                      "label": "Access Control Allow credentials value filter",
+                      "type": "checkbox",
+                      "checked": false,
+                      "jsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.allowCredentialsValue",
+                      "description": "Value, suggested default is: true "
+                    },
+                    {
+                      "label": "Access Control Max Age name filter",
+                      "type": "text",
+                      "default": "Access-Control-Max-Age",
+                      "jsonPath": "$.spec.objects.console.cors.maxAgeName",
+                      "originalJsonPath": "$.spec.objects.console.cors.maxAgeName",
+                      "description": "Name, suggested default is: Access-Control-Max-Age"
+                    },
+                    {
+                      "label": "Access Control Max Age value filter",
+                      "type": "integer",
+                      "default": "1",
+                      "jsonPath": "$.spec.objects.console.cors.maxAgeValue",
+                      "originalJsonPath": "$.spec.objects.console.cors.maxAgeValue",
+                      "description": "Value, suggested default is: 1"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -805,6 +1005,50 @@
                   "jsonPath": "$.spec.objects.servers[*].name",
                   "type": "text",
                   "description": "The name to use for this KIE Server."
+                },
+                {
+                  "label": "Enable Persistent Storage for kie and maven repositories",
+                  "type": "checkbox",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "originalJsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively.",
+                  "fields": [
+                    {
+                      "label": "Enable Persistent Storage for kie and maven repositories",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*]",
+                      "originalJsonPath": "$.spec.objects.servers[*]",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "StorageClass Name",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "originalJsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "type": "text",
+                          "description": "The storageClassName to use for KIE Server pvc's."
+                        },
+                        {
+                          "label": "KIE Server Maven Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.m2 pvc's. Example 10Gi, default value is 1Gi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        },
+                        {
+                          "label": "KIE Server Kie Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversKiePvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].ServersKiePvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.kie pvc's. Example 512Mi, default value is 10Mi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   "label": "Image Context",
@@ -839,7 +1083,15 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].keystoreSecret",
                   "type": "text",
-                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty"
+                  "description": "The secret name within the Java keystore used for https encryption. Generated if empty."
+                },
+                {
+                  "label": "Enable JBPM Cluster",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "originalJsonPath": "$.spec.objects.servers[*].jbpmCluster",
+                  "type": "checkbox",
+                  "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers."
                 },
                 {
                   "label": "Replicas",
@@ -847,6 +1099,12 @@
                   "jsonPath": "$.spec.objects.servers[*].replicas",
                   "type": "integer",
                   "description": "The number of replicas for this KIE Server set."
+                },
+                {
+                  "label": "Custom hostname to be used on the KIE Server external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].routeHostname",
+                  "type": "text"
                 },
                 {
                   "label": "KIE Server image",
@@ -905,6 +1163,22 @@
                       "jsonPath": "$.spec.objects.servers[*].build.kieServerContainerDeployment",
                       "description": "KIE packages to deploy to the KIE Server.",
                       "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT"
+                    },
+                    {
+                      "label": "Disable KIE Jar Pull Dependencies",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Disable Maven pull dependencies for immutable KIE Server configurations for S2I and pre built kjars.",
+                      "jsonPath": "$.spec.objects.servers[*].build.disablePullDeps",
+                      "originalJsonPath": "$.spec.objects.servers[*].build.disablePullDeps"
+                    },
+                    {
+                      "label": "Disable KIE Jar Verification",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Disable Maven KIE Jar verification. It is recommended to test the kjar manually before disabling this verification.",
+                      "jsonPath": "$.spec.objects.servers[*].build.disableKCVerification",
+                      "originalJsonPath": "$.spec.objects.servers[*].build.disableKCVerification"
                     },
                     {
                       "label": "Maven mirror URL",
@@ -982,7 +1256,7 @@
                           "jsonPath": "$.spec.objects.servers[*].build.gitSource.reference",
                           "required": true,
                           "description": "Branch to use in the git repository for S2I build.",
-                          "default": "master"
+                          "default": "main"
                         },
                         {
                           "label": "Context directory",
@@ -1129,6 +1403,153 @@
                   ]
                 },
                 {
+                  "label": "Enable Kafka Extension",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].kafka",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Bootstrap Servers",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.bootstrapServers",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.bootstrapServers",
+                      "description": "A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
+                    },
+                    {
+                      "label": "Client ID",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.clientID",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.clientID",
+                      "description": "An id string to pass to the server when making requests. Not passed by default (the purpose of this property is to provide a logical application name for logging)"
+                    },
+                    {
+                      "label": "Autocreate Topics",
+                      "type": "checkbox",
+                      "checked": true,
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.autocreateTopics",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.autocreateTopics",
+                      "description": "Allow automatic topic creation.Allow automatic topic creation. Enabled by default"
+                    },
+                    {
+                      "label": "Group Identifier",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.groupID",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.groupID",
+                      "description": "A unique string that identifies the group this consumer belongs to. Default to 'jbpm-consumer'"
+                    },
+                    {
+                      "label": "Number of Acknowledgments ",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.acks",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.acks",
+                      "description": "The number of acknowledgments the producer requires the leader to have received before considering a request complete. 1 by default, which means the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers"
+                    },
+                    {
+                      "label": "Max Block in Milliseconds",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.maxBlockMs",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafka.maxBlockMs",
+                      "description": "Number of milliseconds that indicates how long publish method will block. Default 2000 (2 seconds)"
+                    },
+                    {
+                      "label": "Topics",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafka.topics",
+                      "type": "object",
+                      "fields": [
+                        {
+                          "label": "Mapping",
+                          "type": "text",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].kafka.topics[*]",
+                          "originalJsonPath": "$.spec.objects.servers[*].kafka.topics[*]",
+                          "description": "Mapping Message=Topic"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Enable Kafka Emitter",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Bootstrap Servers",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.bootstrapServers",
+                      "description": "Comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster."
+                    },
+                    {
+                      "label": "Client ID",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.clientID",
+                      "description": "This configuration allows users to set an ID to provide a logical application name for logging purposes, not set by default."
+                    },
+                    {
+                      "label": "Number of Acknowledgments ",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.acks",
+                      "description": "The number of acknowledgments that the emitter requires the leader to have received before considering a request to be complete, not set by default."
+                    },
+                    {
+                      "label": "Max Block in Milliseconds",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.maxBlockMs",
+                      "description": "Value in milliseconds that indicates how long the 'publish' method will block the operation. Default 2000 milliseconds (2 seconds)."
+                    },
+                    {
+                      "label": "Date Format",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.dateFormat",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.dateFormat",
+                      "description": "Date and time format to be sent to Kafka. Default format is yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                    },
+                    {
+                      "label": "Processes Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.processesTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.processesTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-processes-events."
+                    },
+                    {
+                      "label": "Tasks Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.tasksTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.tasksTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-tasks-events."
+                    },
+                    {
+                      "label": "Cases Topic Name ",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
+                      "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
+                      "description": "Name to override the default Process topic name, set by default to jbpm-cases-events."
+                    }
+                  ]
+                },
+                {
                   "label": "Enable JMS integration",
                   "type": "checkbox",
                   "required": false,
@@ -1249,7 +1670,7 @@
                           "description": "AMQ broker broker comma separated queues, if empty the values from default queues will be used."
                         },
                         {
-                          "label": "Enable SSL integration",
+                          "label": "Enable JMS with SSL",
                           "type": "checkbox",
                           "required": false,
                           "description": "When set to true will configure the KIE Server with JMS integration, if no configuration is added, the default will be used.",
@@ -1257,7 +1678,7 @@
                           "originalJsonPath": "$.spec.objects.servers[*].jms.amqEnableSSL",
                           "fields": [
                             {
-                              "label": "Enable SSL integration",
+                              "label": "Enable JMS with SSL",
                               "type": "fieldGroup",
                               "jsonPath": "$.spec.objects.servers[*].jms",
                               "originalJsonPath": "$.spec.objects.servers[*].jms",
@@ -1472,15 +1893,15 @@
                           "visible": false,
                           "fields": [
                             {
-                              "label": "Enable Extension image stream",
+                              "label": "Use JDBC Extension Image",
                               "type": "checkbox",
                               "required": false,
-                              "description": "When set to true will configure the KIE Server with Extension Image Stream.",
+                              "description": "When set to true will configure the KIE Server with JDBC Extension Image.",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
                               "originalJsonPath": "$.spec.objects.servers[*].database.externalConfig.extensionImage",
                               "fields": [
                                 {
-                                  "label": "Enable Extension image stream",
+                                  "label": "Use JDBC Extension Image",
                                   "type": "fieldGroup",
                                   "jsonPath": "$.spec.objects.servers[*].build",
                                   "originalJsonPath": "$.spec.objects.servers[*].build",
@@ -1488,25 +1909,25 @@
                                   "visible": false,
                                   "fields": [
                                     {
-                                      "label": "Extension image stream tag",
+                                      "label": "JDBC Extension Image imagestream tag",
                                       "type": "text",
                                       "required": true,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageStreamTag",
                                       "description": "ImageStreamTag definition for the image containing the drivers and configuration. For example, custom-driver-image:7.7.0."
                                     },
                                     {
-                                      "label": "Extension image stream namespace",
+                                      "label": "JDBC Extension Image imagestream namespace",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageStreamTagNamespace",
-                                      "description": "Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to openshift namespace."
+                                      "description": "Namespace within which the ImageStream definition for the image containing the drivers and configuration is located. Defaults to 'openshift' namespace."
                                     },
                                     {
-                                      "label": "Extension image install directory",
+                                      "label": "JDBC Extension Image install directory",
                                       "type": "text",
                                       "required": false,
                                       "jsonPath": "$.spec.objects.servers[*].build.extensionImageInstallDir",
-                                      "description": "Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.)."
+                                      "description": "Full path to the directory within the extensions image where the extensions are located (e.g. install.sh, modules/, etc.). Defaults to '/extension'. Do not change it unless it is necessary."
                                     }
                                   ]
                                 }
@@ -1539,14 +1960,14 @@
                               "label": "Host",
                               "type": "text",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.host",
-                              "description": "Database hostname.",
+                              "description": "Database hostname. Host is intended to be used with databases running on OCP. For Databases Running outside OCP use jdbcUrl instead.",
                               "default": "10.10.10.1"
                             },
                             {
                               "label": "Port",
                               "type": "text",
                               "jsonPath": "$.spec.objects.servers[*].database.externalConfig.port",
-                              "description": "Database port.",
+                              "description": "Database port. Port is intended to be used with databases running on OCP. For Databases Running outside OCP use jdbcUrl instead.",
                               "default": "4312"
                             },
                             {
@@ -1622,6 +2043,141 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "label": "CORS Filters configuration",
+                  "type": "dropDown",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers.cors",
+                  "default": "default",
+                  "options": [
+                    {
+                      "value": "default",
+                      "label": "Default configuration"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "default",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "default",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Enable CORS with Default values",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.servers[*].cors.default",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.default",
+                          "description": "Configure CORS with default values and skip manual configuration"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "custom",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "custom",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Filters",
+                          "type": "text",
+                          "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                          "jsonPath": "$.spec.objects.servers[*].cors.filters",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.filters",
+                          "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                        },
+                        {
+                          "label": "Access Control Allow origin name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Origin",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowOriginName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowOriginName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                        },
+                        {
+                          "label": "Access Control Allow origin value filter",
+                          "type": "text",
+                          "default": "*",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowOriginValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowOriginValue",
+                          "description": "Value, suggested default is: *"
+                        },
+                        {
+                          "label": "Access Control Allow methods name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Methods",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowMethodsName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowMethodsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                        },
+                        {
+                          "label": "Access Control Allow methods value filter",
+                          "type": "text",
+                          "default": "GET, POST, OPTIONS, PUT",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowMethodsValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowMethodsValue",
+                          "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                        },
+                        {
+                          "label": "Access Control Allow headers name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Headers",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowHeadersName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowHeadersName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                        },
+                        {
+                          "label": "Access Control Allow origin headers value filter",
+                          "type": "text",
+                          "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowHeadersValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowHeadersValue",
+                          "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                        },
+                        {
+                          "label": "Access Control Allow credentials name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Credentials",
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowCredentialsName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowCredentialsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                        },
+                        {
+                          "label": "Access Control Allow credentials value filter",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.allowCredentialsValue",
+                          "description": "Value, suggested default is: true "
+                        },
+                        {
+                          "label": "Access Control Max Age name filter",
+                          "type": "text",
+                          "default": "Access-Control-Max-Age",
+                          "jsonPath": "$.spec.objects.servers[*].cors.maxAgeName",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.maxAgeName",
+                          "description": "Name, suggested default is: Access-Control-Max-Age"
+                        },
+                        {
+                          "label": "Access Control Max Age value filter",
+                          "type": "integer",
+                          "default": "1",
+                          "jsonPath": "$.spec.objects.servers[*].cors.maxAgeValue",
+                          "originalJsonPath": "$.spec.objects.servers[*].cors.maxAgeValue",
+                          "description": "Value, suggested default is: 1"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -1629,6 +2185,7 @@
         },
         {
           "label": "Dashbuilder",
+          "visible": true,
           "fields": [
             {
               "label": "Dashbuilder",
@@ -1885,6 +2442,12 @@
                   "type": "text"
                 },
                 {
+                  "label": "Custom hostname to be used on the Dashbuilder external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.routeHostname",
+                  "type": "text"
+                },
+                {
                   "label": "Replicas",
                   "default": "1",
                   "required": false,
@@ -2110,6 +2673,141 @@
                       "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
                     }
                   ]
+                },
+                {
+                  "label": "CORS Filters configuration",
+                  "type": "dropDown",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.cors",
+                  "default": "default",
+                  "options": [
+                    {
+                      "value": "default",
+                      "label": "Default configuration"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "default",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "default",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Enable CORS with Default values",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.default",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.default",
+                          "description": "Configure CORS with default values and skip manual configuration"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "custom",
+                      "type": "fieldGroup",
+                      "required": true,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "custom",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Filters",
+                          "type": "text",
+                          "default": "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.filters",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.filters",
+                          "description": "A comma separated list of Access control filters, suggested default is: AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
+                        },
+                        {
+                          "label": "Access Control Allow origin name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Origin",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowOriginName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowOriginName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Origin"
+                        },
+                        {
+                          "label": "Access Control Allow origin value filter",
+                          "type": "text",
+                          "default": "*",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowOriginValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowOriginValue",
+                          "description": "Value, suggested default is: *"
+                        },
+                        {
+                          "label": "Access Control Allow methods name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Methods",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Methods"
+                        },
+                        {
+                          "label": "Access Control Allow methods value filter",
+                          "type": "text",
+                          "default": "GET, POST, OPTIONS, PUT",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowMethodsValue",
+                          "description": "Value, suggested default is: GET, POST, OPTIONS, PUT"
+                        },
+                        {
+                          "label": "Access Control Allow headers name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Headers",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Headers"
+                        },
+                        {
+                          "label": "Access Control Allow origin headers value filter",
+                          "type": "text",
+                          "default": "Accept, Authorization, Content-Type, X-Requested-With",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowHeadersValue",
+                          "description": "Value, suggested default is: Accept, Authorization, Content-Type, X-Requested-With"
+                        },
+                        {
+                          "label": "Access Control Allow credentials name filter",
+                          "type": "text",
+                          "default": "Access-Control-Allow-Credentials",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsName",
+                          "description": "Name, suggested default is: Access-Control-Allow-Credentials"
+                        },
+                        {
+                          "label": "Access Control Allow credentials value filter",
+                          "type": "checkbox",
+                          "checked": false,
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.allowCredentialsValue",
+                          "description": "Value, suggested default is: true "
+                        },
+                        {
+                          "label": "Access Control Max Age name filter",
+                          "type": "text",
+                          "default": "Access-Control-Max-Age",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.maxAgeName",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.maxAgeName",
+                          "description": "Name, suggested default is: Access-Control-Max-Age"
+                        },
+                        {
+                          "label": "Access Control Max Age value filter",
+                          "type": "integer",
+                          "default": "1",
+                          "jsonPath": "$.spec.objects.dashbuilder.cors.maxAgeValue",
+                          "originalJsonPath": "$.spec.objects.dashbuilder.cors.maxAgeValue",
+                          "description": "Value, suggested default is: 1"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -2117,6 +2815,7 @@
         },
         {
           "label": "Smart Router",
+          "visible": true,
           "fields": [
             {
               "label": "Smart Router",
@@ -2151,6 +2850,12 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.imageTag",
                   "description": "The image tag to use for smart router e.g. 7.9.0, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Custom hostname to be used on the Smart Router external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.routeHostname",
                   "type": "text"
                 },
                 {
@@ -2222,6 +2927,130 @@
                       "description": "Maximum processing power granted to the container, default is 500m"
                     }
                   ]
+                },
+                {
+                  "label": "Enable JVM configuration",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "When set to true will configure the Smart Router with JVM configuration, if no configuration is added, the defaults will be used.",
+                  "jsonPath": "$.spec.objects.smartRouter.jvm.enableConfiguration",
+                  "originalJsonPath": "$.spec.objects.smartRouter.jvm.enableConfiguration",
+                  "fields": [
+                    {
+                      "label": "Enable JVM configuration",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.smartRouter.jvm",
+                      "originalJsonPath": "$.spec.objects.smartRouter.jvm",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Java Opts append",
+                          "type": "text",
+                          "required": false,
+                          "description": "User specified Java options to be appended to generated options in JAVA_OPTS. e.g. '-Dsome.property=foo'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaOptsAppend",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaOptsAppend"
+                        },
+                        {
+                          "label": "Java max memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xmx' option is given in JAVA_OPTS. This is used to calculate a default maximal heap memory based on a containers restriction. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xmx' is set to a ratio of the container available memory as set here. The default is '50' which means 50% of the available memory is used as an upper boundary. You can skip this mechanism by setting this value to '0' in which case no '-Xmx' option is added.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaMaxMemRatio",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaMaxMemRatio"
+                        },
+                        {
+                          "label": "Java initial memory ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate a default initial heap memory based on the maximum heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is set to a ratio of the '-Xmx' memory as set here. The default is '25' which means 25% of the '-Xmx' is used as the initial heap size. You can skip this mechanism by setting this value to '0' in which case no '-Xms' option is added. e.g. '25'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaInitialMemRatio",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaInitialMemRatio"
+                        },
+                        {
+                          "label": "Java max initial memory",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Is used when no '-Xms' option is given in JAVA_OPTS. This is used to calculate the maximum value of the initial heap memory. If used in a container without any memory constraints for the container then this option has no effect. If there is a memory constraint then '-Xms' is limited to the value set here. The default is 4096Mb which means the calculated value of '-Xms' never will be greater than 4096Mb. The value of this variable is expressed in MB. e.g. '4096'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaMaxInitialMem",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaMaxInitialMem"
+                        },
+                        {
+                          "label": "Java diagnostics",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "Set this to get some diagnostics information to standard output when things are happening. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaDiagnostics",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaDiagnostics"
+                        },
+                        {
+                          "label": "Java debug",
+                          "type": "checkbox",
+                          "required": false,
+                          "description": "If set remote debugging will be switched on. Disabled by default. e.g. 'true'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaDebug",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaDebug"
+                        },
+                        {
+                          "label": "Java debug port",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Port used for remote debugging. Defaults to 5005. e.g. '8787'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.javaDebugPort",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.javaDebugPort"
+                        },
+                        {
+                          "label": "GC min heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Minimum percentage of heap free after GC to avoid expansion. e.g. '20'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcMinHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcMinHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC max heap free ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Maximum percentage of heap free after GC to avoid shrinking. e.g. '40'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcMaxHeapFreeRatio",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcMaxHeapFreeRatio"
+                        },
+                        {
+                          "label": "GC time ratio",
+                          "type": "integer",
+                          "required": false,
+                          "description": "Specifies the ratio of the time spent outside the garbage collection (for example, the time spent for application execution) to the time spent in the garbage collection, it's desirable that not more than 1 / (1 + n) e.g. 99 means 1% spent on gc, 4 means spent 20% on gc.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcTimeRatio",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcTimeRatio"
+                        },
+                        {
+                          "label": "GC adaptive size policy weight",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The weighting given to the current GC time versus previous GC times when determining the new heap size, between 0 and 100. e.g. '90'",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcAdaptiveSizePolicyWeight",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcAdaptiveSizePolicyWeight"
+                        },
+                        {
+                          "label": "GC max metaspace size",
+                          "type": "integer",
+                          "required": false,
+                          "description": "The maximum metaspace size in Mega bytes unit e.g. 400",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcMaxMetaspaceSize",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcMaxMetaspaceSize"
+                        },
+                        {
+                          "label": "GC gcContainerOptions",
+                          "type": "text",
+                          "required": false,
+                          "description": "Specify Java GC to use. The value of this variable should contain the necessary JRE command-line options to specify the required GC, which will override the default of '-XX:+UseParallelOldGC'. e.g. '-XX:+UseG1GC'.",
+                          "jsonPath": "$.spec.objects.smartRouter.jvm.gcContainerOptions",
+                          "originalJsonPath": "$.spec.objects.smartRouter.jvm.gcContainerOptions"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -2229,6 +3058,7 @@
         },
         {
           "label": "Process Instance Migration",
+          "visible": true,
           "fields": [
             {
               "label": "Process Instance Migration",
@@ -2256,6 +3086,30 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.processMigration.imageTag",
                   "description": "The image tag to use for Process Instance Migration e.g. 7.9.0, this param is optional for custom image.",
+                  "type": "text"
+                },
+                {
+                  "label": "Process Instance Migration Admin Username, if empty the common AdminUser will be used.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.username",
+                  "type": "text"
+                },
+                {
+                  "label": "Process Instance Migration Admin Password, if empty the common AdminPassword will be used.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.password",
+                  "type": "password"
+                },
+                {
+                  "label": "Process Instance Migration ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted on the image before.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.extraClassPath",
+                  "type": "text"
+                },
+                {
+                  "label": "Custom hostname to be used on the Process Migration external Route.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.routeHostname",
                   "type": "text"
                 },
                 {

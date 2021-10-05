@@ -6,6 +6,7 @@ type Form struct {
 
 type Page struct {
 	Label    string   `json:"label,omitempty"`
+	Visible  bool     `json:"visible,omitempty"`
 	Fields   []Field  `json:"fields,omitempty"`
 	Buttons  []Button `json:"buttons,omitempty"`
 	SubPages []Page   `json:"subPages,omitempty"`
@@ -22,6 +23,7 @@ type Field struct {
 	Max              *int     `json:"max,omitempty"`
 	OriginalJSONPath string   `json:"originalJsonPath,omitempty"`
 	Visible          bool     `json:"visible,omitempty"`
+	Checked          bool     `json:"checked,omitempty"`
 	DisplayWhen      string   `json:"displayWhen,omitempty"`
 	Fields           []Field  `json:"fields,omitempty"`
 	Options          []Option `json:"options,omitempty"`

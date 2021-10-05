@@ -16,7 +16,7 @@ require (
 	github.com/openshift/client-go v0.0.0-00010101000000-000000000000
 	github.com/operator-framework/api v0.3.12
 	github.com/operator-framework/operator-sdk v0.19.2
-	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible
+	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.42.1
 	github.com/prometheus/common v0.10.0
@@ -36,7 +36,7 @@ replace (
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible // Required by OLM
 
 	// Pin RHsyseng library versions
-	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20200414161125-135bc9b52976
+	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20210323180350-be2aa15abde0
 	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v0.0.0-20200929135808-85f5a6e442d9
 
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1

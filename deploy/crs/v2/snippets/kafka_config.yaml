@@ -1,0 +1,23 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: kafka-config
+  annotations:
+    consoleName: kafka-config
+    consoleTitle: Use kafka extension
+    consoleDesc: Use this snippet to create Kafka configuration
+    consoleSnippet: true
+spec:
+  objects:
+    servers:
+      - kafka:
+          bootstrapServers: 'localhost:9092'
+          clientID: '123456'
+          autocreateTopics: true
+          groupID: 'jbpm-consumer'
+          acks: 2
+          maxBlockMs: 2000
+          extEnabled: true
+          topics:
+            - event=events
+            - error=errors

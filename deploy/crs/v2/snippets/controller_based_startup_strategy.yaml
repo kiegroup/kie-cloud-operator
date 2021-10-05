@@ -1,0 +1,13 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: controller-based-startup-strategy
+  annotations:
+    consoleName: snippet-controller-based-startup-strategy
+    consoleTitle: Use Controller Startup Strategy rather than OpenShift's Startup Strategy
+    consoleDesc: Use this snippet to switch the to the Controller Startup Strategy
+    consoleSnippet: true
+spec:
+  commonConfig:
+    startupStrategy:
+      strategyName: "ControllerBasedStartupStrategy"
