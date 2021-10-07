@@ -1202,7 +1202,7 @@ func loadYaml(service kubernetes.PlatformService, filename, productVersion, name
 	// prepend specified product version dir to filepath
 	filename = strings.Join([]string{productVersion, filename}, "/")
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
-		box := packr.New("config", "../../../../config")
+		box := packr.New("rhpam-config", "../../../../rhpam-config")
 		if !box.HasDir(productVersion) {
 			return nil, fmt.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
 		}
@@ -1277,7 +1277,7 @@ func getCMListfromBox(box *packr.Box) map[string][]map[string]string {
 // ConfigMapsFromFile reads the files under the config folder and creates
 // configmaps in the given namespace. It sets OwnerRef to operator deployment.
 func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) (configMaps []corev1.ConfigMap) {
-	box := packr.New("config", "../../../../config")
+	box := packr.New("rhpam-config", "../../../../rhpam-config")
 	cmList := getCMListfromBox(box)
 	for cmName, dataSlice := range cmList {
 		cmData := map[string]string{}
