@@ -851,7 +851,6 @@
               "type": "dropDown",
               "required": false,
               "jsonPath": "$.spec.objects.console.cors",
-              "default": "default",
               "options": [
                 {
                   "value": "default",
@@ -2049,7 +2048,6 @@
                   "type": "dropDown",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers.cors",
-                  "default": "default",
                   "options": [
                     {
                       "value": "default",
