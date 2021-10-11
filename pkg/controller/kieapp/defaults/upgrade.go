@@ -91,7 +91,7 @@ func getConfigVersionLists(fromVersion, toVersion string) (configFromList, confi
 	fromList := map[string][]map[string]string{}
 	toList := map[string][]map[string]string{}
 	if checkVersion(fromVersion) && checkVersion(toVersion) {
-		box := packr.New("config", "../../../../config")
+		box := packr.New("rhpam-config", "../../../../rhpam-config")
 		if box.HasDir(fromVersion) && box.HasDir(toVersion) {
 			cmList := getCMListfromBox(box)
 			for cmName, cmData := range cmList {
