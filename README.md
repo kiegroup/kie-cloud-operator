@@ -100,14 +100,14 @@ spec:
   publisher: grpc
 ```
 
-Choose a CATALOG_SOURCE_NAME something like "max-operator-manifests"
+Choose a CATALOG_SOURCE_NAME something like "my-operator-manifests"
 
 Example of catalog-source.yaml
 ```console
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: max-operator-manifests
+  name: my-operator-manifests
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
@@ -145,11 +145,11 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: businessautomation-operator
-  namespace: max
+  namespace: my-namespace
 spec:
   channel: stable
   name: businessautomation-operator
-  source: max-operator-manifests
+  source: my-operator-manifests
   sourceNamespace: openshift-marketplace
 ```
 
@@ -157,7 +157,7 @@ spec:
 ```console
 oc create -f subscription.yaml
 ```
-On OpenShift go to your project (e.g. max) to see your subscription and your operator,
+On OpenShift go to your project (e.g. my-namespace) to see your subscription and your operator,
 this could take a variable time to be visible.
 
 
