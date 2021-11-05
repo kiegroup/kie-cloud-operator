@@ -6,6 +6,10 @@
 
 - go v1.13.x
 - operator-sdk v0.19.2
+- docker 
+- [opm](https://github.com/operator-framework/operator-registry/releases)
+- [podman](https://podman.io/)
+- [cekit](https://cekit.io/)
 
 ## Build
 
@@ -16,72 +20,205 @@ make
 ## Upload to a container registry
 
 e.g.
-
 ```bash
-docker push quay.io/kiegroup/kie-cloud-operator:<version>
+docker tag quay.io/kiegroup/kie-cloud-operator:<version> quay.io/<your-registry-username>/kie-cloud-operator:<version>
+docker push quay.io/<your-registry-username>/kie-cloud-operator:<version>
 ```
 
-## Deploy to OpenShift 4.5+ using OLM
+### Note
 
-To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create
-an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) 
-instructions for Operator Courier to obtain an account token. 
+If the quay.io repository where the images were pushed is private, a pull secret will need to be configured, 
+otherwise all operator related images must be public.
+
+
+
+## Deploy to OpenShift 4.7+ using OLM
+
+To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io (https://quay.io/) account to create
+an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication)
+instructions for Operator Courier to obtain an account token.
 This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
 
-If pushing to another quay repository, replace _kiegroup_ with your username or other namespace. 
-Also note that the push command does not overwrite an existing repository, 
-and it needs to be deleted before a new version can be built and uploaded. 
-Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) 
+Also note that the push command does not overwrite an existing repository,
+and it needs to be deleted before a new version can be built and uploaded.
+Once the bundle has been uploaded, create an [Operator Source](https://github.com/k8s-operatorhub/community-operators/)
 to load your operator bundle in OpenShift.
 
-**Create your own index image**
 
-Requires [opm](https://github.com/operator-framework/operator-registry/releases) v1.15.3+ -
+**To create the bundle image follow the steps**
+
+- Create your own bundle
+- Push the bundle on the container registry
+- Build the index
+- Push the index on the container registry
+- Disable default catalog sources on Openshift
+- Write your Catalog-source
+- Create your catalog source on Openshift
+- Write your Subscription
+- Create your Subscription on Openshift
+
+**To Restore your cluster from your bundle image changes follow the steps**
+
+- Cleanup your catalog-source
+
+### Create your own Bundle
+
+i.e. 7.12.0-1 version
+Remove the following line from deploy/olm-catalog/dev/7.12.0-1/manifest/businessautomation-operator.clusterserviceversion.yaml
+
+```console
+replaces: businessautomation-operator.<last-version>
+```
+Set your registry id, like quay username 
+with USERNAME as env
 
 ```bash
-USERNAME=tchughesiv
-VERSION=$(go run getversion.go -csv)
-IMAGE=quay.io/${USERNAME}/rhpam-operator-bundle
-BUNDLE=${IMAGE}:${VERSION}
+export USERNAME=<your-registry-id>
+```
+
+activate Cekit and run the following command
+
+
+```bash
 $ make bundle-dev
+```
 
+the last log line is something like this:
+```console
+INFO  Image built and available under following tags: quay.io/<your_quay_username>/rhpam-operator-bundle:7.12.1, quay.io/${USERNAME}/rhpam-operator-bundle:latest
+```
+###  Push the bundle on the container registry
 
-$ docker push ${BUNDLE}
-BUNDLE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUNDLE})
-INDEX_VERSION=v4.7
-INDEX_IMAGE=quay.io/${USERNAME}/ba-operator-index:${INDEX_VERSION}
-INDEX_FROM=${INDEX_IMAGE}_$(go run getversion.go -csvPrior)
-INDEX_TO=${INDEX_IMAGE}_${VERSION}
+VERSION=$(go run getversion.go)
 
-$ opm index add -c docker --bundles ${BUNDLE_DIGEST} --from-index ${INDEX_FROM} --tag ${INDEX_TO}
+USERNAME=<your_quay_username>
 
-$ docker push ${INDEX_TO}
+```bash
+$ docker push quay.io/${USERNAME}/rhpam-operator-bundle:${VERSION}
+```
 
-# only run in dev env
-$ oc patch operatorhub.config.openshift.io/cluster -p='{"spec":{"disableAllDefaultSources":true}}' --type=merge
-$ oc apply -f - <<EOF
+### Build the index image
+
+```bash
+opm index add --bundles quay.io/${USERNAME}/rhpam-operator-bundle:${VERSION} --tag quay.io/${USERNAME}/rhpam-operator-index:${VERSION}
+```
+### Push the index on the container registry
+
+Log in into your quay.io account:
+```bash
+podman login quay.io
+```
+
+Push the index on your quay repository
+```bash
+podman push quay.io/${USERNAME}/rhpam-operator-index:${VERSION}
+```
+
+#### Disable default catalog sources on Openshift
+
+To test your Operator, with bundle and index you need to disable the default source like the operator hub
+```bash
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+```
+
+#### Write your Catalog-source
+
+A catalog source is repository of CSVs, CRDs, and packages that define an application.
+
+```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: my-catalog
+  name: xxxxxname
   namespace: openshift-marketplace
 spec:
-  displayName: "Dev Bundles"
-  publisher: "Red Hat"
   sourceType: grpc
-  image: ${INDEX_TO}
-  updateStrategy:
-    registryPoll:
-      interval: 45m
-EOF
+  image: xxxxximage
+  displayName: My Operator Catalog
+  publisher: grpc
 ```
 
-It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. 
+Choose a CATALOG_SOURCE_NAME something like "my-operator-manifests"
+
+Example of catalog-source.yaml
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-operator-manifests
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/<your_quay_id>/rhpam-operator-index:7.12.1
+  displayName: My Operator Catalog
+  publisher: grpc
+```
+
+#### Create catalog source on Openshift
+
+```bash
+oc create -f catalog-source.yaml
+```
+
+#### Write your Subscription
+
+A subscription keeps CSVs up to date by tracking a channel in a package.
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: businessautomation-operator
+  namespace: <your-namespace>
+spec:
+  channel: stable
+  name: businessautomation-operator
+  source: $CATALOG_SOURCE_NAME
+  sourceNamespace: openshift-marketplace
+```
+
+Example of subscription.yaml
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: businessautomation-operator
+  namespace: my-namespace
+spec:
+  channel: stable
+  name: businessautomation-operator
+  source: my-operator-manifests
+  sourceNamespace: openshift-marketplace
+```
+
+#### Create your Subscription on Openshift
+
+You could create the subscription copying the yaml in the the OCP UI or from cli with Openshift Client
+
+```bash
+oc create -f subscription.yaml
+```
+On OpenShift go to your project (e.g. my-namespace) to see your subscription and your operator,
+this could take a variable time to be visible.
+
+
+#### Cleanup catalog-source
+
+After your test are completed, to restore the Operator hub and remove your catalog source
+delete your catalog source
+and run the following command:
+
+```bash
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": false}]'
+```
+
+It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_.
 It can be easily found by filtering the provider type to _Custom_.
 
 ### Trigger a KieApp deployment
 
-Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed, 
+Use the OLM console to subscribe to the `Kie Cloud` Operator Catalog Source within your namespace. Once subscribed,
 use the console to `Create KieApp` or create one manually as seen below.
 
 ```bash
