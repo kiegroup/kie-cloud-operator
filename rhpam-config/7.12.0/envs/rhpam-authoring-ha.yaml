@@ -97,23 +97,25 @@ others:
                       name: hotrod
                       protocol: TCP
                   livenessProbe:
-                    exec:
-                      command:
-                        - /opt/datagrid/bin/livenessProbe.sh
+                    httpGet:
+                      path: /rest/v2/cache-managers/default/health/status
+                      port: 11222
+                      scheme: HTTP
                     failureThreshold: 5
-                    initialDelaySeconds: 15
-                    periodSeconds: 20
-                    successThreshold: 1
-                    timeoutSeconds: 10
-                  readinessProbe:
-                    exec:
-                      command:
-                        - /opt/datagrid/bin/readinessProbe.sh
-                    failureThreshold: 5
-                    initialDelaySeconds: 17
+                    initialDelaySeconds: 10
                     periodSeconds: 10
                     successThreshold: 1
-                    timeoutSeconds: 10
+                    timeoutSeconds: 40
+                  readinessProbe:
+                    httpGet:
+                      path: /rest/v2/cache-managers/default/health/status
+                      port: 11222
+                      scheme: HTTP
+                    failureThreshold: 5
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 40
                   resources:
                     limits:
                       cpu: "1000m"
