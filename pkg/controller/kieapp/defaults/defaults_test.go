@@ -6045,7 +6045,7 @@ func TestResourcesOverrideServers(t *testing.T) {
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		constants.ConsoleProdMemRequests, constants.ServerMemRequests) //Since Memory request is not set, default will be used
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
 }
 
 func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string, rMEMConsole string, rMEMServers string) {
