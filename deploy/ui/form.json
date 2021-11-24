@@ -60,8 +60,8 @@
           "type": "checkbox",
           "required": false,
           "description": "If checked, external routes to the services will use plain text communication (http).",
-          "jsonPath": "$.spec.disableSsl",
-          "originalJsonPath": "$.spec.disableSsl"
+          "jsonPath": "$.spec.commonConfig.disableSsl",
+          "originalJsonPath": "$.spec.commonConfig.disableSsl"
         },
         {
           "label": "Truststore",
@@ -133,7 +133,7 @@
         {
           "label": "Startup Strategy",
           "type": "fieldGroup",
-          "jsonPath": "$.spec.startupStrategy",
+          "jsonPath": "$.spec.commonConfig.startupStrategy",
           "visible": true,
           "fields": [
             {
@@ -996,50 +996,6 @@
                   "description": "The name to use for this KIE Server."
                 },
                 {
-                  "label": "Enable Persistent Storage for kie and maven repositories",
-                  "type": "checkbox",
-                  "required": false,
-                  "jsonPath": "$.spec.objects.servers[*].persistRepos",
-                  "originalJsonPath": "$.spec.objects.servers[*].persistRepos",
-                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively.",
-                  "fields": [
-                    {
-                      "label": "Enable Persistent Storage for kie and maven repositories",
-                      "type": "fieldGroup",
-                      "jsonPath": "$.spec.objects.servers[*]",
-                      "originalJsonPath": "$.spec.objects.servers[*]",
-                      "displayWhen": "true",
-                      "visible": false,
-                      "fields": [
-                        {
-                          "label": "StorageClass Name",
-                          "required": false,
-                          "jsonPath": "$.spec.objects.servers[*].storageClassName",
-                          "originalJsonPath": "$.spec.objects.servers[*].storageClassName",
-                          "type": "text",
-                          "description": "The storageClassName to use for KIE Server pvc's."
-                        },
-                        {
-                          "label": "KIE Server Maven Persistent Volume Size",
-                          "required": false,
-                          "jsonPath": "$.spec.objects.servers[*].serversM2PvSize",
-                          "originalJsonPath": "$.spec.objects.servers[*].serversM2PvSize",
-                          "type": "text",
-                          "description": "The Size of the KIE Server ~/.m2 pvc's. Example 10Gi, default value is 1Gi. Note that it uses RWX, the default aws ebs storage does not support it."
-                        },
-                        {
-                          "label": "KIE Server Kie Persistent Volume Size",
-                          "required": false,
-                          "jsonPath": "$.spec.objects.servers[*].serversKiePvSize",
-                          "originalJsonPath": "$.spec.objects.servers[*].ServersKiePvSize",
-                          "type": "text",
-                          "description": "The Size of the KIE Server ~/.kie pvc's. Example 512Mi, default value is 10Mi. Note that it uses RWX, the default aws ebs storage does not support it."
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
                   "label": "Image Context",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].imageContext",
@@ -1535,6 +1491,50 @@
                       "jsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
                       "originalJsonPath": "$.spec.objects.servers[*].kafkaJbpmEventEmitters.casesTopicName",
                       "description": "Name to override the default Process topic name, set by default to jbpm-cases-events."
+                    }
+                  ]
+                },
+                {
+                  "label": "Enable Persistent Storage for kie and maven repositories",
+                  "type": "checkbox",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "originalJsonPath": "$.spec.objects.servers[*].persistRepos",
+                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively.",
+                  "fields": [
+                    {
+                      "label": "Enable Persistent Storage for kie and maven repositories",
+                      "type": "fieldGroup",
+                      "jsonPath": "$.spec.objects.servers[*]",
+                      "originalJsonPath": "$.spec.objects.servers[*]",
+                      "displayWhen": "true",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "StorageClass Name",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "originalJsonPath": "$.spec.objects.servers[*].storageClassName",
+                          "type": "text",
+                          "description": "The storageClassName to use for KIE Server pvc's."
+                        },
+                        {
+                          "label": "KIE Server Maven Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].serversM2PvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.m2 pvc's. Example 10Gi, default value is 1Gi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        },
+                        {
+                          "label": "KIE Server Kie Persistent Volume Size",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.servers[*].serversKiePvSize",
+                          "originalJsonPath": "$.spec.objects.servers[*].ServersKiePvSize",
+                          "type": "text",
+                          "description": "The Size of the KIE Server ~/.kie pvc's. Example 512Mi, default value is 10Mi. Note that it uses RWX, the default aws ebs storage does not support it."
+                        }
+                      ]
                     }
                   ]
                 },
