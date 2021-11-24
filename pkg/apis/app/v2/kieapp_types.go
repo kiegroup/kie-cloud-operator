@@ -129,17 +129,21 @@ type KieServerSet struct {
 	// Server name
 	Name string `json:"name,omitempty"`
 	// Server ID
-	ID               string             `json:"id,omitempty"`
-	From             *ImageObjRef       `json:"from,omitempty"`
-	Build            *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
-	SSOClient        *SSOAuthClient     `json:"ssoClient,omitempty"`
-	KieAppObject     `json:",inline"`
-	Database         *DatabaseObject  `json:"database,omitempty"`
-	Jms              *KieAppJmsObject `json:"jms,omitempty"`
-	Jvm              *JvmObject       `json:"jvm,omitempty"`
-	PersistRepos     bool             `json:"persistRepos,omitempty"`
-	ServersM2PvSize  string           `json:"serversM2PvSize,omitempty"`
-	ServersKiePvSize string           `json:"serversKiePvSize,omitempty"`
+	ID           string             `json:"id,omitempty"`
+	From         *ImageObjRef       `json:"from,omitempty"`
+	Build        *KieAppBuildObject `json:"build,omitempty"` // S2I Build configuration
+	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
+	KieAppObject `json:",inline"`
+	Database     *DatabaseObject  `json:"database,omitempty"`
+	Jms          *KieAppJmsObject `json:"jms,omitempty"`
+	Jvm          *JvmObject       `json:"jvm,omitempty"`
+	// PersistRepos enables persistent volume for KIE Server's kie and maven repositories
+	PersistRepos bool `json:"persistRepos,omitempty"`
+	// ServersM2PvSize the desired size of the Maven persistent volume, the size of the files on this directory
+	//can grow fast as all dependencies for KIE Containers will be stored there. Defaults to 1Gi
+	ServersM2PvSize string `json:"serversM2PvSize,omitempty"`
+	// ServersKiePvSize the desired size of the KIE local repository persistent volume. Defaults to 10Mi
+	ServersKiePvSize string `json:"serversKiePvSize,omitempty"`
 	// JbpmCluster Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers
 	JbpmCluster            bool                          `json:"jbpmCluster,omitempty"`
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
@@ -269,7 +273,7 @@ type KieAppObject struct {
 	Image string `json:"image,omitempty"`
 	// ImageTag The image tag to use e.g. 7.9.0, this param is optional for custom image.
 	ImageTag string `json:"imageTag,omitempty"`
-	// StorageClassName The storageClassName to use
+	// StorageClassName The storageClassName to use for kie pvc's.
 	StorageClassName string `json:"storageClassName,omitempty"`
 	// RouteHostname will define the route.spec.host value
 	RouteHostname string `json:"routeHostname,omitempty"`
