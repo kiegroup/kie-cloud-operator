@@ -6001,7 +6001,8 @@ func TestResourcesDefault(t *testing.T) {
 	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
 		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
 		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
-		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"])
+		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"],
+		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -6043,10 +6044,11 @@ func TestResourcesOverrideServers(t *testing.T) {
 	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String()) //Since Memory request is not set, default will be used
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		constants.ConsoleProdMemRequests, constants.ServerMemRequests) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration, rCPUProcessMigration string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string, rMEMConsole string, rMEMServers string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
