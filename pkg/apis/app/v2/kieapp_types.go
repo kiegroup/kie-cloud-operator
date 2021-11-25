@@ -137,7 +137,7 @@ type KieServerSet struct {
 	Database     *DatabaseObject  `json:"database,omitempty"`
 	Jms          *KieAppJmsObject `json:"jms,omitempty"`
 	Jvm          *JvmObject       `json:"jvm,omitempty"`
-	// PersistRepos enables persistent volume for KIE Server's kie and maven repositories
+	// PersistRepos enables persistent volumes for KIE Server's kie and maven repositories
 	PersistRepos bool `json:"persistRepos,omitempty"`
 	// ServersM2PvSize the desired size of the Maven persistent volume, the size of the files on this directory
 	//can grow fast as all dependencies for KIE Containers will be stored there. Defaults to 1Gi
