@@ -6045,10 +6045,10 @@ func TestResourcesOverrideServers(t *testing.T) {
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		constants.ConsoleProdMemRequests, constants.ServersMemRequests) //Since Memory request is not set, default will be used
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String()) //Since Memory request is not set, default will be used
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string, rMEMConsole string, rMEMServers string) {
+func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string, lMEMServers string, rMEMServers string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -6079,6 +6079,12 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 
 	requestsCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUProcessMigration.String() == rCPUProcessMigration)
+
+	limitMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceMemory]
+	assert.True(t, limitMEMServer.String() == lMEMServers)
+
+	requestsMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceMemory]
+	assert.True(t, requestsMEMServer.String() == rMEMServers)
 }
 
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
