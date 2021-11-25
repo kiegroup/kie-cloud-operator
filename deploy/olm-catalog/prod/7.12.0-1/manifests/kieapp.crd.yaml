@@ -758,6 +758,7 @@ spec:
                         type: object
                       storageClassName:
                         description: StorageClassName The storageClassName to use
+                          for kie pvc's.
                         type: string
                     type: object
                   dashbuilder:
@@ -1209,6 +1210,7 @@ spec:
                         type: object
                       storageClassName:
                         description: StorageClassName The storageClassName to use
+                          for kie pvc's.
                         type: string
                     type: object
                   processMigration:
@@ -1564,6 +1566,7 @@ spec:
                         type: string
                       storageClassName:
                         description: StorageClassName The storageClassName to use
+                          for kie pvc's.
                         type: string
                       username:
                         description: If empty the CommonConfig.AdminUser will be used
@@ -2436,6 +2439,8 @@ spec:
                           description: Server name
                           type: string
                         persistRepos:
+                          description: PersistRepos enables persistent volume for
+                            KIE Server's kie and maven repositories
                           type: boolean
                         replicas:
                           description: Replicas to set for the DeploymentConfig
@@ -2474,8 +2479,14 @@ spec:
                             value
                           type: string
                         serversKiePvSize:
+                          description: ServersKiePvSize the desired size of the KIE
+                            local repository persistent volume. Defaults to 10Mi
                           type: string
                         serversM2PvSize:
+                          description: ServersM2PvSize the desired size of the Maven
+                            persistent volume, the size of the files on this directory
+                            can grow fast as all dependencies for KIE Containers will
+                            be stored there. Defaults to 1Gi
                           type: string
                         ssoClient:
                           description: SSOAuthClient Auth client to use for the SSO
@@ -2497,6 +2508,7 @@ spec:
                           type: object
                         storageClassName:
                           description: StorageClassName The storageClassName to use
+                            for kie pvc's.
                           type: string
                       type: object
                     type: array
@@ -2775,6 +2787,7 @@ spec:
                         type: string
                       storageClassName:
                         description: StorageClassName The storageClassName to use
+                          for kie pvc's.
                         type: string
                       useExternalRoute:
                         description: If enabled, Business Central will use the external
@@ -3548,7 +3561,7 @@ spec:
                             type: object
                           storageClassName:
                             description: StorageClassName The storageClassName to
-                              use
+                              use for kie pvc's.
                             type: string
                         type: object
                       dashbuilder:
@@ -4007,7 +4020,7 @@ spec:
                             type: object
                           storageClassName:
                             description: StorageClassName The storageClassName to
-                              use
+                              use for kie pvc's.
                             type: string
                         type: object
                       processMigration:
@@ -4366,7 +4379,7 @@ spec:
                             type: string
                           storageClassName:
                             description: StorageClassName The storageClassName to
-                              use
+                              use for kie pvc's.
                             type: string
                           username:
                             description: If empty the CommonConfig.AdminUser will
@@ -5270,6 +5283,8 @@ spec:
                               description: Server name
                               type: string
                             persistRepos:
+                              description: PersistRepos enables persistent volume
+                                for KIE Server's kie and maven repositories
                               type: boolean
                             replicas:
                               description: Replicas to set for the DeploymentConfig
@@ -5308,8 +5323,15 @@ spec:
                                 value
                               type: string
                             serversKiePvSize:
+                              description: ServersKiePvSize the desired size of the
+                                KIE local repository persistent volume. Defaults to
+                                10Mi
                               type: string
                             serversM2PvSize:
+                              description: ServersM2PvSize the desired size of the
+                                Maven persistent volume, the size of the files on
+                                this directory can grow fast as all dependencies for
+                                KIE Containers will be stored there. Defaults to 1Gi
                               type: string
                             ssoClient:
                               description: SSOAuthClient Auth client to use for the
@@ -5332,7 +5354,7 @@ spec:
                               type: object
                             storageClassName:
                               description: StorageClassName The storageClassName to
-                                use
+                                use for kie pvc's.
                               type: string
                           type: object
                         type: array
@@ -5613,7 +5635,7 @@ spec:
                             type: string
                           storageClassName:
                             description: StorageClassName The storageClassName to
-                              use
+                              use for kie pvc's.
                             type: string
                           useExternalRoute:
                             description: If enabled, Business Central will use the
