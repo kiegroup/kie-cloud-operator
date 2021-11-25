@@ -6002,7 +6002,7 @@ func TestResourcesDefault(t *testing.T) {
 		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
 		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
 		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"],
-		constants.ConsoleProdMemRequests, constants.ServersMemRequests)
+		constants.ServersMemLimit, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
