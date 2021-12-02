@@ -11,6 +11,7 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/utils/kubernetes"
 	"github.com/ghodss/yaml"
+	"github.com/gobuffalo/packr/v2"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
@@ -6043,14 +6044,14 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testCPUReqAndLimit(t, cr, sampleLimitAndRequestsResources.String(corev1.ResourceLimitsCPU), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsCPU),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsCPU), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsCPU),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsCPU), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsCPU),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsCPU), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsCPU))
-	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.String(corev1.ResourceLimitsMemory), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsMemory),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsMemory), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsMemory),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsMemory), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsMemory),
-		sampleLimitAndRequestsResources.String(corev1.ResourceLimitsMemory), sampleLimitAndRequestsResources.String(corev1.ResourceRequestsMemory))
+	testCPUReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String())
+	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String())
 }
 
 func testCPUReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string) {
@@ -6061,28 +6062,28 @@ func testCPUReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUSer
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 	assert.NotNil(t, cr.Status.Applied.Objects.ProcessMigration.Resources)
 
-	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceLimitsCPU]
+	limitCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUServer.String() == lCPUServer)
 
-	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceRequestsCPU]
+	requestsCPUServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUServer.String() == rCPUServer)
 
-	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceLimitsCPU]
+	limitCPUConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUConsole.String() == lCPUConsole)
 
-	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceRequestsCPU]
+	requestsCPUConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUConsole.String() == rCPUConsole)
 
-	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceLimitsCPU]
+	limitCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUSmartRouter.String() == lCPUSmartRouter)
 
-	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceRequestsCPU]
+	requestsCPUSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUSmartRouter.String() == rCPUSmartRouter)
 
-	limitCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceLimitsCPU]
+	limitCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceCPU]
 	assert.True(t, limitCPUProcessMigration.String() == lCPUProcessMigration)
 
-	requestsCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceRequestsCPU]
+	requestsCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUProcessMigration.String() == rCPUProcessMigration)
 }
 
@@ -6093,36 +6094,40 @@ func testMemoryReqAndLimit(t *testing.T, cr *api.KieApp, lMEMServers string, rME
 	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
 	assert.NotNil(t, cr.Status.Applied.Objects.ProcessMigration.Resources)
 
-	limitMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceLimitsMemory]
+	limitMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceMemory]
 	assert.True(t, limitMEMServer.String() == lMEMServers)
 
-	requestsMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceRequestsMemory]
+	requestsMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceMemory]
 	assert.True(t, requestsMEMServer.String() == rMEMServers)
 
-	limitMEMConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceLimitsMemory]
+	limitMEMConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceMemory]
 	assert.True(t, limitMEMConsole.String() == lMEMConsole)
 
-	requestsMEMConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceRequestsMemory]
+	requestsMEMConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceMemory]
 	assert.True(t, requestsMEMConsole.String() == rMEMConsole)
 
-	limitMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceLimitsMemory]
+	limitMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceMemory]
 	assert.True(t, limitMEMSmartRouter.String() == lMEMSmartRouter)
 
-	requestsMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceRequestsMemory]
+	requestsMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceMemory]
 	assert.True(t, requestsMEMSmartRouter.String() == rMEMSmartRouter)
 
-	limitMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceLimitsMemory]
+	limitMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceMemory]
 	assert.True(t, limitMEMProcessMigration.String() == lMEMProcessMigration)
 
-	requestsMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceRequestsMemory]
+	requestsMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceMemory]
 	assert.True(t, requestsMEMProcessMigration.String() == rMEMProcessMigration)
 }
 
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
-		corev1.ResourceLimitsCPU: *resource.NewQuantity(200, "m"),
-		corev1.ResourceLimitsMemory: *resource.NewQuantity(256, "Mi"),
-		corev1.ResourceRequestsCPU: *resource.NewQuantity(100, "m"),
-		corev1.ResourceRequestsMemory: *resource.NewQuantity(102, "Mi"),
+	Limits: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
+		corev1.ResourceMemory: *resource.NewQuantity(256, "Mi"),
+	},
+	Requests: corev1.ResourceList{
+		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
+		corev1.ResourceMemory: *resource.NewQuantity(102, "Mi"),
+	},
 }
 
 func TestSmartRouterDefaultConf(t *testing.T) {
