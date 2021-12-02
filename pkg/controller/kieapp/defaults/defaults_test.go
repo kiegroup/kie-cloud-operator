@@ -5998,11 +5998,11 @@ func TestResourcesDefault(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
+	testCPUReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
 		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
 		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
-		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"],
-		constants.ServersMemLimit, constants.ServersMemRequests)
+		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"])
+	testMemoryReqAndLimit(t, cr, constants.ServersMemLimit, constants.ServersMemRequests)
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -6041,14 +6041,14 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+	testCPUReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String()) //Since Memory request is not set, default will be used
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String()) //Since Memory request is not set, default will be used
+	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String())
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string, lMEMServers string, rMEMServers string) {
+func testCPUReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -6079,6 +6079,11 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 
 	requestsCPUProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceCPU]
 	assert.True(t, requestsCPUProcessMigration.String() == rCPUProcessMigration)
+}
+
+func testMemoryReqAndLimit(t *testing.T, cr *api.KieApp, lMEMServers string, rMEMServers string) {
+	assert.NotNil(t, cr.Status.Applied)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
 
 	limitMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceMemory]
 	assert.True(t, limitMEMServer.String() == lMEMServers)
