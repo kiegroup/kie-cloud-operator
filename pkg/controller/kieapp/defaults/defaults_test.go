@@ -6048,7 +6048,7 @@ func TestResourcesOverrideServers(t *testing.T) {
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String())
-	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.MemoryLimits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
 		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
 		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
 		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String())
