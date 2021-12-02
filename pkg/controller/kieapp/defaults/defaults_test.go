@@ -6019,39 +6019,39 @@ func TestResourcesOverrideServers(t *testing.T) {
 			Objects: api.KieAppObjects{
 				SmartRouter: &api.SmartRouterObject{
 					KieAppObject: api.KieAppObject{
-						Resources: sampleCPULimitAndRequestsResources, sampleMemoryLimitAndRequestsResources,
+						Resources: sampleLimitAndRequestsResources,
 					},
 				},
 
 				Console: &api.ConsoleObject{
 					KieAppObject: api.KieAppObject{
-						Resources: sampleCPULimitAndRequestsResources, sampleMemoryLimitAndRequestsResources,
+						Resources: sampleLimitAndRequestsResources,
 					},
 				},
 				Servers: []api.KieServerSet{
 					{
 						KieAppObject: api.KieAppObject{
-							Resources: sampleCPULimitAndRequestsResources, sampleMemoryLimitAndRequestsResources,
+							Resources: sampleLimitAndRequestsResources,
 						},
 					},
 				},
 				ProcessMigration: &api.ProcessMigrationObject{
 					KieAppObject: api.KieAppObject{
-						Resources: sampleCPULimitAndRequestsResources, sampleMemoryLimitAndRequestsResources,
+						Resources: sampleLimitAndRequestsResources,
 					},
 				},
 			},
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testCPUReqAndLimit(t, cr, sampleCPULimitAndRequestsResources.Limits.Cpu().String(), sampleCPULimitAndRequestsResources.Requests.Cpu().String(),
-		sampleCPULimitAndRequestsResources.Limits.Cpu().String(), sampleCPULimitAndRequestsResources.Requests.Cpu().String(),
-		sampleCPULimitAndRequestsResources.Limits.Cpu().String(), sampleCPULimitAndRequestsResources.Requests.Cpu().String(),
-		sampleCPULimitAndRequestsResources.Limits.Cpu().String(), sampleCPULimitAndRequestsResources.Requests.Cpu().String()) //Since Memory request is not set, default will be used
-	testMemoryReqAndLimit(t, cr, sampleMemoryLimitAndRequestsResources.Limits.Memory().String(), sampleMemoryLimitAndRequestsResources.Requests.Memory().String(),
-		sampleMemoryLimitAndRequestsResources.Limits.Memory().String(), sampleMemoryLimitAndRequestsResources.Requests.Memory().String(),
-		sampleMemoryLimitAndRequestsResources.Limits.Memory().String(), sampleMemoryLimitAndRequestsResources.Requests.Memory().String(),
-		sampleMemoryLimitAndRequestsResources.Limits.Memory().String(), sampleMemoryLimitAndRequestsResources.Requests.Memory().String())
+	testCPUReqAndLimit(t, cr, sampleLimitAndRequestsResources.CPULimits.Cpu().String(), sampleLimitAndRequestsResources.CPURequests.Cpu().String(),
+		sampleLimitAndRequestsResources.CPULimits.Cpu().String(), sampleLimitAndRequestsResources.CPURequests.Cpu().String(),
+		sampleLimitAndRequestsResources.CPULimits.Cpu().String(), sampleLimitAndRequestsResources.CPURequests.Cpu().String(),
+		sampleLimitAndRequestsResources.CPULimits.Cpu().String(), sampleLimitAndRequestsResources.CPURequests.Cpu().String())
+	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.MemoryLimits.Memory().String(), sampleLimitAndRequestsResources.MemoryRequests.Memory().String(),
+		sampleLimitAndRequestsResources.MemoryLimits.Memory().String(), sampleLimitAndRequestsResources.MemoryRequests.Memory().String(),
+		sampleLimitAndRequestsResources.MemoryLimits.Memory().String(), sampleLimitAndRequestsResources.MemoryRequests.Memory().String(),
+		sampleLimitAndRequestsResources.MemoryLimits.Memory().String(), sampleLimitAndRequestsResources.MemoryRequests.Memory().String())
 }
 
 func testCPUReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string) {
@@ -6119,20 +6119,17 @@ func testMemoryReqAndLimit(t *testing.T, cr *api.KieApp, lMEMServers string, rME
 	assert.True(t, requestsMEMProcessMigration.String() == rMEMProcessMigration)
 }
 
-var sampleCPULimitAndRequestsResources = &corev1.ResourceRequirements{
-	Limits: corev1.ResourceList{
+var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
+	CPULimits: corev1.ResourceList{
 		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
 	},
-	Requests: corev1.ResourceList{
+	CPURequests: corev1.ResourceList{
 		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
 	},
-}
-
-var sampleMemoryLimitAndRequestsResources = &corev1.ResourceRequirements{
-	Limits: corev1.ResourceList{
+	MemoryLimits: corev1.ResourceList{
 		corev1.ResourceMemory: *resource.NewQuantity(256, "Mi"),
 	},
-	Requests: corev1.ResourceList{
+	MemoryRequests: corev1.ResourceList{
 		corev1.ResourceMemory: *resource.NewQuantity(102, "Mi"),
 	},
 }
