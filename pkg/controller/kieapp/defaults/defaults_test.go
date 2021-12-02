@@ -6121,11 +6121,11 @@ func testMemoryReqAndLimit(t *testing.T, cr *api.KieApp, lMEMServers string, rME
 
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
 	Limits: corev1.ResourceList{
-		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
+		corev1.ResourceCPU:    *resource.NewQuantity(200, "m"),
 		corev1.ResourceMemory: *resource.NewQuantity(256, "Mi"),
 	},
 	Requests: corev1.ResourceList{
-		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
+		corev1.ResourceCPU:    *resource.NewQuantity(100, "m"),
 		corev1.ResourceMemory: *resource.NewQuantity(102, "Mi"),
 	},
 }
