@@ -875,6 +875,11 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
+	// The user to use for datagrid
+	DataGridUsername string `json:"dataGridUsername,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// The password to use for datagrid user
+	DataGridPassword string `json:"dataGridPassword,omitempty"`
 }
 
 // VersionConfigs ...

@@ -41,6 +41,16 @@ console:
                     value: "jmsBrokerUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "[[.AMQClusterPassword]]"
+                  - name: APPFORMER_INFINISPAN_USERNAME
+                    value: "[[.DataGridUsername]]"
+                  - name: APPFORMER_INFINISPAN_PASSWORD
+                    value: "[[.DataGridPassword]]"
+                  - name: APPFORMER_INFINISPAN_SASL_QOP
+                    value: "auth"
+                  - name: APPFORMER_INFINISPAN_SERVER_NAME
+                    value: "infinispan"
+                  - name: APPFORMER_INFINISPAN_REALM
+                    value: "default"
             volumes:
               - name: "[[.ApplicationName]]-[[.Console.Name]]-pvol"
                 persistentVolumeClaim:
@@ -76,6 +86,10 @@ others:
             spec:
               containers:
                 - env:
+                    - name: USER
+                      value: "[[.DataGridUsername]]"
+                    - name: PASS
+                      value: "[[.DataGridPassword]]"
                     - name: SERVICE_NAME
                       value: "[[.ApplicationName]]-datagrid"
                     - name: SERVICE_PROFILE
