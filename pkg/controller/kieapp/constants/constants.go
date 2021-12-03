@@ -244,7 +244,7 @@ const (
 	RhelVersion = "-rhel8"
 
 	//Resources Limits and Requests
-	ConsoleProdCPULimit         = "1"
+	ConsoleProdCPULimit         = "2"
 	ConsoleProdMemLimit         = "2Gi"
 	ConsoleAuthoringCPULimit    = "2"
 	ConsoleAuthoringMemLimit    = "4Gi"
