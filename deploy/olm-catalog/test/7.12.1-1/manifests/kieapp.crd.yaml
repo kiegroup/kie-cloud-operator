@@ -414,6 +414,17 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      dataGridAuth:
+                        description: DataGridAuth
+                        properties:
+                          password:
+                            description: The password to use for datagrid user
+                            format: password
+                            type: string
+                          username:
+                            description: The user to use for datagrid
+                            type: string
+                        type: object
                       env:
                         items:
                           description: EnvVar represents an environment variable present
@@ -3212,6 +3223,17 @@ spec:
                                   Value, default is: 1'
                                 format: int32
                                 type: integer
+                            type: object
+                          dataGridAuth:
+                            description: DataGridAuth
+                            properties:
+                              password:
+                                description: The password to use for datagrid user
+                                format: password
+                                type: string
+                              username:
+                                description: The user to use for datagrid
+                                type: string
                             type: object
                           env:
                             items:

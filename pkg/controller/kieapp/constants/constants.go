@@ -290,6 +290,8 @@ const (
 
 	SUBCOMPONENT_TYPE_APP   = "application"
 	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
+
+	DefaultDatagridUsername = "infinispan"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
