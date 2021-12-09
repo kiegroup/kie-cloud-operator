@@ -159,6 +159,16 @@ type ConsoleObject struct {
 	Jvm          *JvmObject         `json:"jvm,omitempty"`
 	PvSize       string             `json:"pvSize,omitempty"`
 	Cors         *CORSFiltersObject `json:"cors,omitempty"`
+	DataGridAuth *DataGridAuth      `json:"dataGridAuth,omitempty"`
+}
+
+// DataGridAuth
+type DataGridAuth struct {
+	// The user to use for datagrid
+	Username string `json:"username,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// The password to use for datagrid user
+	Password string `json:"password,omitempty"`
 }
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -675,6 +685,7 @@ type ConsoleTemplate struct {
 	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
 	Cors                CORSFiltersObject `json:"cors,omitempty"`
 	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
+	DataGridAuth        DataGridAuth      `json:"dataGridAuth,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates

@@ -477,6 +477,13 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				}
 			}
 		}
+
+		// Datagrid Authentication
+		if cr.Status.Applied.Environment == api.RhpamAuthoringHA || cr.Status.Applied.Environment == api.RhdmAuthoringHA {
+			if cr.Status.Applied.Objects.Console.DataGridAuth != nil {
+				template.DataGridAuth = *cr.Status.Applied.Objects.Console.DataGridAuth
+			}
+		}
 	}
 	return template
 }
@@ -1384,7 +1391,6 @@ func SetDefaults(cr *api.KieApp) {
 	if len(specApply.CommonConfig.AdminUser) == 0 {
 		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
 	}
-
 	if specApply.CommonConfig.StartupStrategy == nil {
 		specApply.CommonConfig.StartupStrategy = &api.StartupStrategy{StrategyName: api.OpenshiftStartupStrategy, ControllerTemplateCacheTTL: Pint(5000)}
 	}
@@ -1409,6 +1415,20 @@ func SetDefaults(cr *api.KieApp) {
 			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleAuthoringLimits, constants.ConsoleAuthoringRequests)
 		} else if strings.Contains(string(specApply.Environment), "production") {
 			setResourcesDefault(&specApply.Objects.Console.KieAppObject, constants.ConsoleProdLimits, constants.ConsoleProdRequests)
+		}
+
+		if cr.Spec.Environment == api.RhpamAuthoringHA || cr.Spec.Environment == api.RhdmAuthoringHA {
+			if specApply.Objects.Console.DataGridAuth != nil {
+				if len(specApply.Objects.Console.DataGridAuth.Username) == 0 {
+					specApply.Objects.Console.DataGridAuth.Username = constants.DefaultDatagridUsername
+				}
+				if len(specApply.Objects.Console.DataGridAuth.Password) == 0 {
+					specApply.Objects.Console.DataGridAuth.Password = string(shared.GeneratePassword(8))
+				}
+			} else {
+				//if not provided we create default credentials to allow the correct deployment of the HA env
+				specApply.Objects.Console.DataGridAuth = &api.DataGridAuth{Username: constants.DefaultDatagridUsername, Password: string(shared.GeneratePassword(8))}
+			}
 		}
 	}
 
