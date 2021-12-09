@@ -477,6 +477,14 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				}
 			}
 		}
+
+		if cr.Status.Applied.CommonConfig.DataGridUsername != "" {
+			template.DataGridUsername = cr.Status.Applied.CommonConfig.DataGridUsername
+		}
+
+		if cr.Status.Applied.CommonConfig.DataGridPassword != "" {
+			template.DataGridUsername = cr.Status.Applied.CommonConfig.DataGridPassword
+		}
 	}
 	return template
 }
@@ -1175,6 +1183,7 @@ func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
+		&spec.CommonConfig.DataGridPassword,
 	}
 	for i := range passwords {
 		if len(*passwords[i]) > 0 {
@@ -1383,6 +1392,9 @@ func SetDefaults(cr *api.KieApp) {
 	}
 	if len(specApply.CommonConfig.AdminUser) == 0 {
 		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
+	}
+	if len(specApply.CommonConfig.DataGridUsername) == 0 {
+		specApply.CommonConfig.DataGridUsername = constants.DefaultDatagridUsername
 	}
 
 	if specApply.CommonConfig.StartupStrategy == nil {

@@ -675,6 +675,8 @@ type ConsoleTemplate struct {
 	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
 	Cors                CORSFiltersObject `json:"cors,omitempty"`
 	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
+	DataGridUsername    string            `json:"dataGridUsername,omitempty"`
+	DataGridPassword    string            `json:"dataGridPassword,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -875,6 +877,11 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
+	// The user to use for datagrid
+	DataGridUsername string `json:"dataGridUsername,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// The password to use for datagrid user
+	DataGridPassword string `json:"dataGridPassword,omitempty"`
 }
 
 // VersionConfigs ...

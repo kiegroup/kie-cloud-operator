@@ -520,6 +520,18 @@
               "type": "password",
               "jsonPath": "$.spec.commonConfig.dbPassword",
               "description": "The password to use for databases. Generated if empty"
+            },
+            {
+              "label": "Datagrid username",
+              "type": "text",
+              "jsonPath": "$.spec.commonConfig.dataGridUsername",
+              "description": "The username to use for Data Grid. Default is infinispan"
+            },
+            {
+              "label": "Datagrid password",
+              "type": "password",
+              "jsonPath": "$.spec.commonConfig.dataGridPassword",
+              "description": "The password to use for Data Grid. Generated if empty"
             }
           ]
         }

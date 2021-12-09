@@ -7183,3 +7183,29 @@ func assertRouteHostnameEmpty(t *testing.T, env api.Environment) {
 	assert.Empty(t, env.SmartRouter.Routes[0].Spec.Host)
 	assert.Empty(t, env.Dashbuilder.Routes[0].Spec.Host)
 }
+
+func TestDataGridAuth(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamAuthoringHA,
+			CommonConfig: api.CommonConfig{
+				DataGridUsername: "InfinispanUser",
+				DataGridPassword: "InfinispanPassword",
+			},
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting Test Rhpam Authoring ha environment")
+	assert.Equal(t, "InfinispanUser", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_USERNAME"))
+	assert.Equal(t, "InfinispanPassword", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_PASSWORD"))
+	assert.Equal(t, "auth", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_SASL_QOP"))
+	assert.Equal(t, "infinispan", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_SERVER_NAME"))
+	assert.Equal(t, "default", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_REALM"))
+}

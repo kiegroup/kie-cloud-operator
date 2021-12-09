@@ -295,6 +295,13 @@ spec:
                   applicationName:
                     description: The name of the application deployment.
                     type: string
+                  dataGridPassword:
+                    description: The password to use for datagrid user
+                    format: password
+                    type: string
+                  dataGridUsername:
+                    description: The user to use for datagrid
+                    type: string
                   dbPassword:
                     description: The password to use for databases.
                     format: password
@@ -2439,7 +2446,7 @@ spec:
                           description: Server name
                           type: string
                         persistRepos:
-                          description: PersistRepos enables persistent volume for
+                          description: PersistRepos enables persistent volumes for
                             KIE Server's kie and maven repositories
                           type: boolean
                         replicas:
@@ -3090,6 +3097,13 @@ spec:
                         type: string
                       applicationName:
                         description: The name of the application deployment.
+                        type: string
+                      dataGridPassword:
+                        description: The password to use for datagrid user
+                        format: password
+                        type: string
+                      dataGridUsername:
+                        description: The user to use for datagrid
                         type: string
                       dbPassword:
                         description: The password to use for databases.
@@ -5283,7 +5297,7 @@ spec:
                               description: Server name
                               type: string
                             persistRepos:
-                              description: PersistRepos enables persistent volume
+                              description: PersistRepos enables persistent volumes
                                 for KIE Server's kie and maven repositories
                               type: boolean
                             replicas:
