@@ -7197,7 +7197,6 @@ func TestDataGridAuth(t *testing.T) {
 			},
 			Objects: api.KieAppObjects{
 				Console: &api.ConsoleObject{},
-
 			},
 		},
 	}
