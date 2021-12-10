@@ -245,17 +245,24 @@
                   "visible": true,
                   "fields": [
                     {
-                      "label": "Roles properties file",
+                      "label": "Roles properties file path or the desire roles to map",
                       "type": "text",
                       "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-                      "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+                      "description": "When present, the RoleMapping will be configured to use the provided properties file or roles. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
                     },
                     {
-                      "label": "Replace roles",
+                      "label": "Roles keep mapped",
                       "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.replaceRole",
+                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
                       "default": "false",
-                      "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
+                      "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
+                    },
+                    {
+                      "label": "Roles keep non mapped",
+                      "type": "checkbox",
+                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
+                      "default": "false",
+                      "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
                     },
                     {
                       "label": "RoleMapper Configuration object",
@@ -314,19 +321,6 @@
                   "description": "LDAP Credentials used for authentication of bindDN"
                 },
                 {
-                  "label": "LoginModule Flag",
-                  "type": "dropDown",
-                  "jsonPath": "$.spec.auth.ldap.loginModule",
-                  "originalJsonPath": "$.spec.auth.ldap.loginModule",
-                  "description": "A flag to set login module to optional. The default value is required"
-                },
-                {
-                  "label": "JAAS security domain",
-                  "type": "password",
-                  "jsonPath": "$.spec.auth.ldap.jaasSecurityDomain",
-                  "description": "The JMX ObjectName of the JaasSecurityDomain used to decrypt the password."
-                },
-                {
                   "label": "BaseCtxDN",
                   "type": "text",
                   "default": "ou=users,ou=example,ou=com",
@@ -341,11 +335,11 @@
                   "description": "Search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
                 },
                 {
-                  "label": "Search scope",
-                  "type": "dropDown",
-                  "jsonPath": "$.spec.auth.ldap.searchScope",
-                  "originalJsonPath": "$.spec.auth.ldap.searchScope",
-                  "description": "The search scope to use."
+                  "label": "User recursive search",
+                  "type": "text",
+                  "default": "false",
+                  "jsonPath": "$.spec.auth.ldap.recursiveSearch",
+                  "description": "Indicates if the user queries are recursive."
                 },
                 {
                   "label": "Search time limit",
@@ -353,32 +347,6 @@
                   "default": "10000",
                   "jsonPath": "$.spec.auth.ldap.searchTimeLimit",
                   "description": "The timeout in milliseconds for ldap searches."
-                },
-                {
-                  "label": "DN attribute",
-                  "type": "text",
-                  "default": "distinguishedName",
-                  "jsonPath": "$.spec.auth.ldap.distinguishedNameAttribute",
-                  "description": "The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used."
-                },
-                {
-                  "label": "Parse username",
-                  "type": "checkbox",
-                  "jsonPath": "$.spec.auth.ldap.parseUsername",
-                  "default": "false",
-                  "description": "A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with Username prefix and Username suffix."
-                },
-                {
-                  "label": "Username prefix",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.usernameBeginString",
-                  "description": "Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with Username suffix and only taken into account if parseUsername is set to true."
-                },
-                {
-                  "label": "Username suffix",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.usernameEndString",
-                  "description": "Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with Username prefix and only taken into account if parseUsername is set to true."
                 },
                 {
                   "label": "Role attribute ID",
@@ -416,31 +384,16 @@
                   "description": "A role included for all authenticated users"
                 },
                 {
-                  "label": "Role name attribute ID",
+                  "label": "Ldap New Identity Attributes",
                   "type": "text",
-                  "default": "name",
-                  "jsonPath": "$.spec.auth.ldap.roleNameAttributeID",
-                  "description": "Name of the attribute within the Role context DN that contains the role name. If the 'Role attribute is DN' property is set to true, this property is used to find the role object’s name attribute."
+                  "jsonPath": "$.spec.auth.ldap.newIdentityAttributes",
+                  "description": "Provide new identities for Ldap  identity mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'"
                 },
                 {
-                  "label": "Parse role name from DN",
-                  "type": "checkbox",
-                  "jsonPath": "$.spec.auth.ldap.parseRoleNameFromDN",
-                  "default": "false",
-                  "description": "A flag indicating if the DN returned by a query contains the 'Role name attribute ID'. If set to true, the DN is checked for the 'Role name attribute ID'. If set to false, the DN is not checked for the 'Role name attribute ID'. This flag can improve the performance of LDAP queries."
-                },
-                {
-                  "label": "Role attribute is DN",
-                  "type": "checkbox",
-                  "jsonPath": "$.spec.auth.ldap.roleAttributeIsDN",
-                  "default": "false",
-                  "description": "Whether or not the 'Role attribute ID' contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the 'Role name attribute ID' attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true."
-                },
-                {
-                  "label": "Referral user attribute ID",
+                  "label": "Referral mode",
                   "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.referralUserAttributeIDToCheck",
-                  "description": "If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree"
+                  "jsonPath": "$.spec.auth.ldap.referralMode",
+                  "description": "If LDAP referrals should be followed. Supported options are FOLLOW, IGNORE or THROW"
                 },
                 {
                   "label": "RoleMapper",
@@ -453,7 +406,7 @@
                       "label": "Roles properties file",
                       "type": "text",
                       "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-                      "description": "When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3"
+                      "description": "When present, the RoleMapping will be configured to use the provided properties file or roles set. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
                     },
                     {
                       "label": "Replace roles",

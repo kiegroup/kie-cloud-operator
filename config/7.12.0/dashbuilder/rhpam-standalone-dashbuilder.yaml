@@ -192,26 +192,14 @@ dashbuilder:
                     value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
-                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: "[[.Auth.LDAP.JAASSecurityDomain]]"
-                  - name: AUTH_LDAP_LOGIN_MODULE
-                    value: "[[.Auth.LDAP.LoginModule]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
                     value: "[[.Auth.LDAP.BaseFilter]]"
-                  - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: "[[.Auth.LDAP.SearchScope]]"
+                  - name: AUTH_LDAP_RECURSIVE_SEARCH
+                    value: "[[.Auth.LDAP.RecursiveSearch]]"
                   - name: AUTH_LDAP_SEARCH_TIME_LIMIT
                     value: "[[.Auth.LDAP.SearchTimeLimit]]"
-                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: "[[.Auth.LDAP.DistinguishedNameAttribute]]"
-                  - name: AUTH_LDAP_PARSE_USERNAME
-                    value: "[[.Auth.LDAP.ParseUsername]]"
-                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: "[[.Auth.LDAP.UsernameBeginString]]"
-                  - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: "[[.Auth.LDAP.UsernameEndString]]"
                   - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
                     value: "[[.Auth.LDAP.RoleAttributeID]]"
                   - name: AUTH_LDAP_ROLES_CTX_DN
@@ -222,22 +210,20 @@ dashbuilder:
                     value: "[[.Auth.LDAP.RoleRecursion]]"
                   - name: AUTH_LDAP_DEFAULT_ROLE
                     value: "[[.Auth.LDAP.DefaultRole]]"
-                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: "[[.Auth.LDAP.RoleNameAttributeID]]"
-                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: "[[.Auth.LDAP.ParseRoleNameFromDN]]"
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: "[[.Auth.LDAP.RoleAttributeIsDN]]"
-                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: "[[.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                  - name: AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES
+                    value: "[[.Auth.LDAP.NewIdentityAttributes]]"
+                  - name: AUTH_LDAP_REFERRAL_MODE
+                    value: "[[.Auth.LDAP.ReferralMode]]"
                   #[[end]]
                   ## LDAP config END
                   ## RoleMapping config BEGIN
                   #[[if .Auth.RoleMapper.RolesProperties]]
                   - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
                     value: "[[.Auth.RoleMapper.RolesProperties]]"
-                  - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                    value: "[[.Auth.RoleMapper.ReplaceRole]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepMapped]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_NON_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepNonMapped]]"
                   #[[end]]
                   ## RoleMapping config END
                   # Auth config END

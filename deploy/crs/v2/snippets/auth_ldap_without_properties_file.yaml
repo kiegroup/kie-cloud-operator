@@ -3,7 +3,7 @@ kind: KieApp
 metadata:
   name: rhpam-ldap
   annotations:
-    consoleName: snippet-rhpam-ldap
+    consoleName: snippet-rhpam-ldap-without-properties-file
     consoleTitle: Configure LDAP
     consoleDesc: Use this snippet to configure ldap opts
     consoleSnippet: true
@@ -15,16 +15,15 @@ spec:
       bindCredential: s3cret
       baseCtxDN: ou=users,ou=example,ou=com
       baseFilter: (uid={0})
-      recursiveSearch: true
+      recursiveSearch: false
       roleAttributeID: memberOf
       rolesCtxDN: ou=groups,ou=example,ou=com
       roleFilter: (memberOf={1})
       defaultRole: guest
       newIdentityAttributes: sn=BlankSurname;cn=BlankCommonName
-      referralMode: FOLLOW
+      referralMode: IGNORE
     roleMapper:
       rolesProperties: /config/roleMapper.properties
-      replaceRole: true
-      from:
-        kind: ConfigMap
-        name: roles-configmap
+      rolesKeepMapped: true
+      rolesKeepNonMapped: false
+
