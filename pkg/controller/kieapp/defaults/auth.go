@@ -6,6 +6,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	"path/filepath"
 )
 
 const ssoHostnameVar = "HOSTNAME_HTTPS"
@@ -95,7 +96,7 @@ func configureLDAP(config *api.LDAPAuthConfig, envTemplate *api.EnvTemplate) err
 func configureRoleMapper(config *api.RoleMapperAuthConfig, envTemplate *api.EnvTemplate) {
 	if config != nil {
 		envTemplate.Auth.RoleMapper.RoleMapperAuthConfig = *config.DeepCopy()
-		if envTemplate.Auth.RoleMapper.RoleMapperAuthConfig.RolesProperties != "" {
+		if len(filepath.Ext(envTemplate.Auth.RoleMapper.RoleMapperAuthConfig.RolesProperties)) > 0 {
 			pos := -1
 			for i, c := range config.RolesProperties {
 				if c == '/' {

@@ -3,9 +3,9 @@ kind: KieApp
 metadata:
   name: rhpam-ldap
   annotations:
-    consoleName: snippet-rhpam-ldap
+    consoleName: snippet-rhpam-ldap-without-properties-file
     consoleTitle: Configure LDAP
-    consoleDesc: Use this snippet to configure ldap opts
+    consoleDesc: Use this snippet to configure ldap opts using role mappning withiout a roles.properties file.
     consoleSnippet: true
 spec:
   auth:
@@ -15,17 +15,16 @@ spec:
       bindCredential: s3cret
       baseCtxDN: ou=users,ou=example,ou=com
       baseFilter: uid
-      recursiveSearch: true
+      recursiveSearch: false
       roleAttributeID: memberOf
       rolesCtxDN: ou=groups,ou=example,ou=com
       roleFilter: (memberOf={1})
       defaultRole: guest
       newIdentityAttributes: sn=BlankSurname;cn=BlankCommonName
-      referralMode: FOLLOW
-      loginModule: optional
+      referralMode: IGNORE
+      loginFailover: true
     roleMapper:
-      rolesProperties: /config/roleMapper.properties
-      replaceRole: true
-      from:
-        kind: ConfigMap
-        name: roles-configmap
+      rolesProperties: admin=PowerUser,BillingAdmin;guest=guest;Administrator=admin,kie-server,rest-all;controllerUser=kie-server,rest-all
+      rolesKeepMapped: true
+      rolesKeepNonMapped: false
+
