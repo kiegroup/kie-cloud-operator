@@ -7192,8 +7192,10 @@ func TestDataGridAuth(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamAuthoringHA,
 			CommonConfig: api.CommonConfig{
-				DataGridUsername: "InfinispanUser",
-				DataGridPassword: "InfinispanPassword",
+				DataGridAuth: &api.DataGridAuth{
+						DataGridUsername: "InfinispanUser",
+						DataGridPassword: "InfinispanPass",
+				},
 			},
 			Objects: api.KieAppObjects{
 				Console: &api.ConsoleObject{},
@@ -7204,10 +7206,10 @@ func TestDataGridAuth(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting Test Rhpam Authoring ha environment")
 	assert.Equal(t, "InfinispanUser", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_USERNAME"))
-	assert.Equal(t, "InfinispanPassword", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_PASSWORD"))
+	assert.Equal(t, "InfinispanPass", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_PASSWORD"))
 	assert.Equal(t, "auth", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_SASL_QOP"))
 	assert.Equal(t, "infinispan", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_SERVER_NAME"))
 	assert.Equal(t, "default", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_INFINISPAN_REALM"))
 	assert.Equal(t, "InfinispanUser", getEnvVariable(env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0], "USER"))
-	assert.Equal(t, "InfinispanPassword", getEnvVariable(env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0], "PASS"))
+	assert.Equal(t, "InfinispanPass", getEnvVariable(env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0], "PASS"))
 }

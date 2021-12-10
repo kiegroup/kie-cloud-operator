@@ -314,6 +314,7 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 		Servers:     serversConfig,
 		SmartRouter: getSmartRouterTemplate(cr),
 		Constants:   *getTemplateConstants(cr),
+		DataGridAuth: getDataGridAuthTemplate(cr),
 	}
 	if IsOcpCA(cr) {
 		envTemplate.OpenshiftCaBundle = cr.Status.Applied.Truststore.OpenshiftCaBundle
@@ -342,7 +343,31 @@ func getEnvTemplate(cr *api.KieApp) (envTemplate api.EnvTemplate, err error) {
 			return envTemplate, err
 		}
 	}
+
 	return envTemplate, nil
+}
+
+func getDataGridAuthTemplate(cr *api.KieApp) api.DataGridAuth {
+	if cr.Status.Applied.Objects.DataGridAuth != nil && cr.Status.Applied.Objects.DataGridAuth.DataGridUsername != ""  && cr.Status.Applied.Objects.DataGridAuth.DataGridPassword != "" {
+
+		return api.DataGridAuth{
+			DataGridUsername: cr.Status.Applied.Objects.DataGridAuth.DataGridUsername,
+			DataGridPassword: cr.Status.Applied.Objects.DataGridAuth.DataGridPassword,
+		}
+	}else {
+		if (cr.Status.Applied.CommonConfig.DataGridAuth != nil){
+			cr.Status.Applied.Objects.DataGridAuth = &api.DataGridAuth{
+				DataGridUsername: cr.Status.Applied.CommonConfig.DataGridAuth.DataGridUsername,
+				DataGridPassword: cr.Status.Applied.CommonConfig.DataGridAuth.DataGridPassword,
+			}
+			return api.DataGridAuth{
+				DataGridUsername: cr.Status.Applied.Objects.DataGridAuth.DataGridUsername,
+				DataGridPassword: cr.Status.Applied.Objects.DataGridAuth.DataGridPassword,
+			}
+		}else {
+			return api.DataGridAuth{}
+		}
+	}
 }
 
 func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
@@ -478,12 +503,8 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 			}
 		}
 
-		if cr.Status.Applied.CommonConfig.DataGridUsername != "" {
-			template.DataGridUsername = cr.Status.Applied.CommonConfig.DataGridUsername
-		}
-
-		if cr.Status.Applied.CommonConfig.DataGridPassword != "" {
-			template.DataGridUsername = cr.Status.Applied.CommonConfig.DataGridPassword
+		if cr.Status.Applied.CommonConfig.DataGridAuth != nil {
+			template.DataGridAuth  = *cr.Status.Applied.CommonConfig.DataGridAuth
 		}
 	}
 	return template
@@ -1183,7 +1204,7 @@ func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
-		&spec.CommonConfig.DataGridPassword,
+		&spec.CommonConfig.DataGridAuth.DataGridPassword,
 	}
 	for i := range passwords {
 		if len(*passwords[i]) > 0 {
@@ -1393,8 +1414,8 @@ func SetDefaults(cr *api.KieApp) {
 	if len(specApply.CommonConfig.AdminUser) == 0 {
 		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
 	}
-	if len(specApply.CommonConfig.DataGridUsername) == 0 {
-		specApply.CommonConfig.DataGridUsername = constants.DefaultDatagridUsername
+	if len(specApply.CommonConfig.DataGridAuth.DataGridUsername) == 0 {
+		specApply.CommonConfig.DataGridAuth.DataGridUsername = constants.DefaultDatagridUsername
 	}
 
 	if specApply.CommonConfig.StartupStrategy == nil {

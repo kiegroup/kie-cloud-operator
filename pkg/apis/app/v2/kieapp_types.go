@@ -111,6 +111,7 @@ type KieAppObjects struct {
 	SmartRouter      *SmartRouterObject      `json:"smartRouter,omitempty"`
 	ProcessMigration *ProcessMigrationObject `json:"processMigration,omitempty"`
 	Dashbuilder      *DashbuilderObject      `json:"dashbuilder,omitempty"`
+	DataGridAuth     *DataGridAuth           `json:"dataGridAuth,omitempty"`
 }
 
 // KieAppUpgrades KIE App product upgrade flags
@@ -628,6 +629,7 @@ type EnvTemplate struct {
 	Constants         TemplateConstants        `json:"constants,omitempty"`
 	OpenshiftCaBundle bool                     `json:"openshiftCaBundle,omitempty"`
 	RouteProtocol     string                   `json:"routeProtocol,omitempty"`
+	DataGridAuth      DataGridAuth             `json:"dataGridAuth,omitempty"`
 }
 
 // TemplateConstants constant values that are used within the different configuration templates
@@ -675,8 +677,7 @@ type ConsoleTemplate struct {
 	DashbuilderLocation string            `json:"dashbuilderLocation,omitempty"`
 	Cors                CORSFiltersObject `json:"cors,omitempty"`
 	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
-	DataGridUsername    string            `json:"dataGridUsername,omitempty"`
-	DataGridPassword    string            `json:"dataGridPassword,omitempty"`
+	DataGridAuth        DataGridAuth      `json:"dataGridAuth,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -877,11 +878,8 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
-	// The user to use for datagrid
-	DataGridUsername string `json:"dataGridUsername,omitempty"`
-	// +kubebuilder:validation:Format:=password
-	// The password to use for datagrid user
-	DataGridPassword string `json:"dataGridPassword,omitempty"`
+	// DataGrid Credentials
+	DataGridAuth    *DataGridAuth    `json:"dataGridAuth,omitempty"`
 }
 
 // VersionConfigs ...
@@ -1096,6 +1094,15 @@ const (
 	OpenshiftStartupStrategy  = "OpenShiftStartupStrategy"
 	ControllerStartupStrategy = "ControllerBasedStartupStrategy"
 )
+
+// DataGridAuth
+type DataGridAuth struct {
+	// The user to use for datagrid
+	DataGridUsername string `json:"dataGridUsername,omitempty"`
+	// +kubebuilder:validation:Format:=password
+	// The password to use for datagrid user
+	DataGridPassword string `json:"dataGridPassword,omitempty"`
+}
 
 func init() {
 	SchemeBuilder.Register(&KieApp{}, &KieAppList{})

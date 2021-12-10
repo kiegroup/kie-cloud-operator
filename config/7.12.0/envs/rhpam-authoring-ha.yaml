@@ -42,9 +42,9 @@ console:
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "[[.AMQClusterPassword]]"
                   - name: APPFORMER_INFINISPAN_USERNAME
-                    value: "[[.DataGridUsername]]"
+                    value: "[[.DataGridAuth.DataGridUsername]]"
                   - name: APPFORMER_INFINISPAN_PASSWORD
-                    value: "[[.DataGridPassword]]"
+                    value: "[[.DataGridAuth.DataGridPassword]]"
                   - name: APPFORMER_INFINISPAN_SASL_QOP
                     value: "auth"
                   - name: APPFORMER_INFINISPAN_SERVER_NAME
@@ -87,9 +87,9 @@ others:
               containers:
                 - env:
                     - name: USER
-                      value: "[[.DataGridUsername]]"
+                      value: "[[.DataGridAuth.DataGridUsername]]"
                     - name: PASS
-                      value: "[[.DataGridPassword]]"
+                      value: "[[.DataGridAuth.DataGridPassword]]"
                     - name: SERVICE_NAME
                       value: "[[.ApplicationName]]-datagrid"
                     - name: SERVICE_PROFILE
