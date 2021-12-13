@@ -2439,7 +2439,7 @@ spec:
                           description: Server name
                           type: string
                         persistRepos:
-                          description: PersistRepos enables persistent volume for
+                          description: PersistRepos enables persistent volumes for
                             KIE Server's kie and maven repositories
                           type: boolean
                         replicas:
@@ -5283,7 +5283,7 @@ spec:
                               description: Server name
                               type: string
                             persistRepos:
-                              description: PersistRepos enables persistent volume
+                              description: PersistRepos enables persistent volumes
                                 for KIE Server's kie and maven repositories
                               type: boolean
                             replicas:
