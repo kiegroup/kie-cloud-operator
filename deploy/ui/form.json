@@ -969,6 +969,29 @@
                   ]
                 }
               ]
+            },
+            {
+              "label": "DataGrid Auth used in HA Environments",
+              "type": "fieldGroup",
+              "jsonPath": "$.spec.objects.console.dataGridAuth",
+              "originalJsonPath": "$.spec.objects.console.dataGridAuth",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "HA Environment - Datagrid username",
+                  "type": "text",
+                  "jsonPath": "$.spec.objects.console.dataGridAuth.username",
+                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
+                  "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                },
+                {
+                  "label": "HA Environment - Datagrid password",
+                  "type": "password",
+                  "jsonPath": "$.spec.objects.console.dataGridAuth.password",
+                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
+                  "description": "The password to use for Data Grid. Generated if empty"
+                }
+              ]
             }
           ]
         },
