@@ -364,19 +364,30 @@ func TestAuthLDAPConfig(t *testing.T) {
 			},
 			Auth: &api.KieAppAuthObject{
 				LDAP: &api.LDAPAuthConfig{
-					URL:    "ldaps://ldap.example.com",
-					BindDN: "cn=admin,dc=example,dc=com",
+					URL:                   "ldaps://ldap.example.com",
+					BindDN:                "cn=admin,dc=example,dc=com",
+					RecursiveSearch:       true,
+					ReferralMode:          api.Follow,
+					NewIdentityAttributes: "sn=BlankSurname;cn=BlankCommonName",
+					LoginModule:           "required",
+					LoginFailover:         true,
 				},
 			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
+
 	assert.Nil(t, err, "Error getting trial environment")
 
 	expectedEnvs := []corev1.EnvVar{
 		{Name: "AUTH_LDAP_URL", Value: "ldaps://ldap.example.com"},
 		{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
 		{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
+		{Name: "AUTH_LDAP_RECURSIVE_SEARCH", Value: "true"},
+		{Name: "AUTH_LDAP_REFERRAL_MODE", Value: "FOLLOW"},
+		{Name: "AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES", Value: "sn=BlankSurname;cn=BlankCommonName"},
+		{Name: "AUTH_LDAP_LOGIN_MODULE", Value: "required"},
+		{Name: "AUTH_LDAP_LOGIN_FAILOVER", Value: "true"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
@@ -389,11 +400,12 @@ func TestAuthLDAPConfig(t *testing.T) {
 func TestAuthRoleMapperConfig(t *testing.T) {
 	var defaultMode int32 = 420
 	tests := []struct {
-		name                string
-		roleMapper          *api.RoleMapperAuthConfig
-		expectedVolumeMount *corev1.VolumeMount
-		expectedVolume      *corev1.Volume
-		expectedPath        string
+		name                    string
+		roleMapper              *api.RoleMapperAuthConfig
+		expectedVolumeMount     *corev1.VolumeMount
+		expectedVolume          *corev1.Volume
+		expectedPath            string
+		expectedRolesProperties string
 	}{{
 		name: "RoleMapper config is set with defaults",
 		roleMapper: &api.RoleMapperAuthConfig{
@@ -405,8 +417,9 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 	}, {
 		name: "RoleMapper config has ReplaceRole",
 		roleMapper: &api.RoleMapperAuthConfig{
-			RolesProperties: "mapping.properties",
-			ReplaceRole:     true,
+			RolesProperties:    "mapping.properties",
+			RolesKeepMapped:    true,
+			RolesKeepNonMapped: false,
 		},
 		expectedVolumeMount: nil,
 		expectedVolume:      nil,
@@ -517,6 +530,14 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			},
 		},
 		expectedPath: "/other/path/mapping.properties",
+	}, {
+		name: "RoleMapper config has no role.properties file",
+		roleMapper: &api.RoleMapperAuthConfig{
+			RolesProperties: "admin=PowerUser,BillingAdmin;guest=guest",
+		},
+		expectedVolumeMount: nil,
+		expectedVolume:      nil,
+		expectedPath:        "admin=PowerUser,BillingAdmin;guest=guest",
 	}}
 
 	cr := &api.KieApp{
@@ -549,7 +570,8 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			{Name: "AUTH_LDAP_BIND_DN", Value: "cn=admin,dc=example,dc=com"},
 			{Name: "AUTH_LDAP_BIND_CREDENTIAL"},
 			{Name: "AUTH_ROLE_MAPPER_ROLES_PROPERTIES", Value: item.expectedPath},
-			{Name: "AUTH_ROLE_MAPPER_REPLACE_ROLE", Value: strconv.FormatBool(item.roleMapper.ReplaceRole)},
+			{Name: "AUTH_LDAP_MAPPER_KEEP_MAPPED", Value: strconv.FormatBool(item.roleMapper.RolesKeepMapped)},
+			{Name: "AUTH_LDAP_MAPPER_KEEP_NON_MAPPED", Value: strconv.FormatBool(item.roleMapper.RolesKeepNonMapped)},
 		}
 		for _, expectedEnv := range expectedEnvs {
 			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Console does not contain env %v", item.name, expectedEnv)
@@ -571,46 +593,6 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			}
 		}
 	}
-}
-
-func getExpectedSSOEnvs() []corev1.EnvVar {
-	return []corev1.EnvVar{
-		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
-		{Name: "SSO_REALM", Value: "rhpam-test"},
-		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
-		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
-		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
-		{Name: "SSO_USERNAME"},
-		{Name: "SSO_PASSWORD"},
-		{Name: "SSO_PASSWORD"},
-	}
-}
-
-func TestLDAPLoginModuleRequiredFlag(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamAuthoring,
-			Objects: api.KieAppObjects{
-				Servers: []api.KieServerSet{
-					{Deployments: Pint(2)},
-				},
-			},
-			Auth: &api.KieAppAuthObject{
-				LDAP: &api.LDAPAuthConfig{
-					URL:         "ldaps://ldap.example.com",
-					BindDN:      "cn=admin,dc=example,dc=com",
-					LoginModule: "required",
-				},
-			},
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, "required", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
-	assert.Equal(t, "required", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 }
 
 func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
@@ -639,4 +621,17 @@ func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
 	assert.Equal(t, "optional", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 	assert.Equal(t, "optional", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 
+}
+
+func getExpectedSSOEnvs() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{Name: "SSO_URL", Value: "https://sso.example.com:8080"},
+		{Name: "SSO_REALM", Value: "rhpam-test"},
+		{Name: "SSO_OPENIDCONNECT_DEPLOYMENTS", Value: "ROOT.war"},
+		{Name: "SSO_PRINCIPAL_ATTRIBUTE", Value: "preferred_username"},
+		{Name: "SSO_DISABLE_SSL_CERTIFICATE_VALIDATION", Value: "false"},
+		{Name: "SSO_USERNAME"},
+		{Name: "SSO_PASSWORD"},
+		{Name: "SSO_PASSWORD"},
+	}
 }
