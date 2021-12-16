@@ -403,28 +403,23 @@ type LDAPAuthConfig struct {
 	// +kubebuilder:validation:Required
 	// LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space
 	URL string `json:"url"`
+	// +kubebuilder:validation:Enum:=optional
+	// LDAP login module flag, adds backward compatibility with the legacy security subsystem on elytron.
+	// 'optional' is the only supported value, if set will create a distributed realm with ldap and filesystem realm
+	// with the user added using the KIE_ADMIN_USER.
+	LoginModule LoginModuleType `json:"loginModule,omitempty"`
+	// Enable failover, if Ldap Url is unreachable, it will fail over to the KieFsRealm.
+	LoginFailover bool `json:"loginFailover,omitempty"`
 	// Bind DN used for authentication
 	BindDN string `json:"bindDN,omitempty"`
-	// The JMX ObjectName of the JaasSecurityDomain used to decrypt the password.
-	JAASSecurityDomain string `json:"jaasSecurityDomain,omitempty"`
-	// +kubebuilder:validation:Enum:=optional;required
-	LoginModule LoginModuleType `json:"loginModule,omitempty"`
 	// LDAP Base DN of the top-level context to begin the user search.
 	BaseCtxDN string `json:"baseCtxDN,omitempty"`
 	// DAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}).
 	BaseFilter string `json:"baseFilter,omitempty"`
-	// +kubebuilder:validation:Enum:=SUBTREE_SCOPE;OBJECT_SCOPE;ONELEVEL_SCOPE
-	SearchScope SearchScopeType `json:"searchScope,omitempty"`
+	// Indicates if the user queries are recursive.
+	RecursiveSearch bool `json:"recursiveSearch,omitempty"`
 	// The timeout in milliseconds for user or role searches.
 	SearchTimeLimit int32 `json:"searchTimeLimit,omitempty"`
-	// The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used.
-	DistinguishedNameAttribute string `json:"distinguishedNameAttribute,omitempty"`
-	// A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString.
-	ParseUsername bool `json:"parseUsername,omitempty"`
-	// Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true.
-	UsernameBeginString string `json:"usernameBeginString,omitempty"`
-	// Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true.
-	UsernameEndString string `json:"usernameEndString,omitempty"`
 	// Name of the attribute containing the user roles.
 	RoleAttributeID string `json:"roleAttributeID,omitempty"`
 	// The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is.
@@ -436,45 +431,57 @@ type LDAPAuthConfig struct {
 	RoleRecursion int16 `json:"roleRecursion,omitempty"`
 	// A role included for all authenticated users
 	DefaultRole string `json:"defaultRole,omitempty"`
-	// Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute.
-	RoleNameAttributeID string `json:"roleNameAttributeID,omitempty"`
-	// A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries.
-	ParseRoleNameFromDN bool `json:"parseRoleNameFromDN,omitempty"`
-	// Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true.
-	RoleAttributeIsDN bool `json:"roleAttributeIsDN,omitempty"`
-	// If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
-	ReferralUserAttributeIDToCheck string `json:"referralUserAttributeIDToCheck,omitempty"`
+	// Provide new identities for Ldap  identity mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'
+	NewIdentityAttributes string `json:"newIdentityAttributes,omitempty"`
+	// +kubebuilder:validation:Enum:=FOLLOW;IGNORE;THROW
+	// If LDAP referrals should be followed.
+	ReferralMode ReferralModeType `json:"referralMode,omitempty"`
 }
 
-// A flag to set login module to optional. The default value is required
+// AuthTemplate Authentication definition used in the template
+type AuthTemplate struct {
+	SSO        SSOAuthConfig      `json:"sso,omitempty"`
+	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
+	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
+}
+
+// RoleMapperTemplate RoleMapper definition used in the template
+type RoleMapperTemplate struct {
+	MountPath            string `json:"mountPath,omitempty"`
+	RoleMapperAuthConfig `json:",inline"`
+}
+
+// RoleMapperAuthConfig Configuration for RoleMapper Authentication
+type RoleMapperAuthConfig struct {
+	// +kubebuilder:validation:Required
+	// When present, the RoleMapping will be configured to use the provided properties file or roles. This parameter
+	// defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern
+	// 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3
+	// expects eiter a .properties file or a content with the patter above.
+	RolesProperties string `json:"rolesProperties"`
+	// When set to 'true' the mapped roles will retain all roles, that have defined mappings. Defaults to false.
+	RolesKeepMapped bool `json:"rolesKeepMapped,omitempty"`
+	// When set to 'true' the mapped roles will retain all roles, that have no defined mappings. Defaults to false.
+	RolesKeepNonMapped bool    `json:"rolesKeepNonMapped,omitempty"`
+	From               *ObjRef `json:"from,omitempty"`
+}
+
+// ReferralModeType Type used to define how the LDAP will follow referrals
+type ReferralModeType string
+
+const (
+	Follow ReferralModeType = "FOLLOW"
+	Ignore ReferralModeType = "IGNORE"
+	Throw  ReferralModeType = "THROW"
+)
+
+// LoginModuleType A flag to set login module to optional.
 type LoginModuleType string
 
 const (
 	//OptionalLoginModule optional login module
 	OptionalLoginModule LoginModuleType = "optional"
-	//RequiredLoginModule required login module
-	RequiredLoginModule LoginModuleType = "required"
 )
-
-// SearchScopeType Type used to define how the LDAP searches are performed
-type SearchScopeType string
-
-const (
-	// SubtreeSearchScope Subtree search scope
-	SubtreeSearchScope SearchScopeType = "SUBTREE_SCOPE"
-	// ObjectSearchScope Object search scope
-	ObjectSearchScope SearchScopeType = "OBJECT_SCOPE"
-	// OneLevelSearchScope One Level search scope
-	OneLevelSearchScope SearchScopeType = "ONELEVEL_SCOPE"
-)
-
-// RoleMapperAuthConfig Configuration for RoleMapper Authentication
-type RoleMapperAuthConfig struct {
-	// +kubebuilder:validation:Required
-	RolesProperties string  `json:"rolesProperties"`
-	ReplaceRole     bool    `json:"replaceRole,omitempty"`
-	From            *ObjRef `json:"from,omitempty"`
-}
 
 // DatabaseType to define what kind of database will be used for the Kie Servers
 type DatabaseType string
@@ -907,19 +914,6 @@ type VersionConfigs struct {
 	MySQLComponent       string `json:"mySQLComponent,omitempty"`
 	PostgreSQLImageURL   string `json:"postgreSQLImageURL,omitempty"`
 	PostgreSQLComponent  string `json:"postgreSQLComponent,omitempty"`
-}
-
-// AuthTemplate Authentication definition used in the template
-type AuthTemplate struct {
-	SSO        SSOAuthConfig      `json:"sso,omitempty"`
-	LDAP       LDAPAuthConfig     `json:"ldap,omitempty"`
-	RoleMapper RoleMapperTemplate `json:"roleMapper,omitempty"`
-}
-
-// RoleMapperTemplate RoleMapper definition used in the template
-type RoleMapperTemplate struct {
-	MountPath            string `json:"mountPath,omitempty"`
-	RoleMapperAuthConfig `json:",inline"`
 }
 
 // ProcessMigrationObject configuration of the RHPAM PIM
