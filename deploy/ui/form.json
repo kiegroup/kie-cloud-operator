@@ -423,11 +423,18 @@
                       "description": "When present, the RoleMapping will be configured to use the provided properties file or roles set. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
                     },
                     {
-                      "label": "Replace roles",
+                      "label": "Roles keep mapped",
                       "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.replaceRole",
+                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
                       "default": "false",
-                      "description": "Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true."
+                      "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
+                    },
+                    {
+                      "label": "Roles keep non mapped",
+                      "type": "checkbox",
+                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
+                      "default": "false",
+                      "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
                     },
                     {
                       "label": "RoleMapper Configuration object",
