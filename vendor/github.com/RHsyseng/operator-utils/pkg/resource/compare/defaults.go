@@ -3,10 +3,10 @@ package compare
 import (
 	"fmt"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
 	"strings"
 
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -23,27 +23,27 @@ const (
 )
 
 type resourceComparator struct {
-	defaultCompareFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
-	compareFuncMap     map[reflect.Type]func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
+	defaultCompareFunc func(deployed client.Object, requested client.Object) bool
+	compareFuncMap     map[reflect.Type]func(deployed client.Object, requested client.Object) bool
 }
 
-func (this *resourceComparator) SetDefaultComparator(compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool) {
+func (this *resourceComparator) SetDefaultComparator(compFunc func(deployed client.Object, requested client.Object) bool) {
 	this.defaultCompareFunc = compFunc
 }
 
-func (this *resourceComparator) GetDefaultComparator() func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func (this *resourceComparator) GetDefaultComparator() func(deployed client.Object, requested client.Object) bool {
 	return this.defaultCompareFunc
 }
 
-func (this *resourceComparator) SetComparator(resourceType reflect.Type, compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool) {
+func (this *resourceComparator) SetComparator(resourceType reflect.Type, compFunc func(deployed client.Object, requested client.Object) bool) {
 	this.compareFuncMap[resourceType] = compFunc
 }
 
-func (this *resourceComparator) GetComparator(resourceType reflect.Type) func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func (this *resourceComparator) GetComparator(resourceType reflect.Type) func(deployed client.Object, requested client.Object) bool {
 	return this.compareFuncMap[resourceType]
 }
 
-func (this *resourceComparator) Compare(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func (this *resourceComparator) Compare(deployed client.Object, requested client.Object) bool {
 	compareFunc := this.GetDefaultComparator()
 	type1 := reflect.ValueOf(deployed).Elem().Type()
 	type2 := reflect.ValueOf(requested).Elem().Type()
@@ -55,12 +55,12 @@ func (this *resourceComparator) Compare(deployed resource.KubernetesResource, re
 	return compareFunc(deployed, requested)
 }
 
-func (this *resourceComparator) CompareArrays(deployed []resource.KubernetesResource, requested []resource.KubernetesResource) ResourceDelta {
+func (this *resourceComparator) CompareArrays(deployed []client.Object, requested []client.Object) ResourceDelta {
 	deployedMap := getObjectMap(deployed)
 	requestedMap := getObjectMap(requested)
-	var added []resource.KubernetesResource
-	var updated []resource.KubernetesResource
-	var removed []resource.KubernetesResource
+	var added []client.Object
+	var updated []client.Object
+	var removed []client.Object
 	for name, requestedObject := range requestedMap {
 		deployedObject := deployedMap[name]
 		if deployedObject == nil {
@@ -81,16 +81,16 @@ func (this *resourceComparator) CompareArrays(deployed []resource.KubernetesReso
 	}
 }
 
-func getObjectMap(objects []resource.KubernetesResource) map[string]resource.KubernetesResource {
-	objectMap := make(map[string]resource.KubernetesResource)
+func getObjectMap(objects []client.Object) map[string]client.Object {
+	objectMap := make(map[string]client.Object)
 	for index := range objects {
 		objectMap[objects[index].GetName()] = objects[index]
 	}
 	return objectMap
 }
 
-func defaultMap() map[reflect.Type]func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
-	equalsMap := make(map[reflect.Type]func(resource.KubernetesResource, resource.KubernetesResource) bool)
+func defaultMap() map[reflect.Type]func(deployed client.Object, requested client.Object) bool {
+	equalsMap := make(map[reflect.Type]func(client.Object, client.Object) bool)
 	equalsMap[reflect.TypeOf(oappsv1.DeploymentConfig{})] = equalDeploymentConfigs
 	equalsMap[reflect.TypeOf(appsv1.Deployment{})] = equalDeployment
 	equalsMap[reflect.TypeOf(corev1.Service{})] = equalServices
@@ -103,7 +103,7 @@ func defaultMap() map[reflect.Type]func(deployed resource.KubernetesResource, re
 	return equalsMap
 }
 
-func equalDeploymentConfigs(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalDeploymentConfigs(deployed client.Object, requested client.Object) bool {
 	dc1 := deployed.(*oappsv1.DeploymentConfig)
 	dc2 := requested.(*oappsv1.DeploymentConfig)
 
@@ -181,7 +181,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	return equal
 }
 
-func equalDeployment(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalDeployment(deployed client.Object, requested client.Object) bool {
 	d1 := deployed.(*appsv1.Deployment)
 	d2 := requested.(*appsv1.Deployment)
 
@@ -380,7 +380,7 @@ func ignoreGenerateContainerValues(containers1 []corev1.Container, containers2 [
 
 }
 
-func equalServices(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalServices(deployed client.Object, requested client.Object) bool {
 	service1 := deployed.(*corev1.Service)
 	service2 := requested.(*corev1.Service)
 
@@ -399,6 +399,17 @@ func equalServices(deployed resource.KubernetesResource, requested resource.Kube
 	if service2.Spec.SessionAffinity == "" {
 		service1.Spec.SessionAffinity = ""
 	}
+
+	if len(service2.Spec.ClusterIPs) == 0 {
+		service1.Spec.ClusterIPs = nil
+	}
+	if len(service2.Spec.IPFamilies) == 0 {
+		service1.Spec.IPFamilies = nil
+	}
+	if service2.Spec.IPFamilyPolicy == nil {
+		service1.Spec.IPFamilyPolicy = nil
+	}
+
 	for _, port2 := range service2.Spec.Ports {
 		if found, port1 := findServicePort(port2, service1.Spec.Ports); found {
 			if port2.Protocol == "" {
@@ -430,7 +441,7 @@ func findServicePort(port corev1.ServicePort, ports []corev1.ServicePort) (bool,
 	return false, &corev1.ServicePort{}
 }
 
-func equalRoutes(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalRoutes(deployed client.Object, requested client.Object) bool {
 	route1 := deployed.(*routev1.Route)
 	route2 := requested.(*routev1.Route)
 	route1 = route1.DeepCopy()
@@ -467,7 +478,7 @@ func equalRoutes(deployed resource.KubernetesResource, requested resource.Kubern
 	return equal
 }
 
-func equalRoles(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalRoles(deployed client.Object, requested client.Object) bool {
 	role1 := deployed.(*rbacv1.Role)
 	role2 := requested.(*rbacv1.Role)
 	var pairs [][2]interface{}
@@ -483,7 +494,7 @@ func equalRoles(deployed resource.KubernetesResource, requested resource.Kuberne
 	return equal
 }
 
-func equalServiceAccounts(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalServiceAccounts(deployed client.Object, requested client.Object) bool {
 	sa1 := deployed.(*corev1.ServiceAccount)
 	sa2 := requested.(*corev1.ServiceAccount)
 	var pairs [][2]interface{}
@@ -498,7 +509,7 @@ func equalServiceAccounts(deployed resource.KubernetesResource, requested resour
 	return equal
 }
 
-func equalRoleBindings(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalRoleBindings(deployed client.Object, requested client.Object) bool {
 	binding1 := deployed.(*rbacv1.RoleBinding)
 	binding2 := requested.(*rbacv1.RoleBinding)
 	var pairs [][2]interface{}
@@ -515,7 +526,7 @@ func equalRoleBindings(deployed resource.KubernetesResource, requested resource.
 	return equal
 }
 
-func equalSecrets(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalSecrets(deployed client.Object, requested client.Object) bool {
 	secret1 := deployed.(*corev1.Secret)
 	secret2 := requested.(*corev1.Secret)
 	secret1 = mergeSecretStringDataToData(secret1)
@@ -547,7 +558,7 @@ func mergeSecretStringDataToData(secret *corev1.Secret) *corev1.Secret {
 	return s
 }
 
-func equalBuildConfigs(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func equalBuildConfigs(deployed client.Object, requested client.Object) bool {
 	bc1 := deployed.(*buildv1.BuildConfig)
 	bc2 := requested.(*buildv1.BuildConfig)
 
@@ -606,7 +617,7 @@ func equalBuildConfigs(deployed resource.KubernetesResource, requested resource.
 	return equal
 }
 
-func deepEquals(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+func deepEquals(deployed client.Object, requested client.Object) bool {
 	struct1 := reflect.ValueOf(deployed).Elem().Type()
 	if field1, found1 := struct1.FieldByName("Spec"); found1 {
 		struct2 := reflect.ValueOf(requested).Elem().Type()

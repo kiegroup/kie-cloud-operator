@@ -58,7 +58,7 @@ spec:
         - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.12.0
           value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.12.0
         - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.12.0
-          value: registry.redhat.io/openshift4/ose-cli:v4.7
+          value: registry.redhat.io/openshift4/ose-cli:v4.8
         - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.12.0
           value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
         - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.0
@@ -88,7 +88,7 @@ spec:
         - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.11.1
           value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.11.1
         - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.11.1
-          value: registry.redhat.io/openshift4/ose-cli:v4.7
+          value: registry.redhat.io/openshift4/ose-cli:v4.8
         - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.11.1
           value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
         - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.11.1
@@ -99,6 +99,8 @@ spec:
           value: registry.redhat.io/amq7/amq-broker:7.8
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+        - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.8
+          value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.8
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6

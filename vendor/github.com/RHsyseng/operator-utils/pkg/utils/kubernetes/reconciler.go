@@ -2,19 +2,19 @@ package kubernetes
 
 import (
 	"context"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type ExtendedReconciler struct {
 	Service    PlatformService
 	Reconciler reconcile.Reconciler
-	Resource   resource.KubernetesResource
+	Resource   client.Object
 	Finalizers map[string]Finalizer
 }
 
-func NewExtendedReconciler(service PlatformService, reconciler reconcile.Reconciler, resource resource.KubernetesResource) ExtendedReconciler {
+func NewExtendedReconciler(service PlatformService, reconciler reconcile.Reconciler, resource client.Object) ExtendedReconciler {
 	return ExtendedReconciler{
 		Service:    service,
 		Reconciler: reconciler,
@@ -24,7 +24,7 @@ func NewExtendedReconciler(service PlatformService, reconciler reconcile.Reconci
 }
 
 func (e *ExtendedReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	instance := e.Resource.DeepCopyObject().(resource.KubernetesResource)
+	instance := e.Resource.DeepCopyObject().(client.Object)
 	err := e.Service.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -40,5 +40,5 @@ func (e *ExtendedReconciler) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	return e.Reconciler.Reconcile(request)
+	return e.Reconciler.Reconcile(context.TODO(), request)
 }

@@ -1,24 +1,24 @@
 package compare
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type mapBuilder struct {
-	resourceMap map[reflect.Type][]resource.KubernetesResource
+	resourceMap map[reflect.Type][]client.Object
 }
 
 func NewMapBuilder() *mapBuilder {
-	this := &mapBuilder{resourceMap: make(map[reflect.Type][]resource.KubernetesResource)}
+	this := &mapBuilder{resourceMap: make(map[reflect.Type][]client.Object)}
 	return this
 }
 
-func (this *mapBuilder) ResourceMap() map[reflect.Type][]resource.KubernetesResource {
+func (this *mapBuilder) ResourceMap() map[reflect.Type][]client.Object {
 	return this.resourceMap
 }
 
-func (this *mapBuilder) Add(resources ...resource.KubernetesResource) *mapBuilder {
+func (this *mapBuilder) Add(resources ...client.Object) *mapBuilder {
 	for index := range resources {
 		if resources[index] == nil || reflect.ValueOf(resources[index]).IsNil() {
 			continue
