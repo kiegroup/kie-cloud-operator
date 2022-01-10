@@ -3,15 +3,15 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strings"
 )
 
 type Finalizer interface {
 	GetName() string
-	OnFinalize(owner resource.KubernetesResource, service PlatformService) error
+	OnFinalize(owner client.Object, service PlatformService) error
 }
 
 func (e *ExtendedReconciler) RegisterFinalizer(f Finalizer) error {
@@ -38,7 +38,7 @@ func (e *ExtendedReconciler) isFinalizing(owner metav1.Object) bool {
 }
 
 //RemoveFinalizer removes a finalizer and updates the owner object
-func (e *ExtendedReconciler) removeFinalizer(owner resource.KubernetesResource, finalizer string) error {
+func (e *ExtendedReconciler) removeFinalizer(owner client.Object, finalizer string) error {
 	err := validateFinalizerName(finalizer)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (e *ExtendedReconciler) removeFinalizer(owner resource.KubernetesResource, 
 }
 
 //FinalizeOnDelete triggers all the finalizers registered for the given object in case it is being deleted
-func (e *ExtendedReconciler) finalizeOnDelete(owner resource.KubernetesResource) error {
+func (e *ExtendedReconciler) finalizeOnDelete(owner client.Object) error {
 	if !e.isFinalizing(owner) {
 		return nil
 	}

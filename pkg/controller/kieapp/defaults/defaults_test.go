@@ -21,7 +21,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -104,7 +103,7 @@ func TestInaccessibleConfigMap(t *testing.T) {
 
 	mockService := test.MockService()
 	client := fake.NewFakeClient(cm)
-	mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+	mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 		return client.Get(ctx, key, obj)
 	}
 	_, err := GetEnvironment(cr, mockService)

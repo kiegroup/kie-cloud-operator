@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -80,7 +79,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 			}
 		}
 	}
-	requestedResources := []resource.KubernetesResource{role, roleBinding, sa, pod, service, route}
+	requestedResources := []client.Object{role, roleBinding, sa, pod, service, route}
 	resourceMap := compare.NewMapBuilder()
 	for _, resource := range requestedResources {
 		resourceMap.Add(resource)
@@ -97,9 +96,9 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	updateCSVlinks(reconciler, route, operator)
 }
 
-func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map[reflect.Type][]resource.KubernetesResource) (map[reflect.Type][]resource.KubernetesResource, error) {
+func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map[reflect.Type][]client.Object) (map[reflect.Type][]client.Object, error) {
 	reader := read.New(reconciler.Service).WithNamespace(namespace)
-	var deployedArray []resource.KubernetesResource
+	var deployedArray []client.Object
 	for resourceType, requestedArray := range requestedMap {
 		for _, requested := range requestedArray {
 			deployed, err := reader.Load(resourceType, requested.GetName())

@@ -10,7 +10,6 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write"
@@ -32,7 +31,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -51,12 +49,12 @@ type Reconciler struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (reconciler *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	// The next several lines only execute if the operator is running in a pod, via deployment.
 	// Otherwise, embedded configs are used and no console is deployed.
 	if opName, depNameSpace, useEmbedded := defaults.UseEmbeddedFiles(reconciler.Service); !useEmbedded {
 		myDep := &appsv1.Deployment{}
-		err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
+		err := reconciler.Service.Get(ctx, types.NamespacedName{Namespace: depNameSpace, Name: opName}, myDep)
 		if err == nil {
 			if shouldDeployConsole() {
 				deployConsole(reconciler, myDep)
@@ -72,7 +70,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// Fetch the KieApp instance
 	instance := &api.KieApp{}
-	err := reconciler.Service.Get(context.TODO(), request.NamespacedName, instance)
+	err := reconciler.Service.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -134,7 +132,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	caConfigMap := &corev1.ConfigMap{}
 	if defaults.IsOcpCA(instance) {
-		if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-kieapp-ca-bundle", Namespace: instance.Namespace}, caConfigMap); err != nil {
+		if err := reconciler.Service.Get(ctx, types.NamespacedName{Name: instance.Name + "-kieapp-ca-bundle", Namespace: instance.Namespace}, caConfigMap); err != nil {
 			if !errors.IsNotFound(err) {
 				return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, err
 			}
@@ -174,7 +172,7 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// Fetch the cached KieApp instance
 	cachedInstance := &api.KieApp{}
-	err = reconciler.Service.GetCached(context.TODO(), request.NamespacedName, cachedInstance)
+	err = reconciler.Service.GetCached(ctx, request.NamespacedName, cachedInstance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -188,23 +186,23 @@ func (reconciler *Reconciler) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// Update CR Status if needed
-	return reconciler.checkStatus(instance, cachedInstance, hasUpdates)
+	return reconciler.checkStatus(ctx, instance, cachedInstance, hasUpdates)
 }
 
-func (reconciler *Reconciler) checkStatus(instance, cachedInstance *api.KieApp, hasUpdates bool) (reconcile.Result, error) {
+func (reconciler *Reconciler) checkStatus(ctx context.Context, instance, cachedInstance *api.KieApp, hasUpdates bool) (reconcile.Result, error) {
 	var requeue bool
 	if hasUpdates {
 		requeue = status.SetProvisioning(instance)
 	} else {
 		requeue = status.SetDeployed(instance)
 	}
-	return reconciler.updateStatus(instance, cachedInstance, requeue)
+	return reconciler.updateStatus(ctx, instance, cachedInstance, requeue)
 }
 
-func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp, requeue bool) (reconcile.Result, error) {
+func (reconciler *Reconciler) updateStatus(ctx context.Context, instance, cachedInstance *api.KieApp, requeue bool) (reconcile.Result, error) {
 	if reconciler.hasStatusChanges(instance, cachedInstance) {
 		if instance.ResourceVersion == cachedInstance.ResourceVersion {
-			if err := reconciler.Service.Status().Update(context.TODO(), instance); err != nil {
+			if err := reconciler.Service.Status().Update(ctx, instance); err != nil {
 				return reconcile.Result{}, err
 			}
 		} else {
@@ -214,7 +212,7 @@ func (reconciler *Reconciler) updateStatus(instance, cachedInstance *api.KieApp,
 	return reconcile.Result{Requeue: requeue}, nil
 }
 
-func (reconciler *Reconciler) reconcileResources(ownerController metav1.Object, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
+func (reconciler *Reconciler) reconcileResources(ownerController metav1.Object, requestedResources []client.Object, deployed map[reflect.Type][]client.Object) (bool, error) {
 	writer := write.New(reconciler.Service).WithOwnerController(ownerController, reconciler.Service.GetScheme())
 	//Compare what's deployed with what should be deployed
 	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
@@ -243,7 +241,7 @@ func (reconciler *Reconciler) reconcileResources(ownerController metav1.Object, 
 	return hasUpdates, nil
 }
 
-func isNamespaced(resource resource.KubernetesResource) bool {
+func isNamespaced(resource client.Object) bool {
 	if reflect.TypeOf(resource) == reflect.TypeOf(&consolev1.ConsoleLink{}) {
 		return false
 	}
@@ -254,7 +252,7 @@ func getComparator() compare.MapComparator {
 	resourceComparator := compare.DefaultComparator()
 	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
 	defaultDCComparator := resourceComparator.GetComparator(dcType)
-	resourceComparator.SetComparator(dcType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+	resourceComparator.SetComparator(dcType, func(deployed client.Object, requested client.Object) bool {
 		dc1 := deployed.(*oappsv1.DeploymentConfig)
 		dc2 := requested.(*oappsv1.DeploymentConfig)
 		for i := range dc1.Spec.Triggers {
@@ -275,7 +273,7 @@ func getComparator() compare.MapComparator {
 
 	bcType := reflect.TypeOf(buildv1.BuildConfig{})
 	defaultBCComparator := resourceComparator.GetComparator(bcType)
-	resourceComparator.SetComparator(bcType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+	resourceComparator.SetComparator(bcType, func(deployed client.Object, requested client.Object) bool {
 		bc1 := deployed.(*buildv1.BuildConfig)
 		bc2 := requested.(*buildv1.BuildConfig).DeepCopy()
 		if bc1.Spec.Strategy.SourceStrategy != nil {
@@ -290,7 +288,7 @@ func getComparator() compare.MapComparator {
 	})
 
 	configMapType := reflect.TypeOf(corev1.ConfigMap{})
-	resourceComparator.SetComparator(configMapType, func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+	resourceComparator.SetComparator(configMapType, func(deployed client.Object, requested client.Object) bool {
 		configMap1 := deployed.(*corev1.ConfigMap)
 		configMap2 := requested.(*corev1.ConfigMap)
 		var pairs [][2]interface{}
@@ -304,7 +302,7 @@ func getComparator() compare.MapComparator {
 		}
 		equal := compare.EqualPairs(pairs)
 		if !equal {
-			log.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+			log.Infof("Resources are not equal -- deployed %+v -- requested %+v", deployed, requested)
 		}
 		return equal
 	})
@@ -312,7 +310,7 @@ func getComparator() compare.MapComparator {
 	return compare.MapComparator{Comparator: resourceComparator}
 }
 
-func setDeploymentStatus(instance *api.KieApp, resources []resource.KubernetesResource) {
+func setDeploymentStatus(instance *api.KieApp, resources []client.Object) {
 	var dcs []oappsv1.DeploymentConfig
 	for index := range resources {
 		dc := resources[index].(*oappsv1.DeploymentConfig)
@@ -343,7 +341,7 @@ func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *api
 		Name:      ref.Name,
 		Namespace: namespace,
 	}
-	allowedObjects := []runtime.Object{&corev1.ConfigMap{}, &corev1.Secret{}, &corev1.PersistentVolumeClaim{}}
+	allowedObjects := []client.Object{&corev1.ConfigMap{}, &corev1.Secret{}, &corev1.PersistentVolumeClaim{}}
 	for _, obj := range allowedObjects {
 		expected := reflect.Indirect(reflect.ValueOf(obj)).Type().Name()
 		if ref.Kind == expected {
@@ -354,10 +352,10 @@ func (reconciler *Reconciler) verifyExternalReference(namespace string, ref *api
 	return fmt.Errorf("unsupported Kind: %s", ref.Kind)
 }
 
-func getRequestedRoutes(env api.Environment, instance *api.KieApp) []resource.KubernetesResource {
+func getRequestedRoutes(env api.Environment, instance *api.KieApp) []client.Object {
 	//Derive routes that should be created:
 	objects := filterOmittedObjects(getCustomObjects(env))
-	var requestedRoutes []resource.KubernetesResource
+	var requestedRoutes []client.Object
 	for i := range objects {
 		for j := range objects[i].Routes {
 			route := &objects[i].Routes[j]
@@ -485,7 +483,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 }
 
 //loadRoutes attempts to load as many of the specified routes as it can find
-func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesResource) (map[types.NamespacedName]routev1.Route, error) {
+func (reconciler *Reconciler) loadRoutes(requestedRoutes []client.Object) (map[types.NamespacedName]routev1.Route, error) {
 	deployedRoutes := make(map[types.NamespacedName]routev1.Route)
 	for _, requested := range requestedRoutes {
 		namespacedName := shared.GetNamespacedName(requested)
@@ -500,7 +498,7 @@ func (reconciler *Reconciler) loadRoutes(requestedRoutes []resource.KubernetesRe
 	return deployedRoutes, nil
 }
 
-func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource, caConfigMap *corev1.ConfigMap) (api.Environment, error) {
+func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.Environment, routes []client.Object, caConfigMap *corev1.ConfigMap) (api.Environment, error) {
 	if defaults.IsOcpCA(cr) {
 		secret, err := reconciler.generateTruststoreSecret(
 			cr.Status.Applied.CommonConfig.ApplicationName+constants.TruststoreSecret,
@@ -609,7 +607,7 @@ func (reconciler *Reconciler) setEnvironmentProperties(cr *api.KieApp, env api.E
 	return defaults.ConsolidateObjects(env, cr), nil
 }
 
-func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []resource.KubernetesResource) (consoleCN string) {
+func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment, routes []client.Object) (consoleCN string) {
 
 	if cr.Status.Applied.Environment == api.RhpamStandaloneDashbuilder {
 		for _, rt := range env.Dashbuilder.Routes {
@@ -640,8 +638,8 @@ func (reconciler *Reconciler) setConsoleHost(cr *api.KieApp, env api.Environment
 	return consoleCN
 }
 
-func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Environment) []resource.KubernetesResource {
-	var resources []resource.KubernetesResource
+func (reconciler *Reconciler) getKubernetesResources(cr *api.KieApp, env api.Environment) []client.Object {
+	var resources []client.Object
 	objects := filterOmittedObjects(getCustomObjects(env))
 	objects = reconciler.imageStreams(cr, objects)
 	for _, obj := range objects {
@@ -784,8 +782,8 @@ func (reconciler *Reconciler) generateTruststoreSecret(secretName string, cr *ap
 }
 
 // getCustomObjectResources returns all kubernetes resources that need to be created for the given CustomObject
-func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, cr *api.KieApp) []resource.KubernetesResource {
-	var allObjects []resource.KubernetesResource
+func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, cr *api.KieApp) []client.Object {
+	var allObjects []client.Object
 	if object.Omit {
 		return allObjects
 	}
@@ -870,7 +868,7 @@ func (reconciler *Reconciler) ensureImageStream(name, namespace, imageURL string
 }
 
 // createObj creates an object based on the error passed in from a `client.Get`
-func (reconciler *Reconciler) createObj(object resource.KubernetesResource, err error) (reconcile.Result, error) {
+func (reconciler *Reconciler) createObj(object client.Object, err error) (reconcile.Result, error) {
 	log := log.With("kind", object.GetObjectKind().GroupVersionKind().Kind, "name", object.GetName(), "namespace", object.GetNamespace())
 
 	if err != nil && errors.IsNotFound(err) {
@@ -912,7 +910,7 @@ func checkTLS(tls *routev1.TLSConfig) bool {
 }
 
 // GetRouteHost returns the Hostname of the route provided
-func (reconciler *Reconciler) GetRouteHost(route routev1.Route, routes []resource.KubernetesResource) string {
+func (reconciler *Reconciler) GetRouteHost(route routev1.Route, routes []client.Object) string {
 	for index := range routes {
 		candidate := routes[index].(*routev1.Route)
 		if candidate.Name == route.Name && candidate.Namespace == route.Namespace {
@@ -1021,7 +1019,7 @@ func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env 
 	}
 }
 
-func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[reflect.Type][]resource.KubernetesResource, error) {
+func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[reflect.Type][]client.Object, error) {
 	log := log.With("kind", instance.Kind, "name", instance.Name, "namespace", instance.Namespace)
 
 	reader := read.New(reconciler.Service).WithNamespace(instance.Namespace).WithOwnerObject(instance)
@@ -1049,7 +1047,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	// multiple group-version-kinds associated with type *api.SecretList, refusing to guess at one
 	// Will work around by loading known secrets instead
 
-	var secrets []resource.KubernetesResource
+	var secrets []client.Object
 	dcs := resourceMap[reflect.TypeOf(oappsv1.DeploymentConfig{})]
 	for _, res := range dcs {
 		dc := res.(*oappsv1.DeploymentConfig)
@@ -1083,7 +1081,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 			log.Warn("Failed to load ConsoleLink", err)
 			return resourceMap, err
 		}
-		resourceMap[reflect.TypeOf(*consoleLink)] = []resource.KubernetesResource{consoleLink}
+		resourceMap[reflect.TypeOf(*consoleLink)] = []client.Object{consoleLink}
 	}
 
 	return resourceMap, nil
@@ -1105,7 +1103,7 @@ func (reconciler *Reconciler) getCSV(operator *appsv1.Deployment) *operatorsv1al
 	return csv
 }
 
-func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) resource.KubernetesResource {
+func (reconciler *Reconciler) getConsoleLinkResource(cr *api.KieApp) client.Object {
 	if cr.GetDeletionTimestamp() != nil || cr.Status.ConsoleHost == "" || !strings.HasPrefix(cr.Status.ConsoleHost, "https://") ||
 		(reconciler.OcpVersion != "" && semver.Compare(reconciler.OcpVersion, "v4.2") < 0) {
 		return nil

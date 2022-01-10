@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/google/uuid"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -25,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -455,7 +454,7 @@ func TestVerifyExternalReferencesRoleMapper(t *testing.T) {
 
 	reconciler := &Reconciler{Service: mockService}
 	for _, test := range tests {
-		mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+		mockService.GetFunc = func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 			if test.errMsg == "" {
 				return nil
 			}
@@ -580,7 +579,7 @@ func TestVerifyExternalReferencesGitHooks(t *testing.T) {
 	reconciler := &Reconciler{Service: mockService}
 
 	for _, test := range tests {
-		mockService.GetFunc = func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+		mockService.GetFunc = func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 			if test.errMsg == "" {
 				return nil
 			}
@@ -732,25 +731,26 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
 	reconciler := Reconciler{Service: service}
-	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err := reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
 	assert.Nil(t, err)
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
 	assert.Nil(t, err)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.NotEmpty(t, cr.Status.Conditions)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
 
 	//Let's now assume console pod is starting
-	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
@@ -763,17 +763,18 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 		return err
 	}
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{}, result, depMessage)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
 
 	//Let's now assume both pods have started
-	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
@@ -785,11 +786,12 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 		return err
 	}
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{}, result, depMessage)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
@@ -806,7 +808,7 @@ func TestConsoleLinkCreation(t *testing.T) {
 	err := service.Create(context.TODO(), cr)
 	assert.Nil(t, err)
 	reconciler := Reconciler{Service: service}
-	result, err := reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err := reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{Requeue: true, RequeueAfter: time.Duration(500) * time.Millisecond}, result, "Routes should be created, requeued for hostname detection before other resources are created")
 
@@ -816,20 +818,21 @@ func TestConsoleLinkCreation(t *testing.T) {
 	bcRoute.Spec.Host = "example"
 	reconciler.Service.Update(context.TODO(), bcRoute)
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "All other resources created, custom Resource status set to provisioning, and requeued")
 	assert.Nil(t, err)
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Equal(t, reconcile.Result{Requeue: true}, result, "Deployment status set, and requeued")
 	assert.Nil(t, err)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 2, "Expect 2 stopped deployments")
 
 	//Let's now assume console pod is starting
-	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
@@ -842,17 +845,18 @@ func TestConsoleLinkCreation(t *testing.T) {
 		return err
 	}
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{}, result, depMessage)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 1, "Expect 1 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 1, "Expect 1 deployment starting up")
 
 	//Let's now assume both pods have started
-	service.ListFunc = func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
 		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
 			for index := range list.(*oappsv1.DeploymentConfigList).Items {
@@ -864,11 +868,12 @@ func TestConsoleLinkCreation(t *testing.T) {
 		return err
 	}
 
-	result, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	result, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{}, result, depMessage)
 
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	assert.Nil(t, err)
 	assert.Equal(t, api.ProvisioningConditionType, cr.Status.Conditions[0].Type)
 	assert.Len(t, cr.Status.Deployments.Stopped, 0, "Expect 0 stopped deployments")
 	assert.Len(t, cr.Status.Deployments.Starting, 0, "Expect 0 deployment starting up")
@@ -888,9 +893,13 @@ func TestConsoleLinkCreation(t *testing.T) {
 	err = service.Update(context.TODO(), cr)
 	assert.Nil(t, err)
 
-	_, err = reconciler.Reconcile(reconcile.Request{NamespacedName: crNamespacedName})
+	_, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
-	cr = reloadCR(t, service, crNamespacedName)
+	cr, err = reloadCR(t, service, crNamespacedName)
+	// it now returns the error.StatusError, in this case:
+	// Status:"Failure", Message:"kieapps.app.kiegroup.org \"cr\" not found", Reason:"NotFound",
+	// Details:(*v1.StatusDetails)(0xc0003d1320), Code:404}
+	assert.NotNil(t, err)
 	assert.Len(t, cr.GetFinalizers(), 0)
 	consoleLink = &consolev1.ConsoleLink{}
 	err = reconciler.Service.Get(context.TODO(), getNamespacedName("", "testns-cr-0"), consoleLink)
@@ -904,11 +913,10 @@ func getNamespacedName(namespace string, name string) types.NamespacedName {
 	}
 }
 
-func reloadCR(t *testing.T, service *test.MockPlatformService, namespacedName types.NamespacedName) *api.KieApp {
+func reloadCR(t *testing.T, service *test.MockPlatformService, namespacedName types.NamespacedName) (*api.KieApp, error) {
 	cr := getInstance(namespacedName)
 	err := service.Get(context.TODO(), namespacedName, cr)
-	assert.Nil(t, err)
-	return cr
+	return cr, err
 }
 
 func getInstance(namespacedName types.NamespacedName) *api.KieApp {
@@ -926,8 +934,8 @@ func TestGetComparatorConfigMap(t *testing.T) {
 	comparator := getComparator()
 
 	type args struct {
-		deployed  map[reflect.Type][]resource.KubernetesResource
-		requested map[reflect.Type][]resource.KubernetesResource
+		deployed  map[reflect.Type][]client.Object
+		requested map[reflect.Type][]client.Object
 	}
 	tests := []struct {
 		name string
@@ -937,7 +945,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"NoChange",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -959,7 +967,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 						},
 					},
 				},
-				requested: map[reflect.Type][]resource.KubernetesResource{
+				requested: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -987,8 +995,8 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"Add",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{},
-				requested: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{},
+				requested: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1012,7 +1020,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 				},
 			},
 			compare.ResourceDelta{
-				Added: []resource.KubernetesResource{
+				Added: []client.Object{
 					&corev1.ConfigMap{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "test",
@@ -1037,7 +1045,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"Removed",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1059,10 +1067,10 @@ func TestGetComparatorConfigMap(t *testing.T) {
 						},
 					},
 				},
-				requested: map[reflect.Type][]resource.KubernetesResource{},
+				requested: map[reflect.Type][]client.Object{},
 			},
 			compare.ResourceDelta{
-				Removed: []resource.KubernetesResource{
+				Removed: []client.Object{
 					&corev1.ConfigMap{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "test",
@@ -1087,7 +1095,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"UpdatedData",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1109,7 +1117,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 						},
 					},
 				},
-				requested: map[reflect.Type][]resource.KubernetesResource{
+				requested: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1133,7 +1141,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 				},
 			},
 			compare.ResourceDelta{
-				Updated: []resource.KubernetesResource{
+				Updated: []client.Object{
 					&corev1.ConfigMap{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "test",
@@ -1158,7 +1166,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"UpdatedBinaryData",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1180,7 +1188,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 						},
 					},
 				},
-				requested: map[reflect.Type][]resource.KubernetesResource{
+				requested: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1204,7 +1212,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 				},
 			},
 			compare.ResourceDelta{
-				Updated: []resource.KubernetesResource{
+				Updated: []client.Object{
 					&corev1.ConfigMap{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "test",
@@ -1229,7 +1237,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 		{
 			"UpdatedLabels",
 			args{
-				deployed: map[reflect.Type][]resource.KubernetesResource{
+				deployed: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1251,7 +1259,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 						},
 					},
 				},
-				requested: map[reflect.Type][]resource.KubernetesResource{
+				requested: map[reflect.Type][]client.Object{
 					reflect.TypeOf(corev1.ConfigMap{}): {
 						&corev1.ConfigMap{
 							ObjectMeta: metav1.ObjectMeta{
@@ -1275,7 +1283,7 @@ func TestGetComparatorConfigMap(t *testing.T) {
 				},
 			},
 			compare.ResourceDelta{
-				Updated: []resource.KubernetesResource{
+				Updated: []client.Object{
 					&corev1.ConfigMap{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "test",
