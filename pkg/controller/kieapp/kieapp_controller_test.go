@@ -61,8 +61,9 @@ func TestGenerateSecret(t *testing.T) {
 
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
-	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
-	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	//assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	//assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+	generateSecretCommonAssertions(t, env)
 
 	consoleSecret := env.Console.Secrets[0]
 	serverSecret := env.Servers[0].Secrets[0]
@@ -113,8 +114,7 @@ func TestGenerateSecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
-	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
-	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+	assertSecret(t, consoleSecret, serverSecret, env, true)
 
 	// change app name which should change commonname and keystore secret
 	currentRoute := cr.Status.ConsoleHost
@@ -125,10 +125,8 @@ func TestGenerateSecret(t *testing.T) {
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
 	assert.NotEqual(t, currentRoute, cr.Status.ConsoleHost)
-	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
-	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
-	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
-	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	generateSecretCommonAssertions(t, env)
+	assertSecret(t, consoleSecret, serverSecret, env, false)
 	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
 	assert.Nil(t, err)
 	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
@@ -147,8 +145,7 @@ func TestGenerateSecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
-	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
-	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+	assertSecret(t, consoleSecret, serverSecret, env, true)
 
 	// change keystore password which should change commonname and keystore secret
 	oldPassword := cr.Status.Applied.CommonConfig.KeyStorePassword
@@ -159,10 +156,9 @@ func TestGenerateSecret(t *testing.T) {
 	assert.NotEqual(t, oldPassword, cr.Status.Applied.CommonConfig.KeyStorePassword)
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
-	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
-	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
-	assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
-	assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	generateSecretCommonAssertions(t, env)
+
+	assertSecret(t, consoleSecret, serverSecret, env, false)
 	err = reconciler.Service.Delete(context.TODO(), &consoleSecret)
 	assert.Nil(t, err)
 	err = reconciler.Service.Delete(context.TODO(), &serverSecret)
@@ -181,8 +177,23 @@ func TestGenerateSecret(t *testing.T) {
 	assert.Nil(t, err, "Error getting a new environment")
 	env, err = reconciler.setEnvironmentProperties(cr, env, getRequestedRoutes(env, cr), caConfigMap)
 	assert.Nil(t, err)
-	assert.Equal(t, consoleSecret, env.Console.Secrets[0])
-	assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+	assertSecret(t, consoleSecret, serverSecret, env, true)
+}
+
+func generateSecretCommonAssertions(t *testing.T, env api.Environment) {
+	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
+	assert.Len(t, env.Servers[0].Secrets, 1, "One secret should be generated for each trial kieserver")
+}
+
+func assertSecret(t *testing.T, consoleSecret corev1.Secret, serverSecret corev1.Secret, env api.Environment, equal bool) {
+	if equal {
+		assert.Equal(t, consoleSecret, env.Console.Secrets[0])
+		assert.Equal(t, serverSecret, env.Servers[0].Secrets[0])
+	} else {
+		assert.NotEqual(t, consoleSecret, env.Console.Secrets[0])
+		assert.NotEqual(t, serverSecret, env.Servers[0].Secrets[0])
+	}
+
 }
 
 func TestGenerateTruststoreSecret(t *testing.T) {
