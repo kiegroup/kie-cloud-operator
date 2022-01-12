@@ -19,7 +19,6 @@ import (
 	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -132,7 +131,7 @@ func checkCSV(t *testing.T, csv *operators.ClusterServiceVersion) {
 	assert.Nil(t, err, "Error creating the Operator")
 
 	var url string
-	service.CreateFunc = func(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
+	service.CreateFunc = func(ctx context.Context, obj client.Object, opts ...client.CreateOption) error {
 		if route, matched := obj.(*routev1.Route); matched {
 			url = fmt.Sprintf("%s.apps.example.com", route.Name)
 			route.Spec.Host = url

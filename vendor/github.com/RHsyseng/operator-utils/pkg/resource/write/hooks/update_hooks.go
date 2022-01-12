@@ -1,12 +1,12 @@
 package hooks
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type hookFunc = func(existing resource.KubernetesResource, requested resource.KubernetesResource) error
+type hookFunc = func(existing client.Object, requested client.Object) error
 
 type UpdateHookMap struct {
 	DefaultHook hookFunc
@@ -14,7 +14,7 @@ type UpdateHookMap struct {
 }
 
 func DefaultUpdateHooks() *UpdateHookMap {
-	hookMap := make(map[reflect.Type]func(existing resource.KubernetesResource, requested resource.KubernetesResource) error)
+	hookMap := make(map[reflect.Type]func(existing client.Object, requested client.Object) error)
 	hookMap[reflect.TypeOf(corev1.Service{})] = serviceHook
 	return &UpdateHookMap{
 		DefaultHook: defaultHook,
@@ -22,7 +22,7 @@ func DefaultUpdateHooks() *UpdateHookMap {
 	}
 }
 
-func (this *UpdateHookMap) Trigger(existing resource.KubernetesResource, requested resource.KubernetesResource) error {
+func (this *UpdateHookMap) Trigger(existing client.Object, requested client.Object) error {
 	function := this.HookMap[reflect.ValueOf(existing).Elem().Type()]
 	if function == nil {
 		function = this.DefaultHook
@@ -30,13 +30,13 @@ func (this *UpdateHookMap) Trigger(existing resource.KubernetesResource, request
 	return function(existing, requested)
 }
 
-func defaultHook(existing resource.KubernetesResource, requested resource.KubernetesResource) error {
+func defaultHook(existing client.Object, requested client.Object) error {
 	requested.SetResourceVersion(existing.GetResourceVersion())
 	requested.GetObjectKind().SetGroupVersionKind(existing.GetObjectKind().GroupVersionKind())
 	return nil
 }
 
-func serviceHook(existing resource.KubernetesResource, requested resource.KubernetesResource) error {
+func serviceHook(existing client.Object, requested client.Object) error {
 	existingService := existing.(*corev1.Service)
 	requestedService := requested.(*corev1.Service)
 	if requestedService.Spec.ClusterIP == "" {

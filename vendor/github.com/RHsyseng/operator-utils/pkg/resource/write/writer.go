@@ -2,21 +2,20 @@ package write
 
 import (
 	"context"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/write/hooks"
 	newerror "github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type UpdateHooks interface {
-	Trigger(existing resource.KubernetesResource, requested resource.KubernetesResource) error
+	Trigger(existing client.Object, requested client.Object) error
 }
 
 type resourceWriter struct {
-	writer          clientv1.Writer
+	writer          client.Writer
 	ownerRefs       []metav1.OwnerReference
 	ownerController metav1.Object
 	scheme          *runtime.Scheme
@@ -25,7 +24,7 @@ type resourceWriter struct {
 
 // New creates a resourceWriter object that can be used to add/update/remove kubernetes resources
 // the provided writer object will be used for the underlying operations
-func New(writer clientv1.Writer) *resourceWriter {
+func New(writer client.Writer) *resourceWriter {
 	return &resourceWriter{
 		writer:      writer,
 		updateHooks: hooks.DefaultUpdateHooks(),
@@ -59,7 +58,7 @@ func (this *resourceWriter) WithCustomUpdateHooks(updateHooks UpdateHooks) *reso
 
 // AddResources sets ownership as/if configured, and then uses the writer to create them
 // the boolean result is true if any changes were made
-func (this *resourceWriter) AddResources(resources []resource.KubernetesResource) (bool, error) {
+func (this *resourceWriter) AddResources(resources []client.Object) (bool, error) {
 	var added bool
 	for index := range resources {
 		requested := resources[index]
@@ -93,11 +92,11 @@ func (this *resourceWriter) canSetOwnerRef(resource metav1.Object, owner metav1.
 // UpdateResources finds the updated counterpart for each of the provided resources in the existing array and uses it to set resource version and GVK
 // It also sets ownership as/if configured, and then uses the writer to update them
 // the boolean result is true if any changes were made
-func (this *resourceWriter) UpdateResources(existing []resource.KubernetesResource, resources []resource.KubernetesResource) (bool, error) {
+func (this *resourceWriter) UpdateResources(existing []client.Object, resources []client.Object) (bool, error) {
 	var updated bool
 	for index := range resources {
 		requested := resources[index]
-		var counterpart resource.KubernetesResource
+		var counterpart client.Object
 		for _, candidate := range existing {
 			if candidate.GetNamespace() == requested.GetNamespace() && candidate.GetName() == requested.GetName() {
 				counterpart = candidate
@@ -130,7 +129,7 @@ func (this *resourceWriter) UpdateResources(existing []resource.KubernetesResour
 
 // RemoveResources removes each of the provided resources using the provided writer
 // the boolean result is true if any changes were made
-func (this *resourceWriter) RemoveResources(resources []resource.KubernetesResource) (bool, error) {
+func (this *resourceWriter) RemoveResources(resources []client.Object) (bool, error) {
 	var removed bool
 	for index := range resources {
 		err := this.writer.Delete(context.TODO(), resources[index])
