@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.12.0
-    createdAt: "2022-01-12 14:48:09"
+    createdAt: "2022-01-12 15:17:07"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -313,6 +313,7 @@ spec:
           - route.openshift.io
           resources:
           - routes
+          - routes/custom-host
           verbs:
           - create
           - delete
