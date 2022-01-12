@@ -1,14 +1,14 @@
 package compare
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ResourceDelta struct {
-	Added   []resource.KubernetesResource
-	Updated []resource.KubernetesResource
-	Removed []resource.KubernetesResource
+	Added   []client.Object
+	Updated []client.Object
+	Removed []client.Object
 }
 
 func (delta *ResourceDelta) HasChanges() bool {
@@ -25,12 +25,12 @@ func (delta *ResourceDelta) HasChanges() bool {
 }
 
 type ResourceComparator interface {
-	SetDefaultComparator(compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool)
-	GetDefaultComparator() func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
-	SetComparator(resourceType reflect.Type, compFunc func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool)
-	GetComparator(resourceType reflect.Type) func(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
-	Compare(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool
-	CompareArrays(deployed []resource.KubernetesResource, requested []resource.KubernetesResource) ResourceDelta
+	SetDefaultComparator(compFunc func(deployed client.Object, requested client.Object) bool)
+	GetDefaultComparator() func(deployed client.Object, requested client.Object) bool
+	SetComparator(resourceType reflect.Type, compFunc func(deployed client.Object, requested client.Object) bool)
+	GetComparator(resourceType reflect.Type) func(deployed client.Object, requested client.Object) bool
+	Compare(deployed client.Object, requested client.Object) bool
+	CompareArrays(deployed []client.Object, requested []client.Object) ResourceDelta
 }
 
 func DefaultComparator() ResourceComparator {
@@ -43,6 +43,6 @@ func DefaultComparator() ResourceComparator {
 func SimpleComparator() ResourceComparator {
 	return &resourceComparator{
 		deepEquals,
-		make(map[reflect.Type]func(resource.KubernetesResource, resource.KubernetesResource) bool),
+		make(map[reflect.Type]func(client.Object, client.Object) bool),
 	}
 }

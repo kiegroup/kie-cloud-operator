@@ -36,35 +36,35 @@ func GetInstance(mgr manager.Manager) KubernetesPlatformService {
 	}
 }
 
-func (service *KubernetesPlatformService) Create(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
+func (service *KubernetesPlatformService) Create(ctx context.Context, obj clientv1.Object, opts ...clientv1.CreateOption) error {
 	return service.client.Create(ctx, obj, opts...)
 }
 
-func (service *KubernetesPlatformService) Delete(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOption) error {
+func (service *KubernetesPlatformService) Delete(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteOption) error {
 	return service.client.Delete(ctx, obj, opts...)
 }
 
-func (service *KubernetesPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+func (service *KubernetesPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 	return service.client.Get(ctx, key, obj)
 }
 
-func (service *KubernetesPlatformService) List(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+func (service *KubernetesPlatformService) List(ctx context.Context, list clientv1.ObjectList, opts ...clientv1.ListOption) error {
 	return service.client.List(ctx, list, opts...)
 }
 
-func (service *KubernetesPlatformService) Update(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
+func (service *KubernetesPlatformService) Update(ctx context.Context, obj clientv1.Object, opts ...clientv1.UpdateOption) error {
 	return service.client.Update(ctx, obj, opts...)
 }
 
-func (service *KubernetesPlatformService) Patch(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
+func (service *KubernetesPlatformService) Patch(ctx context.Context, obj clientv1.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
 	return service.client.Patch(ctx, obj, patch, opts...)
 }
 
-func (service *KubernetesPlatformService) DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error {
+func (service *KubernetesPlatformService) DeleteAllOf(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteAllOfOption) error {
 	return service.client.DeleteAllOf(ctx, obj, opts...)
 }
 
-func (service *KubernetesPlatformService) GetCached(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+func (service *KubernetesPlatformService) GetCached(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 	return service.cache.Get(ctx, key, obj)
 }
 

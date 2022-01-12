@@ -9,8 +9,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // KieAppSpec defines the desired state of KieApp
@@ -76,6 +76,7 @@ type KieAppTruststore struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // KieApp is the Schema for the kieapps API
 // +k8s:openapi-gen=true
@@ -95,6 +96,7 @@ type KieApp struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // KieAppList contains a list of KieApp
 type KieAppList struct {
@@ -629,8 +631,7 @@ type CustomObject struct {
 }
 
 type OpenShiftObject interface {
-	metav1.Object
-	runtime.Object
+	client.Object
 }
 
 type EnvTemplate struct {
