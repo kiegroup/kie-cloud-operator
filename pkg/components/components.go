@@ -235,6 +235,7 @@ func GetRole(operatorName string) *rbacv1.Role {
 				},
 				Resources: []string{
 					"routes",
+					"routes/custom-host",
 				},
 				Verbs: Verbs,
 			},
