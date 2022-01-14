@@ -12,3 +12,5 @@ spec:
     # By default is the cr.Name
     applicationName: other
     adminPassword: example
+    secretAdminCredentialsReference:
+        name: "kie-admin-credentials"

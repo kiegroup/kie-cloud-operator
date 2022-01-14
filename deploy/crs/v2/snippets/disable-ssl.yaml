@@ -10,4 +10,6 @@ metadata:
 spec:
   commonConfig:
     disableSsl: true
+    secretAdminCredentialsReference:
+      name: "kie-admin-credentials"
 

@@ -85,9 +85,15 @@ console:
                   - name: APPLICATION_ROLES_PROPERTIES
                     value: "/opt/kie/data/configuration/application-roles.properties"
                   - name: KIE_ADMIN_USER
-                    value: "[[.AdminUser]]"
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentialsReference]]"
+                        key: username
                   - name: KIE_ADMIN_PWD
-                    value: "[[.AdminPassword]]"
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentialsReference]]"
+                        key: password
                   - name: KIE_MBEANS
                     value: enabled
                   #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
@@ -562,9 +568,15 @@ smartRouter:
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
                   #[[end]]
                   - name: KIE_ADMIN_USER
-                    value: "[[.AdminUser]]"
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentialsReference]]"
+                        key: username
                   - name: KIE_ADMIN_PWD
-                    value: "[[.AdminPassword]]"
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentialsReference]]"
+                        key: password
                   - name: KIE_SERVER_CONTROLLER_SERVICE
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -772,9 +784,15 @@ servers:
                       value: ws
                     #[[end]]
                     - name: KIE_ADMIN_USER
-                      value: "[[$.AdminUser]]"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAdminCredentialsReference]]"
+                          key: username
                     - name: KIE_ADMIN_PWD
-                      value: "[[$.AdminPassword]]"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAdminCredentialsReference]]"
+                          key: password
                     - name: KIE_SERVER_STARTUP_STRATEGY
                       value: "[[.StartupStrategy.StrategyName]]"
                     #[[if eq .StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
@@ -804,9 +822,15 @@ servers:
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "[[.KieName]]"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
-                      value: "[[$.AdminUser]]"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAdminCredentialsReference]]"
+                          key: username
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
-                      value: "[[$.AdminPassword]]"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAdminCredentialsReference]]"
+                          key: password
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_SERVICE"
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: MAVEN_REPOS

@@ -2,6 +2,7 @@ package kieapp
 
 import (
 	"context"
+	errors2 "errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -66,6 +67,10 @@ func (reconciler *Reconciler) Reconcile(ctx context.Context, request reconcile.R
 		if err = reconciler.createConsoleYAMLSamples(); err != nil {
 			log.Error(err)
 		}
+	}
+	errSecret := checkAndCreateAdminSecret(reconciler, request.Namespace)
+	if errSecret != nil {
+		log.Error("Can't create Admin Secret. ", errSecret)
 	}
 
 	// Fetch the KieApp instance
@@ -1136,4 +1141,49 @@ func getConsoleLinkName(cr *api.KieApp) string {
 
 func getConsoleLinkFriendlyName(cr *api.KieApp) string {
 	return fmt.Sprintf("%s: %s", cr.Name, constants.EnvironmentConstants[cr.Status.Applied.Environment].App.FriendlyName)
+}
+
+func checkAndCreateAdminSecret(reconciler *Reconciler, namespace string) error {
+	found := corev1.Secret{}
+	err := reconciler.Service.Get(context.TODO(), types.NamespacedName{
+		Name:      constants.KIE_ADMIN_CREDENTIALS_SECRET,
+		Namespace: namespace,
+	}, &found)
+	USERNAME := "username"
+	PASSWORD := "password"
+	if err != nil {
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      constants.KIE_ADMIN_CREDENTIALS_SECRET,
+				Namespace: namespace,
+			},
+			Type: "Opaque",
+			StringData: map[string]string{
+				USERNAME: constants.DefaultAdminUser,
+				PASSWORD: string(shared.GeneratePassword(8)),
+			},
+		}
+		err := reconciler.Service.Create(context.TODO(), &secret)
+		if err != nil {
+			log.Error("Can't create Admin Secret. ", err)
+			return errors2.New("Isn't possible to create a secret with default values")
+		} else {
+			log.Info(constants.KIE_ADMIN_CREDENTIALS_SECRET + " created with default username and generated password")
+			return nil
+		}
+	} else {
+		reconciler.Service.Get(context.TODO(), types.NamespacedName{
+			Name:      constants.KIE_ADMIN_CREDENTIALS_SECRET,
+			Namespace: namespace,
+		}, &found)
+
+		if len(found.StringData[USERNAME]) > 0 && len(found.StringData[PASSWORD]) > 0 {
+			log.Info("Found " + constants.KIE_ADMIN_CREDENTIALS_SECRET + " secret")
+		} else {
+			return errors2.New("Found" + constants.KIE_ADMIN_CREDENTIALS_SECRET + " but lack username or password key")
+		}
+
+		log.Info("Found " + constants.KIE_ADMIN_CREDENTIALS_SECRET + " secret")
+		return nil
+	}
 }

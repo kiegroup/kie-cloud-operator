@@ -11,3 +11,5 @@ spec:
   commonConfig:
     startupStrategy:
       strategyName: "ControllerBasedStartupStrategy"
+    secretAdminCredentialsReference:
+      name: "kie-admin-credentials"

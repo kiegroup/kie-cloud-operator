@@ -726,7 +726,8 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession                   *int                             `json:"MDBMaxSession,omitempty"`
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -880,11 +881,8 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for keystore generation.
 	KeyStorePassword string `json:"keyStorePassword,omitempty"`
-	// The user to use for the admin.
-	AdminUser string `json:"adminUser,omitempty"`
-	// +kubebuilder:validation:Format:=password
-	// The password to use for the adminUser.
-	AdminPassword string `json:"adminPassword,omitempty"`
+	// SecretAdminReference is a reference to the secret containing this user's password
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference"`
 	// +kubebuilder:validation:Format:=password
 	// The password to use for databases.
 	DBPassword string `json:"dbPassword,omitempty"`
@@ -898,6 +896,12 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
+}
+
+// SecretAdminCredentialsReference is a reference to the secret containing the admin's credentials
+type SecretAdminCredentialsReference struct {
+	// Name is the name of the secret storing admin's username and password
+	Name string `json:"name"`
 }
 
 // VersionConfigs ...
@@ -923,14 +927,11 @@ type VersionConfigs struct {
 
 // ProcessMigrationObject configuration of the RHPAM PIM
 type ProcessMigrationObject struct {
-	KieAppObject  `json:",inline"`
-	Jvm           *JvmObject                     `json:"jvm,omitempty"`
-	Database      ProcessMigrationDatabaseObject `json:"database,omitempty"`
-	RouteHostname string                         `json:"routeHostname,omitempty"`
-	// If empty the CommonConfig.AdminUser will be used
-	Username string `json:"username,omitempty"`
-	// If empty the CommonConfig.AdminPassword will be used
-	Password string `json:"password,omitempty"`
+	KieAppObject                    `json:",inline"`
+	Jvm                             *JvmObject                       `json:"jvm,omitempty"`
+	Database                        ProcessMigrationDatabaseObject   `json:"database,omitempty"`
+	RouteHostname                   string                           `json:"routeHostname,omitempty"`
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference,omitempty"`
 	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
 	// on the image before.
 	ExtraClassPath string `json:"extraClassPath,omitempty"`
@@ -938,17 +939,14 @@ type ProcessMigrationObject struct {
 
 // ProcessMigrationTemplate ...
 type ProcessMigrationTemplate struct {
-	KieAppObject     `json:",inline"`
-	OmitImageStream  bool                           `json:"omitImageStream"`
-	ImageURL         string                         `json:"imageURL,omitempty"`
-	KieServerClients []KieServerClient              `json:"kieServerClients,omitempty"`
-	Jvm              JvmObject                      `json:"jvm,omitempty"`
-	Database         ProcessMigrationDatabaseObject `json:"database,omitempty"`
-	RouteHostname    string                         `json:"routeHostname,omitempty"`
-	// PIM Admin username. If empty the CommonConfig.AdminUser will be used
-	Username string `json:"username,omitempty"`
-	// PIM Admin password. If empty the CommonConfig.AdminPassword will be used
-	Password string `json:"password,omitempty"`
+	KieAppObject                    `json:",inline"`
+	OmitImageStream                 bool                             `json:"omitImageStream"`
+	ImageURL                        string                           `json:"imageURL,omitempty"`
+	KieServerClients                []KieServerClient                `json:"kieServerClients,omitempty"`
+	Jvm                             JvmObject                        `json:"jvm,omitempty"`
+	Database                        ProcessMigrationDatabaseObject   `json:"database,omitempty"`
+	RouteHostname                   string                           `json:"routeHostname,omitempty"`
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference,omitempty"`
 	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
 	// on the image before.
 	ExtraClassPath string `json:"extraClassPath,omitempty"`

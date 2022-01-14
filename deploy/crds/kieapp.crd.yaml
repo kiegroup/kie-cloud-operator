@@ -242,13 +242,6 @@ spec:
               commonConfig:
                 description: CommonConfig variables used in the templates
                 properties:
-                  adminPassword:
-                    description: The password to use for the adminUser.
-                    format: password
-                    type: string
-                  adminUser:
-                    description: The user to use for the admin.
-                    type: string
                   amqClusterPassword:
                     description: The password to use for amq cluster user.
                     format: password
@@ -272,6 +265,17 @@ spec:
                     description: The password to use for keystore generation.
                     format: password
                     type: string
+                  secretAdminCredentialsReference:
+                    description: SecretAdminReference is a reference to the secret
+                      containing this user's password
+                    properties:
+                      name:
+                        description: Name is the name of the secret storing admin's
+                          username and password
+                        type: string
+                    required:
+                    - name
+                    type: object
                   startupStrategy:
                     description: Startup strategy for Console and Kieserver
                     properties:
@@ -287,6 +291,8 @@ spec:
                           default is OpenShiftStartupStrategy
                         type: string
                     type: object
+                required:
+                - secretAdminCredentialsReference
                 type: object
               environment:
                 description: The name of the environment used as a baseline
@@ -1500,10 +1506,6 @@ spec:
                       keystoreSecret:
                         description: KeystoreSecret secret name
                         type: string
-                      password:
-                        description: If empty the CommonConfig.AdminPassword will
-                          be used
-                        type: string
                       replicas:
                         description: Replicas to set for the DeploymentConfig
                         format: int32
@@ -1540,12 +1542,20 @@ spec:
                         description: RouteHostname will define the route.spec.host
                           value
                         type: string
+                      secretAdminCredentialsReference:
+                        description: SecretAdminCredentialsReference is a reference
+                          to the secret containing the admin's credentials
+                        properties:
+                          name:
+                            description: Name is the name of the secret storing admin's
+                              username and password
+                            type: string
+                        required:
+                        - name
+                        type: object
                       storageClassName:
                         description: StorageClassName The storageClassName to use
                           for kie pvc's.
-                        type: string
-                      username:
-                        description: If empty the CommonConfig.AdminUser will be used
                         type: string
                     type: object
                   servers:
@@ -3019,13 +3029,6 @@ spec:
                   commonConfig:
                     description: CommonConfig variables used in the templates
                     properties:
-                      adminPassword:
-                        description: The password to use for the adminUser.
-                        format: password
-                        type: string
-                      adminUser:
-                        description: The user to use for the admin.
-                        type: string
                       amqClusterPassword:
                         description: The password to use for amq cluster user.
                         format: password
@@ -3049,6 +3052,17 @@ spec:
                         description: The password to use for keystore generation.
                         format: password
                         type: string
+                      secretAdminCredentialsReference:
+                        description: SecretAdminReference is a reference to the secret
+                          containing this user's password
+                        properties:
+                          name:
+                            description: Name is the name of the secret storing admin's
+                              username and password
+                            type: string
+                        required:
+                        - name
+                        type: object
                       startupStrategy:
                         description: Startup strategy for Console and Kieserver
                         properties:
@@ -3064,6 +3078,8 @@ spec:
                               default is OpenShiftStartupStrategy
                             type: string
                         type: object
+                    required:
+                    - secretAdminCredentialsReference
                     type: object
                   environment:
                     description: The name of the environment used as a baseline
@@ -4294,10 +4310,6 @@ spec:
                           keystoreSecret:
                             description: KeystoreSecret secret name
                             type: string
-                          password:
-                            description: If empty the CommonConfig.AdminPassword will
-                              be used
-                            type: string
                           replicas:
                             description: Replicas to set for the DeploymentConfig
                             format: int32
@@ -4334,13 +4346,20 @@ spec:
                             description: RouteHostname will define the route.spec.host
                               value
                             type: string
+                          secretAdminCredentialsReference:
+                            description: SecretAdminCredentialsReference is a reference
+                              to the secret containing the admin's credentials
+                            properties:
+                              name:
+                                description: Name is the name of the secret storing
+                                  admin's username and password
+                                type: string
+                            required:
+                            - name
+                            type: object
                           storageClassName:
                             description: StorageClassName The storageClassName to
                               use for kie pvc's.
-                            type: string
-                          username:
-                            description: If empty the CommonConfig.AdminUser will
-                              be used
                             type: string
                         type: object
                       servers:

@@ -467,8 +467,8 @@ func TestRHPAMDashbuilderIntegrationWithKieServer(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "test-dash-kieserver", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
 	assert.Equal(t, "http://test-dash-kieserver:8080/services/rest/server", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_LOCATION"))
-	assert.Equal(t, "adminUser", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_USER"))
-	assert.Equal(t, "RedHat", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_PASSWORD"))
+	//assert.Equal(t, "adminUser", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_USER"))
+	//assert.Equal(t, "RedHat", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_PASSWORD"))
 }
 
 func TestRHPAMDashbuilderIntegrationWithBC(t *testing.T) {
@@ -505,12 +505,10 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	adminPassword := cr.Status.Applied.CommonConfig.AdminPassword
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
-	assert.Equal(t, adminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
@@ -549,7 +547,6 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhpamAuthoringHA,
 			CommonConfig: api.CommonConfig{
-				AdminPassword:      "admin",
 				AMQPassword:        "amq",
 				AMQClusterPassword: "cluster",
 			},
@@ -562,7 +559,6 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
 				CommonConfig: api.CommonConfig{
-					AdminPassword:      "RedHat",
 					AMQPassword:        "RedHat",
 					AMQClusterPassword: "RedHat",
 				},
@@ -578,8 +574,8 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	amqPassword := getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
 	assert.Equal(t, "amq", amqPassword, "Expected provided password to take effect, but found %v", amqPassword)
-	adminPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
-	assert.Equal(t, "admin", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
+	//adminPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	//assert.Equal(t, "admin", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
 	amqClusterPassword = getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_CLUSTER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	assert.Equal(t, "test-rhpamcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
@@ -2596,8 +2592,8 @@ func TestTrialConsoleEnv(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%s-rhdmcentr", cr.Spec.CommonConfig.ApplicationName), env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, fmt.Sprintf("rhdm-decisioncentral-rhel8:%s", cr.Status.Applied.Version), env.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	adminUser := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
-	assert.Equal(t, constants.DefaultAdminUser, adminUser, "AdminUser default not being set correctly")
+	//adminUser := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
+	//assert.Equal(t, constants.DefaultAdminUser, adminUser, "AdminUser default not being set correctly")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envReplace, "Environment overriding not functional")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, envAddition, "Environment additions not functional")
 	assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -2775,10 +2771,10 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	assert.Equal(t, serverHttpsAnnotations, env.Servers[0].Routes[1].Annotations)
 
 	// Env vars overrides
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+	/*assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "KIE_ADMIN_PWD",
 		Value: "RedHat",
-	})
+	})*/
 	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "KIE_SERVER_PROTOCOL",
 		Value: "",
@@ -3110,31 +3106,21 @@ func TestPartialTemplateConfig(t *testing.T) {
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhdmAuthoring,
-			CommonConfig: api.CommonConfig{
-				AdminUser:     "NewAdmin",
-				AdminPassword: "MyPassword",
-			},
+			Environment:  api.RhdmAuthoring,
+			CommonConfig: api.CommonConfig{},
 		},
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
-				Environment: api.RhdmAuthoring,
-				CommonConfig: api.CommonConfig{
-					AdminPassword: "RedHat",
-				},
+				Environment:  api.RhdmAuthoring,
+				CommonConfig: api.CommonConfig{},
 			},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting partial trial environment")
-	adminUser := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
-	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
-	assert.Equal(t, cr.Spec.CommonConfig.AdminUser, adminUser, "Expected provided user to take effect, but found %v", adminUser)
-	assert.Equal(t, cr.Spec.CommonConfig.AdminPassword, adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
-	assert.Equal(t, cr.Spec.CommonConfig.AdminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
-	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
-	assert.Equal(t, "MyPassword", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+	//mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
+	//assert.Equal(t, "MyPassword", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
@@ -3157,19 +3143,17 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 			Name: "test",
 		},
 		Spec: api.KieAppSpec{
-			Environment: api.RhdmTrial,
-			CommonConfig: api.CommonConfig{
-				AdminPassword: "MyPassword",
-			},
+			Environment:  api.RhdmTrial,
+			CommonConfig: api.CommonConfig{},
 		},
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
-	adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
-	assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
-	mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
-	assert.Equal(t, "MyPassword", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
+	//adminPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	//assert.Equal(t, "MyPassword", adminPassword, "Expected provided password to take effect, but found %v", adminPassword)
+	//mavenPassword := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHDMCENTR_MAVEN_REPO_PASSWORD")
+	//assert.Equal(t, "MyPassword", mavenPassword, "Expected default password of RedHat, but found %v", mavenPassword)
 
 	assert.Equal(t, "test-rhdmcentr", env.Console.DeploymentConfigs[0].Name)
 	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, env.Console.DeploymentConfigs[0].Spec.Strategy.Type)
@@ -4819,9 +4803,8 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{
-								Username:       "testpim-user",
-								Password:       "test-pim-pwd",
-								ExtraClassPath: "/tmp/test.jar",
+								SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: "kie-admin-credentials"},
+								ExtraClassPath:                  "/tmp/test.jar",
 								KieAppObject: api.KieAppObject{
 									Replicas:     Pint32(5),
 									Image:        "test-pim-image",
@@ -4842,10 +4825,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 								},
 							},
 						},
-						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
-						},
+						CommonConfig: api.CommonConfig{},
 					},
 				},
 				[]api.ServerTemplate{
@@ -4854,9 +4834,8 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				Username:       "testpim-user",
-				Password:       "2491032541ee362db900f11af2f8fe0a",
-				ExtraClassPath: "/tmp/test.jar",
+				SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: "kie-admin-credentials"},
+				ExtraClassPath:                  "/tmp/test.jar",
 				KieAppObject: api.KieAppObject{
 					Replicas:     Pint32(5),
 					Image:        "test-pim-image",
@@ -4907,10 +4886,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				// empty credentials provided, in this case the common.AdminUser and password will be used
-				// and the password will be hashed using md5.
-				Username: "adminUser",
-				Password: "a2d11c9699448828d6fc052bddc37fe6",
+				SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: "kie-admin-credentials"},
 				KieAppObject: api.KieAppObject{
 					Replicas:     Pint32(1),
 					Image:        pimImage,
@@ -4942,11 +4918,8 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 			args{
 				&api.KieApp{
 					Spec: api.KieAppSpec{
-						Environment: api.RhpamTrial,
-						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
-						},
+						Environment:  api.RhpamTrial,
+						CommonConfig: api.CommonConfig{},
 					},
 				},
 				[]api.ServerTemplate{
@@ -4976,10 +4949,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 								},
 							},
 						},
-						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
-						},
+						CommonConfig: api.CommonConfig{},
 					},
 				},
 				[]api.ServerTemplate{
@@ -5024,10 +4994,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 								},
 							},
 						},
-						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
-						},
+						CommonConfig: api.CommonConfig{},
 					},
 				},
 				[]api.ServerTemplate{
@@ -5036,10 +5003,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				},
 			},
 			&api.ProcessMigrationTemplate{
-				// empty credentials provided, in this case the common.AdminUser and password will be used
-				// and the password will be hashed using md5.
-				Username: "testuser",
-				Password: "288252a54f57c3d846d613868f8165f3",
+				SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: "kie-admin-credentials"},
 				KieAppObject: api.KieAppObject{
 					Replicas:     Pint32(1),
 					Image:        "test-pim-image",
@@ -5110,10 +5074,9 @@ func TestProcessMigrationRouteCustomConfig(t *testing.T) {
 			Environment: api.RhpamAuthoring,
 			Objects: api.KieAppObjects{
 				ProcessMigration: &api.ProcessMigrationObject{
-					Username:       "testpim",
-					Password:       "testpimpwd",
-					Jvm:            createJvmTestObjectWithoutJavaMaxMemRatio(),
-					ExtraClassPath: "/tmp/test.jar",
+					SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: "kie-admin-credentials"},
+					Jvm:                             createJvmTestObjectWithoutJavaMaxMemRatio(),
+					ExtraClassPath:                  "/tmp/test.jar",
 					KieAppObject: api.KieAppObject{
 						Replicas: Pint32(3),
 
@@ -5141,9 +5104,9 @@ func TestProcessMigrationRouteCustomConfig(t *testing.T) {
 	assert.Equal(t, routeAnnotations, env.ProcessMigration.Routes[0].Annotations)
 	assert.Equal(t, *Pint32(3), env.ProcessMigration.DeploymentConfigs[0].Spec.Replicas)
 
-	assert.Equal(t, "testpim", cr.Status.Applied.Objects.ProcessMigration.Username)
+	/*assert.Equal(t, "testpim", cr.Status.Applied.Objects.ProcessMigration.Username)
 	assert.Equal(t, "c6b08e2600dd7bb5ae5c8755b25ef45d", cr.Status.Applied.Objects.ProcessMigration.Password)
-	assert.Equal(t, "c6b08e2600dd7bb5ae5c8755b25ef45d", cr.Spec.Objects.ProcessMigration.Password)
+	assert.Equal(t, "c6b08e2600dd7bb5ae5c8755b25ef45d", cr.Spec.Objects.ProcessMigration.Password)*/
 
 	assert.Equal(t, 3, len(env.ProcessMigration.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts))
 

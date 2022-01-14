@@ -573,8 +573,10 @@ func applyDashbuilderConfig(template *api.DashbuilderTemplate, cr api.KieApp, se
 					api.KieServerDataSetOrTemplate{
 						Name:     server.KieServerID,
 						Location: fmt.Sprintf("http://%s:8080/services/rest/server", server.KieName),
-						User:     cr.Status.Applied.CommonConfig.AdminUser,
-						Password: cr.Status.Applied.CommonConfig.AdminPassword,
+						// @TODO Replace with Secret
+						//User:     cr.Status.Applied.CommonConfig.AdminUser,
+						//Password: cr.Status.Applied.CommonConfig.AdminPassword,
+
 					})
 			}
 		}
@@ -871,6 +873,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.StartupStrategy.StrategyName = cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName
 			} else {
 				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
+			}
+
+			if cr.Status.Applied.CommonConfig.SecretAdminCredentialsReference == nil {
+				template.SecretAdminCredentialsReference = &api.SecretAdminCredentialsReference{Name: constants.KIE_ADMIN_CREDENTIALS_SECRET}
+			} else {
+				template.SecretAdminCredentialsReference = cr.Status.Applied.CommonConfig.SecretAdminCredentialsReference
 			}
 
 			servers = append(servers, template)
@@ -1184,7 +1192,6 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 	passwords := []*string{
 		&spec.CommonConfig.KeyStorePassword,
-		&spec.CommonConfig.AdminPassword,
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
@@ -1394,9 +1401,7 @@ func SetDefaults(cr *api.KieApp) {
 	if len(specApply.CommonConfig.ApplicationName) == 0 {
 		specApply.CommonConfig.ApplicationName = cr.Name
 	}
-	if len(specApply.CommonConfig.AdminUser) == 0 {
-		specApply.CommonConfig.AdminUser = constants.DefaultAdminUser
-	}
+
 	if specApply.CommonConfig.StartupStrategy == nil {
 		specApply.CommonConfig.StartupStrategy = &api.StartupStrategy{StrategyName: api.OpenshiftStartupStrategy, ControllerTemplateCacheTTL: Pint(5000)}
 	}
@@ -1653,9 +1658,10 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 		}
 		for _, sc := range serversConfig {
 			processMigrationTemplate.KieServerClients = append(processMigrationTemplate.KieServerClients, api.KieServerClient{
-				Host:     fmt.Sprintf("http://%s:8080/services/rest/server", sc.KieName),
-				Username: cr.Status.Applied.CommonConfig.AdminUser,
-				Password: cr.Status.Applied.CommonConfig.AdminPassword,
+				// @TODO replace with the secret
+				//Username: cr.Status.Applied.CommonConfig.AdminUser,
+				//Password: cr.Status.Applied.CommonConfig.AdminPassword,
+				Host: fmt.Sprintf("http://%s:8080/services/rest/server", sc.KieName),
 			})
 		}
 		if cr.Status.Applied.Objects.ProcessMigration.Database.Type == "" {
@@ -1667,27 +1673,11 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.Database = *cr.Status.Applied.Objects.ProcessMigration.Database.DeepCopy()
 		}
 
-		if len(cr.Spec.Objects.ProcessMigration.Username) == 0 {
-			cr.Status.Applied.Objects.ProcessMigration.Username = cr.Status.Applied.CommonConfig.AdminUser
-
+		if cr.Spec.Objects.ProcessMigration.SecretAdminCredentialsReference == nil {
+			cr.Status.Applied.Objects.ProcessMigration.SecretAdminCredentialsReference = &api.SecretAdminCredentialsReference{Name: constants.KIE_ADMIN_CREDENTIALS_SECRET}
 		} else {
-			cr.Status.Applied.Objects.ProcessMigration.Username = cr.Spec.Objects.ProcessMigration.Username
+			cr.Status.Applied.Objects.ProcessMigration.SecretAdminCredentialsReference = cr.Spec.Objects.ProcessMigration.SecretAdminCredentialsReference
 		}
-
-		if len(cr.Spec.Objects.ProcessMigration.Password) == 0 {
-			cr.Status.Applied.Objects.ProcessMigration.Password = shared.GeneratedPimPwdMd5(
-				cr.Status.Applied.Objects.ProcessMigration.Username,
-				cr.Status.Applied.CommonConfig.AdminPassword)
-		} else {
-			cr.Status.Applied.Objects.ProcessMigration.Password = shared.GeneratedPimPwdMd5(
-				cr.Status.Applied.Objects.ProcessMigration.Username,
-				cr.Spec.Objects.ProcessMigration.Password)
-			// reset the spec to hide the password
-			cr.Spec.Objects.ProcessMigration.Password = cr.Status.Applied.Objects.ProcessMigration.Password
-		}
-
-		processMigrationTemplate.Username = cr.Status.Applied.Objects.ProcessMigration.Username
-		processMigrationTemplate.Password = cr.Status.Applied.Objects.ProcessMigration.Password
 
 		processMigrationTemplate.ExtraClassPath = cr.Status.Applied.Objects.ProcessMigration.ExtraClassPath
 

@@ -107,26 +107,28 @@
           ]
         },
         {
-          "label": "Admin user",
+          "label": "Admin user configuration",
           "type": "fieldGroup",
           "required": false,
           "jsonPath": "$.spec.commonConfig",
           "visible": true,
           "fields": [
             {
-              "label": "Username",
-              "default": "adminUser",
-              "required": false,
-              "description": "Administrative username for RHPAM components",
-              "jsonPath": "$.spec.commonConfig.adminUser",
-              "type": "text"
-            },
-            {
-              "label": "Password",
-              "required": false,
-              "description": "Administrative password to use instead of generating default value",
-              "jsonPath": "$.spec.commonConfig.adminPassword",
-              "type": "password"
+              "label": "Secret",
+              "type": "fieldGroup",
+              "required": true,
+              "jsonPath": "$.spec",
+              "displayWhen": "secret",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "Secret configuration to use for Admin user",
+                  "type": "text",
+                  "jsonPath": "$.spec.commonConfig.adminSecret",
+                  "originalJsonPath": "$.spec.commonConfig",
+                  "description": "If empty kie-admin-credentials secret will be used, if missing one with default username and generated password will be created"
+                }
+              ]
             }
           ]
         },
