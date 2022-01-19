@@ -557,10 +557,11 @@
               "description": "The size of the Business Central's Persistent Volume. Examples: 1Gi, 512Mi."
             },
             {
-              "label": "Custom hostname to be used on the Business Central external Route.",
+              "label": "Custom hostname",
               "required": false,
               "jsonPath": "$.spec.objects.console.routeHostname",
-              "type": "text"
+              "type": "text",
+              "description": "Custom hostname to be used on the Business Central external Route."
             },
             {
               "label": "GitHooks",
