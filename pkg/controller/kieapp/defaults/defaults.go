@@ -1034,6 +1034,10 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 
 func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from api.ImageObjRef, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
+		if serverSet.From.Kind == "DockerImage" {
+			omitImageTrigger = true
+			imageURL = serverSet.From.Name
+		}
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
