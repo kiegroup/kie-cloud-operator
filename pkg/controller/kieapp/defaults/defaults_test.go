@@ -3293,6 +3293,14 @@ func TestSetKieServerFrom(t *testing.T) {
 							},
 						},
 					},
+					{
+						From: &api.ImageObjRef{
+							Kind: "DockerImage",
+							ObjectReference: api.ObjectReference{
+								Name: "quay.io/custom/image:1.0",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -3303,6 +3311,10 @@ func TestSetKieServerFrom(t *testing.T) {
 	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, byeRules, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+
+	assert.Equal(t, (*appsv1.DeploymentTriggerImageChangeParams)(nil), env.Servers[2].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams)
+	assert.Equal(t, "quay.io/custom/image:1.0", env.Servers[2].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
@@ -3408,7 +3420,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "anotherbranch",
@@ -3418,6 +3430,23 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 								{
 									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
+								},
+							},
+						},
+					},
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT",
+							GitSource: api.GitSource{
+								URI:        "http://git.example.com",
+								Reference:  "anotherbranch",
+								ContextDir: "test",
+							},
+							From: &api.ImageObjRef{
+								Kind: "DockerImage",
+								ObjectReference: api.ObjectReference{
+									Name:      "quay.io/test/custom:1.0",
+									Namespace: "",
 								},
 							},
 						},
@@ -3432,7 +3461,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
+	assert.Len(t, env.Servers, 3, "Expect two KIE Servers to be created based on provided build configs")
 	assert.Equal(t, "somebranch", env.Servers[0].BuildConfigs[0].Spec.Source.Git.Ref)
 	assert.Equal(t, "anotherbranch", env.Servers[1].BuildConfigs[0].Spec.Source.Git.Ref)
 
@@ -3446,6 +3475,10 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 	assert.Len(t, env.Servers[1].ImageStreams, 1)
 	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+
+	assert.Equal(t, "DockerImage", env.Servers[2].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
+	assert.Equal(t, "quay.io/test/custom:1.0", env.Servers[2].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+
 	os.Clearenv()
 }
 
