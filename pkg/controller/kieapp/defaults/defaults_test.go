@@ -562,9 +562,11 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
 				CommonConfig: api.CommonConfig{
-					AdminPassword:      "RedHat",
-					AMQPassword:        "RedHat",
-					AMQClusterPassword: "RedHat",
+					AdminPassword:          "RedHat",
+					AMQPassword:            "RedHat",
+					AMQClusterPassword:     "RedHat",
+					AdminUser:              "adminUser",
+					SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 				},
 			},
 		},
@@ -3121,7 +3123,9 @@ func TestPartialTemplateConfig(t *testing.T) {
 			Applied: api.KieAppSpec{
 				Environment: api.RhdmAuthoring,
 				CommonConfig: api.CommonConfig{
-					AdminPassword: "RedHat",
+					AdminPassword:          "RedHat",
+					AdminUser:              "MyUser",
+					SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 				},
 			},
 		},
@@ -3160,7 +3164,9 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
 			CommonConfig: api.CommonConfig{
-				AdminPassword: "MyPassword",
+				AdminPassword:          "MyPassword",
+				AdminUser:              "RedHat",
+				SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 			},
 		},
 	}
@@ -4877,8 +4883,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 							},
 						},
 						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
+							AdminUser:              "testuser",
+							AdminPassword:          "testpassword",
+							SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 						},
 					},
 				},
@@ -4934,6 +4941,11 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{},
 						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:              constants.DefaultAdminUser,
+							AdminPassword:          constants.DefaultPassword,
+							SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+						},
 					},
 				},
 				[]api.ServerTemplate{
@@ -4978,8 +4990,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					Spec: api.KieAppSpec{
 						Environment: api.RhpamTrial,
 						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
+							AdminUser:              "testuser",
+							AdminPassword:          "testpassword",
+							SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 						},
 					},
 				},
@@ -5011,8 +5024,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 							},
 						},
 						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
+							AdminUser:              "testuser",
+							AdminPassword:          "testpassword",
+							SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 						},
 					},
 				},
@@ -5059,8 +5073,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 							},
 						},
 						CommonConfig: api.CommonConfig{
-							AdminUser:     "testuser",
-							AdminPassword: "testpassword",
+							AdminUser:              "testuser",
+							AdminPassword:          "testpassword",
+							SecretAdminCredentials: constants.KIE_ADMIN_CREDENTIALS_SECRET,
 						},
 					},
 				},

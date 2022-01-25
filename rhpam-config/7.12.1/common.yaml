@@ -561,10 +561,24 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
                   #[[end]]
+                  #[[if not .SecretAdminCredentials]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
+                  #[[end]]
+                  #[[if .SecretAdminCredentials]]
+                  - name: KIE_ADMIN_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: username
+                  - name: KIE_ADMIN_PWD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: password
+                  #[[end]]
                   - name: KIE_SERVER_CONTROLLER_SERVICE
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL

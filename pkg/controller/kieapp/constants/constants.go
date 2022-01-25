@@ -292,6 +292,10 @@ const (
 	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
 
 	DefaultDatagridUsername = "infinispan"
+
+	KIE_ADMIN_CREDENTIALS_SECRET = "kie-admin-credentials"
+	USERNAME_ADMIN_SECRET_KEY    = "username"
+	PASSWORD_ADMIN_SECRET_KEY    = "password"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)

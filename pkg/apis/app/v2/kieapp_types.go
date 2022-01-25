@@ -769,7 +769,8 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession          *int   `json:"MDBMaxSession,omitempty"`
+	SecretAdminCredentials string `json:"secretAdminCredentials,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -941,6 +942,8 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
+	// Is the name of the secret containing admin's credentials, the keys are username and password, if the adminUser and adminPassword are provided the secretAdminCredentials will be skipped
+	SecretAdminCredentials string `json:"secretAdminCredentials,omitempty"`
 }
 
 // VersionConfigs ...

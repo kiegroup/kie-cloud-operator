@@ -5,6 +5,7 @@ package defaults
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -60,6 +61,29 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		cr.Status.Applied.Version = constants.CurrentVersion
 		cr.Spec.Version = ""
 	}
+
+	// if the secret is the only credential present
+	if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminUser) == 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		creds := constants.KIE_ADMIN_CREDENTIALS_SECRET
+		if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 {
+			creds = cr.Spec.CommonConfig.SecretAdminCredentials
+		}
+		errSecret, _, _ := checkAndCreateAdminSecret(service, creds, cr.Namespace, cr.Spec.Environment)
+		if errSecret != nil {
+			log.Error("Can't create Admin Secret. ", errSecret)
+		}
+	}
+
+	//in case of missing secretAdmin we use the AdminUsername AdminPassword and if missing we set the defaults
+	if len(cr.Spec.CommonConfig.SecretAdminCredentials) == 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		password := constants.DefaultPassword
+
+		if isTrial(cr) {
+			password = string(shared.GeneratePassword(8))
+		}
+		cr.Spec.CommonConfig.AdminPassword = password
+	}
+
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		return api.Environment{}, err
@@ -761,17 +785,18 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 			usedNames[name] = true
 			template := api.ServerTemplate{
-				KieName:          name,
-				KieServerID:      name,
-				Build:            getBuildConfig(product, cr, serverSet),
-				KeystoreSecret:   serverSet.KeystoreSecret,
-				StorageClassName: serverSet.StorageClassName,
-				JbpmCluster:      serverSet.JbpmCluster,
-				PersistRepos:     serverSet.PersistRepos,
-				ServersM2PvSize:  serverSet.ServersM2PvSize,
-				ServersKiePvSize: serverSet.ServersKiePvSize,
-				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
-				MDBMaxSession:    serverSet.MDBMaxSession,
+				KieName:                name,
+				KieServerID:            name,
+				Build:                  getBuildConfig(product, cr, serverSet),
+				KeystoreSecret:         serverSet.KeystoreSecret,
+				StorageClassName:       serverSet.StorageClassName,
+				JbpmCluster:            serverSet.JbpmCluster,
+				PersistRepos:           serverSet.PersistRepos,
+				ServersM2PvSize:        serverSet.ServersM2PvSize,
+				ServersKiePvSize:       serverSet.ServersKiePvSize,
+				StartupStrategy:        cr.Status.Applied.CommonConfig.StartupStrategy,
+				MDBMaxSession:          serverSet.MDBMaxSession,
+				SecretAdminCredentials: cr.Status.Applied.CommonConfig.SecretAdminCredentials,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -1189,7 +1214,6 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 	passwords := []*string{
 		&spec.CommonConfig.KeyStorePassword,
-		&spec.CommonConfig.AdminPassword,
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
@@ -2099,4 +2123,75 @@ func getRouteHostname(obj interface{}) (host string) {
 		host = ""
 	}
 	return host
+}
+
+func checkAndCreateAdminSecret(service kubernetes.PlatformService, namespace string, secretName string, environment api.EnvironmentType) (error, string, string) {
+	/* The default secret will be like this
+
+	apiVersion: v1
+	kind: Secret
+	metadata:
+	  name: kie-admin-credentials
+	type: Opaque
+	data:
+	  //adminUser
+	  username: YWRtaW4=
+	  //RedHat
+	  password: UmVkSGF0
+
+	*/
+
+	providedSecret, err := getSecret(service, namespace, secretName)
+
+	// The secret passed by the user doesn't exist we create one with default values
+	if err != nil {
+		username := constants.DefaultAdminUser
+		password := constants.DefaultPassword
+		if !strings.HasSuffix(string(environment), constants.TrialEnvSuffix) {
+			password = string(shared.GeneratePassword(8))
+		}
+
+		err := createSecret(service, namespace, constants.KIE_ADMIN_CREDENTIALS_SECRET, username, password)
+		if err != nil {
+			log.Error("Can't create Admin Secret. ", err)
+			return errors.New("Isn't possible to create a secret with default values"), "", ""
+		} else {
+			return nil, username, password
+		}
+	} else {
+		// the customer secret exists and we read the keys to see if is correct
+		username := providedSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
+		password := providedSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+		if len(username) > 0 && len(password) > 0 {
+			log.Info("Found " + secretName + " secret")
+		} else {
+			return errors.New("Found" + secretName + " but lack username or password "), "", ""
+		}
+		return nil, username, password
+	}
+}
+
+func createSecret(service kubernetes.PlatformService, namespace string, secretName string, username string, password string) error {
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Type: "Opaque",
+		StringData: map[string]string{
+			constants.USERNAME_ADMIN_SECRET_KEY: username,
+			constants.PASSWORD_ADMIN_SECRET_KEY: password,
+		},
+	}
+	err := service.Create(context.TODO(), &secret)
+	return err
+}
+
+func getSecret(service kubernetes.PlatformService, namespace string, secretName string) (corev1.Secret, error) {
+	found := corev1.Secret{}
+	err := service.Get(context.TODO(), types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}, &found)
+	return found, err
 }
