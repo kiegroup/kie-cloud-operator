@@ -726,7 +726,8 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession                   *int                             `json:"MDBMaxSession,omitempty"`
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -886,6 +887,8 @@ type CommonConfig struct {
 	// The password to use for the adminUser.
 	AdminPassword string `json:"adminPassword,omitempty"`
 	// +kubebuilder:validation:Format:=password
+	// SecretAdminReference is a reference to the secret containing this user's password
+	SecretAdminCredentialsReference *SecretAdminCredentialsReference `json:"secretAdminCredentialsReference"`
 	// The password to use for databases.
 	DBPassword string `json:"dbPassword,omitempty"`
 	// +kubebuilder:validation:Format:=password
@@ -1092,6 +1095,12 @@ type StartupStrategy struct {
 	StrategyName string `json:"strategyName,omitempty"`
 	// Controller Template Cache TTL to use when the OpenShiftStartupStrategy is choosed and Business Central is deployed, default is 5000
 	ControllerTemplateCacheTTL *int `json:"controllerTemplateCacheTTL,omitempty"`
+}
+
+// SecretAdminCredentialsReference is a reference to the secret containing the admin's credentials
+type SecretAdminCredentialsReference struct {
+	// Name is the name of the secret storing admin's username and password
+	Name string `json:"name"`
 }
 
 // StartupStrategies supported values

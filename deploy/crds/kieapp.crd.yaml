@@ -272,6 +272,18 @@ spec:
                     description: The password to use for keystore generation.
                     format: password
                     type: string
+                  secretAdminCredentialsReference:
+                    description: SecretAdminReference is a reference to the secret
+                      containing this user's password
+                    format: password
+                    properties:
+                      name:
+                        description: Name is the name of the secret storing admin's
+                          username and password
+                        type: string
+                    required:
+                    - name
+                    type: object
                   startupStrategy:
                     description: Startup strategy for Console and Kieserver
                     properties:
@@ -287,6 +299,8 @@ spec:
                           default is OpenShiftStartupStrategy
                         type: string
                     type: object
+                required:
+                - secretAdminCredentialsReference
                 type: object
               environment:
                 description: The name of the environment used as a baseline
@@ -3049,6 +3063,18 @@ spec:
                         description: The password to use for keystore generation.
                         format: password
                         type: string
+                      secretAdminCredentialsReference:
+                        description: SecretAdminReference is a reference to the secret
+                          containing this user's password
+                        format: password
+                        properties:
+                          name:
+                            description: Name is the name of the secret storing admin's
+                              username and password
+                            type: string
+                        required:
+                        - name
+                        type: object
                       startupStrategy:
                         description: Startup strategy for Console and Kieserver
                         properties:
@@ -3064,6 +3090,8 @@ spec:
                               default is OpenShiftStartupStrategy
                             type: string
                         type: object
+                    required:
+                    - secretAdminCredentialsReference
                     type: object
                   environment:
                     description: The name of the environment used as a baseline

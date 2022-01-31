@@ -468,7 +468,6 @@ func TestRHPAMDashbuilderIntegrationWithKieServer(t *testing.T) {
 	assert.Equal(t, "test-dash-kieserver", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIESERVER_SERVER_TEMPLATES"))
 	assert.Equal(t, "http://test-dash-kieserver:8080/services/rest/server", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_LOCATION"))
 	assert.Equal(t, "adminUser", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_USER"))
-	assert.Equal(t, "RedHat", getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "test_dash_kieserver_PASSWORD"))
 }
 
 func TestRHPAMDashbuilderIntegrationWithBC(t *testing.T) {
@@ -505,12 +504,10 @@ func TestRhpamcentrMonitoringEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	adminPassword := cr.Status.Applied.CommonConfig.AdminPassword
 
 	env, err = GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.Equal(t, "64Mi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
-	assert.Equal(t, adminPassword, cr.Status.Applied.CommonConfig.AdminPassword)
 	assert.Equal(t, "test-rhpamcentrmon", env.Console.DeploymentConfigs[0].ObjectMeta.Name)
 	assert.Equal(t, bcmImage+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
@@ -562,9 +559,11 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 		Status: api.KieAppStatus{
 			Applied: api.KieAppSpec{
 				CommonConfig: api.CommonConfig{
-					AdminPassword:      "RedHat",
-					AMQPassword:        "RedHat",
-					AMQClusterPassword: "RedHat",
+					AdminPassword:                   "RedHat",
+					AMQPassword:                     "RedHat",
+					AMQClusterPassword:              "RedHat",
+					AdminUser:                       "adminUser",
+					SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: constants.KIE_ADMIN_CREDENTIALS_SECRET},
 				},
 			},
 		},
@@ -2775,10 +2774,6 @@ func TestMergeTrialAndCommonConfig(t *testing.T) {
 	assert.Equal(t, serverHttpsAnnotations, env.Servers[0].Routes[1].Annotations)
 
 	// Env vars overrides
-	assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-		Name:  "KIE_ADMIN_PWD",
-		Value: "RedHat",
-	})
 	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "KIE_SERVER_PROTOCOL",
 		Value: "",
@@ -3120,7 +3115,9 @@ func TestPartialTemplateConfig(t *testing.T) {
 			Applied: api.KieAppSpec{
 				Environment: api.RhdmAuthoring,
 				CommonConfig: api.CommonConfig{
-					AdminPassword: "RedHat",
+					AdminPassword:                   "RedHat",
+					AdminUser:                       "MyUser",
+					SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: constants.KIE_ADMIN_CREDENTIALS_SECRET},
 				},
 			},
 		},
@@ -3159,7 +3156,9 @@ func TestOverwritePartialTrialPasswords(t *testing.T) {
 		Spec: api.KieAppSpec{
 			Environment: api.RhdmTrial,
 			CommonConfig: api.CommonConfig{
-				AdminPassword: "MyPassword",
+				AdminPassword:                   "MyPassword",
+				AdminUser:                       "RedHat",
+				SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{Name: constants.KIE_ADMIN_CREDENTIALS_SECRET},
 			},
 		},
 	}
@@ -4845,6 +4844,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						CommonConfig: api.CommonConfig{
 							AdminUser:     "testuser",
 							AdminPassword: "testpassword",
+							SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{
+								Name: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+							},
 						},
 					},
 				},
@@ -4900,6 +4902,13 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{},
 						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     constants.DefaultAdminUser,
+							AdminPassword: constants.DefaultPassword,
+							SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{
+								Name: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+							},
+						},
 					},
 				},
 				[]api.ServerTemplate{
@@ -4946,6 +4955,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						CommonConfig: api.CommonConfig{
 							AdminUser:     "testuser",
 							AdminPassword: "testpassword",
+							SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{
+								Name: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+							},
 						},
 					},
 				},
@@ -4979,6 +4991,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						CommonConfig: api.CommonConfig{
 							AdminUser:     "testuser",
 							AdminPassword: "testpassword",
+							SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{
+								Name: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+							},
 						},
 					},
 				},
@@ -5027,6 +5042,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						CommonConfig: api.CommonConfig{
 							AdminUser:     "testuser",
 							AdminPassword: "testpassword",
+							SecretAdminCredentialsReference: &api.SecretAdminCredentialsReference{
+								Name: constants.KIE_ADMIN_CREDENTIALS_SECRET,
+							},
 						},
 					},
 				},

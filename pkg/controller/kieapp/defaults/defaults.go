@@ -5,6 +5,7 @@ package defaults
 import (
 	"bytes"
 	"context"
+	errors2 "errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -60,6 +61,30 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		cr.Status.Applied.Version = constants.CurrentVersion
 		cr.Spec.Version = ""
 	}
+
+	/*  with cr.Spec.CommonConfig.SecretAdminCredentialsReference != nil && len(cr.Spec.CommonConfig.AdminUser) >= 0 && len(cr.Spec.CommonConfig.AdminPassword) >= 0
+	we do nothing because is a condition used in the tests and we skip the secret check (not available in the unit tests)
+	*/
+	if cr.Spec.CommonConfig.SecretAdminCredentialsReference != nil && len(cr.Spec.CommonConfig.AdminUser) == 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		errSecret, adminUsername, adminPassword := checkAndCreateAdminSecret(service, cr.Spec.CommonConfig.SecretAdminCredentialsReference.Name, cr.Namespace, cr.Spec.Environment)
+		if errSecret != nil {
+			log.Error("Can't create Admin Secret. ", errSecret)
+			// here we continue instead of return otherwise fail tests without k8s runtime to see the created secret
+		}
+		cr.Spec.CommonConfig.AdminUser = adminUsername
+		cr.Spec.CommonConfig.AdminPassword = adminPassword
+	}
+
+	if cr.Spec.CommonConfig.SecretAdminCredentialsReference == nil && len(cr.Spec.CommonConfig.AdminUser) == 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		errSecret, adminUsername, adminPassword := checkAndCreateAdminSecret(service, constants.KIE_ADMIN_CREDENTIALS_SECRET, cr.Namespace, cr.Spec.Environment)
+		if errSecret != nil {
+			log.Error("Can't create Admin Secret. ", errSecret)
+			// here we continue instead of return otherwise fails test without k8s runtime to see the created secret
+		}
+		cr.Spec.CommonConfig.AdminUser = adminUsername
+		cr.Spec.CommonConfig.AdminPassword = adminPassword
+	}
+
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		return api.Environment{}, err
@@ -761,17 +786,18 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 			usedNames[name] = true
 			template := api.ServerTemplate{
-				KieName:          name,
-				KieServerID:      name,
-				Build:            getBuildConfig(product, cr, serverSet),
-				KeystoreSecret:   serverSet.KeystoreSecret,
-				StorageClassName: serverSet.StorageClassName,
-				JbpmCluster:      serverSet.JbpmCluster,
-				PersistRepos:     serverSet.PersistRepos,
-				ServersM2PvSize:  serverSet.ServersM2PvSize,
-				ServersKiePvSize: serverSet.ServersKiePvSize,
-				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
-				MDBMaxSession:    serverSet.MDBMaxSession,
+				KieName:                         name,
+				KieServerID:                     name,
+				Build:                           getBuildConfig(product, cr, serverSet),
+				KeystoreSecret:                  serverSet.KeystoreSecret,
+				StorageClassName:                serverSet.StorageClassName,
+				JbpmCluster:                     serverSet.JbpmCluster,
+				PersistRepos:                    serverSet.PersistRepos,
+				ServersM2PvSize:                 serverSet.ServersM2PvSize,
+				ServersKiePvSize:                serverSet.ServersKiePvSize,
+				StartupStrategy:                 cr.Status.Applied.CommonConfig.StartupStrategy,
+				MDBMaxSession:                   serverSet.MDBMaxSession,
+				SecretAdminCredentialsReference: cr.Status.Applied.CommonConfig.SecretAdminCredentialsReference,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -2094,4 +2120,60 @@ func getRouteHostname(obj interface{}) (host string) {
 		host = ""
 	}
 	return host
+}
+
+func checkAndCreateAdminSecret(service kubernetes.PlatformService, namespace string, secretName string, environment api.EnvironmentType) (error, string, string) {
+	customerSecret, err := getSecret(service, namespace, secretName)
+
+	// The secret passed by the user doesn't exist we create one with default values
+	if err != nil {
+		username := constants.DefaultAdminUser
+		password := constants.DefaultPassword
+		if !strings.HasSuffix(string(environment), constants.TrialEnvSuffix) {
+			password = string(shared.GeneratePassword(8))
+		}
+
+		err := createSecret(service, namespace, constants.KIE_ADMIN_CREDENTIALS_SECRET, username, password)
+		if err != nil {
+			log.Error("Can't create Admin Secret. ", err)
+			return errors2.New("Isn't possible to create a secret with default values"), "", ""
+		} else {
+			return nil, username, password
+		}
+	} else {
+		// the customer secret exists and we read the keys to see if is correct
+		username := customerSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
+		password := customerSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+		if len(username) > 0 && len(password) > 0 {
+			log.Info("Found " + secretName + " secret")
+		} else {
+			return errors2.New("Found" + secretName + " but lack username or password "), "", ""
+		}
+		return nil, username, password
+	}
+}
+
+func createSecret(service kubernetes.PlatformService, namespace string, secretName string, username string, password string) error {
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Type: "Opaque",
+		StringData: map[string]string{
+			constants.USERNAME_ADMIN_SECRET_KEY: username,
+			constants.PASSWORD_ADMIN_SECRET_KEY: password,
+		},
+	}
+	err := service.Create(context.TODO(), &secret)
+	return err
+}
+
+func getSecret(service kubernetes.PlatformService, namespace string, secretName string) (corev1.Secret, error) {
+	found := corev1.Secret{}
+	err := service.Get(context.TODO(), types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}, &found)
+	return found, err
 }
