@@ -75,6 +75,19 @@ spec:
                       defaultRole:
                         description: A role included for all authenticated users
                         type: string
+                      distinguishedNameAttribute:
+                        description: Deprecated - parameter not supported by Elytron
+                          The name of the attribute in the user entry that contains
+                          the DN of the user. This may be necessary if the DN of the
+                          user itself contains special characters, backslash for example,
+                          that prevent correct user mapping. If the attribute does
+                          not exist, the entry’s DN is used.
+                        type: string
+                      jaasSecurityDomain:
+                        description: Deprecated - parameter not supported by Elytron
+                          The JMX ObjectName of the JaasSecurityDomain used to decrypt
+                          the password.
+                        type: string
                       loginFailover:
                         description: Enable failover, if Ldap Url is unreachable,
                           it will fail over to the KieFsRealm.
@@ -92,6 +105,21 @@ spec:
                         description: Provide new identities for Ldap  identity mapping,
                           the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'
                         type: string
+                      parseRoleNameFromDN:
+                        description: Deprecated - parameter not supported by Elytron
+                          A flag indicating if the DN returned by a query contains
+                          the roleNameAttributeID. If set to true, the DN is checked
+                          for the roleNameAttributeID. If set to false, the DN is
+                          not checked for the roleNameAttributeID. This flag can improve
+                          the performance of LDAP queries.
+                        type: boolean
+                      parseUsername:
+                        description: Deprecated - parameter not supported by Elytron
+                          A flag indicating if the DN is to be parsed for the username.
+                          If set to true, the DN is parsed for the username. If set
+                          to false the DN is not parsed for the username. This option
+                          is used together with usernameBeginString and usernameEndString.
+                        type: boolean
                       recursiveSearch:
                         description: Indicates if the user queries are recursive.
                         type: boolean
@@ -102,9 +130,27 @@ spec:
                         - IGNORE
                         - THROW
                         type: string
+                      referralUserAttributeIDToCheck:
+                        description: Deprecated - parameter not supported by Elytron
+                          If you are not using referrals, you can ignore this option.
+                          When using referrals, this option denotes the attribute
+                          name which contains users defined for a certain role, for
+                          example member, if the role object is inside the referral.
+                          Users are checked against the content of this attribute
+                          name. If this option is not set, the check will always fail,
+                          so role objects cannot be stored in a referral tree.
+                        type: string
                       roleAttributeID:
                         description: Name of the attribute containing the user roles.
                         type: string
+                      roleAttributeIsDN:
+                        description: Deprecated - parameter not supported by Elytron
+                          Whether or not the roleAttributeID contains the fully-qualified
+                          DN of a role object. If false, the role name is taken from
+                          the value of the roleNameAttributeId attribute of the context
+                          name. Certain directory schemas, such as Microsoft Active
+                          Directory, require this attribute to be set to true.
+                        type: boolean
                       roleFilter:
                         description: A search filter used to locate the roles associated
                           with the authenticated user. The input username or userDN
@@ -114,6 +160,13 @@ spec:
                           used. An example search filter that matches on the input
                           username is (member={0}). An alternative that matches on
                           the authenticated userDN is (member={1}).
+                        type: string
+                      roleNameAttributeID:
+                        description: Deprecated - parameter not supported by Elytron
+                          Name of the attribute within the roleCtxDN context which
+                          contains the role name. If the roleAttributeIsDN property
+                          is set to true, this property is used to find the role object’s
+                          name attribute.
                         type: string
                       roleRecursion:
                         description: The number of levels of recursion the role search
@@ -128,6 +181,9 @@ spec:
                           For example, in a Microsoft Active Directory server, this
                           is the DN where the user account is.
                         type: string
+                      searchScope:
+                        description: Deprecated - parameter not supported by Elytron
+                        type: string
                       searchTimeLimit:
                         description: The timeout in milliseconds for user or role
                           searches.
@@ -137,6 +193,20 @@ spec:
                         description: LDAP endpoint to connect for authentication.
                           For failover set two or more LDAP endpoints separated by
                           space
+                        type: string
+                      usernameBeginString:
+                        description: Deprecated - parameter not supported by Elytron
+                          Defines the String which is to be removed from the start
+                          of the DN to reveal the username. This option is used together
+                          with usernameEndString and only taken into account if parseUsername
+                          is set to true.
+                        type: string
+                      usernameEndString:
+                        description: Deprecated - parameter not supported by Elytron
+                          Defines the String which is to be removed from the end of
+                          the DN to reveal the username. This option is used together
+                          with usernameBeginString and only taken into account if
+                          parseUsername is set to true.
                         type: string
                     required:
                     - url
@@ -190,6 +260,10 @@ spec:
                         - kind
                         - name
                         type: object
+                      replaceRole:
+                        description: Deprecated - parameter not supported by Elytron,
+                          instead use RolesKeepMapped and RolesKeepNonMapped
+                        type: boolean
                       rolesKeepMapped:
                         description: When set to 'true' the mapped roles will retain
                           all roles, that have defined mappings. Defaults to false.
@@ -2844,6 +2918,19 @@ spec:
                           defaultRole:
                             description: A role included for all authenticated users
                             type: string
+                          distinguishedNameAttribute:
+                            description: Deprecated - parameter not supported by Elytron
+                              The name of the attribute in the user entry that contains
+                              the DN of the user. This may be necessary if the DN
+                              of the user itself contains special characters, backslash
+                              for example, that prevent correct user mapping. If the
+                              attribute does not exist, the entry’s DN is used.
+                            type: string
+                          jaasSecurityDomain:
+                            description: Deprecated - parameter not supported by Elytron
+                              The JMX ObjectName of the JaasSecurityDomain used to
+                              decrypt the password.
+                            type: string
                           loginFailover:
                             description: Enable failover, if Ldap Url is unreachable,
                               it will fail over to the KieFsRealm.
@@ -2861,6 +2948,22 @@ spec:
                             description: Provide new identities for Ldap  identity
                               mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'
                             type: string
+                          parseRoleNameFromDN:
+                            description: Deprecated - parameter not supported by Elytron
+                              A flag indicating if the DN returned by a query contains
+                              the roleNameAttributeID. If set to true, the DN is checked
+                              for the roleNameAttributeID. If set to false, the DN
+                              is not checked for the roleNameAttributeID. This flag
+                              can improve the performance of LDAP queries.
+                            type: boolean
+                          parseUsername:
+                            description: Deprecated - parameter not supported by Elytron
+                              A flag indicating if the DN is to be parsed for the
+                              username. If set to true, the DN is parsed for the username.
+                              If set to false the DN is not parsed for the username.
+                              This option is used together with usernameBeginString
+                              and usernameEndString.
+                            type: boolean
                           recursiveSearch:
                             description: Indicates if the user queries are recursive.
                             type: boolean
@@ -2871,10 +2974,30 @@ spec:
                             - IGNORE
                             - THROW
                             type: string
+                          referralUserAttributeIDToCheck:
+                            description: Deprecated - parameter not supported by Elytron
+                              If you are not using referrals, you can ignore this
+                              option. When using referrals, this option denotes the
+                              attribute name which contains users defined for a certain
+                              role, for example member, if the role object is inside
+                              the referral. Users are checked against the content
+                              of this attribute name. If this option is not set, the
+                              check will always fail, so role objects cannot be stored
+                              in a referral tree.
+                            type: string
                           roleAttributeID:
                             description: Name of the attribute containing the user
                               roles.
                             type: string
+                          roleAttributeIsDN:
+                            description: Deprecated - parameter not supported by Elytron
+                              Whether or not the roleAttributeID contains the fully-qualified
+                              DN of a role object. If false, the role name is taken
+                              from the value of the roleNameAttributeId attribute
+                              of the context name. Certain directory schemas, such
+                              as Microsoft Active Directory, require this attribute
+                              to be set to true.
+                            type: boolean
                           roleFilter:
                             description: A search filter used to locate the roles
                               associated with the authenticated user. The input username
@@ -2885,6 +3008,13 @@ spec:
                               filter that matches on the input username is (member={0}).
                               An alternative that matches on the authenticated userDN
                               is (member={1}).
+                            type: string
+                          roleNameAttributeID:
+                            description: Deprecated - parameter not supported by Elytron
+                              Name of the attribute within the roleCtxDN context which
+                              contains the role name. If the roleAttributeIsDN property
+                              is set to true, this property is used to find the role
+                              object’s name attribute.
                             type: string
                           roleRecursion:
                             description: The number of levels of recursion the role
@@ -2899,6 +3029,9 @@ spec:
                               roles are. For example, in a Microsoft Active Directory
                               server, this is the DN where the user account is.
                             type: string
+                          searchScope:
+                            description: Deprecated - parameter not supported by Elytron
+                            type: string
                           searchTimeLimit:
                             description: The timeout in milliseconds for user or role
                               searches.
@@ -2908,6 +3041,20 @@ spec:
                             description: LDAP endpoint to connect for authentication.
                               For failover set two or more LDAP endpoints separated
                               by space
+                            type: string
+                          usernameBeginString:
+                            description: Deprecated - parameter not supported by Elytron
+                              Defines the String which is to be removed from the start
+                              of the DN to reveal the username. This option is used
+                              together with usernameEndString and only taken into
+                              account if parseUsername is set to true.
+                            type: string
+                          usernameEndString:
+                            description: Deprecated - parameter not supported by Elytron
+                              Defines the String which is to be removed from the end
+                              of the DN to reveal the username. This option is used
+                              together with usernameBeginString and only taken into
+                              account if parseUsername is set to true.
                             type: string
                         required:
                         - url
@@ -2963,6 +3110,10 @@ spec:
                             - kind
                             - name
                             type: object
+                          replaceRole:
+                            description: Deprecated - parameter not supported by Elytron,
+                              instead use RolesKeepMapped and RolesKeepNonMapped
+                            type: boolean
                           rolesKeepMapped:
                             description: When set to 'true' the mapped roles will
                               retain all roles, that have defined mappings. Defaults
