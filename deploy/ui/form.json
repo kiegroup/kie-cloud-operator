@@ -1498,7 +1498,7 @@
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].persistRepos",
                   "originalJsonPath": "$.spec.objects.servers[*].persistRepos",
-                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively.",
+                  "description": "Persist the Maven and KIE repositories on ~/.m2/repository and ~/.kie/repository respectively. persistRepos option can't be set to true when the trial environment is chosen",
                   "fields": [
                     {
                       "label": "Enable Persistent Storage for kie and maven repositories",
