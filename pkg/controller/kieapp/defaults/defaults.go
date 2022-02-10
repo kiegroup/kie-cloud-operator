@@ -807,6 +807,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			// Apply PV default size
 			if isTrial(cr) {
 				template.PersistRepos = false
+				serverSet.PersistRepos = false
 			} else {
 				if len(template.ServersM2PvSize) <= 0 {
 					template.ServersM2PvSize = constants.ServersM2PvSize
