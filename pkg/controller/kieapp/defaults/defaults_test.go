@@ -764,6 +764,7 @@ func TestRhpamTrialWithReposPersistedWithStorageClass(t *testing.T) {
 
 	// there shouldn't be any pvc on trial env
 	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
+	assert.Equal(t, false, cr.Status.Applied.Objects.Servers[0].PersistRepos)
 }
 
 func runCommonAssertsForKieServerPersistentStorageVolumeMounts(t *testing.T, cr api.KieApp, env api.Environment) {
