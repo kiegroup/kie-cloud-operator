@@ -14,7 +14,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
-	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"f
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	"github.com/stretchr/testify/assert"
@@ -746,6 +746,37 @@ func TestRhpamTrialWithReposPersistedWithStorageClass(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						PersistRepos:     true,
+						ServersM2PvSize:  "2Gi",
+						ServersKiePvSize: "150Mi",
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(&cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	m2RepoVM, kieRepoVM, m2Vol, kieVol := kieServerPersistentStorageCommonConfig(&cr)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, m2RepoVM)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, kieRepoVM)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, m2Vol)
+	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, kieVol)
+
+	// there shouldn't be any pvc on trial env
+	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
+}
+
+func TestRhpamTrialWithoutSpecifyingReposPersistedWithStorageClass(t *testing.T) {
+
+	cr := api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamTrial,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
 						ServersM2PvSize:  "2Gi",
 						ServersKiePvSize: "150Mi",
 					},
