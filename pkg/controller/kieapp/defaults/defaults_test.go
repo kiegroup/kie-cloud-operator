@@ -764,37 +764,8 @@ func TestRhpamTrialWithReposPersistedWithStorageClass(t *testing.T) {
 
 	// there shouldn't be any pvc on trial env
 	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
-}
-
-func TestRhpamTrialWithoutSpecifyingReposPersistedWithStorageClass(t *testing.T) {
-
-	cr := api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Environment: api.RhpamTrial,
-			Objects: api.KieAppObjects{
-				Servers: []api.KieServerSet{
-					{
-						ServersM2PvSize:  "2Gi",
-						ServersKiePvSize: "150Mi",
-					},
-				},
-			},
-		},
-	}
-
-	env, err := GetEnvironment(&cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	m2RepoVM, kieRepoVM, m2Vol, kieVol := kieServerPersistentStorageCommonConfig(&cr)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, m2RepoVM)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, kieRepoVM)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, m2Vol)
-	assert.NotContains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes, kieVol)
-
-	// there shouldn't be any pvc on trial env
-	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_PERSIST_REPOS"), "Variable should exist and be false")
+	assert.Equal(t, false, cr.Status.Applied.Objects.Servers[0].PersistRepos)
 }
 
 func runCommonAssertsForKieServerPersistentStorageVolumeMounts(t *testing.T, cr api.KieApp, env api.Environment) {
