@@ -459,12 +459,21 @@ console:
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
-          targetPort: [[.RouteProtocol]]
-        #[[if not .DisableSsl]]
+          targetPort: "[[.Console.TerminationRoute.Protocol]]"
+      #[[if .Console.TerminationRoute.EnableTlsSection]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
+          termination: "[[.Console.TerminationRoute.Termination]]"
+        #[[if ne .Console.TerminationRoute.Key ""]]
+          key: "[[.Console.TerminationRoute.Key]]"
         #[[end]]
+        #[[if ne .Console.TerminationRoute.Certificate ""]]
+          certificate: "[[.Console.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .Console.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.Console.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
 ## KIE smartrouter BEGIN
 smartRouter:
   persistentVolumeClaims:
@@ -691,12 +700,21 @@ smartRouter:
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
-          targetPort: [[.RouteProtocol]]
-        #[[if not .DisableSsl]]
+          targetPort: "[[.SmartRouter.TerminationRoute.Protocol]]"
+      #[[if .SmartRouter.TerminationRoute.EnableTlsSection]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
+          termination: "[[.SmartRouter.TerminationRoute.Termination]]"
+        #[[if ne .SmartRouter.TerminationRoute.Key ""]]
+          key: "[[.SmartRouter.TerminationRoute.Key]]"
         #[[end]]
+        #[[if ne .SmartRouter.TerminationRoute.Certificate ""]]
+          certificate: "[[.SmartRouter.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .SmartRouter.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.SmartRouter.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
 ## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
@@ -1270,12 +1288,21 @@ servers:
           to:
             name: "[[.KieName]]"
           port:
-            targetPort: [[$.RouteProtocol]]
-          #[[if not $.DisableSsl]]
+            targetPort: "[[.TerminationRoute.Protocol]]"
+        #[[if .TerminationRoute.EnableTlsSection]]
           tls:
             insecureEdgeTerminationPolicy: Redirect
-            termination: passthrough
+            termination: "[[.TerminationRoute.Termination]]"
+          #[[if ne .TerminationRoute.Key ""]]
+            key: "[[.TerminationRoute.Key]]"
           #[[end]]
+          #[[if ne .TerminationRoute.Certificate ""]]
+            certificate: "[[.TerminationRoute.Certificate]]"
+          #[[end]]
+          #[[if ne .TerminationRoute.CaCertificate ""]]
+            caCertificate: "[[.TerminationRoute.CaCertificate]]"
+          #[[end]]
+        #[[end]]
       ## KIE server routes END
 #[[end]]
 ## RANGE ends

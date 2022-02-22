@@ -507,6 +507,45 @@
           "visible": true,
           "fields": [
             {
+              "label": "Change route termination",
+              "description": "Termination, default is passthrough otherwise Edge can be used",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.terminationRoute",
+              "type": "object",
+              "max": 1,
+              "fields": [
+                {
+                  "label": "Enable Edge termination",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "Set true to enable Edge Termination.",
+                  "jsonPath": "$.spec.objects.console.terminationRoute.enableEdge",
+                  "originalJsonPath": "$.spec.objects.console.terminationRoute.enableEdge"
+                },
+                {
+                  "label": "Key",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.key",
+                  "description": "Private Key for Edge termination (optional)",
+                  "type": "textArea"
+                },
+                {
+                  "label": "Certificate",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.certificate",
+                  "description": "Certificate for Edge termination (optional)",
+                  "type": "textArea"
+                },
+                {
+                  "label": "CaCertificate",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.caCertificate",
+                  "description": "CaCertificate for Edge termination (optional)",
+                  "type": "textArea"
+                }
+              ]
+            },
+            {
               "label": "Image Context",
               "required": false,
               "jsonPath": "$.spec.objects.console.imageContext",
@@ -992,6 +1031,45 @@
                   "jsonPath": "$.spec.objects.servers[*].name",
                   "type": "text",
                   "description": "The name to use for this KIE Server."
+                },
+                {
+                  "label": "Change route termination",
+                  "description": "Route termination.",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].terminationRoute",
+                  "type": "object",
+                  "max": 1,
+                  "fields": [
+                    {
+                      "label": "Enable Edge termination",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Set true to enable Edge Termination.",
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.enableEdge",
+                      "originalJsonPath": "$.spec.objects.servers[*].terminationRoute.enableEdge"
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
+                    }
+                  ]
                 },
                 {
                   "label": "Image Context",
@@ -2214,6 +2292,45 @@
                   "originalJsonPath": "$.spec.objects.dashbuilder.config.enableKieServer"
                 },
                 {
+                  "label": "Change route termination",
+                  "description": "Route Termination, default is passthrough otherwise Edge can be used",
+                  "required": false,
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.dashbuilder.terminationRoute",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "Enable Edge termination",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Set true to enable Edge Termination.",
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.enableEdge",
+                      "originalJsonPath": "$.spec.objects.dashbuilder.terminationRoute.enableEdge"
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
+                    }
+                  ]
+                },
+                {
                   "label": "Allow External File Register",
                   "type": "checkbox",
                   "required": false,
@@ -2815,6 +2932,45 @@
               "max": 1,
               "fields": [
                 {
+                  "label": "Route Termination",
+                  "description": "Termination, default is passthrough otherwise Edge can be used",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.terminationRoute.EnableTlsSection",
+                  "type": "object",
+                  "max": 1,
+                  "fields": [
+                    {
+                      "label": "Change route termination",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Set true to enable Edge Termination.",
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.enableEdge",
+                      "originalJsonPath": "$.spec.objects.smartRouter.terminationRoute.enableEdge"
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
+                    }
+                  ]
+                },
+                {
                   "label": "Keystore secret",
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.keystoreSecret",
@@ -3057,6 +3213,45 @@
               "type": "object",
               "max": 1,
               "fields": [
+                {
+                  "label": "Route termination",
+                  "description": "Termination, default is passthrough otherwise Edge can be used",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration.terminationRoute",
+                  "type": "object",
+                  "max": 1,
+                  "fields": [
+                    {
+                      "label": "Change route termination",
+                      "type": "checkbox",
+                      "required": false,
+                      "description": "Set true to enable Edge Termination.",
+                      "jsonPath": "$.spec.objects.processMigration.terminationRoute.enableEdge",
+                      "originalJsonPath": "$.spec.objects.processMigration.terminationRoute.enableEdge"
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.processMigration.terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.processMigration.terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.processMigration.terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
+                    }
+                  ]
+                },
                 {
                   "label": "Image Context",
                   "required": false,

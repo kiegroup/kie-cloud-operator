@@ -489,6 +489,13 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				template.DataGridAuth = *cr.Status.Applied.Objects.Console.DataGridAuth
 			}
 		}
+
+		// Route Termination
+		if cr.Status.Applied.Objects.Console.TerminationRoute != nil && cr.Status.Applied.Objects.Console.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			template.TerminationRoute = *cr.Status.Applied.Objects.Console.TerminationRoute.DeepCopy()
+		}
+		template.TerminationRoute.Termination, template.TerminationRoute.Protocol, template.TerminationRoute.EnableTlsSection = getConsoleTerminationAndProtocolAndTLSEnable(cr)
 	}
 	return template
 }
@@ -558,8 +565,32 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 			dashbuilderTemplate.Cors = *cr.Status.Applied.Objects.Dashbuilder.Cors
 		}
 
+		// Enable EdgeTermination
+		if cr.Status.Applied.Objects.Dashbuilder.TerminationRoute != nil && cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			dashbuilderTemplate.TerminationRoute = *cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.DeepCopy()
+		}
+		dashbuilderTemplate.TerminationRoute.Termination, dashbuilderTemplate.TerminationRoute.Protocol, dashbuilderTemplate.TerminationRoute.EnableTlsSection = getDashbuilderTerminationAndProtocolAndTLSEnable(cr)
+
 	}
 	return dashbuilderTemplate, nil
+}
+
+func getDashbuilderTerminationAndProtocolAndTLSEnable(cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	if cr.Status.Applied.Objects.Dashbuilder.TerminationRoute != nil && cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.EnableEdge {
+		return constants.EdgeTermination, constants.HttpProtocol, true
+	}
+	//legacy Behaviour
+	return checkTerminationProtocolANDTLSEnableWithDisableSSL(cr)
+}
+
+func checkTerminationProtocolANDTLSEnableWithDisableSSL(cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	//legacy Behaviour
+	if cr.Status.Applied.CommonConfig.DisableSsl {
+		return constants.PassthroughTermination, constants.HttpProtocol, false
+	} else {
+		return constants.PassthroughTermination, constants.HttpsProtocol, true
+	}
 }
 
 func applyDashbuilderConfig(template *api.DashbuilderTemplate, cr api.KieApp, serversConfig []api.ServerTemplate, console *api.ConsoleTemplate) {
@@ -601,17 +632,28 @@ func getSpecEnv(envs []corev1.EnvVar, name string) string {
 	return ""
 }
 
-func getSmartRouterProtocol(cr *api.KieApp) string {
-	if cr.Status.Applied.Objects.SmartRouter != nil {
-		if len(cr.Status.Applied.Objects.SmartRouter.Protocol) == 0 && cr.Status.Applied.CommonConfig.DisableSsl {
-			return constants.HttpProtocol
-		} else if len(cr.Status.Applied.Objects.SmartRouter.Protocol) == 0 && !cr.Status.Applied.CommonConfig.DisableSsl {
-			return constants.HttpsProtocol
-		} else {
-			return cr.Status.Applied.Objects.SmartRouter.Protocol
-		}
+func getSmartRouterTerminationAndProtocolAndTLSEnable(cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	if cr.Status.Applied.Objects.SmartRouter != nil && cr.Status.Applied.Objects.SmartRouter.TerminationRoute.EnableEdge {
+		return constants.EdgeTermination, constants.HttpProtocol, true
 	}
-	return constants.HttpProtocol
+	//legacy Behaviour
+	return checkTerminationProtocolANDTLSEnableWithDisableSSL(cr)
+}
+
+func getConsoleTerminationAndProtocolAndTLSEnable(cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	if cr.Status.Applied.Objects.Console.TerminationRoute != nil && cr.Status.Applied.Objects.Console.TerminationRoute.EnableEdge {
+		return constants.EdgeTermination, constants.HttpProtocol, true
+	}
+	//legacyBehaviour
+	return checkTerminationProtocolANDTLSEnableWithDisableSSL(cr)
+}
+
+func getServerTerminationAndProtocolAndTLSEnable(server *api.KieServerSet, cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	if server.TerminationRoute != nil && server.TerminationRoute.EnableEdge {
+		return constants.EdgeTermination, constants.HttpProtocol, true
+	}
+	//legacy Behaviour
+	return checkTerminationProtocolANDTLSEnableWithDisableSSL(cr)
 }
 
 func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
@@ -632,7 +674,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 			template.KeystoreSecret = cr.Status.Applied.Objects.SmartRouter.KeystoreSecret
 		}
 
-		template.Protocol = getSmartRouterProtocol(cr)
+		_, template.Protocol, _ = getSmartRouterTerminationAndProtocolAndTLSEnable(cr)
 
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
@@ -670,6 +712,13 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		if cr.Status.Applied.Objects.SmartRouter.Jvm != nil {
 			template.Jvm = *cr.Status.Applied.Objects.SmartRouter.Jvm.DeepCopy()
 		}
+
+		// Enable EdgeTermination
+		if cr.Status.Applied.Objects.SmartRouter.TerminationRoute != nil && cr.Status.Applied.Objects.SmartRouter.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			template.TerminationRoute = *cr.Status.Applied.Objects.SmartRouter.TerminationRoute.DeepCopy()
+		}
+		template.TerminationRoute.Termination, template.TerminationRoute.Protocol, template.TerminationRoute.EnableTlsSection = getSmartRouterTerminationAndProtocolAndTLSEnable(cr)
 	}
 	return template
 }
@@ -828,7 +877,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				}
 			}
 
-			template.SmartRouter.Protocol = getSmartRouterProtocol(cr)
+			_, template.SmartRouter.Protocol, _ = getSmartRouterTerminationAndProtocolAndTLSEnable(cr)
 
 			// route hostname, if invalid it will not be set
 			template.RouteHostname = getRouteHostname(serverSet)
@@ -884,6 +933,12 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
 			}
 
+			// Enable EdgeTermination
+			if serverSet.TerminationRoute != nil && serverSet.TerminationRoute.EnableEdge {
+				//We copy the key,Certificate and CACertification section
+				template.TerminationRoute = *serverSet.TerminationRoute.DeepCopy()
+			}
+			template.TerminationRoute.Termination, template.TerminationRoute.Protocol, template.TerminationRoute.EnableTlsSection = getServerTerminationAndProtocolAndTLSEnable(serverSet, cr)
 			servers = append(servers, template)
 		}
 
@@ -1433,6 +1488,7 @@ func SetDefaults(cr *api.KieApp) {
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersLimits, constants.ServerRequests)
+		checkTerminationRouteOnServer(&specApply.Objects.Servers[index])
 	}
 
 	if specApply.Objects.Console != nil {
@@ -1456,27 +1512,61 @@ func SetDefaults(cr *api.KieApp) {
 				specApply.Objects.Console.DataGridAuth = &api.DataGridAuth{Username: constants.DefaultDatagridUsername, Password: string(shared.GeneratePassword(8))}
 			}
 		}
+		checkTerminationRouteOnConsole(specApply.Objects.Console)
 	}
 
 	if specApply.Objects.Dashbuilder != nil {
 		checkJvmOnDashbuilder(specApply.Objects.Dashbuilder)
 		setResourcesDefault(&specApply.Objects.Dashbuilder.KieAppObject, constants.DashbuilderLimits, constants.DashbuilderRequests)
+		checkTerminationRouteOnDashbuilder(specApply.Objects.Dashbuilder)
 	}
 
 	if specApply.Objects.SmartRouter != nil {
 		checkJvmOnSmartRouter(specApply.Objects.SmartRouter)
 		setResourcesDefault(&specApply.Objects.SmartRouter.KieAppObject, constants.SmartRouterLimits, constants.SmartRouterRequests)
+		checkTerminationRouteOnSmartRouter(specApply.Objects.SmartRouter)
 	}
 
 	if specApply.Objects.ProcessMigration != nil {
 		checkJvmOnProcessMigration(specApply.Objects.ProcessMigration)
 		setResourcesDefault(&specApply.Objects.ProcessMigration.KieAppObject, constants.ProcessMigrationLimits, constants.ProcessMigrationRequests)
+		checkTerminationRouteOnProcessMigration(specApply.Objects.ProcessMigration)
 	}
 
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
 	setPasswords(specApply, isTrialEnv)
 
 	cr.Status.Applied = *specApply
+}
+
+func checkTerminationRouteOnProcessMigration(migration *api.ProcessMigrationObject) {
+	if migration.TerminationRoute == nil {
+		migration.TerminationRoute = &api.TerminationRoute{Protocol: constants.HttpProtocol}
+	}
+}
+
+func checkTerminationRouteOnDashbuilder(dashbuilder *api.DashbuilderObject) {
+	if dashbuilder.TerminationRoute == nil {
+		dashbuilder.TerminationRoute = &api.TerminationRoute{}
+	}
+}
+
+func checkTerminationRouteOnServer(server *api.KieServerSet) {
+	if server.TerminationRoute == nil {
+		server.TerminationRoute = &api.TerminationRoute{}
+	}
+}
+
+func checkTerminationRouteOnConsole(console *api.ConsoleObject) {
+	if console.TerminationRoute == nil {
+		console.TerminationRoute = &api.TerminationRoute{}
+	}
+}
+
+func checkTerminationRouteOnSmartRouter(smartrouter *api.SmartRouterObject) {
+	if smartrouter.TerminationRoute == nil {
+		smartrouter.TerminationRoute = &api.TerminationRoute{}
+	}
 }
 
 func checkJvmOnConsole(console *api.ConsoleObject) {
@@ -1720,8 +1810,28 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.Jvm = *cr.Status.Applied.Objects.ProcessMigration.Jvm.DeepCopy()
 		}
 
+		// Enable EdgeTermination
+		if cr.Status.Applied.Objects.ProcessMigration.TerminationRoute != nil && cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			processMigrationTemplate.TerminationRoute = *cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.DeepCopy()
+			processMigrationTemplate.TerminationRoute.Termination, processMigrationTemplate.TerminationRoute.Protocol, processMigrationTemplate.TerminationRoute.EnableTlsSection = getProcessMigrationTermination(cr)
+		} else {
+			// legacy behaviour
+			// without edge termination we do not set TLS and termination on Process Migration, Process migration use only http
+			_, processMigrationTemplate.TerminationRoute.Protocol, processMigrationTemplate.TerminationRoute.EnableTlsSection = getProcessMigrationTermination(cr)
+		}
 	}
 	return processMigrationTemplate, nil
+}
+
+func getProcessMigrationTermination(cr *api.KieApp) (termination string, protocol string, enableTLS bool) {
+	//Process migration use always http as a target port
+	if cr.Status.Applied.Objects.ProcessMigration.TerminationRoute != nil && cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.EnableEdge {
+		return constants.EdgeTermination, constants.HttpProtocol, true
+	}
+	//legacy behaviour
+	return constants.PassthroughTermination, constants.HttpProtocol, false
+
 }
 
 func mergeProcessMigration(service kubernetes.PlatformService, cr *api.KieApp, env api.Environment, envTemplate api.EnvTemplate) (api.Environment, error) {
