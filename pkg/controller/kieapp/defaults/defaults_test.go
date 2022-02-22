@@ -17,6 +17,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	routesv1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -58,6 +59,8 @@ const (
 	ksHttpRouteDescription   = "Route for KIE server's http service."
 	routeBalanceAnnotation   = "haproxy.router.openshift.io/balance"
 	smartrouterKeyStore      = "smartrouter-keystore-volume"
+	passthroughTermination   = "passthrough"
+	edgeTermination          = "edge"
 )
 
 func TestLoadUnknownEnvironment(t *testing.T) {
@@ -7670,4 +7673,355 @@ func TestLegacyCredentialSmartRouter(t *testing.T) {
 	adminPasswordEnv := getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
 	assert.Equal(t, adminUserEnv, username)
 	assert.Equal(t, adminPasswordEnv, password)
+}
+
+func TestKieServerWithEdgeTerminationEnabledHttp(t *testing.T) {
+	privateKey := "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						TerminationRoute: &api.TerminationRoute{
+							EnableEdge:    true,
+							Key:           privateKey,
+							Certificate:   privateKey,
+							CaCertificate: privateKey,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, edgeTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestKieServerWithEdgeTerminationEnabledHttps(t *testing.T) {
+	//In this test we see if enabling edge and using a wrong protocol (https) lead to the edge termination and http protocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						TerminationRoute: &api.TerminationRoute{
+							EnableEdge: true,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, edgeTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestKieServerWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	assert.NotNil(t, env.Servers[0].Routes[0])
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, passthroughTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithEdgeTerminationEnabledHttp(t *testing.T) {
+	privateKey := "|-      -----BEGIN PRIVATE KEY-----      [abc]      -----END PRIVATE KEY-----"
+	certKey := "|-      -----BEGIN PRIVATE KEY-----      [certabc]      -----END PRIVATE KEY-----"
+	caCertKey := "|-      -----BEGIN PRIVATE KEY-----      [cacertabc]      -----END PRIVATE KEY-----"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge:    true,
+						Key:           privateKey,
+						Certificate:   certKey,
+						CaCertificate: caCertKey,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, edgeTermination, env.Console.Routes[0])
+	checkTLSCerts(t, env.Console.Routes[0].Spec.TLS, privateKey, certKey, caCertKey)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithEdgeTerminationEnabledHttps(t *testing.T) {
+	//In this test we see if enabling edge and using a wrong protocol (https) lead to the edge termination and http protocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge: true,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, edgeTermination, env.Console.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, passthroughTermination, env.Console.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestSmartRouterWithEdgeTerminationEnabledHttp(t *testing.T) {
+	privateKey := "|-      -----BEGIN PRIVATE KEY-----      [123]      -----END PRIVATE KEY-----"
+	certKey := "|-      -----BEGIN PRIVATE KEY-----      [cert123]      -----END PRIVATE KEY-----"
+	caCertKey := "|-      -----BEGIN PRIVATE KEY-----      [cacert123]      -----END PRIVATE KEY-----"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge:    true,
+						Key:           privateKey,
+						Certificate:   certKey,
+						CaCertificate: caCertKey,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.SmartRouter.Routes[0].Spec.TLS, edgeTermination, env.SmartRouter.Routes[0])
+	checkTLSCerts(t, env.SmartRouter.Routes[0].Spec.TLS, privateKey, certKey, caCertKey)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestSmartRouterWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.SmartRouter.Routes[0].Spec.TLS, passthroughTermination, env.SmartRouter.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithEdgeTerminationEnabledHttp(t *testing.T) {
+	privateKey := "|-      -----BEGIN PRIVATE KEY-----      [xyz]      -----END PRIVATE KEY-----"
+	certKey := "|-      -----BEGIN PRIVATE KEY-----      [certxyz]      -----END PRIVATE KEY-----"
+	caCertKey := "|-      -----BEGIN PRIVATE KEY-----      [cacertxyz]      -----END PRIVATE KEY-----"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge:    true,
+						Key:           privateKey,
+						Certificate:   certKey,
+						CaCertificate: caCertKey,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, edgeTermination, env.Dashbuilder.Routes[0])
+	checkTLSCerts(t, env.Dashbuilder.Routes[0].Spec.TLS, privateKey, certKey, caCertKey)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithEdgeTerminationEnabledHttps(t *testing.T) {
+	//In this test we see if enabling edge and using a wrong protocol (https) lead to the edge termination and http protocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge: true,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, edgeTermination, env.Dashbuilder.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, passthroughTermination, env.Dashbuilder.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithEdgeTerminationEnabledHttp(t *testing.T) {
+	privateKey := "|-      -----BEGIN PRIVATE KEY-----      [456]      -----END PRIVATE KEY-----"
+	certKey := "|-      -----BEGIN PRIVATE KEY-----      [cert456]      -----END PRIVATE KEY-----"
+	caCertKey := "|-      -----BEGIN PRIVATE KEY-----      [cacert456]      -----END PRIVATE KEY-----"
+	protocol := constants.HttpProtocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge:    true,
+						Key:           privateKey,
+						Certificate:   certKey,
+						CaCertificate: caCertKey,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.ProcessMigration.Routes[0].Spec.TLS, edgeTermination, env.ProcessMigration.Routes[0])
+	checkTLSCerts(t, env.ProcessMigration.Routes[0].Spec.TLS, privateKey, certKey, caCertKey)
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: protocol}, env.ProcessMigration.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithEdgeTerminationEnabledHttps(t *testing.T) {
+	//In this test we see if enabling edge and using a wrong protocol (https) lead to the edge termination and http protocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					TerminationRoute: &api.TerminationRoute{
+						EnableEdge: true,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.ProcessMigration.Routes[0].Spec.TLS, edgeTermination, env.ProcessMigration.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.ProcessMigration.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithoutEdgeTerminationHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	assert.NotNil(t, env.ProcessMigration.Routes[0])
+	tls := env.ProcessMigration.Routes[0].Spec.TLS
+	assert.Nil(t, tls)
+}
+
+func getAndCheckEnv(t *testing.T, cr *api.KieApp) api.Environment {
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	return env
+}
+
+func checkTLSAndRoute(t *testing.T, tls *routesv1.TLSConfig, termination string, route routesv1.Route) {
+	assert.NotNil(t, route)
+	assert.NotNil(t, tls)
+	assert.Equal(t, tls.Termination, routesv1.TLSTerminationType(termination))
+	assert.Equal(t, tls.InsecureEdgeTerminationPolicy, routesv1.InsecureEdgeTerminationPolicyType("Redirect"))
+}
+
+func checkTLSCerts(t *testing.T, tls *routesv1.TLSConfig, key string, certkey string, caCert string) {
+	assert.NotNil(t, tls)
+	assert.Equal(t, tls.Key, key)
+	assert.Equal(t, tls.Certificate, certkey)
+	assert.Equal(t, tls.CACertificate, caCert)
 }

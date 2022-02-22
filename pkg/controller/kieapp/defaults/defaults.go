@@ -539,6 +539,12 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				template.DataGridAuth = *cr.Status.Applied.Objects.Console.DataGridAuth
 			}
 		}
+
+		// Route Termination
+		if cr.Status.Applied.Objects.Console.TerminationRoute != nil && cr.Status.Applied.Objects.Console.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			template.TerminationRoute = *cr.Status.Applied.Objects.Console.TerminationRoute.DeepCopy()
+		}
 	}
 	return template
 }
@@ -608,6 +614,12 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 			dashbuilderTemplate.Cors = *cr.Status.Applied.Objects.Dashbuilder.Cors
 		}
 
+		// Route Termination
+		if cr.Status.Applied.Objects.Dashbuilder.TerminationRoute != nil && cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			dashbuilderTemplate.TerminationRoute = *cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.DeepCopy()
+		}
+
 	}
 	return dashbuilderTemplate, nil
 }
@@ -651,7 +663,11 @@ func getSpecEnv(envs []corev1.EnvVar, name string) string {
 	return ""
 }
 
-func getSmartRouterProtocol(cr *api.KieApp) string {
+func getSmartRouterProtocol(cr *api.KieApp) (protocol string) {
+	if cr.Status.Applied.Objects.SmartRouter != nil && cr.Status.Applied.Objects.SmartRouter.TerminationRoute != nil && cr.Status.Applied.Objects.SmartRouter.TerminationRoute.EnableEdge {
+		return constants.HttpProtocol
+	}
+	//legacy Behaviour
 	if cr.Status.Applied.Objects.SmartRouter != nil {
 		if len(cr.Status.Applied.Objects.SmartRouter.Protocol) == 0 && cr.Status.Applied.CommonConfig.DisableSsl {
 			return constants.HttpProtocol
@@ -719,6 +735,12 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		cr.Status.Applied.Objects.SmartRouter.Jvm = setCAJavaAppend(cr, cr.Status.Applied.Objects.SmartRouter.Jvm)
 		if cr.Status.Applied.Objects.SmartRouter.Jvm != nil {
 			template.Jvm = *cr.Status.Applied.Objects.SmartRouter.Jvm.DeepCopy()
+		}
+
+		// Route Termination
+		if cr.Status.Applied.Objects.SmartRouter.TerminationRoute != nil && cr.Status.Applied.Objects.SmartRouter.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			template.TerminationRoute = *cr.Status.Applied.Objects.SmartRouter.TerminationRoute.DeepCopy()
 		}
 	}
 	return template
@@ -934,6 +956,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
 			}
 
+			// Enable EdgeTermination
+			if serverSet.TerminationRoute != nil && serverSet.TerminationRoute.EnableEdge {
+				//We copy the key,Certificate and CACertification section
+				template.TerminationRoute = *serverSet.TerminationRoute.DeepCopy()
+			}
 			servers = append(servers, template)
 		}
 
@@ -1769,6 +1796,11 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 			processMigrationTemplate.Jvm = *cr.Status.Applied.Objects.ProcessMigration.Jvm.DeepCopy()
 		}
 
+		// Route Termination
+		if cr.Status.Applied.Objects.ProcessMigration.TerminationRoute != nil && cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.EnableEdge {
+			//We copy the key,Certificate and CACertification section
+			processMigrationTemplate.TerminationRoute = *cr.Status.Applied.Objects.ProcessMigration.TerminationRoute
+		}
 	}
 	return processMigrationTemplate, nil
 }
