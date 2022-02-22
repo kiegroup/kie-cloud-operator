@@ -811,6 +811,28 @@ spec:
                         description: StorageClassName The storageClassName to use
                           for kie pvc's.
                         type: string
+                      terminationRoute:
+                        properties:
+                          enableTlS:
+                            description: Enable the tls section when http port is
+                              used
+                            type: boolean
+                          protocol:
+                            description: Protocol to use, this could override the
+                              global disableSSL, http is the default, otherwise https,
+                              if termination edge is used the protocol to use is http
+                            enum:
+                            - http
+                            - https
+                            type: string
+                          termination:
+                            description: Passthrough is the default protocol, otherwise
+                              edge could be used.
+                            enum:
+                            - passthrough
+                            - edge
+                            type: string
+                        type: object
                     type: object
                   dashbuilder:
                     description: DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -1264,6 +1286,28 @@ spec:
                         description: StorageClassName The storageClassName to use
                           for kie pvc's.
                         type: string
+                      terminationRoute:
+                        properties:
+                          enableTlS:
+                            description: Enable the tls section when http port is
+                              used
+                            type: boolean
+                          protocol:
+                            description: Protocol to use, this could override the
+                              global disableSSL, http is the default, otherwise https,
+                              if termination edge is used the protocol to use is http
+                            enum:
+                            - http
+                            - https
+                            type: string
+                          termination:
+                            description: Passthrough is the default protocol, otherwise
+                              edge could be used.
+                            enum:
+                            - passthrough
+                            - edge
+                            type: string
+                        type: object
                     type: object
                   processMigration:
                     description: ProcessMigrationObject configuration of the RHPAM
@@ -1621,6 +1665,28 @@ spec:
                         description: StorageClassName The storageClassName to use
                           for kie pvc's.
                         type: string
+                      terminationRoute:
+                        properties:
+                          enableTlS:
+                            description: Enable the tls section when http port is
+                              used
+                            type: boolean
+                          protocol:
+                            description: Protocol to use, this could override the
+                              global disableSSL, http is the default, otherwise https,
+                              if termination edge is used the protocol to use is http
+                            enum:
+                            - http
+                            - https
+                            type: string
+                          termination:
+                            description: Passthrough is the default protocol, otherwise
+                              edge could be used.
+                            enum:
+                            - passthrough
+                            - edge
+                            type: string
+                        type: object
                       username:
                         description: If empty the CommonConfig.AdminUser will be used
                         type: string
@@ -2583,6 +2649,29 @@ spec:
                           description: StorageClassName The storageClassName to use
                             for kie pvc's.
                           type: string
+                        terminationRoute:
+                          properties:
+                            enableTlS:
+                              description: Enable the tls section when http port is
+                                used
+                              type: boolean
+                            protocol:
+                              description: Protocol to use, this could override the
+                                global disableSSL, http is the default, otherwise
+                                https, if termination edge is used the protocol to
+                                use is http
+                              enum:
+                              - http
+                              - https
+                              type: string
+                            termination:
+                              description: Passthrough is the default protocol, otherwise
+                                edge could be used.
+                              enum:
+                              - passthrough
+                              - edge
+                              type: string
+                          type: object
                       type: object
                     type: array
                   smartRouter:
@@ -2863,6 +2952,28 @@ spec:
                         description: StorageClassName The storageClassName to use
                           for kie pvc's.
                         type: string
+                      terminationRoute:
+                        properties:
+                          enableTlS:
+                            description: Enable the tls section when http port is
+                              used
+                            type: boolean
+                          protocol:
+                            description: Protocol to use, this could override the
+                              global disableSSL, http is the default, otherwise https,
+                              if termination edge is used the protocol to use is http
+                            enum:
+                            - http
+                            - https
+                            type: string
+                          termination:
+                            description: Passthrough is the default protocol, otherwise
+                              edge could be used.
+                            enum:
+                            - passthrough
+                            - edge
+                            type: string
+                        type: object
                       useExternalRoute:
                         description: If enabled, Business Central will use the external
                           smartrouter route to communicate with it. Note that, valid
@@ -3694,6 +3805,29 @@ spec:
                             description: StorageClassName The storageClassName to
                               use for kie pvc's.
                             type: string
+                          terminationRoute:
+                            properties:
+                              enableTlS:
+                                description: Enable the tls section when http port
+                                  is used
+                                type: boolean
+                              protocol:
+                                description: Protocol to use, this could override
+                                  the global disableSSL, http is the default, otherwise
+                                  https, if termination edge is used the protocol
+                                  to use is http
+                                enum:
+                                - http
+                                - https
+                                type: string
+                              termination:
+                                description: Passthrough is the default protocol,
+                                  otherwise edge could be used.
+                                enum:
+                                - passthrough
+                                - edge
+                                type: string
+                            type: object
                         type: object
                       dashbuilder:
                         description: DashbuilderObject configuration of the RHPAM
@@ -4155,6 +4289,29 @@ spec:
                             description: StorageClassName The storageClassName to
                               use for kie pvc's.
                             type: string
+                          terminationRoute:
+                            properties:
+                              enableTlS:
+                                description: Enable the tls section when http port
+                                  is used
+                                type: boolean
+                              protocol:
+                                description: Protocol to use, this could override
+                                  the global disableSSL, http is the default, otherwise
+                                  https, if termination edge is used the protocol
+                                  to use is http
+                                enum:
+                                - http
+                                - https
+                                type: string
+                              termination:
+                                description: Passthrough is the default protocol,
+                                  otherwise edge could be used.
+                                enum:
+                                - passthrough
+                                - edge
+                                type: string
+                            type: object
                         type: object
                       processMigration:
                         description: ProcessMigrationObject configuration of the RHPAM
@@ -4516,6 +4673,29 @@ spec:
                             description: StorageClassName The storageClassName to
                               use for kie pvc's.
                             type: string
+                          terminationRoute:
+                            properties:
+                              enableTlS:
+                                description: Enable the tls section when http port
+                                  is used
+                                type: boolean
+                              protocol:
+                                description: Protocol to use, this could override
+                                  the global disableSSL, http is the default, otherwise
+                                  https, if termination edge is used the protocol
+                                  to use is http
+                                enum:
+                                - http
+                                - https
+                                type: string
+                              termination:
+                                description: Passthrough is the default protocol,
+                                  otherwise edge could be used.
+                                enum:
+                                - passthrough
+                                - edge
+                                type: string
+                            type: object
                           username:
                             description: If empty the CommonConfig.AdminUser will
                               be used
@@ -5510,6 +5690,29 @@ spec:
                               description: StorageClassName The storageClassName to
                                 use for kie pvc's.
                               type: string
+                            terminationRoute:
+                              properties:
+                                enableTlS:
+                                  description: Enable the tls section when http port
+                                    is used
+                                  type: boolean
+                                protocol:
+                                  description: Protocol to use, this could override
+                                    the global disableSSL, http is the default, otherwise
+                                    https, if termination edge is used the protocol
+                                    to use is http
+                                  enum:
+                                  - http
+                                  - https
+                                  type: string
+                                termination:
+                                  description: Passthrough is the default protocol,
+                                    otherwise edge could be used.
+                                  enum:
+                                  - passthrough
+                                  - edge
+                                  type: string
+                              type: object
                           type: object
                         type: array
                       smartRouter:
@@ -5793,6 +5996,29 @@ spec:
                             description: StorageClassName The storageClassName to
                               use for kie pvc's.
                             type: string
+                          terminationRoute:
+                            properties:
+                              enableTlS:
+                                description: Enable the tls section when http port
+                                  is used
+                                type: boolean
+                              protocol:
+                                description: Protocol to use, this could override
+                                  the global disableSSL, http is the default, otherwise
+                                  https, if termination edge is used the protocol
+                                  to use is http
+                                enum:
+                                - http
+                                - https
+                                type: string
+                              termination:
+                                description: Passthrough is the default protocol,
+                                  otherwise edge could be used.
+                                enum:
+                                - passthrough
+                                - edge
+                                type: string
+                            type: object
                           useExternalRoute:
                             description: If enabled, Business Central will use the
                               external smartrouter route to communicate with it. Note

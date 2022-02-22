@@ -507,6 +507,30 @@
           "visible": true,
           "fields": [
             {
+              "label": "Enable Edge termination",
+              "description": "If checked, the route will use edge termination (http).",
+              "required": false,
+              "jsonPath": "$.spec.objects.console.terminationRoute.enableInsecureEdgeTermination",
+              "type": "object",
+              "fields": [
+                {
+                  "label": "Port on Edge termination",
+                  "type": "dropDown",
+                  "required": false,
+                  "description": "Port to use with edge termination .",
+                  "jsonPath": "$.spec.objects.console.terminationRoute.protocol",
+                  "originalJsonPath": "$.spec.objects.console.terminationRoute.protocol",
+                  "default": "http",
+                  "options": [
+                    {
+                      "value": "http",
+                      "label": "http"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "label": "Image Context",
               "required": false,
               "jsonPath": "$.spec.objects.console.imageContext",
@@ -992,6 +1016,30 @@
                   "jsonPath": "$.spec.objects.servers[*].name",
                   "type": "text",
                   "description": "The name to use for this KIE Server."
+                },
+                {
+                  "label": "Enable Edge termination",
+                  "description": "If checked, the route will use edge termination (http).",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].terminationRoute.enableInsecureEdgeTermination",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "Port on Edge termination",
+                      "type": "dropDown",
+                      "required": false,
+                      "description": "Port to use with edge termination .",
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.protocol",
+                      "originalJsonPath": "$.spec.objects.servers[*].terminationRoute.protocol",
+                      "default": "http",
+                      "options": [
+                        {
+                          "value": "http",
+                          "label": "http"
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   "label": "Image Context",
@@ -2214,6 +2262,30 @@
                   "originalJsonPath": "$.spec.objects.dashbuilder.config.enableKieServer"
                 },
                 {
+                  "label": "Enable Edge termination",
+                  "description": "If checked, the route will use edge termination (http).",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.enableInsecureEdgeTermination",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "Port on Edge termination",
+                      "type": "dropDown",
+                      "required": false,
+                      "description": "Port to use with edge termination .",
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.protocol",
+                      "originalJsonPath": "$.spec.objects.dashbuilder.terminationRoute.protocol",
+                      "default": "http",
+                      "options": [
+                        {
+                          "value": "http",
+                          "label": "http"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   "label": "Allow External File Register",
                   "type": "checkbox",
                   "required": false,
@@ -2815,6 +2887,30 @@
               "max": 1,
               "fields": [
                 {
+                  "label": "Enable Edge termination",
+                  "description": "If checked, the route will use edge termination (http).",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.smartRouter.terminationRoute.EnableTlsSection",
+                  "type": "object",
+                  "fields": [
+                    {
+                      "label": "Port on Edge termination",
+                      "type": "dropDown",
+                      "required": false,
+                      "description": "Port to use with edge termination .",
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.Protocol",
+                      "originalJsonPath": "$.spec.objects.smartRouter.terminationRoute.Protocol",
+                      "default": "http",
+                      "options": [
+                        {
+                          "value": "http",
+                          "label": "http"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   "label": "Keystore secret",
                   "required": false,
                   "jsonPath": "$.spec.objects.smartRouter.keystoreSecret",
@@ -3050,13 +3146,37 @@
           "label": "Process Instance Migration",
           "visible": true,
           "fields": [
-            {
-              "label": "Process Instance Migration",
-              "required": false,
-              "jsonPath": "$.spec.objects.processMigration",
-              "type": "object",
-              "max": 1,
-              "fields": [
+              {
+                "label": "Process Instance Migration",
+                "required": false,
+                "jsonPath": "$.spec.objects.processMigration",
+                "type": "object",
+                "max": 1,
+                "fields": [
+                  {
+                    "label": "Enable Edge termination",
+                    "description": "If checked, the route will use edge termination (http).",
+                    "required": false,
+                    "jsonPath": "$.spec.objects.processMigration.terminationRoute.enableInsecureEdgeTermination",
+                    "type": "object",
+                    "fields": [
+                      {
+                        "label": "Port on Edge termination",
+                        "type": "dropDown",
+                        "required": false,
+                        "description": "Port to use with edge termination .",
+                        "jsonPath": "$.spec.objects.processMigration.terminationRoute.protocol",
+                        "originalJsonPath": "$.spec.objects.processMigration.terminationRoute.protocol",
+                        "default": "http",
+                        "options": [
+                          {
+                            "value": "http",
+                            "label": "http"
+                          }
+                        ]
+                      }
+                    ]
+                  },
                 {
                   "label": "Image Context",
                   "required": false,

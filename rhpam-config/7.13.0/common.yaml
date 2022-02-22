@@ -459,11 +459,11 @@ console:
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
-          targetPort: [[.RouteProtocol]]
-        #[[if not .DisableSsl]]
+          targetPort: "[[.Console.TerminationRoute.Protocol]]"
+        #[[if .Console.TerminationRoute.EnableTlsSection]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
+          termination: "[[.Console.TerminationRoute.Termination]]"
         #[[end]]
 ## KIE smartrouter BEGIN
 smartRouter:
@@ -691,11 +691,11 @@ smartRouter:
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
-          targetPort: [[.RouteProtocol]]
-        #[[if not .DisableSsl]]
+          targetPort: "[[.SmartRouter.TerminationRoute.Protocol]]"
+        #[[if .SmartRouter.TerminationRoute.EnableTlsSection]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
+          termination: "[[.SmartRouter.TerminationRoute.Termination]]"
         #[[end]]
 ## KIE smartrouter END
 ## KIE Servers BEGIN
@@ -1270,11 +1270,11 @@ servers:
           to:
             name: "[[.KieName]]"
           port:
-            targetPort: [[$.RouteProtocol]]
-          #[[if not $.DisableSsl]]
+            targetPort: "[[.TerminationRoute.Protocol]]"
+          #[[if .TerminationRoute.EnableTlsSection]]
           tls:
             insecureEdgeTerminationPolicy: Redirect
-            termination: passthrough
+            termination: "[[.TerminationRoute.Termination]]"
           #[[end]]
       ## KIE server routes END
 #[[end]]

@@ -17,6 +17,7 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	routesv1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -4979,6 +4980,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 									JavaMaxMemRatio:     Pint32(20),
 									JavaInitialMemRatio: Pint32(25),
 								},
+								TerminationRoute: &api.TerminationRoute{},
 							},
 						},
 						CommonConfig: api.CommonConfig{
@@ -5027,6 +5029,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					JavaMaxMemRatio:     Pint32(20),
 					JavaInitialMemRatio: Pint32(25),
 				},
+				TerminationRoute: api.TerminationRoute{
+					Protocol:         constants.HttpsProtocol,
+					EnableTlsSection: false,
+				},
 			},
 			false,
 		},
@@ -5037,7 +5043,9 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 					Spec: api.KieAppSpec{
 						Environment: api.RhpamTrial,
 						Objects: api.KieAppObjects{
-							ProcessMigration: &api.ProcessMigrationObject{},
+							ProcessMigration: &api.ProcessMigrationObject{
+								TerminationRoute: &api.TerminationRoute{},
+							},
 						},
 					},
 				},
@@ -5072,6 +5080,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				Jvm: api.JvmObject{
 					JavaMaxMemRatio:     Pint32(80),
 					JavaInitialMemRatio: Pint32(25),
+				},
+				TerminationRoute: api.TerminationRoute{
+					Protocol:         constants.HttpsProtocol,
+					EnableTlsSection: false,
 				},
 			},
 			false,
@@ -5161,6 +5173,7 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 										},
 									},
 								},
+								TerminationRoute: &api.TerminationRoute{},
 							},
 						},
 						CommonConfig: api.CommonConfig{
@@ -5220,6 +5233,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 				Jvm: api.JvmObject{
 					JavaMaxMemRatio:     Pint32(80),
 					JavaInitialMemRatio: Pint32(25),
+				},
+				TerminationRoute: api.TerminationRoute{
+					Protocol:         constants.HttpsProtocol,
+					EnableTlsSection: false,
 				},
 			},
 			false,
@@ -7490,4 +7507,312 @@ func TestRhpamKieserverEnvWithoutDecisionsOnlyEnabled(t *testing.T) {
 	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].DecisionsOnly)
 	result, _ := strconv.ParseBool(getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"))
 	assert.False(t, result)
+}
+
+func TestKieServerWithEdgeTerminationEnabledHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						TerminationRoute: &api.TerminationRoute{
+							Protocol: constants.HttpProtocol,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, constants.EdgeTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestKieServerWithEdgeTerminationEnabledHttps(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						TerminationRoute: &api.TerminationRoute{
+							Protocol: constants.HttpsProtocol,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, constants.EdgeTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestKieServerWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	assert.NotNil(t, env.Servers[0].Routes[0])
+	checkTLSAndRoute(t, env.Servers[0].Routes[0].Spec.TLS, constants.DefaultTermination, env.Servers[0].Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Servers[0].Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithEdgeTerminationEnabledHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, constants.EdgeTermination, env.Console.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithEdgeTerminationEnabledHttps(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpsProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, constants.EdgeTermination, env.Console.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestConsoleWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Console: &api.ConsoleObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, constants.DefaultTermination, env.Console.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestSmartRouterWithEdgeTerminationEnabledHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.SmartRouter.Routes[0].Spec.TLS, constants.EdgeTermination, env.SmartRouter.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestSmartRouterWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.SmartRouter.Routes[0].Spec.TLS, constants.DefaultTermination, env.SmartRouter.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithEdgeTerminationEnabledHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, constants.EdgeTermination, env.Dashbuilder.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithEdgeTerminationEnabledHttps(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpsProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, constants.EdgeTermination, env.Dashbuilder.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestDashbuilderWithoutEdgeTermination(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			Objects: api.KieAppObjects{
+				Dashbuilder: &api.DashbuilderObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, constants.DefaultTermination, env.Dashbuilder.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpsProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithEdgeTerminationEnabledHttp(t *testing.T) {
+	protocol := constants.HttpProtocol
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: protocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.ProcessMigration.Routes[0].Spec.TLS, constants.EdgeTermination, env.ProcessMigration.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: protocol}, env.ProcessMigration.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithEdgeTerminationEnabledHttps(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{
+					TerminationRoute: &api.TerminationRoute{
+						Protocol: constants.HttpsProtocol,
+					},
+				},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	checkTLSAndRoute(t, env.ProcessMigration.Routes[0].Spec.TLS, constants.EdgeTermination, env.ProcessMigration.Routes[0])
+	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.ProcessMigration.Routes[0].Spec.Port.TargetPort)
+}
+
+func TestProcessMigrationWithoutEdgeTerminationHttp(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				ProcessMigration: &api.ProcessMigrationObject{},
+			},
+		},
+	}
+
+	env := getAndCheckEnv(t, cr)
+	assert.NotNil(t, env.ProcessMigration.Routes[0])
+	tls := env.ProcessMigration.Routes[0].Spec.TLS
+	assert.Nil(t, tls)
+}
+
+func getAndCheckEnv(t *testing.T, cr *api.KieApp) api.Environment {
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	return env
+}
+
+func checkTLSAndRoute(t *testing.T, tls *routesv1.TLSConfig, termination string, route routesv1.Route) {
+	assert.NotNil(t, route)
+	assert.NotNil(t, tls)
+	assert.Equal(t, tls.Termination, routesv1.TLSTerminationType(termination))
+	assert.Equal(t, tls.InsecureEdgeTerminationPolicy, routesv1.InsecureEdgeTerminationPolicyType("Redirect"))
 }

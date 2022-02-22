@@ -402,10 +402,10 @@ dashbuilder:
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:
-          targetPort: [[.RouteProtocol]]
-        #[[if not .DisableSsl]]
+          targetPort: "[[.Dashbuilder.TerminationRoute.Protocol]]"
+        #[[if .Dashbuilder.TerminationRoute.EnableTlsSection]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
-          termination: passthrough
+          termination: "[[.Dashbuilder.TerminationRoute.Termination]]"
         #[[end]]
 
