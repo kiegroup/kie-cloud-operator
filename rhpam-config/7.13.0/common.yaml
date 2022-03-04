@@ -1105,22 +1105,22 @@ servers:
                   #[[end]]
                   livenessProbe:
                     httpGet:
-                      path: /services/rest/server/healthcheck
-                      port: 8080
-                      scheme: HTTP
-                    initialDelaySeconds: 180
-                    timeoutSeconds: 2
-                    periodSeconds: 15
-                    failureThreshold: 3
+                      path: "[[.Liveness.Handler.HTTPGet.Path]]"
+                      port: [[.Liveness.Handler.HTTPGet.Port]]
+                      scheme: "[[.Liveness.Handler.HTTPGet.Scheme]]"
+                    initialDelaySeconds: [[.Liveness.InitialDelaySeconds]]
+                    timeoutSeconds: [[.Liveness.TimeoutSeconds]]
+                    periodSeconds: [[.Liveness.PeriodSeconds]]
+                    failureThreshold: [[.Liveness.FailureThreshold]]
                   readinessProbe:
                     httpGet:
-                      path: /services/rest/server/readycheck
-                      port: 8080
-                      scheme: HTTP
-                    initialDelaySeconds: 30
-                    timeoutSeconds: 2
-                    periodSeconds: 5
-                    failureThreshold: 36
+                      path: "[[.Readiness.Handler.HTTPGet.Path]]"
+                      port: [[.Readiness.Handler.HTTPGet.Port]]
+                      scheme: "[[.Readiness.Handler.HTTPGet.Scheme]]"
+                    initialDelaySeconds: [[.Readiness.InitialDelaySeconds]]
+                    timeoutSeconds: [[.Readiness.TimeoutSeconds]]
+                    periodSeconds: [[.Readiness.PeriodSeconds]]
+                    failureThreshold: [[.Readiness.FailureThreshold]]
                   ports:
                     - name: jolokia
                       containerPort: 8778

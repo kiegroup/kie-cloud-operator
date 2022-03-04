@@ -1284,6 +1284,16 @@ func (in *KieServerSet) DeepCopyInto(out *KieServerSet) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.Liveness != nil {
+		in, out := &in.Liveness, &out.Liveness
+		*out = new(v1.Probe)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Readiness != nil {
+		in, out := &in.Readiness, &out.Readiness
+		*out = new(v1.Probe)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1555,6 +1565,16 @@ func (in *ServerTemplate) DeepCopyInto(out *ServerTemplate) {
 		in, out := &in.MDBMaxSession, &out.MDBMaxSession
 		*out = new(int)
 		**out = **in
+	}
+	if in.Liveness != nil {
+		in, out := &in.Liveness, &out.Liveness
+		*out = new(v1.Probe)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Readiness != nil {
+		in, out := &in.Readiness, &out.Readiness
+		*out = new(v1.Probe)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

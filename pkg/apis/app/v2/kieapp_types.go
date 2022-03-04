@@ -152,7 +152,9 @@ type KieServerSet struct {
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession *int          `json:"MDBMaxSession,omitempty"`
+	Liveness      *corev1.Probe `json:"liveness,omitempty"`
+	Readiness     *corev1.Probe `json:"readiness,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -769,7 +771,9 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession *int          `json:"MDBMaxSession,omitempty"`
+	Liveness      *corev1.Probe `json:"liveness,omitempty"`
+	Readiness     *corev1.Probe `json:"readiness,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates

@@ -7353,3 +7353,108 @@ func DataGridAuth(t *testing.T, environment api.EnvironmentType) {
 	assert.Equal(t, cr.Status.Applied.Objects.Console.DataGridAuth.Username, "InfinispanUser")
 	assert.Equal(t, cr.Status.Applied.Objects.Console.DataGridAuth.Password, "InfinispanPassword")
 }
+
+func TestKieServerLivenessReadinessDefault(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.NotNil(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+	// test kieserver probes
+	assert.Equal(t, getLivenessReadinessCustom("/services/rest/server/readycheck", "HTTP", 8080), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadinessCustom("/services/rest/server/healthcheck", "HTTP", 8080), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+	livenessProbe := env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe
+	assert.Equal(t, int32(2), livenessProbe.TimeoutSeconds)
+	assert.Equal(t, int32(3), livenessProbe.FailureThreshold)
+	assert.Equal(t, int32(15), livenessProbe.PeriodSeconds)
+	assert.Equal(t, int32(180), livenessProbe.InitialDelaySeconds)
+	readinessProbe := env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe
+	assert.Equal(t, int32(2), readinessProbe.TimeoutSeconds)
+	assert.Equal(t, int32(36), readinessProbe.FailureThreshold)
+	assert.Equal(t, int32(5), readinessProbe.PeriodSeconds)
+	assert.Equal(t, int32(30), readinessProbe.InitialDelaySeconds)
+
+}
+
+func TestKieServerLivenessReadinessCustom(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Liveness: &corev1.Probe{
+							TimeoutSeconds:      int32(4),
+							FailureThreshold:    int32(23),
+							PeriodSeconds:       int32(16),
+							InitialDelaySeconds: int32(42),
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   "/services/rest/server/myhealthcheck",
+									Scheme: "HTTPX",
+									Port:   intstr.IntOrString{Type: 0, IntVal: 8000, StrVal: ""},
+								},
+							},
+						},
+						Readiness: &corev1.Probe{
+							TimeoutSeconds:      int32(4),
+							FailureThreshold:    int32(23),
+							PeriodSeconds:       int32(16),
+							InitialDelaySeconds: int32(42),
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   "/services/rest/server/myreadycheck",
+									Scheme: "HTTPY",
+									Port:   intstr.IntOrString{Type: 0, IntVal: 8005, StrVal: ""},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+	assert.NotNil(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadinessCustom("/services/rest/server/myhealthcheck", "HTTPX", 8000), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet)
+	assert.Equal(t, getLivenessReadinessCustom("/services/rest/server/myreadycheck", "HTTPY", 8005), env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet)
+	livenessProbe := env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].LivenessProbe
+	assert.Equal(t, int32(4), livenessProbe.TimeoutSeconds)
+	assert.Equal(t, int32(23), livenessProbe.FailureThreshold)
+	assert.Equal(t, int32(16), livenessProbe.PeriodSeconds)
+	assert.Equal(t, int32(42), livenessProbe.InitialDelaySeconds)
+	readinessProbe := env.Servers[len(env.Servers)-1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].ReadinessProbe
+	assert.Equal(t, int32(4), readinessProbe.TimeoutSeconds)
+	assert.Equal(t, int32(23), readinessProbe.FailureThreshold)
+	assert.Equal(t, int32(16), readinessProbe.PeriodSeconds)
+	assert.Equal(t, int32(42), readinessProbe.InitialDelaySeconds)
+
+}
+
+func getLivenessReadinessCustom(uri string, scheme string, port int32) *corev1.HTTPGetAction {
+	return &corev1.HTTPGetAction{
+		Scheme: corev1.URIScheme(scheme),
+		Host:   "",
+		Port: intstr.IntOrString{
+			Type:   0,
+			IntVal: port},
+		Path: uri,
+	}
+}

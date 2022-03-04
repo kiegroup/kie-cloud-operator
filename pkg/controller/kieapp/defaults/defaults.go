@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
@@ -553,9 +554,113 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 			dashbuilderTemplate.Cors = *cr.Status.Applied.Objects.Dashbuilder.Cors
 		}
 
+		//probes
+		//setDashbuilderLiveness(cr.Status.Applied.Objects.Dashbuilder, dashbuilderTemplate)
+		//setDashbuilderReadiness(cr.Status.Applied.Objects.Dashbuilder, dashbuilderTemplate)
+
 	}
 	return dashbuilderTemplate, nil
 }
+
+/*func setDashbuilderReadiness(dashbuilder *api.DashbuilderObject, template api.DashbuilderTemplate) {
+	if template.Readiness == nil {
+		template.Readiness = corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.IntOrString{IntVal: 0},
+					Scheme:      "",
+					Host:        "",
+					HTTPHeaders: nil,
+				},
+			},
+			InitialDelaySeconds: 0,
+			TimeoutSeconds:      0,
+			PeriodSeconds:       0,
+			FailureThreshold:    0,
+		}
+	}
+
+	if len(template.Readiness.HTTPGet.Path) == 0 && len(dashbuilder.Readiness.HTTPGet.Path) == 0 {
+		template.Readiness.HTTPGet.Path = "/services/rest/server/readycheck"
+	}
+
+	if (template.Readiness.HTTPGet.Port.Type == intstr.String && len(template.Readiness.HTTPGet.Port.StrVal) == 0) ||
+		(template.Readiness.HTTPGet.Port.Type == intstr.Int && template.Readiness.HTTPGet.Port.IntVal == 0) {
+
+		template.Readiness.HTTPGet.Port = intstr.IntOrString{IntVal: 8080}
+	}
+
+	if len(template.Readiness.HTTPGet.Scheme) == 0 && len(dashbuilder.Readiness.HTTPGet.Scheme) == 0 {
+		template.Readiness.HTTPGet.Scheme = corev1.URISchemeHTTP
+	}
+
+	if template.Readiness.InitialDelaySeconds == 0 && dashbuilder.Readiness.InitialDelaySeconds == 0 {
+		template.Readiness.InitialDelaySeconds = 30
+	}
+
+	if template.Readiness.TimeoutSeconds == 0 && dashbuilder.Readiness.TimeoutSeconds == 0 {
+		template.Readiness.TimeoutSeconds = 2
+	}
+
+	if template.Readiness.PeriodSeconds == 0 && dashbuilder.Readiness.PeriodSeconds == 0 {
+		template.Readiness.PeriodSeconds = 5
+	}
+
+	if template.Readiness.FailureThreshold == 0 && dashbuilder.Readiness.FailureThreshold == 0 {
+		template.Readiness.FailureThreshold = 36
+	}
+}
+
+func setDashbuilderLiveness(dashbuilder *api.DashbuilderObject, template *api.DashbuilderTemplate) {
+	if template.Liveness.HTTPGet == nil {
+		template.Liveness = corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.IntOrString{IntVal: 0},
+					Scheme:      "",
+					Host:        "",
+					HTTPHeaders: nil,
+				},
+			},
+			InitialDelaySeconds: 0,
+			TimeoutSeconds:      0,
+			PeriodSeconds:       0,
+			FailureThreshold:    0,
+		}
+	}
+
+	if len(template.Liveness.HTTPGet.Path) == 0 && len(dashbuilder.Liveness.HTTPGet.Path) == 0 {
+		template.Liveness.HTTPGet.Path = "/rest/healthy"
+	}
+
+	if (template.Liveness.HTTPGet.Port.Type == intstr.String && len(template.Liveness.HTTPGet.Port.StrVal) == 0) ||
+		(template.Liveness.HTTPGet.Port.Type == intstr.Int && template.Liveness.HTTPGet.Port.IntVal == 0) {
+
+		template.Liveness.HTTPGet.Port = intstr.IntOrString{IntVal: 8080}
+	}
+
+	if len(template.Liveness.HTTPGet.Scheme) == 0 && len(dashbuilder.Liveness.HTTPGet.Scheme) == 0 {
+		template.Liveness.HTTPGet.Scheme = corev1.URISchemeHTTP
+	}
+
+	if template.Liveness.InitialDelaySeconds == 0 && dashbuilder.Liveness.InitialDelaySeconds == 0 {
+		template.Liveness.InitialDelaySeconds = 30
+	}
+
+	if template.Liveness.TimeoutSeconds == 0 && dashbuilder.Liveness.TimeoutSeconds == 0 {
+		template.Liveness.TimeoutSeconds = 2
+	}
+
+	if template.Liveness.PeriodSeconds == 0 && dashbuilder.Liveness.PeriodSeconds == 0 {
+		template.Liveness.PeriodSeconds = 5
+	}
+
+	if template.Liveness.FailureThreshold == 0 && dashbuilder.Liveness.FailureThreshold == 0 {
+		template.Liveness.FailureThreshold = 36
+	}
+}*/
 
 func applyDashbuilderConfig(template *api.DashbuilderTemplate, cr api.KieApp, serversConfig []api.ServerTemplate, console *api.ConsoleTemplate) {
 
@@ -772,6 +877,8 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				ServersKiePvSize: serverSet.ServersKiePvSize,
 				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
 				MDBMaxSession:    serverSet.MDBMaxSession,
+				Liveness:         serverSet.Liveness,
+				Readiness:        serverSet.Readiness,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -874,11 +981,115 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
 			}
 
+			// Probes
+			setKieServerLiveness(template, serverSet)
+			setKieserverReadiness(template, serverSet)
+
 			servers = append(servers, template)
 		}
 
 	}
 	return servers, nil
+}
+
+func setKieserverReadiness(template api.ServerTemplate, serverSet *api.KieServerSet) {
+	if template.Readiness == nil {
+		template.Readiness = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.IntOrString{IntVal: 0},
+					Scheme:      "",
+					Host:        "",
+					HTTPHeaders: nil,
+				},
+			},
+			InitialDelaySeconds: 0,
+			TimeoutSeconds:      0,
+			PeriodSeconds:       0,
+			FailureThreshold:    0,
+		}
+	}
+
+	if len(template.Readiness.HTTPGet.Path) == 0 && len(serverSet.Readiness.HTTPGet.Path) == 0 {
+		template.Readiness.HTTPGet.Path = "/services/rest/server/readycheck"
+	}
+
+	if (template.Readiness.HTTPGet.Port.Type == intstr.String && len(template.Readiness.HTTPGet.Port.StrVal) == 0) ||
+		(template.Readiness.HTTPGet.Port.Type == intstr.Int && template.Readiness.HTTPGet.Port.IntVal == 0) {
+
+		template.Readiness.HTTPGet.Port = intstr.IntOrString{IntVal: 8080}
+	}
+
+	if len(template.Readiness.HTTPGet.Scheme) == 0 && len(serverSet.Readiness.HTTPGet.Scheme) == 0 {
+		template.Readiness.HTTPGet.Scheme = corev1.URISchemeHTTP
+	}
+
+	if template.Readiness.InitialDelaySeconds == 0 && serverSet.Readiness.InitialDelaySeconds == 0 {
+		template.Readiness.InitialDelaySeconds = 30
+	}
+
+	if template.Readiness.TimeoutSeconds == 0 && serverSet.Readiness.TimeoutSeconds == 0 {
+		template.Readiness.TimeoutSeconds = 2
+	}
+
+	if template.Readiness.PeriodSeconds == 0 && serverSet.Readiness.PeriodSeconds == 0 {
+		template.Readiness.PeriodSeconds = 5
+	}
+
+	if template.Readiness.FailureThreshold == 0 && serverSet.Readiness.FailureThreshold == 0 {
+		template.Readiness.FailureThreshold = 36
+	}
+}
+
+func setKieServerLiveness(template api.ServerTemplate, serverSet *api.KieServerSet) {
+	if template.Liveness == nil {
+		template.Liveness = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.IntOrString{IntVal: 0},
+					Scheme:      "",
+					Host:        "",
+					HTTPHeaders: nil,
+				},
+			},
+			InitialDelaySeconds: 0,
+			TimeoutSeconds:      0,
+			PeriodSeconds:       0,
+			FailureThreshold:    0,
+		}
+	}
+
+	if len(template.Liveness.HTTPGet.Path) == 0 && len(serverSet.Liveness.HTTPGet.Path) == 0 {
+		template.Liveness.HTTPGet.Path = "/services/rest/server/healthcheck"
+	}
+
+	if (template.Liveness.HTTPGet.Port.Type == intstr.String && len(template.Liveness.HTTPGet.Port.StrVal) == 0) ||
+		(template.Liveness.HTTPGet.Port.Type == intstr.Int && template.Liveness.HTTPGet.Port.IntVal == 0) {
+
+		template.Liveness.HTTPGet.Port = intstr.IntOrString{IntVal: 8080}
+	}
+
+	if len(template.Liveness.HTTPGet.Scheme) == 0 && len(serverSet.Liveness.HTTPGet.Scheme) == 0 {
+		template.Liveness.HTTPGet.Scheme = corev1.URISchemeHTTP
+	}
+
+	if template.Liveness.InitialDelaySeconds == 0 && serverSet.Liveness.InitialDelaySeconds == 0 {
+		template.Liveness.InitialDelaySeconds = 180
+	}
+
+	if template.Liveness.TimeoutSeconds == 0 && serverSet.Liveness.TimeoutSeconds == 0 {
+		template.Liveness.TimeoutSeconds = 2
+	}
+
+	if template.Liveness.PeriodSeconds == 0 && serverSet.Liveness.PeriodSeconds == 0 {
+		template.Liveness.PeriodSeconds = 15
+	}
+
+	if template.Liveness.FailureThreshold == 0 && serverSet.Liveness.FailureThreshold == 0 {
+		template.Liveness.FailureThreshold = 3
+	}
 }
 
 // GetServerSet retrieves to correct ServerSet for processing and the DeploymentName
@@ -1418,6 +1629,7 @@ func SetDefaults(cr *api.KieApp) {
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersLimits, constants.ServerRequests)
+		checkServerProbes(&specApply.Objects.Servers[index])
 	}
 
 	if specApply.Objects.Console != nil {
@@ -1462,6 +1674,43 @@ func SetDefaults(cr *api.KieApp) {
 	setPasswords(specApply, isTrialEnv)
 
 	cr.Status.Applied = *specApply
+}
+
+func checkServerProbes(server *api.KieServerSet) {
+	if server.Liveness == nil {
+		server.Liveness = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.FromString(""),
+					Host:        "",
+					Scheme:      "",
+					HTTPHeaders: nil,
+				},
+			},
+			FailureThreshold:    int32(0),
+			InitialDelaySeconds: int32(0),
+			TimeoutSeconds:      int32(0),
+			PeriodSeconds:       int32(0),
+		}
+	}
+	if server.Readiness == nil {
+		server.Readiness = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:        "",
+					Port:        intstr.FromString(""),
+					Host:        "",
+					Scheme:      "",
+					HTTPHeaders: nil,
+				},
+			},
+			FailureThreshold:    int32(0),
+			InitialDelaySeconds: int32(0),
+			TimeoutSeconds:      int32(0),
+			PeriodSeconds:       int32(0),
+		}
+	}
 }
 
 func checkJvmOnConsole(console *api.ConsoleObject) {

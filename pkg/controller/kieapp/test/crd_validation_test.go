@@ -111,6 +111,10 @@ func TestCompleteCRD(t *testing.T) {
 			// ...
 		} else if strings.Contains(missing.Path, "/env/valueFrom/") {
 			//The valueFrom is not expected to be used and is not fully defined TODO: verify
+		} else if strings.Contains(missing.Path, "readiness") {
+			//Readiness use intstr.IntOrString fields and the github.com/ghodss/yaml can't handle this type
+		} else if strings.Contains(missing.Path, "liveness") {
+			//Liveness use intstr.IntOrString fields and the github.com/ghodss/yaml can't handle this type
 		} else {
 			assert.Fail(t, "Discrepancy between CRD and Struct", "Missing or incorrect schema validation at %v, expected type %v", missing.Path, missing.Type)
 		}

@@ -967,6 +967,136 @@
                   "description": "The password to use for Data Grid. Generated if empty"
                 }
               ]
+            },
+            {
+              "label": "Customize Liveness Probe",
+              "type": "object",
+              "max": 1,
+              "jsonPath": "$.spec.objects.console.liveness",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "Path",
+                  "type": "text",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.handler.httpGet.path",
+                  "originalJsonPath": "$.spec.objects.console.liveness.handler.httpGet.path",
+                  "description": "Path, default is /rest/healthy"
+                },
+                {
+                  "label": "Port",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.handler.httpGet.port",
+                  "originalJsonPath": "$.spec.objects.console.liveness.handler.httpGet.port",
+                  "description": "Port, default is 8080"
+                },
+                {
+                  "label": "Scheme",
+                  "type": "text",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.handler.httpGet.scheme",
+                  "originalJsonPath": "$.spec.objects.console.liveness.handler.httpGet.scheme",
+                  "description": "Scheme, default is HTTP"
+                },
+                {
+                  "label": "Initial delay",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.initialDelaySeconds",
+                  "originalJsonPath": "$.spec.objects.console.liveness.initialDelaySeconds",
+                  "description": "Value in seconds of the initial delay, default is 180"
+                },
+                {
+                  "label": "Timeout",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.timeoutSeconds",
+                  "originalJsonPath": "$.spec.objects.console.liveness.timeoutSeconds",
+                  "description": "Timeout in seconds. Default is 2"
+                },
+                {
+                  "label": "Period",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.periodSeconds",
+                  "originalJsonPath": "$.spec.objects.console.liveness.periodSeconds",
+                  "description": "Period in seconds, default is 15"
+                },
+                {
+                  "label": "Failure Threshold",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.liveness.failureThreshold",
+                  "originalJsonPath": "$.spec.objects.console.liveness.failureThreshold",
+                  "description": "Failure threshold, default is 3"
+                }
+              ]
+            },
+            {
+              "label": "Customize Readiness Probe",
+              "type": "object",
+              "max": 1,
+              "jsonPath": "$.spec.objects.console.readiness",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "Path",
+                  "type": "text",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.handler.httpGet.path",
+                  "originalJsonPath": "$.spec.objects.console.readiness.handler.httpGet.path",
+                  "description": "Path, default is /rest/ready"
+                },
+                {
+                  "label": "Port",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.handler.httpGet.port",
+                  "originalJsonPath": "$.spec.objects.console.readiness.handler.httpGet.port",
+                  "description": "Port, default is 8080"
+                },
+                {
+                  "label": "Scheme",
+                  "type": "text",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.handler.httpGet.scheme",
+                  "originalJsonPath": "$.spec.objects.console.readiness.handler.httpGet.scheme",
+                  "description": "Scheme, default is HTTP"
+                },
+                {
+                  "label": "Initial delay",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.initialDelaySeconds",
+                  "originalJsonPath": "$.spec.objects.console.readiness.initialDelaySeconds",
+                  "description": "Value in seconds of the initial delay, default is 30"
+                },
+                {
+                  "label": "Timeout",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.timeoutSeconds",
+                  "originalJsonPath": "$.spec.objects.console.readiness.timeoutSeconds",
+                  "description": "Timeout in seconds. Default is 2"
+                },
+                {
+                  "label": "Period",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.periodSeconds",
+                  "originalJsonPath": "$.spec.objects.console.readiness.periodSeconds",
+                  "description": "Period in seconds, default is 5"
+                },
+                {
+                  "label": "Failure Threshold",
+                  "type": "integer",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.readiness.failureThreshold",
+                  "originalJsonPath": "$.spec.objects.console.readiness.failureThreshold",
+                  "description": "Failure threshold, default is 36"
+                }
+              ]
             }
           ]
         },
@@ -1342,6 +1472,136 @@
                       "type": "text",
                       "jsonPath": "$.spec.objects.servers[*].ssoClient.hostnameHTTPS",
                       "description": "HTTPS hostname to set as redirect URL, when RH-SSO is configured"
+                    }
+                  ]
+                },
+                {
+                  "label": "Customize Liveness Probe",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].liveness",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Path",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.path",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.path",
+                      "description": "Path, default is /services/rest/server/healthcheck"
+                    },
+                    {
+                      "label": "Port",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.port",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.port",
+                      "description": "Port, default is 8080"
+                    },
+                    {
+                      "label": "Scheme",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.scheme",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.handler.httpGet.scheme",
+                      "description": "Scheme, default is HTTP"
+                    },
+                    {
+                      "label": "Initial delay",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.initialDelaySeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.initialDelaySeconds",
+                      "description": "Value in seconds of the initial delay, default is 180"
+                    },
+                    {
+                      "label": "Timeout",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.timeoutSeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.timeoutSeconds",
+                      "description": "Timeout in seconds. Default is 2"
+                    },
+                    {
+                      "label": "Period",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.periodSeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.periodSeconds",
+                      "description": "Period in seconds, default is 15"
+                    },
+                    {
+                      "label": "Failure Threshold",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].liveness.failureThreshold",
+                      "originalJsonPath": "$.spec.objects.servers[*].liveness.failureThreshold",
+                      "description": "Failure threshold, default is 3"
+                    }
+                  ]
+                },
+                {
+                  "label": "Customize Readiness Probe",
+                  "type": "object",
+                  "max": 1,
+                  "jsonPath": "$.spec.objects.servers[*].readiness",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "Path",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.path",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.path",
+                      "description": "Path, default is /services/rest/server/readycheck"
+                    },
+                    {
+                      "label": "Port",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.port",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.port",
+                      "description": "Port, default is 8080"
+                    },
+                    {
+                      "label": "Scheme",
+                      "type": "text",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.scheme",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.handler.httpGet.scheme",
+                      "description": "Scheme, default is HTTP"
+                    },
+                    {
+                      "label": "Initial delay",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.initialDelaySeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.initialDelaySeconds",
+                      "description": "Value in seconds of the initial delay, default is 30"
+                    },
+                    {
+                      "label": "Timeout",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.timeoutSeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.timeoutSeconds",
+                      "description": "Timeout in seconds. Default is 2"
+                    },
+                    {
+                      "label": "Period",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.periodSeconds",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.periodSeconds",
+                      "description": "Period in seconds, default is 5"
+                    },
+                    {
+                      "label": "Failure Threshold",
+                      "type": "integer",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].readiness.failureThreshold",
+                      "originalJsonPath": "$.spec.objects.servers[*].readiness.failureThreshold",
+                      "description": "Failure threshold, default is 36"
                     }
                   ]
                 },
