@@ -12,9 +12,9 @@ var Ocp4Versions = []string{"4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.12.0"
+	CurrentVersion = "7.12.1"
 	// PriorVersion product version supported
-	PriorVersion = "7.11.1"
+	PriorVersion = "7.12.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -244,13 +244,13 @@ const (
 	RhelVersion = "-rhel8"
 
 	//Resources Limits and Requests
-	ConsoleProdCPULimit         = "1"
+	ConsoleProdCPULimit         = "2"
 	ConsoleProdMemLimit         = "2Gi"
 	ConsoleAuthoringCPULimit    = "2"
 	ConsoleAuthoringMemLimit    = "4Gi"
 	ConsoleAuthoringCPURequests = "1500m"
 	ConsoleAuthoringMemRequests = "3Gi"
-	ConsoleProdCPURequests      = "500m"
+	ConsoleProdCPURequests      = "1500m"
 	ConsoleProdMemRequests      = "1536Mi"
 	ConsolePvSize               = "1Gi"
 	ConsoleProdPvSize           = "64Mi"
@@ -261,7 +261,7 @@ const (
 	ServersCPULimit             = "1"
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
-	ServersMemRequests          = "1Gi"
+	ServersMemRequests          = "1536Mi"
 	ServersM2PvSize             = "1Gi"
 	ServersKiePvSize            = "10Mi"
 	SmartRouterCPULimit         = "500m"

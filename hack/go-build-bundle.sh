@@ -6,6 +6,10 @@ echo
 echo Building operator bundle image:
 echo
 
+if [[ -z "${USERNAME}" ]]; then
+  read -p "Enter your username [Quay account]: " USERNAME
+fi
+
 BUNDLE=rhpam-operator-bundle
 BUNDLE_NAME=rhpam-7/${BUNDLE}
 VERSION=$(go run getversion.go)

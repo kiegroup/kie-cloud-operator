@@ -771,6 +771,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				ServersM2PvSize:  serverSet.ServersM2PvSize,
 				ServersKiePvSize: serverSet.ServersKiePvSize,
 				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
+				MDBMaxSession:    serverSet.MDBMaxSession,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -807,6 +808,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			// Apply PV default size
 			if isTrial(cr) {
 				template.PersistRepos = false
+				serverSet.PersistRepos = false
 			} else {
 				if len(template.ServersM2PvSize) <= 0 {
 					template.ServersM2PvSize = constants.ServersM2PvSize
@@ -859,6 +861,11 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			getCORSConfig(serverSet.Cors)
 			if serverSet.Cors != nil {
 				template.Cors = serverSet.Cors
+			}
+
+			// KieExecutorMDB
+			if serverSet.MDBMaxSession != nil {
+				template.MDBMaxSession = serverSet.MDBMaxSession
 			}
 
 			if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName != "" {
@@ -1028,6 +1035,10 @@ func getBuildConfig(product string, cr *api.KieApp, serverSet *api.KieServerSet)
 
 func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.KieServerSet, forBuild bool) (from api.ImageObjRef, omitImageTrigger bool, imageURL string) {
 	if serverSet.From != nil {
+		if serverSet.From.Kind == "DockerImage" {
+			omitImageTrigger = true
+			imageURL = serverSet.From.Name
+		}
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
@@ -1209,7 +1220,7 @@ func loadYaml(service kubernetes.PlatformService, filename, productVersion, name
 	// prepend specified product version dir to filepath
 	filename = strings.Join([]string{productVersion, filename}, "/")
 	if _, _, useEmbedded := UseEmbeddedFiles(service); useEmbedded {
-		box := packr.New("config", "../../../../config")
+		box := packr.New("rhpam-config", "../../../../rhpam-config")
 		if !box.HasDir(productVersion) {
 			return nil, fmt.Errorf("Product version %s configs are not available in this Operator, %s", productVersion, version.Version)
 		}
@@ -1284,7 +1295,7 @@ func getCMListfromBox(box *packr.Box) map[string][]map[string]string {
 // ConfigMapsFromFile reads the files under the config folder and creates
 // configmaps in the given namespace. It sets OwnerRef to operator deployment.
 func ConfigMapsFromFile(myDep *appsv1.Deployment, ns string, scheme *runtime.Scheme) (configMaps []corev1.ConfigMap) {
-	box := packr.New("config", "../../../../config")
+	box := packr.New("rhpam-config", "../../../../rhpam-config")
 	cmList := getCMListfromBox(box)
 	for cmName, dataSlice := range cmList {
 		cmData := map[string]string{}

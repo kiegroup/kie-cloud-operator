@@ -55,7 +55,7 @@ console:
                     path: /rest/healthy
                     port: 8080
                     scheme: HTTP
-                  initialDelaySeconds: 180
+                  initialDelaySeconds: 60
                   timeoutSeconds: 2
                   periodSeconds: 15
                   successThreshold: 1
@@ -98,7 +98,9 @@ console:
                   - name: KIE_DASHBUILDER_RUNTIME_LOCATION
                     value: "[[.Console.DashbuilderLocation]]"
                   #[[end]]
-                  ## OpenShift Enhancement BEGIN
+                  #[[if .Console.StartupStrategy ]]
+                    #[[if eq .Console.StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
+                    ## OpenShift Enhancement BEGIN
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
@@ -106,8 +108,19 @@ console:
                   - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
                     value: "true"
                   - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
-                    value: "5000"
-                  ## OpenShift Enhancement END
+                    value: "[[.Console.StartupStrategy.ControllerTemplateCacheTTL]]"
+                    ## OpenShift Enhancement END
+                    #[[end]]
+                    #[[if eq .Console.StartupStrategy.StrategyName "ControllerBasedStartupStrategy" ]]
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
+                    value: "false"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_GLOBAL_DISCOVERY_ENABLED
+                    value: "false"
+                  - name: KIE_SERVER_CONTROLLER_OPENSHIFT_PREFER_KIESERVER_SERVICE
+                    value: "false"
+                    #[[end]]
+                  #[[end]]
+                  #[[if not .DisableSsl]]
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/businesscentral-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -116,6 +129,7 @@ console:
                     value: "jboss"
                   - name: HTTPS_PASSWORD
                     value: "[[.KeyStorePassword]]"
+                  #[[end]]
                   - name: WORKBENCH_ROUTE_NAME
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: JGROUPS_PING_PROTOCOL
@@ -158,30 +172,22 @@ console:
                   #[[if .Auth.LDAP.URL]]
                   - name: AUTH_LDAP_URL
                     value: "[[.Auth.LDAP.URL]]"
+                  - name: AUTH_LDAP_LOGIN_MODULE
+                    value: "[[.Auth.LDAP.LoginModule]]"
+                  - name: AUTH_LDAP_LOGIN_FAILOVER
+                    value: "[[.Auth.LDAP.LoginFailover]]"
                   - name: AUTH_LDAP_BIND_DN
                     value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
-                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: "[[.Auth.LDAP.JAASSecurityDomain]]"
-                  - name: AUTH_LDAP_LOGIN_MODULE
-                    value: "[[.Auth.LDAP.LoginModule]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
                     value: "[[.Auth.LDAP.BaseFilter]]"
-                  - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: "[[.Auth.LDAP.SearchScope]]"
+                  - name: AUTH_LDAP_RECURSIVE_SEARCH
+                    value: "[[.Auth.LDAP.RecursiveSearch]]"
                   - name: AUTH_LDAP_SEARCH_TIME_LIMIT
                     value: "[[.Auth.LDAP.SearchTimeLimit]]"
-                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: "[[.Auth.LDAP.DistinguishedNameAttribute]]"
-                  - name: AUTH_LDAP_PARSE_USERNAME
-                    value: "[[.Auth.LDAP.ParseUsername]]"
-                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: "[[.Auth.LDAP.UsernameBeginString]]"
-                  - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: "[[.Auth.LDAP.UsernameEndString]]"
                   - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
                     value: "[[.Auth.LDAP.RoleAttributeID]]"
                   - name: AUTH_LDAP_ROLES_CTX_DN
@@ -192,22 +198,20 @@ console:
                     value: "[[.Auth.LDAP.RoleRecursion]]"
                   - name: AUTH_LDAP_DEFAULT_ROLE
                     value: "[[.Auth.LDAP.DefaultRole]]"
-                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: "[[.Auth.LDAP.RoleNameAttributeID]]"
-                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: "[[.Auth.LDAP.ParseRoleNameFromDN]]"
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: "[[.Auth.LDAP.RoleAttributeIsDN]]"
-                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: "[[.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                  - name: AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES
+                    value: "[[.Auth.LDAP.NewIdentityAttributes]]"
+                  - name: AUTH_LDAP_REFERRAL_MODE
+                    value: "[[.Auth.LDAP.ReferralMode]]"
                   #[[end]]
                   ## LDAP config END
                   ## RoleMapping config BEGIN
                   #[[if .Auth.RoleMapper.RolesProperties]]
                   - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
                     value: "[[.Auth.RoleMapper.RolesProperties]]"
-                  - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                    value: "[[.Auth.RoleMapper.ReplaceRole]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepMapped]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_NON_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepNonMapped]]"
                   #[[end]]
                   ## RoleMapping config END
                   # Auth config END
@@ -265,10 +269,60 @@ console:
                     value: "[[.Console.Jvm.GcContainerOptions]]"
                   #[[end]]
                   ## Jvm config END
+                  ## CORS BEGIN
+                  #[[if .Console.Cors]]
+                    #[[if .Console.Cors.Filters]]
+                  - name: FILTERS
+                    value: "[[.Console.Cors.Filters]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowOriginName]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowOriginName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowOriginValue]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowOriginValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowMethodsName]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowMethodsName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowMethodsValue]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowMethodsValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowHeadersName]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowHeadersName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowHeadersValue]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowHeadersValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowCredentialsName]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.AllowCredentialsName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.AllowCredentialsValue]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.AllowCredentialsValue]]"
+                    #[[end]]
+                    #[[if .Console.Cors.MaxAgeName]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Console.Cors.MaxAgeName]]"
+                    #[[end]]
+                    #[[if .Console.Cors.MaxAgeValue]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Console.Cors.MaxAgeValue]]"
+                    #[[end]]
+                  #[[end]]
+                  ## CORS END
                 volumeMounts:
+                  #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/businesscentral-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -293,9 +347,11 @@ console:
                     mountPath: "/home/jboss/.ssh"
                   #[[end]]
             volumes:
+              #[[if not .DisableSsl]]
               - name: "[[.ApplicationName]]-[[.Console.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Console.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -385,7 +441,7 @@ console:
         annotations:
           description: All the Business Central web server's ports.
   routes:
-    - id: "[[.ApplicationName]]-[[.Console.Name]]-https"
+    - id: "[[.ApplicationName]]-[[.Console.Name]]-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
@@ -393,17 +449,22 @@ console:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Console.Name]]"
         annotations:
-          description: Route for Business Central's https service.
+          description: "Route for Business Central's [[.RouteProtocol]] service."
           haproxy.router.openshift.io/timeout: 60s
+          #[[if not .DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
-        host: ""
+        host: "[[.Console.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 ## KIE smartrouter BEGIN
 smartRouter:
   persistentVolumeClaims:
@@ -492,12 +553,14 @@ smartRouter:
                   #[[end]]
                   - name: KIE_SERVER_ROUTER_SERVICE
                     value: "[[.ApplicationName]]-smartrouter"
+                  #[[if not .DisableSsl]]
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_KEYALIAS
                     value: "jboss"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE_PASSWORD
                     value: "[[.KeyStorePassword]]"
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
+                  #[[end]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
@@ -567,9 +630,11 @@ smartRouter:
                 volumeMounts:
                   - name: "[[.ApplicationName]]-smartrouter"
                     mountPath: "/opt/[[.Constants.Product]]-smartrouter/data"
+                  #[[if not .DisableSsl]]
                   - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                     mountPath: "/etc/smartrouter-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -579,9 +644,11 @@ smartRouter:
               - name: "[[.ApplicationName]]-smartrouter"
                 persistentVolumeClaim:
                   claimName: "[[.ApplicationName]]-smartrouter-claim"
+              #[[if not .DisableSsl]]
               - name: smartrouter-[[.Constants.KeystoreVolumeSuffix]]
                 secret:
                   secretName: "[[.SmartRouter.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -607,7 +674,7 @@ smartRouter:
         annotations:
       description: The smart router server http and https ports.
   routes:
-    - id: "[[.ApplicationName]]-smartrouter-https"
+    - id: "[[.ApplicationName]]-smartrouter-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-smartrouter"
         labels:
@@ -615,16 +682,21 @@ smartRouter:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
         annotations:
-          description: Route for Smart Router's https service.
+          description: Route for Smart Router's [[.RouteProtocol]] service.
+          #[[if not $.DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
-        host: ""
+        host: "[[.SmartRouter.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 ## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
@@ -704,7 +776,15 @@ servers:
                     - name: KIE_ADMIN_PWD
                       value: "[[$.AdminPassword]]"
                     - name: KIE_SERVER_STARTUP_STRATEGY
-                      value: "OpenShiftStartupStrategy"
+                      value: "[[.StartupStrategy.StrategyName]]"
+                    #[[if eq .StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
+                    - name: KIE_SERVER_CONTROLLER_TEMPLATE_CACHE_TTL
+                      value: "[[.StartupStrategy.ControllerTemplateCacheTTL]]"
+                    #[[end]]
+                    #[[if eq .StartupStrategy.StrategyName "ControllerBasedStartupStrategy" ]]
+                    - name: KIE_SERVER_CONTROLLER_OPENSHIFT_ENABLED
+                      value: "false"
+                    #[[end]]
                     - name: DROOLS_SERVER_FILTER_CLASSES
                       value: "true"
                     - name: KIE_SERVER_MODE
@@ -735,6 +815,7 @@ servers:
                       value: /maven2/
                     - name: KIE_SERVER_BYPASS_AUTH_USER
                       value: "false"
+                    #[[if not $.DisableSsl]]
                     - name: HTTPS_KEYSTORE_DIR
                       value: "/etc/kieserver-secret-volume"
                     - name: HTTPS_KEYSTORE
@@ -743,6 +824,7 @@ servers:
                       value: "jboss"
                     - name: HTTPS_PASSWORD
                       value: "[[$.KeyStorePassword]]"
+                    #[[end]]
                     - name: JGROUPS_PING_PROTOCOL
                       value: "kubernetes.KUBE_PING"
                     - name: KUBERNETES_NAMESPACE
@@ -789,30 +871,22 @@ servers:
                     #[[if $.Auth.LDAP.URL]]
                     - name: AUTH_LDAP_URL
                       value: "[[$.Auth.LDAP.URL]]"
+                    - name: AUTH_LDAP_LOGIN_MODULE
+                      value: "[[$.Auth.LDAP.LoginModule]]"
+                    - name: AUTH_LDAP_LOGIN_FAILOVER
+                      value: "[[$.Auth.LDAP.LoginFailover]]"
                     - name: AUTH_LDAP_BIND_DN
                       value: "[[$.Auth.LDAP.BindDN]]"
                     - name: AUTH_LDAP_BIND_CREDENTIAL
                       value: "[[$.Auth.LDAP.BindCredential]]"
-                    - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                      value: "[[$.Auth.LDAP.JAASSecurityDomain]]"
-                    - name: AUTH_LDAP_LOGIN_MODULE
-                      value: "[[$.Auth.LDAP.LoginModule]]"
                     - name: AUTH_LDAP_BASE_CTX_DN
                       value: "[[$.Auth.LDAP.BaseCtxDN]]"
                     - name: AUTH_LDAP_BASE_FILTER
                       value: "[[$.Auth.LDAP.BaseFilter]]"
-                    - name: AUTH_LDAP_SEARCH_SCOPE
-                      value: "[[$.Auth.LDAP.SearchScope]]"
+                    - name: AUTH_LDAP_RECURSIVE_SEARCH
+                      value: "[[$.Auth.LDAP.RecursiveSearch]]"
                     - name: AUTH_LDAP_SEARCH_TIME_LIMIT
                       value: "[[$.Auth.LDAP.SearchTimeLimit]]"
-                    - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                      value: "[[$.Auth.LDAP.DistinguishedNameAttribute]]"
-                    - name: AUTH_LDAP_PARSE_USERNAME
-                      value: "[[$.Auth.LDAP.ParseUsername]]"
-                    - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                      value: "[[$.Auth.LDAP.UsernameBeginString]]"
-                    - name: AUTH_LDAP_USERNAME_END_STRING
-                      value: "[[$.Auth.LDAP.UsernameEndString]]"
                     - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
                       value: "[[$.Auth.LDAP.RoleAttributeID]]"
                     - name: AUTH_LDAP_ROLES_CTX_DN
@@ -823,22 +897,20 @@ servers:
                       value: "[[$.Auth.LDAP.RoleRecursion]]"
                     - name: AUTH_LDAP_DEFAULT_ROLE
                       value: "[[$.Auth.LDAP.DefaultRole]]"
-                    - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                      value: "[[$.Auth.LDAP.RoleNameAttributeID]]"
-                    - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                      value: "[[$.Auth.LDAP.ParseRoleNameFromDN]]"
-                    - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                      value: "[[$.Auth.LDAP.RoleAttributeIsDN]]"
-                    - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                      value: "[[$.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                    - name: AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES
+                      value: "[[$.Auth.LDAP.NewIdentityAttributes]]"
+                    - name: AUTH_LDAP_REFERRAL_MODE
+                      value: "[[$.Auth.LDAP.ReferralMode]]"
                     #[[end]]
                     ## LDAP config END
                     ## RoleMapping config BEGIN
                     #[[if $.Auth.RoleMapper.RolesProperties]]
                     - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
                       value: "[[$.Auth.RoleMapper.RolesProperties]]"
-                    - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                      value: "[[$.Auth.RoleMapper.ReplaceRole]]"
+                    - name: AUTH_LDAP_MAPPER_KEEP_MAPPED
+                      value: "[[$.Auth.RoleMapper.RolesKeepMapped]]"
+                    - name: AUTH_LDAP_MAPPER_KEEP_NON_MAPPED
+                      value: "[[$.Auth.RoleMapper.RolesKeepNonMapped]]"
                     #[[end]]
                     ## RoleMapping config END
                     # Auth config END
@@ -941,7 +1013,7 @@ servers:
                       #[[end]]
                     #[[end]]
                     ## AMQ Streams END
-                    ## JBPM Kafka Emitter BEGIN
+                      ## JBPM Kafka Emitter BEGIN
                       #[[if .KafkaJbpmEventEmitters]]
                     - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_ENABLED
                       value: "true"
@@ -965,7 +1037,7 @@ servers:
                     - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_DATE_FORMAT
                       value: "[[.KafkaJbpmEventEmitters.DateFormat]]"
                       #[[end]]
-                     #[[if .KafkaJbpmEventEmitters.ProcessesTopicName]]
+                    #[[if .KafkaJbpmEventEmitters.ProcessesTopicName]]
                     - name: KIE_SERVER_KAFKA_JBPM_EVENT_EMITTER_PROCESSES_TOPIC_NAME
                       value: "[[.KafkaJbpmEventEmitters.ProcessesTopicName]]"
                       #[[end]]
@@ -979,6 +1051,58 @@ servers:
                       #[[end]]
                     #[[end]]
                     ## JBPM Kafka Emitter END
+                    ## CORS BEGIN
+                    #[[if .Cors]]
+                      #[[if .Cors.Filters]]
+                    - name: FILTERS
+                      value: "[[.Cors.Filters]]"
+                      #[[end]]
+                      #[[if .Cors.AllowOriginName]]
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowOriginName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowOriginValue]]
+                    - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowOriginValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowMethodsName]]
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowMethodsName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowMethodsValue]]
+                    - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowMethodsValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowHeadersName]]
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowHeadersName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowHeadersValue]]
+                    - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowHeadersValue]]"
+                      #[[end]]
+                      #[[if .Cors.AllowCredentialsName]]
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.AllowCredentialsName]]"
+                      #[[end]]
+                      #[[if .Cors.AllowCredentialsValue]]
+                    - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.AllowCredentialsValue]]"
+                      #[[end]]
+                      #[[if .Cors.MaxAgeName]]
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                      value: "[[.Cors.MaxAgeName]]"
+                      #[[end]]
+                      #[[if .Cors.MaxAgeValue]]
+                    - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                      value: "[[.Cors.MaxAgeValue]]"
+                      #[[end]]
+                  #[[end]]
+                  ## CORS END
+                  #[[if .MDBMaxSession]]
+                    - name: JBOSS_MDB_MAX_SESSIONS
+                      value: "[[.MDBMaxSession]]"
+                  #[[end]]
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck
@@ -1008,13 +1132,21 @@ servers:
                       containerPort: 8443
                       protocol: TCP
                   volumeMounts:
+                    #[[if not $.DisableSsl]]
                     - mountPath: /etc/kieserver-secret-volume
                       name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                       readOnly: true
+                    #[[end]]
                     #[[if $.OpenshiftCaBundle]]
                     - name: "[[$.ApplicationName]]-truststore"
                       mountPath: "/etc/openshift-truststore-volume"
                       readOnly: true
+                    #[[end]]
+                    #[[if .PersistRepos]]
+                    - name: "[[$.ApplicationName]]-m2-repository"
+                      mountPath: "/home/jboss/.m2/repository"
+                    - name: "[[$.ApplicationName]]-kie-repository"
+                      mountPath: "/home/jboss/.kie/repository"
                     #[[end]]
                     #[[if $.Auth.RoleMapper.From]]
                     - name: "[[$.Constants.RoleMapperVolume]]"
@@ -1022,13 +1154,23 @@ servers:
                       readOnly: true
                     #[[end]]
               volumes:
+                #[[if not $.DisableSsl]]
                 - name: kieserver-[[$.Constants.KeystoreVolumeSuffix]]
                   secret:
                     secretName: "[[.KeystoreSecret]]"
+                #[[end]]
                 #[[if $.OpenshiftCaBundle]]
                 - name: "[[$.ApplicationName]]-truststore"
                   secret:
                     secretName: "[[$.ApplicationName]]-truststore"
+                #[[end]]
+                #[[if .PersistRepos]]
+                - name: "[[$.ApplicationName]]-m2-repository"
+                  persistentVolumeClaim:
+                    claimName: "[[$.ApplicationName]]-m2-repository-claim"
+                - name: "[[$.ApplicationName]]-kie-repository"
+                  persistentVolumeClaim:
+                    claimName: "[[$.ApplicationName]]-kie-repository-claim"
                 #[[end]]
                 #[[if $.Auth.RoleMapper.From]]
                 - name: "[[$.Constants.RoleMapperVolume]]"
@@ -1047,6 +1189,38 @@ servers:
                 #[[end]]
                 #[[end]]
       ## KIE server deployment config END
+    #[[if .PersistRepos]]
+    persistentVolumeClaims:
+      - metadata:
+          name: "[[$.ApplicationName]]-m2-repository-claim"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+        spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "[[.ServersM2PvSize]]"
+      - metadata:
+          name: "[[$.ApplicationName]]-kie-repository-claim"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+        spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "[[.ServersKiePvSize]]"
+    #[[end]]
+    ## KIE server pvc END
     ## KIE server services BEGIN
     services:
       - spec:
@@ -1074,7 +1248,7 @@ servers:
       ## KIE server services END
     ## KIE server routes BEGIN
     routes:
-      - id: "[[.KieName]]-https"
+      - id: "[[.KieName]]-[[$.RouteProtocol]]"
         metadata:
           name: "[[.KieName]]"
           labels:
@@ -1082,16 +1256,22 @@ servers:
             application: "[[$.ApplicationName]]"
             service: "[[.KieName]]"
           annotations:
-            description: Route for KIE server's https service.
+            description: Route for KIE server's [[$.RouteProtocol]] service.
             haproxy.router.openshift.io/timeout: 60s
+            #[[if not $.DisableSsl]]
+            haproxy.router.openshift.io/balance: source
+            #[[end]]
         spec:
+          host: "[[.RouteHostname]]"
           to:
             name: "[[.KieName]]"
           port:
-            targetPort: https
+            targetPort: [[$.RouteProtocol]]
+          #[[if not $.DisableSsl]]
           tls:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
+          #[[end]]
       ## KIE server routes END
 #[[end]]
 ## RANGE ends
