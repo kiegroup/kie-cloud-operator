@@ -152,7 +152,19 @@ type KieServerSet struct {
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession *int      `json:"MDBMaxSession,omitempty"`
+	Liveness      *KieProbe `json:"liveness,omitempty"`
+	Readiness     *KieProbe `json:"readiness,omitempty"`
+}
+
+type KieProbe struct {
+	Path                string `json:"path,omitempty"`
+	Port                int32  `json:"port,omitempty"`
+	Scheme              string `json:"scheme,omitempty"`
+	InitialDelaySeconds int32  `json:"initialDelaySeconds,omitempty"`
+	TimeoutSeconds      int32  `json:"timeoutSeconds,omitempty"`
+	PeriodSeconds       int32  `json:"periodSeconds,omitempty"`
+	FailureThreshold    int32  `json:"failureThreshold,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -769,7 +781,9 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	MDBMaxSession *int      `json:"MDBMaxSession,omitempty"`
+	Liveness      *KieProbe `json:"liveness,omitempty"`
+	Readiness     *KieProbe `json:"readiness,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates

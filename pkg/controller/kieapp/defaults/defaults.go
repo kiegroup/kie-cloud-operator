@@ -484,6 +484,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 				template.DataGridAuth = *cr.Status.Applied.Objects.Console.DataGridAuth
 			}
 		}
+
 	}
 	return template
 }
@@ -772,6 +773,8 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				ServersKiePvSize: serverSet.ServersKiePvSize,
 				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
 				MDBMaxSession:    serverSet.MDBMaxSession,
+				Liveness:         serverSet.Liveness,
+				Readiness:        serverSet.Readiness,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -872,6 +875,113 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				template.StartupStrategy.StrategyName = cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName
 			} else {
 				template.StartupStrategy.StrategyName = api.OpenshiftStartupStrategy
+			}
+
+			// LivenessProbe
+			/*
+					livenessProbe:
+				    	httpGet:
+				        	path: /services/rest/server/healthcheck
+				            port: 8080
+				            scheme: HTTP
+						initialDelaySeconds: 180
+				        timeoutSeconds: 2
+				        periodSeconds: 15
+				        failureThreshold: 3
+			*/
+
+			if template.Liveness == nil {
+				template.Liveness = &api.KieProbe{
+					Path:                "",
+					Port:                int32(0),
+					Scheme:              "",
+					TimeoutSeconds:      int32(0),
+					InitialDelaySeconds: int32(0),
+					PeriodSeconds:       int32(0),
+					FailureThreshold:    int32(0),
+				}
+			}
+
+			if len(template.Liveness.Path) == 0 && len(serverSet.Liveness.Path) == 0 {
+				template.Liveness.Path = "/services/rest/server/healthcheck"
+			}
+
+			if template.Liveness.Port == 0 && serverSet.Liveness.Port == 0 {
+				template.Liveness.Port = 8080
+			}
+
+			if len(template.Liveness.Scheme) == 0 && len(serverSet.Liveness.Scheme) == 0 {
+				template.Liveness.Scheme = "HTTP"
+			}
+
+			if template.Liveness.InitialDelaySeconds == 0 && serverSet.Liveness.InitialDelaySeconds == 0 {
+				template.Liveness.InitialDelaySeconds = int32(180)
+			}
+
+			if template.Liveness.TimeoutSeconds == 0 && serverSet.Liveness.TimeoutSeconds == 0 {
+				template.Liveness.TimeoutSeconds = int32(2)
+			}
+
+			if template.Liveness.PeriodSeconds == 0 && serverSet.Liveness.PeriodSeconds == 0 {
+				template.Liveness.PeriodSeconds = int32(15)
+			}
+
+			if template.Liveness.FailureThreshold == 0 && serverSet.Liveness.FailureThreshold == 0 {
+				template.Liveness.FailureThreshold = int32(3)
+			}
+
+			// ReadinessProbe
+
+			/*
+				readinessProbe:
+					httpGet:
+				    	path: /services/rest/server/readycheck
+				        port: 8080
+				        scheme: HTTP
+					initialDelaySeconds: 30
+				    timeoutSeconds: 2
+				    periodSeconds: 5
+				    failureThreshold: 36
+			*/
+
+			if template.Readiness == nil {
+				template.Readiness = &api.KieProbe{
+					Path:                "",
+					Port:                int32(0),
+					Scheme:              "",
+					TimeoutSeconds:      int32(0),
+					InitialDelaySeconds: int32(0),
+					PeriodSeconds:       int32(0),
+					FailureThreshold:    int32(0),
+				}
+			}
+
+			if len(template.Readiness.Path) == 0 && len(serverSet.Readiness.Path) == 0 {
+				template.Readiness.Path = "/services/rest/server/readycheck"
+			}
+
+			if template.Readiness.Port == 0 && serverSet.Readiness.Port == 0 {
+				template.Readiness.Port = 8080
+			}
+
+			if len(template.Readiness.Scheme) == 0 && len(serverSet.Readiness.Scheme) == 0 {
+				template.Readiness.Scheme = "HTTP"
+			}
+
+			if template.Readiness.InitialDelaySeconds == 0 && serverSet.Readiness.InitialDelaySeconds == 0 {
+				template.Readiness.InitialDelaySeconds = 30
+			}
+
+			if template.Readiness.TimeoutSeconds == 0 && serverSet.Readiness.TimeoutSeconds == 0 {
+				template.Readiness.TimeoutSeconds = 2
+			}
+
+			if template.Readiness.PeriodSeconds == 0 && serverSet.Readiness.PeriodSeconds == 0 {
+				template.Readiness.PeriodSeconds = 5
+			}
+
+			if template.Readiness.FailureThreshold == 0 && serverSet.Readiness.FailureThreshold == 0 {
+				template.Readiness.FailureThreshold = int32(36)
 			}
 
 			servers = append(servers, template)
@@ -1418,6 +1528,7 @@ func SetDefaults(cr *api.KieApp) {
 		addWebhookPwds(specApply.Objects.Servers[index].Build)
 		checkJvmOnServer(&specApply.Objects.Servers[index])
 		setResourcesDefault(&specApply.Objects.Servers[index].KieAppObject, constants.ServersLimits, constants.ServerRequests)
+		checkServerProbes(&specApply.Objects.Servers[index])
 	}
 
 	if specApply.Objects.Console != nil {
@@ -1462,6 +1573,31 @@ func SetDefaults(cr *api.KieApp) {
 	setPasswords(specApply, isTrialEnv)
 
 	cr.Status.Applied = *specApply
+}
+
+func checkServerProbes(server *api.KieServerSet) {
+	if server.Liveness == nil {
+		server.Liveness = &api.KieProbe{
+			Path:                "",
+			Port:                int32(0),
+			Scheme:              "",
+			FailureThreshold:    int32(0),
+			InitialDelaySeconds: int32(0),
+			TimeoutSeconds:      int32(0),
+			PeriodSeconds:       int32(0),
+		}
+	}
+	if server.Readiness == nil {
+		server.Readiness = &api.KieProbe{
+			Path:                "",
+			Port:                int32(0),
+			Scheme:              "",
+			FailureThreshold:    int32(0),
+			InitialDelaySeconds: int32(0),
+			TimeoutSeconds:      int32(0),
+			PeriodSeconds:       int32(0),
+		}
+	}
 }
 
 func checkJvmOnConsole(console *api.ConsoleObject) {

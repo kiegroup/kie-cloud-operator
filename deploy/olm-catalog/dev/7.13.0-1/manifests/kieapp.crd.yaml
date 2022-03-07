@@ -2488,6 +2488,28 @@ spec:
                         keystoreSecret:
                           description: KeystoreSecret secret name
                           type: string
+                        liveness:
+                          properties:
+                            failureThreshold:
+                              format: int32
+                              type: integer
+                            initialDelaySeconds:
+                              format: int32
+                              type: integer
+                            path:
+                              type: string
+                            periodSeconds:
+                              format: int32
+                              type: integer
+                            port:
+                              format: int32
+                              type: integer
+                            scheme:
+                              type: string
+                            timeoutSeconds:
+                              format: int32
+                              type: integer
+                          type: object
                         name:
                           description: Server name
                           type: string
@@ -2495,6 +2517,28 @@ spec:
                           description: PersistRepos enables persistent volumes for
                             KIE Server's kie and maven repositories
                           type: boolean
+                        readiness:
+                          properties:
+                            failureThreshold:
+                              format: int32
+                              type: integer
+                            initialDelaySeconds:
+                              format: int32
+                              type: integer
+                            path:
+                              type: string
+                            periodSeconds:
+                              format: int32
+                              type: integer
+                            port:
+                              format: int32
+                              type: integer
+                            scheme:
+                              type: string
+                            timeoutSeconds:
+                              format: int32
+                              type: integer
+                          type: object
                         replicas:
                           description: Replicas to set for the DeploymentConfig
                           format: int32
@@ -5390,6 +5434,28 @@ spec:
                             keystoreSecret:
                               description: KeystoreSecret secret name
                               type: string
+                            liveness:
+                              properties:
+                                failureThreshold:
+                                  format: int32
+                                  type: integer
+                                initialDelaySeconds:
+                                  format: int32
+                                  type: integer
+                                path:
+                                  type: string
+                                periodSeconds:
+                                  format: int32
+                                  type: integer
+                                port:
+                                  format: int32
+                                  type: integer
+                                scheme:
+                                  type: string
+                                timeoutSeconds:
+                                  format: int32
+                                  type: integer
+                              type: object
                             name:
                               description: Server name
                               type: string
@@ -5397,6 +5463,28 @@ spec:
                               description: PersistRepos enables persistent volumes
                                 for KIE Server's kie and maven repositories
                               type: boolean
+                            readiness:
+                              properties:
+                                failureThreshold:
+                                  format: int32
+                                  type: integer
+                                initialDelaySeconds:
+                                  format: int32
+                                  type: integer
+                                path:
+                                  type: string
+                                periodSeconds:
+                                  format: int32
+                                  type: integer
+                                port:
+                                  format: int32
+                                  type: integer
+                                scheme:
+                                  type: string
+                                timeoutSeconds:
+                                  format: int32
+                                  type: integer
+                              type: object
                             replicas:
                               description: Replicas to set for the DeploymentConfig
                               format: int32
