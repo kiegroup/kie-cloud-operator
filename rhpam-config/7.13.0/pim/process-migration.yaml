@@ -1,0 +1,271 @@
+## KIE ProcessMigration BEGIN
+processMigration:
+  deploymentConfigs:
+    - metadata:
+        name: "[[.ApplicationName]]-process-migration"
+        labels:
+          app: "[[$.ApplicationName]]"
+          application: "[[$.ApplicationName]]"
+          service: "[[.ApplicationName]]-process-migration"
+      spec:
+        replicas: [[.ProcessMigration.Replicas]]
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-process-migration"
+        strategy:
+          type: Recreate
+        triggers:
+          #[[if not .ProcessMigration.OmitImageStream]]
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - "[[.ApplicationName]]-process-migration"
+              from:
+                kind: ImageStreamTag
+                namespace: openshift
+                name: "[[.ProcessMigration.Image]]:[[.ProcessMigration.ImageTag]]"
+          #[[end]]
+          - type: ConfigChange
+        template:
+          metadata:
+            name: "[[.ApplicationName]]-process-migration"
+            labels:
+              app: "[[.ApplicationName]]"
+              application: "[[.ApplicationName]]"
+              deploymentConfig: "[[.ApplicationName]]-process-migration"
+              service: "[[.ApplicationName]]-process-migration"
+          spec:
+            serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
+            terminationGracePeriodSeconds: 60
+            containers:
+              - name: "[[.ApplicationName]]-process-migration"
+                image: "[[.ProcessMigration.ImageURL]]"
+                imagePullPolicy: Always
+                resources:
+                  limits:
+                    memory: 512Mi
+                ports:
+                  - name: http
+                    containerPort: 8080
+                    protocol: TCP
+                readinessProbe:
+                  failureThreshold: 36
+                  httpGet:
+                    path: /q/health/ready
+                    port: 8080
+                    scheme: HTTP
+                  initialDelaySeconds: 30
+                  periodSeconds: 5
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                livenessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                    scheme: HTTP
+                  initialDelaySeconds: 90
+                  periodSeconds: 15
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                env:
+                  #[[if .ProcessMigration.ExtraClassPath]]
+                  - name: JBOSS_KIE_EXTRA_CLASSPATH
+                    value: [[.ProcessMigration.ExtraClassPath]]
+                  #[[end]]
+                  ## Jvm config BEGIN
+                  #[[if .ProcessMigration.Jvm.JavaOptsAppend]]
+                  - name: JAVA_OPTS_APPEND
+                    value: "[[.ProcessMigration.Jvm.JavaOptsAppend]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaMaxMemRatio]]
+                  - name: JAVA_MAX_MEM_RATIO
+                    value: "[[.ProcessMigration.Jvm.JavaMaxMemRatio]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaInitialMemRatio]]
+                  - name: JAVA_INITIAL_MEM_RATIO
+                    value: "[[.ProcessMigration.Jvm.JavaInitialMemRatio]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaMaxInitialMem]]
+                  - name: JAVA_MAX_INITIAL_MEM
+                    value: "[[.ProcessMigration.Jvm.JavaMaxInitialMem]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaDiagnostics]]
+                  - name: JAVA_DIAGNOSTICS
+                    value: "[[.ProcessMigration.Jvm.JavaDiagnostics]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaDebug]]
+                  - name: JAVA_DEBUG
+                    value: "[[.ProcessMigration.Jvm.JavaDebug]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.JavaDebugPort]]
+                  - name: JAVA_DEBUG_PORT
+                    value: "[[.ProcessMigration.Jvm.JavaDebugPort]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcMinHeapFreeRatio]]
+                  - name: GC_MIN_HEAP_FREE_RATIO
+                    value: "[[.ProcessMigration.Jvm.GcMinHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcMaxHeapFreeRatio]]
+                  - name: GC_MAX_HEAP_FREE_RATIO
+                    value: "[[.ProcessMigration.Jvm.GcMaxHeapFreeRatio]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcTimeRatio]]
+                  - name: GC_TIME_RATIO
+                    value: "[[.ProcessMigration.Jvm.GcTimeRatio]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcAdaptiveSizePolicyWeight]]
+                  - name: GC_ADAPTIVE_SIZE_POLICY_WEIGHT
+                    value: "[[.ProcessMigration.Jvm.GcAdaptiveSizePolicyWeight]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcMaxMetaspaceSize]]
+                  - name: GC_MAX_METASPACE_SIZE
+                    value: "[[.ProcessMigration.Jvm.GcMaxMetaspaceSize]]"
+                  #[[end]]
+                  #[[if .ProcessMigration.Jvm.GcContainerOptions]]
+                  - name: GC_CONTAINER_OPTIONS
+                    value: "[[.ProcessMigration.Jvm.GcContainerOptions]]"
+                  #[[end]]
+                  ## Jvm config END
+                volumeMounts:
+                  - mountPath: /opt/rhpam-process-migration/quarkus-app/config/application.yaml
+                    subPath: application.yaml
+                    name: config
+                  - mountPath: /opt/rhpam-process-migration/quarkus-app/config/application-users.properties
+                    subPath: application-users.properties
+                    name: config
+                  - mountPath: /opt/rhpam-process-migration/quarkus-app/config/application-roles.properties
+                    subPath: application-roles.properties
+                    name: config
+            volumes:
+              - name: config
+                configMap:
+                  name: "[[.ApplicationName]]-process-migration"
+                  defaultMode: 420
+  configMaps:
+    - metadata:
+        name: "[[.ApplicationName]]-process-migration"
+      data:
+        application.yaml: |-
+          # Default pim configuration
+          quarkus:
+            class-loading:
+              removed-artifacts: com.oracle.database.jdbc:ojdbc8,com.ibm.db2:jcc,com.microsoft.sqlserver:mssql-jdbc
+            package:
+              type: mutable-jar
+              user-providers-directory: providers
+            http:
+              auth:
+                basic: true
+                policy:
+                  main-policy:
+                    roles-allowed: admin
+                permission:
+                  main:
+                    paths: /*
+                    policy: main-policy
+                  public:
+                    paths: /q/health/*
+                    policy: permit
+                    methods: GET
+            security:
+              users:
+                file:
+                  realm-name: pim-file
+                  enabled: true
+                  plain-text: false
+                  users: /opt/rhpam-process-migration/quarkus-app/config/application-users.properties
+                  roles: /opt/rhpam-process-migration/quarkus-app/config/application-roles.properties
+              jdbc:
+                realm-name: pim-jdbc
+                enabled: true
+                principal-query:
+                  sql: SELECT u.password, u.role FROM users u WHERE u.username=?
+              ldap:
+                realm-name: pim-ldap
+                enabled: true
+                dir-context:
+                  url: ldap://override-when-needed
+                identity-mapping:
+                  search-base-dn: ou=users,o=YourCompany,c=ES
+            # Flyway to create PIM schema
+            flyway:
+              connect-retries: 10
+              table: flyway_pim_history
+              migrate-at-start: true
+              baseline-on-migrate: true
+              baseline-version: 1.0
+              baseline-description: PimDB
+              sql-migration-prefix: h2
+            # Quartz configuration
+            quartz:
+              store-type: jdbc-cmt
+              start-mode: forced
+            resteasy:
+              path: /rest
+            datasource:
+              db-kind: h2
+              jdbc:
+                url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+              username: sa
+              password: sa
+            hibernate-orm:
+              database:
+                generation: validate
+          pim:
+            auth-method: file
+          kieservers:
+            #[[range $index, $Map := .ProcessMigration.KieServerClients]]
+            - host: [[.Host]]
+              username: [[.Username]]
+              password: [[.Password]]
+            #[[end]]
+        application-users.properties: |-
+          # set the following spec to autogenerated this file content, if you want to provide your own properties file
+          # override this file's content.
+          # spec:
+          #  objects:
+          #    processMigration:
+          #      username: pimAdmin
+          #      password: somePasswordThatWillBeConvertedToMD5
+          # to generate password use:  echo -n "username:pim-file:password" | openssl md5
+          # pim-file is the realm defined on the application.yaml config-map;
+          [[.ProcessMigration.Username]]=[[.ProcessMigration.Password]]
+        application-roles.properties: |-
+          [[.ProcessMigration.Username]]=admin
+  services:
+    - spec:
+        ports:
+          - name: http
+            port: 8080
+            protocol: TCP
+            targetPort: 8080
+        selector:
+          deploymentConfig: "[[.ApplicationName]]-process-migration"
+      metadata:
+        name: "[[.ApplicationName]]-process-migration"
+        labels:
+          app: "[[$.ApplicationName]]"
+          application: "[[$.ApplicationName]]"
+          service: "[[.ApplicationName]]-process-migration"
+        annotations:
+          description: Process Migration web server's port.
+  routes:
+    - id: "[[.ApplicationName]]-process-migration-http"
+      metadata:
+        name: "[[.ApplicationName]]-process-migration"
+        labels:
+          app: "[[.ApplicationName]]"
+          application: "[[.ApplicationName]]"
+          service: "[[.ApplicationName]]-process-migration"
+        annotations:
+          description: "Route for Process Migration [[.RouteProtocol]] service."
+      spec:
+        host: "[[.ProcessMigration.RouteHostname]]"
+        to:
+          kind: Service
+          name: "[[.ApplicationName]]-process-migration"
+        port:
+          targetPort: http
+## KIE ProcessMigration END
+
