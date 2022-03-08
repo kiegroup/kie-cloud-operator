@@ -764,6 +764,7 @@ func TestRhpamTrialWithReposPersistedWithStorageClass(t *testing.T) {
 
 	// there shouldn't be any pvc on trial env
 	assert.Len(t, env.Servers[0].PersistentVolumeClaims, 0)
+	assert.Equal(t, false, cr.Status.Applied.Objects.Servers[0].PersistRepos)
 }
 
 func runCommonAssertsForKieServerPersistentStorageVolumeMounts(t *testing.T, cr api.KieApp, env api.Environment) {
@@ -3293,6 +3294,14 @@ func TestSetKieServerFrom(t *testing.T) {
 							},
 						},
 					},
+					{
+						From: &api.ImageObjRef{
+							Kind: "DockerImage",
+							ObjectReference: api.ObjectReference{
+								Name: "quay.io/custom/image:1.0",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -3303,6 +3312,10 @@ func TestSetKieServerFrom(t *testing.T) {
 	assert.Equal(t, "", env.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
 	assert.Equal(t, byeRules, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 	assert.Equal(t, "", env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+
+	assert.Equal(t, (*appsv1.DeploymentTriggerImageChangeParams)(nil), env.Servers[2].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams)
+	assert.Equal(t, "quay.io/custom/image:1.0", env.Servers[2].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+
 }
 
 func TestSetKieServerFromBuild(t *testing.T) {
@@ -3408,7 +3421,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 					},
 					{
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 							GitSource: api.GitSource{
 								URI:        "http://git.example.com",
 								Reference:  "anotherbranch",
@@ -3418,6 +3431,23 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 								{
 									Type:   api.GitHubWebhook,
 									Secret: "s3cr3t",
+								},
+							},
+						},
+					},
+					{
+						Build: &api.KieAppBuildObject{
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.7.0-SNAPSHOT",
+							GitSource: api.GitSource{
+								URI:        "http://git.example.com",
+								Reference:  "anotherbranch",
+								ContextDir: "test",
+							},
+							From: &api.ImageObjRef{
+								Kind: "DockerImage",
+								ObjectReference: api.ObjectReference{
+									Name:      "quay.io/test/custom:1.0",
+									Namespace: "",
 								},
 							},
 						},
@@ -3432,7 +3462,7 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Len(t, env.Servers, 2, "Expect two KIE Servers to be created based on provided build configs")
+	assert.Len(t, env.Servers, 3, "Expect two KIE Servers to be created based on provided build configs")
 	assert.Equal(t, "somebranch", env.Servers[0].BuildConfigs[0].Spec.Source.Git.Ref)
 	assert.Equal(t, "anotherbranch", env.Servers[1].BuildConfigs[0].Spec.Source.Git.Ref)
 
@@ -3446,6 +3476,10 @@ func TestMultipleBuildConfigurations(t *testing.T) {
 	assert.Equal(t, "openshift", env.Servers[1].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Namespace)
 	assert.Len(t, env.Servers[1].ImageStreams, 1)
 	assert.Equal(t, cr.Status.Applied.Objects.Servers[1].Name+latestTag, env.Servers[1].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+
+	assert.Equal(t, "DockerImage", env.Servers[2].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Kind)
+	assert.Equal(t, "quay.io/test/custom:1.0", env.Servers[2].BuildConfigs[0].Spec.Strategy.SourceStrategy.From.Name)
+
 	os.Clearenv()
 }
 
@@ -5998,10 +6032,14 @@ func TestResourcesDefault(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
+	testCPUReqAndLimit(t, cr, constants.ServersCPULimit, constants.ServersCPURequests,
 		constants.ConsoleProdCPULimit, constants.ConsoleProdCPURequests,
 		constants.SmartRouterLimits["CPU"], constants.SmartRouterRequests["CPU"],
 		constants.ProcessMigrationLimits["CPU"], constants.ProcessMigrationRequests["CPU"])
+	testMemoryReqAndLimit(t, cr, constants.ServersMemLimit, constants.ServersMemRequests,
+		constants.ConsoleProdMemLimit, constants.ConsoleProdMemRequests,
+		constants.SmartRouterLimits["MEM"], constants.SmartRouterRequests["MEM"],
+		constants.ProcessMigrationLimits["MEM"], constants.ProcessMigrationRequests["MEM"])
 }
 
 func TestResourcesOverrideServers(t *testing.T) {
@@ -6040,13 +6078,17 @@ func TestResourcesOverrideServers(t *testing.T) {
 		},
 	}
 	GetEnvironment(cr, test.MockService())
-	testReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
+	testCPUReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
 		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String(),
-		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String()) //Since Memory request is not set, default will be used
+		sampleLimitAndRequestsResources.Limits.Cpu().String(), sampleLimitAndRequestsResources.Requests.Cpu().String())
+	testMemoryReqAndLimit(t, cr, sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String(),
+		sampleLimitAndRequestsResources.Limits.Memory().String(), sampleLimitAndRequestsResources.Requests.Memory().String())
 }
 
-func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration, rCPUProcessMigration string) {
+func testCPUReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer string, lCPUConsole string, rCPUConsole string, lCPUSmartRouter string, rCPUSmartRouter string, lCPUProcessMigration string, rCPUProcessMigration string) {
 
 	assert.NotNil(t, cr.Status.Applied)
 	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
@@ -6079,12 +6121,46 @@ func testReqAndLimit(t *testing.T, cr *api.KieApp, lCPUServer string, rCPUServer
 	assert.True(t, requestsCPUProcessMigration.String() == rCPUProcessMigration)
 }
 
+func testMemoryReqAndLimit(t *testing.T, cr *api.KieApp, lMEMServers string, rMEMServers string, lMEMConsole string, rMEMConsole string, lMEMSmartRouter string, rMEMSmartRouter string, lMEMProcessMigration string, rMEMProcessMigration string) {
+	assert.NotNil(t, cr.Status.Applied)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.Console.Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.SmartRouter.Resources)
+	assert.NotNil(t, cr.Status.Applied.Objects.ProcessMigration.Resources)
+
+	limitMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Limits[corev1.ResourceMemory]
+	assert.True(t, limitMEMServer.String() == lMEMServers)
+
+	requestsMEMServer := cr.Status.Applied.Objects.Servers[0].Resources.Requests[corev1.ResourceMemory]
+	assert.True(t, requestsMEMServer.String() == rMEMServers)
+
+	limitMEMConsole := cr.Status.Applied.Objects.Console.KieAppObject.Resources.Limits[corev1.ResourceMemory]
+	assert.True(t, limitMEMConsole.String() == lMEMConsole)
+
+	requestsMEMConsole := cr.Status.Applied.Objects.Console.Resources.Requests[corev1.ResourceMemory]
+	assert.True(t, requestsMEMConsole.String() == rMEMConsole)
+
+	limitMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.KieAppObject.Resources.Limits[corev1.ResourceMemory]
+	assert.True(t, limitMEMSmartRouter.String() == lMEMSmartRouter)
+
+	requestsMEMSmartRouter := cr.Status.Applied.Objects.SmartRouter.Resources.Requests[corev1.ResourceMemory]
+	assert.True(t, requestsMEMSmartRouter.String() == rMEMSmartRouter)
+
+	limitMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.KieAppObject.Resources.Limits[corev1.ResourceMemory]
+	assert.True(t, limitMEMProcessMigration.String() == lMEMProcessMigration)
+
+	requestsMEMProcessMigration := cr.Status.Applied.Objects.ProcessMigration.Resources.Requests[corev1.ResourceMemory]
+	assert.True(t, requestsMEMProcessMigration.String() == rMEMProcessMigration)
+}
+
 var sampleLimitAndRequestsResources = &corev1.ResourceRequirements{
 	Limits: corev1.ResourceList{
-		corev1.ResourceCPU: *resource.NewQuantity(200, "m"),
+		corev1.ResourceCPU:    *resource.NewQuantity(200, "m"),
+		corev1.ResourceMemory: *resource.NewQuantity(256, "Mi"),
 	},
 	Requests: corev1.ResourceList{
-		corev1.ResourceCPU: *resource.NewQuantity(100, "m"),
+		corev1.ResourceCPU:    *resource.NewQuantity(100, "m"),
+		corev1.ResourceMemory: *resource.NewQuantity(102, "Mi"),
 	},
 }
 
@@ -7182,6 +7258,60 @@ func assertRouteHostnameEmpty(t *testing.T, env api.Environment) {
 	assert.Empty(t, env.Console.Routes[0].Spec.Host)
 	assert.Empty(t, env.SmartRouter.Routes[0].Spec.Host)
 	assert.Empty(t, env.Dashbuilder.Routes[0].Spec.Host)
+}
+
+func TestKieExecutorMDB(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testKieExecutorMDB"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{MDBMaxSession: Pint(40)},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestKieExecutorMDB environment")
+
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
+	mdbMaxSessionPassed := false
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
+			if env.Name != "JBOSS_MDB_MAX_SESSION" && env.Value == "40" {
+				mdbMaxSessionPassed = true
+			}
+		}
+	}
+	assert.True(t, mdbMaxSessionPassed)
+}
+
+func TestKieExecutorMDBEmpty(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{Name: "testKieExecutorMDB"},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting TestKieExecutorMDBEmpty environment")
+
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
+	mdbMaxSessionNotPassed := true
+	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
+		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
+			if env.Name != "JBOSS_MDB_MAX_SESSION" {
+				mdbMaxSessionNotPassed = false
+			}
+		}
+	}
+	assert.True(t, mdbMaxSessionNotPassed)
 }
 
 func TestDataGridRHPAMAuth(t *testing.T) {

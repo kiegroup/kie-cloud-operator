@@ -139,6 +139,7 @@ dashbuilder:
                   - name: DASHBUILDER_CONFIG_MAP_PROPS
                     value: "[[.Dashbuilder.Config.ConfigMapProps]]"
                   #[[end]]
+                  #[[if not .DisableSsl]]
                   - name: HTTPS_KEYSTORE_DIR
                     value: "/etc/dashbuilder-secret-volume"
                   - name: HTTPS_KEYSTORE
@@ -147,6 +148,7 @@ dashbuilder:
                     value: "jboss"
                   - name: HTTPS_PASSWORD
                     value: "[[.KeyStorePassword]]"
+                  #[[end]]
                   - name: KUBERNETES_NAMESPACE
                     valueFrom:
                       fieldRef:
@@ -186,30 +188,22 @@ dashbuilder:
                   #[[if .Auth.LDAP.URL]]
                   - name: AUTH_LDAP_URL
                     value: "[[.Auth.LDAP.URL]]"
+                  - name: AUTH_LDAP_LOGIN_MODULE
+                    value: "[[.Auth.LDAP.LoginModule]]"
+                  - name: AUTH_LDAP_LOGIN_FAILOVER
+                    value: "[[.Auth.LDAP.LoginFailover]]"
                   - name: AUTH_LDAP_BIND_DN
                     value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
-                  - name: AUTH_LDAP_JAAS_SECURITY_DOMAIN
-                    value: "[[.Auth.LDAP.JAASSecurityDomain]]"
-                  - name: AUTH_LDAP_LOGIN_MODULE
-                    value: "[[.Auth.LDAP.LoginModule]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
                     value: "[[.Auth.LDAP.BaseFilter]]"
-                  - name: AUTH_LDAP_SEARCH_SCOPE
-                    value: "[[.Auth.LDAP.SearchScope]]"
+                  - name: AUTH_LDAP_RECURSIVE_SEARCH
+                    value: "[[.Auth.LDAP.RecursiveSearch]]"
                   - name: AUTH_LDAP_SEARCH_TIME_LIMIT
                     value: "[[.Auth.LDAP.SearchTimeLimit]]"
-                  - name: AUTH_LDAP_DISTINGUISHED_NAME_ATTRIBUTE
-                    value: "[[.Auth.LDAP.DistinguishedNameAttribute]]"
-                  - name: AUTH_LDAP_PARSE_USERNAME
-                    value: "[[.Auth.LDAP.ParseUsername]]"
-                  - name: AUTH_LDAP_USERNAME_BEGIN_STRING
-                    value: "[[.Auth.LDAP.UsernameBeginString]]"
-                  - name: AUTH_LDAP_USERNAME_END_STRING
-                    value: "[[.Auth.LDAP.UsernameEndString]]"
                   - name: AUTH_LDAP_ROLE_ATTRIBUTE_ID
                     value: "[[.Auth.LDAP.RoleAttributeID]]"
                   - name: AUTH_LDAP_ROLES_CTX_DN
@@ -220,22 +214,20 @@ dashbuilder:
                     value: "[[.Auth.LDAP.RoleRecursion]]"
                   - name: AUTH_LDAP_DEFAULT_ROLE
                     value: "[[.Auth.LDAP.DefaultRole]]"
-                  - name: AUTH_LDAP_ROLE_NAME_ATTRIBUTE_ID
-                    value: "[[.Auth.LDAP.RoleNameAttributeID]]"
-                  - name: AUTH_LDAP_PARSE_ROLE_NAME_FROM_DN
-                    value: "[[.Auth.LDAP.ParseRoleNameFromDN]]"
-                  - name: AUTH_LDAP_ROLE_ATTRIBUTE_IS_DN
-                    value: "[[.Auth.LDAP.RoleAttributeIsDN]]"
-                  - name: AUTH_LDAP_REFERRAL_USER_ATTRIBUTE_ID_TO_CHECK
-                    value: "[[.Auth.LDAP.ReferralUserAttributeIDToCheck]]"
+                  - name: AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES
+                    value: "[[.Auth.LDAP.NewIdentityAttributes]]"
+                  - name: AUTH_LDAP_REFERRAL_MODE
+                    value: "[[.Auth.LDAP.ReferralMode]]"
                   #[[end]]
                   ## LDAP config END
                   ## RoleMapping config BEGIN
                   #[[if .Auth.RoleMapper.RolesProperties]]
                   - name: AUTH_ROLE_MAPPER_ROLES_PROPERTIES
                     value: "[[.Auth.RoleMapper.RolesProperties]]"
-                  - name: AUTH_ROLE_MAPPER_REPLACE_ROLE
-                    value: "[[.Auth.RoleMapper.ReplaceRole]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepMapped]]"
+                  - name: AUTH_LDAP_MAPPER_KEEP_NON_MAPPED
+                    value: "[[.Auth.RoleMapper.RolesKeepNonMapped]]"
                   #[[end]]
                   ## RoleMapping config END
                   # Auth config END
@@ -293,10 +285,60 @@ dashbuilder:
                     value: "[[.Dashbuilder.Jvm.GcContainerOptions]]"
                   #[[end]]
                   ## Jvm config END
+                  ## CORS BEGIN
+                  #[[if .Dashbuilder.Cors]]
+                    #[[if .Dashbuilder.Cors.Filters]]
+                  - name: FILTERS
+                    value: "[[.Dashbuilder.Cors.Filters]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowOriginName]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowOriginName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowOriginValue]]
+                  - name: AC_ALLOW_ORIGIN_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowOriginValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowMethodsName]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowMethodsName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowMethodsValue]]
+                  - name: AC_ALLOW_METHODS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowMethodsValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowHeadersName]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowHeadersName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowHeadersValue]]
+                  - name: AC_ALLOW_HEADERS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowHeadersValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowCredentialsName]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.AllowCredentialsName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.AllowCredentialsValue]]
+                  - name: AC_ALLOW_CREDENTIALS_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.AllowCredentialsValue]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.MaxAgeName]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_NAME
+                    value: "[[.Dashbuilder.Cors.MaxAgeName]]"
+                    #[[end]]
+                    #[[if .Dashbuilder.Cors.MaxAgeValue]]
+                  - name: AC_MAX_AGE_FILTER_RESPONSE_HEADER_VALUE
+                    value: "[[.Dashbuilder.Cors.MaxAgeValue]]"
+                    #[[end]]
+                  #[[end]]
+                  ## CORS END
                 volumeMounts:
+                  #[[if not .DisableSsl]]
                   - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                     mountPath: "/etc/dashbuilder-secret-volume"
                     readOnly: true
+                  #[[end]]
                   #[[if .OpenshiftCaBundle]]
                   - name: "[[.ApplicationName]]-truststore"
                     mountPath: "/etc/openshift-truststore-volume"
@@ -307,9 +349,11 @@ dashbuilder:
                     mountPath: "/opt/kie/dashbuilder"
                   #[[end]]
             volumes:
+              #[[if not .DisableSsl]]
               - name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.Constants.KeystoreVolumeSuffix]]"
                 secret:
                   secretName: "[[.Dashbuilder.KeystoreSecret]]"
+              #[[end]]
               #[[if .OpenshiftCaBundle]]
               - name: "[[.ApplicationName]]-truststore"
                 secret:
@@ -340,7 +384,7 @@ dashbuilder:
         annotations:
           description: All the Dashbuilder web server's ports.
   routes:
-    - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-https"
+    - id: "[[.ApplicationName]]-[[.Dashbuilder.Name]]-[[.RouteProtocol]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         labels:
@@ -348,15 +392,20 @@ dashbuilder:
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         annotations:
-          description: Route for Dashbuilder's https service.
+          description: Route for Dashbuilder's [[.RouteProtocol]] service.
           haproxy.router.openshift.io/timeout: 60s
+          #[[if not .DisableSsl]]
+          haproxy.router.openshift.io/balance: source
+          #[[end]]
       spec:
-        host: ""
+        host: "[[.Dashbuilder.RouteHostname]]"
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:
-          targetPort: https
+          targetPort: [[.RouteProtocol]]
+        #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
+        #[[end]]
 
