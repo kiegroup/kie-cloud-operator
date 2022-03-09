@@ -11,9 +11,9 @@ spec:
   objects:
     servers:
       - build:
-          kieServerContainerDeployment: rhdm-kieserver-hellorules=org.openshift.quickstarts:rhdm-kieserver-hellorules:1.6.0-SNAPSHOT
+          kieServerContainerDeployment: rhdm-kieserver-hellorules=org.openshift.quickstarts:rhpam-kieserver-decisions:1.6.0-SNAPSHOT
           gitSource:
-            uri: https://github.com/jboss-container-images/rhdm-7-openshift-image.git
+            uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
             reference: main
             contextDir: quickstarts/hello-rules/hellorules
         jms:

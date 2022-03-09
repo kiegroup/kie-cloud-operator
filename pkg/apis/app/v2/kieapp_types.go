@@ -297,7 +297,7 @@ type KieAppObject struct {
 type KieAppBuildObject struct {
 	// Env set environment variables for BuildConfigs
 	Env []corev1.EnvVar `json:"env,omitempty"`
-	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+	// The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT
 	KieServerContainerDeployment string `json:"kieServerContainerDeployment,omitempty"`
 	// Disable Maven pull dependencies for immutable KIE Server configurations for S2I and pre built kjars. Useful for pre-compiled kjar.
 	DisablePullDeps bool `json:"disablePullDeps,omitempty"`
