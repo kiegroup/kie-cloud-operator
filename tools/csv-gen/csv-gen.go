@@ -200,7 +200,7 @@ func main() {
 				Version:     api.SchemeGroupVersion.Version,
 				Kind:        "KieApp",
 				DisplayName: "KieApp",
-				Description: "A project prescription running an RHPAM/RHDM environment.",
+				Description: "A project prescription running an RHPAM environment.",
 				Name:        "kieapps." + api.SchemeGroupVersion.Group,
 				Resources: []csvv1.APIResourceReference{
 					{

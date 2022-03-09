@@ -24,7 +24,7 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: A project prescription running an RHPAM/RHDM environment.
+    - description: A project prescription running an RHPAM environment.
       displayName: KieApp
       kind: KieApp
       name: kieapps.app.kiegroup.org
@@ -172,12 +172,6 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_DC_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.0
                   value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.13.0
@@ -202,12 +196,6 @@ spec:
                   value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.13.0
                   value: registry.redhat.io/amq7/amq-broker:7.8
-                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.1
-                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.12.1
-                - name: RELATED_IMAGE_DM_DC_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.12.1
                   value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.12.1
