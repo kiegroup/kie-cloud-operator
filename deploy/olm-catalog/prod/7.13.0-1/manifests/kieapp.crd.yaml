@@ -1848,7 +1848,7 @@ spec:
                               - uri
                               type: object
                             kieServerContainerDeployment:
-                              description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+                              description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT
                               type: string
                             mavenMirrorURL:
                               description: Maven mirror to use for S2I builds
@@ -4731,7 +4731,7 @@ spec:
                                   - uri
                                   type: object
                                 kieServerContainerDeployment:
-                                  description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+                                  description: The Maven GAV to deploy, e.g., rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT
                                   type: string
                                 mavenMirrorURL:
                                   description: Maven mirror to use for S2I builds

@@ -1105,7 +1105,7 @@
                       "required": true,
                       "jsonPath": "$.spec.objects.servers[*].build.kieServerContainerDeployment",
                       "description": "KIE packages to deploy to the KIE Server.",
-                      "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT"
+                      "default": "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT"
                     },
                     {
                       "label": "Disable KIE Jar Pull Dependencies",

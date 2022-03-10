@@ -1484,7 +1484,7 @@ func TestInvalidBuildConfiguration(t *testing.T) {
 					{
 						Deployments: Pint(2),
 						Build: &api.KieAppBuildObject{
-							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT",
+							KieServerContainerDeployment: "rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT",
 							MavenMirrorURL:               "https://maven.mirror.com/",
 							ArtifactDir:                  "dir",
 							GitSource: api.GitSource{
