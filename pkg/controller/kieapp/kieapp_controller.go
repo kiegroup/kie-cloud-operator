@@ -413,7 +413,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
-	product := defaults.GetProduct(cr.Status.Applied.Environment)
+	product := defaults.GetProduct(cr)
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	imageName := tagName
 	major, _, _ := defaults.GetMajorMinorMicro(cr.Status.Applied.Version)

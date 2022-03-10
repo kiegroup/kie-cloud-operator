@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-03-09 11:11:20"
+    createdAt: "2022-03-11 12:52:50"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -172,12 +172,6 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.13.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.13.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-controller-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_DC_IMAGE_7.13.0
-                  value: registry.stage.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.0
                   value: registry.stage.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.13.0

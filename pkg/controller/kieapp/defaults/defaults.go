@@ -60,6 +60,7 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		cr.Status.Applied.Version = constants.CurrentVersion
 		cr.Spec.Version = ""
 	}
+
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		return api.Environment{}, err
@@ -167,16 +168,11 @@ func setProductLabels(cr *api.KieApp, env *api.Environment) {
 
 func getConsoleName(cr *api.KieApp) string {
 	env := string(cr.Spec.Environment)
-	consoleName := ""
-	if strings.Contains(env, constants.RhdmPrefix) {
+	consoleName := constants.RhpamBusinessCentral
+	if strings.Contains(env, constants.RhdmPrefix) && !isGE713(cr) {
 		consoleName = constants.RhdmDecisionCentral
-	} else if strings.Contains(env, constants.RhpamPrefix) {
-
-		if strings.Contains(env, constants.Production) {
-			consoleName = constants.RhpamBusinessCentralMon
-		} else {
-			consoleName = constants.RhpamBusinessCentral
-		}
+	} else if strings.Contains(env, constants.RhpamPrefix) && strings.Contains(env, constants.Production) {
+		consoleName = constants.RhpamBusinessCentralMon
 	}
 	return consoleName
 }
@@ -349,7 +345,7 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 	c := constants.TemplateConstants.DeepCopy()
 	c.Major, c.Minor, c.Micro = GetMajorMinorMicro(cr.Status.Applied.Version)
 	if envConstants, found := constants.EnvironmentConstants[cr.Status.Applied.Environment]; found {
-		c.Product = envConstants.App.Product
+		c.Product = GetProduct(cr)
 		c.MavenRepo = envConstants.App.MavenRepo
 	}
 	if versionConstants, found := constants.VersionConstants[cr.Status.Applied.Version]; found {
@@ -386,9 +382,15 @@ func getTemplateConstants(cr *api.KieApp) *api.TemplateConstants {
 
 func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	template := api.ConsoleTemplate{}
-	if cr.Status.Applied.Objects.Console != nil {
-		envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
-
+	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
+	if cr.Status.Applied.Objects.Console != nil && envConstants != nil {
+		// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
+		if !isGE713(cr) && !isRHPAM(cr) {
+			envConstants.App = constants.RhdmAppConstants
+		} else if isGE713(cr) && !isRHPAM(cr) {
+			envConstants.App = constants.RhdmAppConstants713
+		}
+		product := GetProduct(cr)
 		// Set replicas
 		if !hasEnv {
 			return template
@@ -400,7 +402,9 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 		template.Name = envConstants.App.Prefix
 		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
-		template.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+
+		template.ImageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+
 		template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 		if template.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			template.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "businesscentral"}, "-"))
@@ -429,6 +433,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 			template.ImageURL = template.ImageContext + "/" + template.Image + ":" + template.ImageTag
 			template.OmitImageStream = false
 		}
+
 		if cr.Status.Applied.Objects.Console.GitHooks != nil {
 			template.GitHooks = *cr.Status.Applied.Objects.Console.GitHooks.DeepCopy()
 			if template.GitHooks.MountPath == "" {
@@ -746,7 +751,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 	if hasEnv {
 		serverReplicas = envConstants.Replica.Server.Replicas
 	}
-	product := GetProduct(cr.Status.Applied.Environment)
+	product := GetProduct(cr)
 	usedNames := map[string]bool{}
 	serverSlice := cr.Status.Applied.Objects.Servers
 	for index := range serverSlice {
@@ -1042,12 +1047,13 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
-	if product == constants.RhdmPrefix {
+	if product == constants.RhdmPrefix && isGE713(cr) {
 		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
 	}
 
 	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
 	imageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+
 	if !cr.Status.Applied.UseImageTags && !forBuild {
 		if val, exists := os.LookupEnv(envVar); exists {
 			imageURL = val
@@ -1348,10 +1354,14 @@ func Pbool(b bool) *bool {
 }
 
 // GetProduct ...
-func GetProduct(env api.EnvironmentType) (product string) {
-	envConstants := constants.EnvironmentConstants[env]
+func GetProduct(cr *api.KieApp) (product string) {
+	envConstants := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if envConstants != nil {
-		product = envConstants.App.Product
+		if isGE713(cr) && !isRHPAM(cr) {
+			product = "rhpam"
+		} else {
+			product = envConstants.App.Product
+		}
 	}
 	return
 }
@@ -1889,6 +1899,10 @@ func isGE78(cr *api.KieApp) bool {
 
 func isGE710(cr *api.KieApp) bool {
 	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.10") >= 0
+}
+
+func isGE713(cr *api.KieApp) bool {
+	return semver.Compare(semver.MajorMinor("v"+cr.Status.Applied.Version), "v7.13") >= 0
 }
 
 func IsOcpCA(cr *api.KieApp) bool {
