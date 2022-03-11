@@ -772,6 +772,7 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				ServersKiePvSize: serverSet.ServersKiePvSize,
 				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
 				MDBMaxSession:    serverSet.MDBMaxSession,
+				DecisionsOnly:    serverSet.DecisionsOnly,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {

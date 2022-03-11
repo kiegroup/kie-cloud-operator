@@ -1103,6 +1103,8 @@ servers:
                     - name: JBOSS_MDB_MAX_SESSIONS
                       value: "[[.MDBMaxSession]]"
                   #[[end]]
+                    - name: KIE_SERVER_DECISIONS_ONLY
+                      value: "[[.DecisionsOnly]]"
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

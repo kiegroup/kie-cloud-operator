@@ -2037,6 +2037,12 @@ spec:
                           required:
                           - type
                           type: object
+                        decisionsOnly:
+                          description: When set to true will configure the KIE Server
+                            image to disable all capabilities that are not related
+                            to decisions, Default to true for RHDM environments and
+                            false to RHPAM.
+                          type: boolean
                         deployments:
                           description: Number of Server sets that will be deployed
                           format: int
@@ -4922,6 +4928,12 @@ spec:
                               required:
                               - type
                               type: object
+                            decisionsOnly:
+                              description: When set to true will configure the KIE
+                                Server image to disable all capabilities that are
+                                not related to decisions, Default to true for RHDM
+                                environments and false to RHPAM.
+                              type: boolean
                             deployments:
                               description: Number of Server sets that will be deployed
                               format: int
