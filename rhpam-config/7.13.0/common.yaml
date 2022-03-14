@@ -1099,9 +1099,9 @@ servers:
                       #[[end]]
                   #[[end]]
                   ## CORS END
-                  #[[if .MDBMaxSession]]
-                    - name: JBOSS_MDB_MAX_SESSIONS
-                      value: "[[.MDBMaxSession]]"
+                  #[[if .KieExecutorMDBMaxSession]]
+                    - name: KIE_EXECUTOR_MDB_MAX_SESSIONS
+                      value: "[[.KieExecutorMDBMaxSession]]"
                   #[[end]]
                     - name: KIE_SERVER_DECISIONS_ONLY
                       value: "[[.DecisionsOnly]]"
