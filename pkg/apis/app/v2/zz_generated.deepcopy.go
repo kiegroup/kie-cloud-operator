@@ -1279,8 +1279,8 @@ func (in *KieServerSet) DeepCopyInto(out *KieServerSet) {
 		*out = new(CORSFiltersObject)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.MDBMaxSession != nil {
-		in, out := &in.MDBMaxSession, &out.MDBMaxSession
+	if in.KieExecutorMDBMaxSession != nil {
+		in, out := &in.KieExecutorMDBMaxSession, &out.KieExecutorMDBMaxSession
 		*out = new(int)
 		**out = **in
 	}
@@ -1551,8 +1551,8 @@ func (in *ServerTemplate) DeepCopyInto(out *ServerTemplate) {
 		*out = new(StartupStrategy)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.MDBMaxSession != nil {
-		in, out := &in.MDBMaxSession, &out.MDBMaxSession
+	if in.KieExecutorMDBMaxSession != nil {
+		in, out := &in.KieExecutorMDBMaxSession, &out.KieExecutorMDBMaxSession
 		*out = new(int)
 		**out = **in
 	}

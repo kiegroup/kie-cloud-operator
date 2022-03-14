@@ -7267,7 +7267,7 @@ func TestKieExecutorMDB(t *testing.T) {
 			Environment: api.RhpamProductionImmutable,
 			Objects: api.KieAppObjects{
 				Servers: []api.KieServerSet{
-					{MDBMaxSession: Pint(40)},
+					{KieExecutorMDBMaxSession: Pint(40)},
 				},
 			},
 		},
@@ -7276,16 +7276,8 @@ func TestKieExecutorMDB(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting TestKieExecutorMDB environment")
 
-	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
-	mdbMaxSessionPassed := false
-	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
-		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
-			if env.Name != "JBOSS_MDB_MAX_SESSION" && env.Value == "40" {
-				mdbMaxSessionPassed = true
-			}
-		}
-	}
-	assert.True(t, mdbMaxSessionPassed)
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].KieExecutorMDBMaxSession)
+	assert.Equal(t, "40", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_EXECUTOR_MDB_MAX_SESSIONS"))
 }
 
 func TestKieExecutorMDBEmpty(t *testing.T) {
@@ -7302,7 +7294,7 @@ func TestKieExecutorMDBEmpty(t *testing.T) {
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting TestKieExecutorMDBEmpty environment")
 
-	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].MDBMaxSession)
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].KieExecutorMDBMaxSession)
 	mdbMaxSessionNotPassed := true
 	for _, env := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env {
 		if strings.HasPrefix(env.Name, "JBOSS_MDB") {
