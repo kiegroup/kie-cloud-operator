@@ -151,7 +151,7 @@ type KieServerSet struct {
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
-	// MDBMaxSession number of KIE Executor sessions
+	// MDBMaxSession number of max KIE Executor session, it must be lower than the value of max-pool-size passed as jboss.mdb.strict.max.pool.size, if leaved empty if leaved empty the max.pool.size will be set to 60s
 	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
 }
 
