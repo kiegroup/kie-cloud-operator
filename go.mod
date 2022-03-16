@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/RHsyseng/console-cr-form v0.0.0-00010101000000-000000000000
-	github.com/RHsyseng/operator-utils v0.0.0-00010101000000-000000000000
+	github.com/RHsyseng/operator-utils v1.4.9-1
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.9
@@ -24,12 +24,12 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.6.1
 	github.com/tidwall/sjson v1.1.1
-	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
-	k8s.io/api v0.21.2
-	k8s.io/apiextensions-apiserver v0.21.2
-	k8s.io/apimachinery v0.21.2
+	golang.org/x/mod v0.4.2
+	k8s.io/api v0.22.1
+	k8s.io/apiextensions-apiserver v0.22.1
+	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v12.0.0+incompatible
-	sigs.k8s.io/controller-runtime v0.9.1
+	sigs.k8s.io/controller-runtime v0.10.0
 )
 
 replace (
@@ -37,7 +37,6 @@ replace (
 
 	// Pin RHsyseng library versions
 	github.com/RHsyseng/console-cr-form => github.com/RHsyseng/console-cr-form v0.0.0-20210323180350-be2aa15abde0
-	github.com/RHsyseng/operator-utils => github.com/RHsyseng/operator-utils v1.4.6-0.20220111145438-f824bea2df43
 
 	github.com/gobuffalo/packr/v2 => github.com/gobuffalo/packr/v2 v2.7.1
 
@@ -52,11 +51,11 @@ replace (
 	github.com/operator-framework/api => github.com/operator-framework/api v0.3.12
 	github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.19.2
 
-	// Pinned to kubernetes-1.21.2
-	k8s.io/api => k8s.io/api v0.21.2
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.2
-	k8s.io/apimachinery => k8s.io/apimachinery v0.21.2
-	k8s.io/client-go => k8s.io/client-go v0.21.2 // Required by prometheus-operator
+	// Pinned to kubernetes-1.22.1
+	k8s.io/api => k8s.io/api v0.22.1
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.22.1
+	k8s.io/apimachinery => k8s.io/apimachinery v0.22.1
+	k8s.io/client-go => k8s.io/client-go v0.22.1 // Required by prometheus-operator
 
 	// others
 	modernc.org/cc => gitlab.com/cznic/cc v1.0.0
