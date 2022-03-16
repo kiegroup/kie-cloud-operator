@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/common v0.26.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/gjson v1.6.1
+	github.com/tidwall/gjson v1.9.3
 	github.com/tidwall/sjson v1.1.1
 	golang.org/x/mod v0.4.2
 	k8s.io/api v0.22.1
