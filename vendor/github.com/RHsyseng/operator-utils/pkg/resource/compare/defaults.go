@@ -409,6 +409,9 @@ func equalServices(deployed client.Object, requested client.Object) bool {
 	if service2.Spec.IPFamilyPolicy == nil {
 		service1.Spec.IPFamilyPolicy = nil
 	}
+	if service2.Spec.InternalTrafficPolicy == nil {
+		service1.Spec.InternalTrafficPolicy = nil
+	}
 
 	for _, port2 := range service2.Spec.Ports {
 		if found, port1 := findServicePort(port2, service1.Spec.Ports); found {
