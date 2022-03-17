@@ -1631,9 +1631,6 @@ spec:
                       description: KieServerSet KIE Server configuration for a single
                         set, or for multiple sets if deployments is set to >1
                       properties:
-                        MDBMaxSession:
-                          description: MDBMaxSession number of KIE Executor sessions
-                          type: integer
                         build:
                           description: KieAppBuildObject Data to define how to build
                             an application from source
@@ -2501,6 +2498,14 @@ spec:
                         keystoreSecret:
                           description: KeystoreSecret secret name
                           type: string
+                        kieExecutorMDBMaxSession:
+                          description: 'Number of max KIE Executor sessions, it must
+                            be lower than the value of max-pool-size, by default is
+                            max-pool-size set to 60. Max pool size can be set by system
+                            property jboss.mdb.strict.max.pool.size (using javaOptsAppend:
+                            "-Djboss.mdb.strict.max.pool.size=40"), for more information
+                            see https://access.redhat.com/solutions/2955481.'
+                          type: integer
                         name:
                           description: Server name
                           type: string
@@ -4523,9 +4528,6 @@ spec:
                             single set, or for multiple sets if deployments is set
                             to >1
                           properties:
-                            MDBMaxSession:
-                              description: MDBMaxSession number of KIE Executor sessions
-                              type: integer
                             build:
                               description: KieAppBuildObject Data to define how to
                                 build an application from source
@@ -5421,6 +5423,14 @@ spec:
                             keystoreSecret:
                               description: KeystoreSecret secret name
                               type: string
+                            kieExecutorMDBMaxSession:
+                              description: 'Number of max KIE Executor sessions, it
+                                must be lower than the value of max-pool-size, by
+                                default is max-pool-size set to 60. Max pool size
+                                can be set by system property jboss.mdb.strict.max.pool.size
+                                (using javaOptsAppend: "-Djboss.mdb.strict.max.pool.size=40"),
+                                for more information see https://access.redhat.com/solutions/2955481.'
+                              type: integer
                             name:
                               description: Server name
                               type: string

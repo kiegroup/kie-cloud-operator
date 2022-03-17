@@ -766,18 +766,18 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 			usedNames[name] = true
 			template := api.ServerTemplate{
-				KieName:          name,
-				KieServerID:      name,
-				Build:            getBuildConfig(product, cr, serverSet),
-				KeystoreSecret:   serverSet.KeystoreSecret,
-				StorageClassName: serverSet.StorageClassName,
-				JbpmCluster:      serverSet.JbpmCluster,
-				PersistRepos:     serverSet.PersistRepos,
-				ServersM2PvSize:  serverSet.ServersM2PvSize,
-				ServersKiePvSize: serverSet.ServersKiePvSize,
-				StartupStrategy:  cr.Status.Applied.CommonConfig.StartupStrategy,
-				MDBMaxSession:    serverSet.MDBMaxSession,
-				DecisionsOnly:    serverSet.DecisionsOnly,
+				KieName:                  name,
+				KieServerID:              name,
+				Build:                    getBuildConfig(product, cr, serverSet),
+				KeystoreSecret:           serverSet.KeystoreSecret,
+				StorageClassName:         serverSet.StorageClassName,
+				JbpmCluster:              serverSet.JbpmCluster,
+				PersistRepos:             serverSet.PersistRepos,
+				ServersM2PvSize:          serverSet.ServersM2PvSize,
+				ServersKiePvSize:         serverSet.ServersKiePvSize,
+				StartupStrategy:          cr.Status.Applied.CommonConfig.StartupStrategy,
+				DecisionsOnly:            serverSet.DecisionsOnly,
+				KieExecutorMDBMaxSession: serverSet.KieExecutorMDBMaxSession,
 			}
 
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
@@ -870,8 +870,8 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			}
 
 			// KieExecutorMDB
-			if serverSet.MDBMaxSession != nil {
-				template.MDBMaxSession = serverSet.MDBMaxSession
+			if serverSet.KieExecutorMDBMaxSession != nil {
+				template.KieExecutorMDBMaxSession = serverSet.KieExecutorMDBMaxSession
 			}
 
 			if cr.Status.Applied.CommonConfig.StartupStrategy.StrategyName != "" {
