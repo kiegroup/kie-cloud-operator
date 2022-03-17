@@ -1037,6 +1037,14 @@
                   "description": "Enable the KIE Server Jbpm clustering for processes fail-over, it could increase the number of kieservers."
                 },
                 {
+                  "label": "Execute Kie Server only with Decisions capabilities",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.servers[*].decisionsOnly",
+                  "originalJsonPath": "$.spec.objects.servers[*].decisionsOnly",
+                  "type": "checkbox",
+                  "description": "Execute the KIE Server with only the extensions required for Decisions management."
+                },
+                {
                   "label": "Replicas",
                   "required": false,
                   "jsonPath": "$.spec.objects.servers[*].replicas",

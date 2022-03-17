@@ -1284,6 +1284,11 @@ func (in *KieServerSet) DeepCopyInto(out *KieServerSet) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.DecisionsOnly != nil {
+		in, out := &in.DecisionsOnly, &out.DecisionsOnly
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
@@ -1554,6 +1559,11 @@ func (in *ServerTemplate) DeepCopyInto(out *ServerTemplate) {
 	if in.MDBMaxSession != nil {
 		in, out := &in.MDBMaxSession, &out.MDBMaxSession
 		*out = new(int)
+		**out = **in
+	}
+	if in.DecisionsOnly != nil {
+		in, out := &in.DecisionsOnly, &out.DecisionsOnly
+		*out = new(bool)
 		**out = **in
 	}
 	return

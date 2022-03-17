@@ -153,6 +153,8 @@ type KieServerSet struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
 	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	// When set to true will configure the KIE Server image to disable all capabilities that are not related to decisions, Default to true for RHDM environments and false to RHPAM.
+	DecisionsOnly *bool `json:"decisionsOnly,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -770,6 +772,8 @@ type ServerTemplate struct {
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// MDBMaxSession number of KIE Executor sessions
 	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	// When set to true will configure the KIE Server image to disable all capabilities that are not related to decisions, Default to true for RHDM environments and false to RHPAM.
+	DecisionsOnly *bool `json:"decisionsOnly,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates

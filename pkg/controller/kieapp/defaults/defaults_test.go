@@ -7449,3 +7449,44 @@ func DataGridAuth(t *testing.T, environment api.EnvironmentType) {
 	assert.Equal(t, cr.Status.Applied.Objects.Console.DataGridAuth.Username, "InfinispanUser")
 	assert.Equal(t, cr.Status.Applied.Objects.Console.DataGridAuth.Password, "InfinispanPassword")
 }
+
+func TestRhpamKieserverEnvWithDecisionsOnlyEnabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						DecisionsOnly: Pbool(true),
+					},
+				},
+			},
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.NotNil(t, cr.Status.Applied.Objects.Servers[0].DecisionsOnly)
+	assert.True(t, *cr.Status.Applied.Objects.Servers[0].DecisionsOnly)
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"))
+}
+
+func TestRhpamKieserverEnvWithoutDecisionsOnlyEnabled(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+		},
+	}
+
+	env, err := GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].DecisionsOnly)
+	result, _ := strconv.ParseBool(getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"))
+	assert.False(t, result)
+}
