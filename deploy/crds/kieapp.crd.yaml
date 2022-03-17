@@ -2499,8 +2499,10 @@ spec:
                           description: Server name
                           type: string
                         persistRepos:
-                          description: PersistRepos enables persistent volumes for
-                            KIE Server's kie and maven repositories
+                          description: Persist the Maven and KIE repositories on ~/.m2/repository
+                            and ~/.kie/repository respectively. The option persistRepos
+                            will be automatically set to false when the Trial environment
+                            is set.
                           type: boolean
                         replicas:
                           description: Replicas to set for the DeploymentConfig
@@ -5411,8 +5413,10 @@ spec:
                               description: Server name
                               type: string
                             persistRepos:
-                              description: PersistRepos enables persistent volumes
-                                for KIE Server's kie and maven repositories
+                              description: Persist the Maven and KIE repositories
+                                on ~/.m2/repository and ~/.kie/repository respectively.
+                                The option persistRepos will be automatically set
+                                to false when the Trial environment is set.
                               type: boolean
                             replicas:
                               description: Replicas to set for the DeploymentConfig
