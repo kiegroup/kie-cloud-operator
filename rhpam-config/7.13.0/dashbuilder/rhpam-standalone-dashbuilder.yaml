@@ -86,10 +86,24 @@ dashbuilder:
                     containerPort: 8443
                     protocol: TCP
                 env:
+                  #[[if not .SecretAdminCredentials]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
+                  #[[end]]
+                  #[[if .SecretAdminCredentials]]
+                  - name: KIE_ADMIN_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: username
+                  - name: KIE_ADMIN_PWD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: password
+                  #[[end]]
                   ## Dashbuilder config BEGIN
                   #[[if .Dashbuilder.Config.AllowExternalFileRegister]]
                   - name: DASHBUILDER_ALLOW_EXTERNAL_FILE_REGISTER

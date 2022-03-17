@@ -107,26 +107,78 @@
           ]
         },
         {
-          "label": "Admin user",
-          "type": "fieldGroup",
+          "label": "Admin user configuration",
+          "type": "dropDown",
           "required": false,
-          "jsonPath": "$.spec.commonConfig",
           "visible": true,
-          "fields": [
+          "default": "default",
+          "options": [
             {
-              "label": "Username",
-              "default": "adminUser",
-              "required": false,
-              "description": "Administrative username for RHPAM components",
-              "jsonPath": "$.spec.commonConfig.adminUser",
-              "type": "text"
+              "value": "default",
+              "label": "Username and Password configuration"
             },
             {
-              "label": "Password",
+              "value": "secret",
+              "label": "Secret configuration"
+            }
+          ],
+          "fields": [
+            {
+              "label": "Username and password",
+              "type": "fieldGroup",
               "required": false,
-              "description": "Administrative password to use instead of generating default value",
-              "jsonPath": "$.spec.commonConfig.adminPassword",
-              "type": "password"
+              "jsonPath": "$.spec.commonConfig",
+              "displayWhen": "default",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "Username",
+                  "default": "adminUser",
+                  "required": false,
+                  "description": "Administrative username for RHPAM components",
+                  "jsonPath": "$.spec.commonConfig.adminUser",
+                  "type": "text"
+                },
+                {
+                  "label": "Password",
+                  "required": false,
+                  "description": "Administrative password, if empty will be generated",
+                  "jsonPath": "$.spec.commonConfig.adminPassword",
+                  "type": "password"
+                }
+              ]
+            },
+            {
+              "label": "OpenShift admin credentials secret",
+              "type": "fieldGroup",
+              "required": false,
+              "jsonPath": "$.spec.commonConfig.secretAdminCredentials",
+              "displayWhen": "secret",
+              "visible": false,
+              "fields": [
+                {
+                  "label": "Secret that holds admin credentials information",
+                  "required": false,
+                  "description": "Name of secret with credentials username and password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given username and password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                  "jsonPath": "$.spec.commonConfig.secretAdminCredentials",
+                  "type": "text"
+                },
+                {
+                  "label": "Username",
+                  "default": "adminUser",
+                  "required": false,
+                  "description": "If the username is already provided with the secret this field is not needed, otherwise it could be used for the Administrative username in the creation of the secret",
+                  "jsonPath": "$.spec.commonConfig.adminUser",
+                  "type": "text"
+                },
+                {
+                  "label": "Password",
+                  "required": false,
+                  "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the Administrative password in the creation of the secret.",
+                  "jsonPath": "$.spec.commonConfig.adminPassword",
+                  "type": "password"
+                }
+              ]
             }
           ]
         },

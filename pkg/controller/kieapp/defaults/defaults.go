@@ -61,6 +61,8 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		cr.Spec.Version = ""
 	}
 
+	handleAdminSecretUsernameAndPassword(cr, service)
+
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
 		return api.Environment{}, err
@@ -154,6 +156,54 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	overrideKafkaTopicsEnv(cr, &mergedEnv)
 	setProductLabels(cr, &mergedEnv)
 	return mergedEnv, nil
+}
+
+func handleAdminSecretUsernameAndPassword(cr *api.KieApp, service kubernetes.PlatformService) {
+	/* The default secret will be like this
+	apiVersion: v1
+	kind: Secret
+	metadata:
+	  name: kie-admin-credentials
+	type: Opaque
+	data:
+	  //adminUser
+	  username: YWRtaW4=
+	  //RedHat
+	  password: UmVkSGF0
+	*/
+	if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) > 0 {
+		checkAndCreate(cr, cr.Spec.CommonConfig.AdminPassword, service)
+	} else if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		checkAndCreate(cr, "", service)
+	} else if len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+		//in case of missing secretAdmin we use the AdminUsername AdminPassword and if missing we set the defaults
+		password := constants.DefaultPassword
+		if !isTrial(cr) {
+			password = string(shared.GeneratePassword(8))
+		}
+		cr.Spec.CommonConfig.AdminPassword = password
+	}
+}
+
+func checkAndCreate(cr *api.KieApp, adminPassword string, service kubernetes.PlatformService) {
+	_, err := getSecret(service, cr.Namespace, cr.Spec.CommonConfig.SecretAdminCredentials)
+	if err != nil {
+		localUsername := cr.Spec.CommonConfig.AdminUser
+		localPassword := adminPassword
+		if adminPassword == "" {
+			localPassword = constants.DefaultPassword
+			if !strings.HasSuffix(string(cr.Spec.Environment), constants.TrialEnvSuffix) {
+				localPassword = string(shared.GeneratePassword(8))
+			}
+		}
+		if len(cr.Spec.CommonConfig.AdminUser) == 0 {
+			localUsername = constants.DefaultAdminUser
+		}
+		errSecret := createSecret(service, cr.Spec.CommonConfig.SecretAdminCredentials, localUsername, localPassword, cr)
+		if errSecret != nil {
+			log.Error("Can't create Admin Secret. ", errSecret)
+		}
+	}
 }
 
 func setProductLabels(cr *api.KieApp, env *api.Environment) {
@@ -1200,7 +1250,6 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 	passwords := []*string{
 		&spec.CommonConfig.KeyStorePassword,
-		&spec.CommonConfig.AdminPassword,
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
@@ -2118,4 +2167,44 @@ func getRouteHostname(obj interface{}) (host string) {
 		host = ""
 	}
 	return host
+}
+
+func createSecret(service kubernetes.PlatformService, secretName string, username string, password string, cr *api.KieApp) error {
+
+	ownerRef := []metav1.OwnerReference{
+		{
+			APIVersion:         cr.APIVersion,
+			Kind:               cr.Kind,
+			Name:               cr.Name,
+			UID:                cr.ObjectMeta.GetUID(),
+			Controller:         Pbool(true),
+			BlockOwnerDeletion: Pbool(true),
+		},
+	}
+	subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            secretName,
+			Namespace:       cr.Namespace,
+			OwnerReferences: ownerRef,
+			Labels:          setLabels(cr, nil, subcomponent, getSubComponentTypeByImageName(getFormattedComponentName(cr, constants.KieServerServicePrefix))),
+		},
+		Type: "Opaque",
+		StringData: map[string]string{
+			constants.USERNAME_ADMIN_SECRET_KEY: username,
+			constants.PASSWORD_ADMIN_SECRET_KEY: password,
+		},
+	}
+
+	err := service.Create(context.TODO(), &secret)
+	return err
+}
+
+func getSecret(service kubernetes.PlatformService, namespace string, secretName string) (corev1.Secret, error) {
+	found := corev1.Secret{}
+	err := service.Get(context.TODO(), types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}, &found)
+	return found, err
 }
