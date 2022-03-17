@@ -151,8 +151,8 @@ type KieServerSet struct {
 	Kafka                  *KafkaExtObject               `json:"kafka,omitempty"`
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
-	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	// Number of max KIE Executor sessions, it must be lower than the value of max-pool-size, by default is max-pool-size set to 60. Max pool size can be set by system property jboss.mdb.strict.max.pool.size (using javaOptsAppend: "-Djboss.mdb.strict.max.pool.size=40"), for more information see https://access.redhat.com/solutions/2955481.
+	KieExecutorMDBMaxSession *int `json:"kieExecutorMDBMaxSession,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
@@ -768,8 +768,8 @@ type ServerTemplate struct {
 	KafkaJbpmEventEmitters *KafkaJBPMEventEmittersObject `json:"kafkaJbpmEventEmitters,omitempty"`
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
-	// MDBMaxSession number of KIE Executor sessions
-	MDBMaxSession *int `json:"MDBMaxSession,omitempty"`
+	// KieExecutorMDBMaxSession number of KIE Executor sessions
+	KieExecutorMDBMaxSession *int `json:"KieExecutorMDBMaxSession,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
