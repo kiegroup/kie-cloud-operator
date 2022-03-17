@@ -121,6 +121,10 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			if i.Var == constants.PamDashbuilderVar && semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.10") < 0 {
 				continue
 			}
+			// since 7.13.0 there is no builds of rhdm images.
+			if semver.Compare(semver.MajorMinor("v"+imageVersion), "v7.12.1") > 0 && strings.HasPrefix(i.Component, "rhdm") {
+				continue
+			}
 			registry := i.Registry
 			imageContext := i.Context
 			if version.Version == imageVersion && !dev {
@@ -134,6 +138,7 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 				Value: registry + imageContext + ":" + imageVersion,
 			})
 		}
+
 		if versionConstants, found := constants.VersionConstants[imageVersion]; found {
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  constants.OseCliVar + imageVersion,

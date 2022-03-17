@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.0
-    createdAt: "2022-03-09 11:11:20"
+    createdAt: "2022-03-11 12:52:50"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +18,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-485sf5796n
+  name: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -172,12 +172,6 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.13.0
-                - name: RELATED_IMAGE_DM_DC_IMAGE_7.13.0
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.0
                   value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.13.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.13.0
@@ -408,7 +402,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-485sf5796n
+    operated-by: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -424,5 +418,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-485sf5796n
-  version: 7.13.0-1+485sf5796n
+      operated-by: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
+  version: 7.13.0-1+tnrkd9hx9r

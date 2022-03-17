@@ -185,8 +185,7 @@ const (
 	// ACFilters Default filters for CORS
 	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 
-	relatedImageVar = "RELATED_IMAGE_"
-
+	relatedImageVar        = "RELATED_IMAGE_"
 	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
 	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
@@ -449,10 +448,16 @@ type ImageRefTag struct {
 	From *corev1.ObjectReference `json:"from"`
 }
 
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: RhpamBusinessCentralMon, ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
 var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
+
+// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
+var RhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhdmDecisionCentral, ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
+
+// 7.13.0 rhdm image changes
+// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
+var RhdmAppConstants713 = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -494,10 +499,10 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
 	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
 	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
-	api.RhdmTrial:                  {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoring:              {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoringHA:            {App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:    {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmTrial:                  {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: RhdmAppConstants713, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: RhdmAppConstants713, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates
