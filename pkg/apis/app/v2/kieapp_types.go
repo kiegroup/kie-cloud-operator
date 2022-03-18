@@ -769,7 +769,7 @@ type ServerTemplate struct {
 	Cors                   *CORSFiltersObject            `json:"cors,omitempty"`
 	StartupStrategy        *StartupStrategy              `json:"startupStrategy,omitempty"`
 	// KieExecutorMDBMaxSession number of KIE Executor sessions
-	KieExecutorMDBMaxSession *int `json:"KieExecutorMDBMaxSession,omitempty"`
+	KieExecutorMDBMaxSession *int `json:"kieExecutorMDBMaxSession,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
