@@ -773,7 +773,7 @@ type ServerTemplate struct {
 	// When set to true will configure the KIE Server image to disable all capabilities that are not related to decisions, Default to true for RHDM environments and false to RHPAM.
 	DecisionsOnly *bool `json:"decisionsOnly,omitempty"`
 	// KieExecutorMDBMaxSession number of KIE Executor sessions
-	KieExecutorMDBMaxSession *int `json:"KieExecutorMDBMaxSession,omitempty"`
+	KieExecutorMDBMaxSession *int `json:"kieExecutorMDBMaxSession,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
