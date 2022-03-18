@@ -1099,12 +1099,14 @@ servers:
                       #[[end]]
                   #[[end]]
                   ## CORS END
-                  #[[if .KieExecutorMDBMaxSession]]
+                      #[[if .KieExecutorMDBMaxSession]]
                     - name: KIE_EXECUTOR_MDB_MAX_SESSIONS
                       value: "[[.KieExecutorMDBMaxSession]]"
-                  #[[end]]
+                      #[[end]]
+                      #[[if .DecisionsOnly]]
                     - name: KIE_SERVER_DECISIONS_ONLY
                       value: "[[.DecisionsOnly]]"
+                      #[[end]]
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck

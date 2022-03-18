@@ -780,6 +780,10 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 				KieExecutorMDBMaxSession: serverSet.KieExecutorMDBMaxSession,
 			}
 
+			if !isRHPAM(cr) && isGE713(cr) {
+				template.DecisionsOnly = Pbool(true)
+			}
+
 			if cr.Status.Applied.Objects.Console == nil || cr.Status.Applied.Environment == api.RhdmProductionImmutable {
 				template.OmitConsole = true
 			}

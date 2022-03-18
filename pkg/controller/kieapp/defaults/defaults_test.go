@@ -180,6 +180,15 @@ func runTrialEnvironmentTests(t *testing.T, consoleName string, environment api.
 
 	env, err := GetEnvironment(cr, test.MockService())
 
+	if environment == api.RhdmTrial && len(version) == 0 {
+		// should be set by default on all rhdm envs
+		assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"), "variable should exist")
+	}
+	if environment == api.RhpamTrial && len(version) == 0 {
+		// should not be set rhpam envs
+		assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"), "variable should exist")
+	}
+
 	assert.Nil(t, err, "Error getting trial environment")
 	wbServices := env.Console.Services
 	mainService := getService(wbServices, "test-"+consoleName)
