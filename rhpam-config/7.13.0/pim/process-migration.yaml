@@ -271,6 +271,15 @@ processMigration:
         tls:
             insecureEdgeTerminationPolicy: Redirect
             termination: "[[.ProcessMigration.TerminationRoute.Termination]]"
+            #[[if ne .ProcessMigration.TerminationRoute.Key ""]]
+            key: "[[.ProcessMigration.TerminationRoute.Key]]"
+            #[[end]]
+            #[[if ne .ProcessMigration.TerminationRoute.Certificate ""]]
+            certificate: "[[.ProcessMigration.TerminationRoute.Certificate]]"
+            #[[end]]
+            #[[if ne .ProcessMigration.TerminationRoute.CaCertificate ""]]
+            caCertificate: "[[.ProcessMigration.TerminationRoute.CaCertificate]]"
+            #[[end]]
         #[[end]]
 ## KIE ProcessMigration END
 

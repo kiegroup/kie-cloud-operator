@@ -494,6 +494,16 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		if cr.Status.Applied.Objects.Console.TerminationRoute != nil && len(cr.Status.Applied.Objects.Console.TerminationRoute.Protocol) > 0 {
 			template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getConsoleTermination(cr)
 			template.TerminationRoute.EnableTlsSection = true
+			if len(cr.Status.Applied.Objects.Console.TerminationRoute.Key) > 0 {
+				template.TerminationRoute.Key = cr.Status.Applied.Objects.Console.TerminationRoute.Key
+			}
+			if len(cr.Status.Applied.Objects.Console.TerminationRoute.Certificate) > 0 {
+				template.TerminationRoute.Certificate = cr.Status.Applied.Objects.Console.TerminationRoute.Certificate
+			}
+			if len(cr.Status.Applied.Objects.Console.TerminationRoute.CaCertificate) > 0 {
+				template.TerminationRoute.CaCertificate = cr.Status.Applied.Objects.Console.TerminationRoute.CaCertificate
+			}
+
 		} else {
 			// legacy behaviour
 			template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getConsoleTermination(cr)
@@ -576,6 +586,16 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		if cr.Status.Applied.Objects.Dashbuilder.TerminationRoute != nil && len(cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.Protocol) > 0 {
 			dashbuilderTemplate.TerminationRoute.Termination, dashbuilderTemplate.TerminationRoute.Protocol = getDashbuilderTermination(cr)
 			dashbuilderTemplate.TerminationRoute.EnableTlsSection = true
+			if len(cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.Key) > 0 {
+				dashbuilderTemplate.TerminationRoute.Key = cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.Key
+			}
+			if len(cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.Certificate) > 0 {
+				dashbuilderTemplate.TerminationRoute.Certificate = cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.Certificate
+			}
+			if len(cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.CaCertificate) > 0 {
+				dashbuilderTemplate.TerminationRoute.CaCertificate = cr.Status.Applied.Objects.Dashbuilder.TerminationRoute.CaCertificate
+			}
+
 		} else {
 			// legacy behaviour
 			dashbuilderTemplate.TerminationRoute.Termination, dashbuilderTemplate.TerminationRoute.Protocol = getDashbuilderTermination(cr)
@@ -750,6 +770,15 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 		if cr.Status.Applied.Objects.SmartRouter.TerminationRoute != nil && len(cr.Status.Applied.Objects.SmartRouter.TerminationRoute.Protocol) > 0 {
 			template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getSmartRouterTermination(cr)
 			template.TerminationRoute.EnableTlsSection = true
+			if len(cr.Status.Applied.Objects.SmartRouter.TerminationRoute.Key) > 0 {
+				template.TerminationRoute.Key = cr.Status.Applied.Objects.SmartRouter.TerminationRoute.Key
+			}
+			if len(cr.Status.Applied.Objects.SmartRouter.TerminationRoute.Certificate) > 0 {
+				template.TerminationRoute.Certificate = cr.Status.Applied.Objects.SmartRouter.TerminationRoute.Certificate
+			}
+			if len(cr.Status.Applied.Objects.SmartRouter.TerminationRoute.CaCertificate) > 0 {
+				template.TerminationRoute.CaCertificate = cr.Status.Applied.Objects.SmartRouter.TerminationRoute.CaCertificate
+			}
 		} else {
 			// legacy behaviour
 			template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getSmartRouterTermination(cr)
@@ -977,6 +1006,15 @@ func getServersConfig(cr *api.KieApp) ([]api.ServerTemplate, error) {
 			if serverSet.TerminationRoute != nil && len(serverSet.TerminationRoute.Protocol) > 0 {
 				template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getServerTermination(serverSet, cr)
 				template.TerminationRoute.EnableTlsSection = true
+				if len(serverSet.TerminationRoute.Key) > 0 {
+					template.TerminationRoute.Key = serverSet.TerminationRoute.Key
+				}
+				if len(serverSet.TerminationRoute.Certificate) > 0 {
+					template.TerminationRoute.Certificate = serverSet.TerminationRoute.Certificate
+				}
+				if len(serverSet.TerminationRoute.CaCertificate) > 0 {
+					template.TerminationRoute.CaCertificate = serverSet.TerminationRoute.CaCertificate
+				}
 			} else {
 				// legacy behaviour
 				template.TerminationRoute.Termination, template.TerminationRoute.Protocol = getServerTermination(serverSet, cr)
@@ -1862,6 +1900,15 @@ func getProcessMigrationTemplate(cr *api.KieApp, serversConfig []api.ServerTempl
 		if cr.Status.Applied.Objects.ProcessMigration.TerminationRoute != nil && len(cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.Protocol) > 0 {
 			processMigrationTemplate.TerminationRoute.Termination, processMigrationTemplate.TerminationRoute.Protocol = getProcessMigrationTermination(cr)
 			processMigrationTemplate.TerminationRoute.EnableTlsSection = true
+			if len(cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.Key) > 0 {
+				processMigrationTemplate.TerminationRoute.Key = cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.Key
+			}
+			if len(cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.Certificate) > 0 {
+				processMigrationTemplate.TerminationRoute.Certificate = cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.Certificate
+			}
+			if len(cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.CaCertificate) > 0 {
+				processMigrationTemplate.TerminationRoute.CaCertificate = cr.Status.Applied.Objects.ProcessMigration.TerminationRoute.CaCertificate
+			}
 		} else {
 			// legacy behaviour
 			// without edge termination we do not set TLS and termination on Process Migration

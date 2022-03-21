@@ -407,5 +407,14 @@ dashbuilder:
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: "[[.Dashbuilder.TerminationRoute.Termination]]"
+          #[[if ne .Dashbuilder.TerminationRoute.Key ""]]
+          key: "[[.Dashbuilder.TerminationRoute.Key]]"
+          #[[end]]
+          #[[if ne .Dashbuilder.TerminationRoute.Certificate ""]]
+          certificate: "[[.Dashbuilder.TerminationRoute.Certificate]]"
+          #[[end]]
+          #[[if ne .Dashbuilder.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.Dashbuilder.TerminationRoute.CaCertificate]]"
+          #[[end]]
         #[[end]]
 

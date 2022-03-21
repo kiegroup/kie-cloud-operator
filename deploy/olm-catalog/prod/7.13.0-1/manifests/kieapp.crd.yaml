@@ -817,6 +817,9 @@ spec:
                             description: Enable the tls section when http port is
                               used
                             type: boolean
+                          key:
+                            description: CaCertificate if used
+                            type: string
                           protocol:
                             description: Protocol to use, this could override the
                               global disableSSL, http is the default, otherwise https,
@@ -832,6 +835,8 @@ spec:
                             - passthrough
                             - edge
                             type: string
+                        required:
+                        - key
                         type: object
                     type: object
                   dashbuilder:
@@ -1292,6 +1297,9 @@ spec:
                             description: Enable the tls section when http port is
                               used
                             type: boolean
+                          key:
+                            description: CaCertificate if used
+                            type: string
                           protocol:
                             description: Protocol to use, this could override the
                               global disableSSL, http is the default, otherwise https,
@@ -1307,6 +1315,8 @@ spec:
                             - passthrough
                             - edge
                             type: string
+                        required:
+                        - key
                         type: object
                     type: object
                   processMigration:
@@ -1671,6 +1681,9 @@ spec:
                             description: Enable the tls section when http port is
                               used
                             type: boolean
+                          key:
+                            description: CaCertificate if used
+                            type: string
                           protocol:
                             description: Protocol to use, this could override the
                               global disableSSL, http is the default, otherwise https,
@@ -1686,6 +1699,8 @@ spec:
                             - passthrough
                             - edge
                             type: string
+                        required:
+                        - key
                         type: object
                       username:
                         description: If empty the CommonConfig.AdminUser will be used
@@ -2655,6 +2670,9 @@ spec:
                               description: Enable the tls section when http port is
                                 used
                               type: boolean
+                            key:
+                              description: CaCertificate if used
+                              type: string
                             protocol:
                               description: Protocol to use, this could override the
                                 global disableSSL, http is the default, otherwise
@@ -2671,6 +2689,8 @@ spec:
                               - passthrough
                               - edge
                               type: string
+                          required:
+                          - key
                           type: object
                       type: object
                     type: array
@@ -2958,6 +2978,9 @@ spec:
                             description: Enable the tls section when http port is
                               used
                             type: boolean
+                          key:
+                            description: CaCertificate if used
+                            type: string
                           protocol:
                             description: Protocol to use, this could override the
                               global disableSSL, http is the default, otherwise https,
@@ -2973,6 +2996,8 @@ spec:
                             - passthrough
                             - edge
                             type: string
+                        required:
+                        - key
                         type: object
                       useExternalRoute:
                         description: If enabled, Business Central will use the external
@@ -3811,6 +3836,9 @@ spec:
                                 description: Enable the tls section when http port
                                   is used
                                 type: boolean
+                              key:
+                                description: CaCertificate if used
+                                type: string
                               protocol:
                                 description: Protocol to use, this could override
                                   the global disableSSL, http is the default, otherwise
@@ -3827,6 +3855,8 @@ spec:
                                 - passthrough
                                 - edge
                                 type: string
+                            required:
+                            - key
                             type: object
                         type: object
                       dashbuilder:
@@ -4295,6 +4325,9 @@ spec:
                                 description: Enable the tls section when http port
                                   is used
                                 type: boolean
+                              key:
+                                description: CaCertificate if used
+                                type: string
                               protocol:
                                 description: Protocol to use, this could override
                                   the global disableSSL, http is the default, otherwise
@@ -4311,6 +4344,8 @@ spec:
                                 - passthrough
                                 - edge
                                 type: string
+                            required:
+                            - key
                             type: object
                         type: object
                       processMigration:
@@ -4679,6 +4714,9 @@ spec:
                                 description: Enable the tls section when http port
                                   is used
                                 type: boolean
+                              key:
+                                description: CaCertificate if used
+                                type: string
                               protocol:
                                 description: Protocol to use, this could override
                                   the global disableSSL, http is the default, otherwise
@@ -4695,6 +4733,8 @@ spec:
                                 - passthrough
                                 - edge
                                 type: string
+                            required:
+                            - key
                             type: object
                           username:
                             description: If empty the CommonConfig.AdminUser will
@@ -5696,6 +5736,9 @@ spec:
                                   description: Enable the tls section when http port
                                     is used
                                   type: boolean
+                                key:
+                                  description: CaCertificate if used
+                                  type: string
                                 protocol:
                                   description: Protocol to use, this could override
                                     the global disableSSL, http is the default, otherwise
@@ -5712,6 +5755,8 @@ spec:
                                   - passthrough
                                   - edge
                                   type: string
+                              required:
+                              - key
                               type: object
                           type: object
                         type: array
@@ -6002,6 +6047,9 @@ spec:
                                 description: Enable the tls section when http port
                                   is used
                                 type: boolean
+                              key:
+                                description: CaCertificate if used
+                                type: string
                               protocol:
                                 description: Protocol to use, this could override
                                   the global disableSSL, http is the default, otherwise
@@ -6018,6 +6066,8 @@ spec:
                                 - passthrough
                                 - edge
                                 type: string
+                            required:
+                            - key
                             type: object
                           useExternalRoute:
                             description: If enabled, Business Central will use the

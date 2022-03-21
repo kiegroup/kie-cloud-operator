@@ -167,6 +167,12 @@ type TerminationRoute struct {
 	Termination string `json:"termination,omitempty"`
 	// Enable the tls section when http port is used
 	EnableTlsSection bool `json:"enableTlS,omitempty"`
+	// Key if used
+	Key string `json:"key,omitempty"`
+	// Certificate if used
+	Certificate string `json:"key,certificate"`
+	// CaCertificate if used
+	CaCertificate string `json:"key,caCertificate"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench

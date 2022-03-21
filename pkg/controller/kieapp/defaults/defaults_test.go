@@ -7520,7 +7520,10 @@ func TestKieServerWithEdgeTerminationEnabledHttp(t *testing.T) {
 				Servers: []api.KieServerSet{
 					{
 						TerminationRoute: &api.TerminationRoute{
-							Protocol: constants.HttpProtocol,
+							Protocol:      constants.HttpProtocol,
+							Key:           "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+							Certificate:   "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+							CaCertificate: "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
 						},
 					},
 				},
@@ -7586,7 +7589,10 @@ func TestConsoleWithEdgeTerminationEnabledHttp(t *testing.T) {
 			Objects: api.KieAppObjects{
 				Console: &api.ConsoleObject{
 					TerminationRoute: &api.TerminationRoute{
-						Protocol: constants.HttpProtocol,
+						Protocol:      constants.HttpProtocol,
+						Key:           "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						Certificate:   "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						CaCertificate: "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
 					},
 				},
 			},
@@ -7595,6 +7601,7 @@ func TestConsoleWithEdgeTerminationEnabledHttp(t *testing.T) {
 
 	env := getAndCheckEnv(t, cr)
 	checkTLSAndRoute(t, env.Console.Routes[0].Spec.TLS, constants.EdgeTermination, env.Console.Routes[0])
+	checkTLSCerts(t, env.Console.Routes[0].Spec.TLS)
 	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Console.Routes[0].Spec.Port.TargetPort)
 }
 
@@ -7648,7 +7655,10 @@ func TestSmartRouterWithEdgeTerminationEnabledHttp(t *testing.T) {
 			Objects: api.KieAppObjects{
 				SmartRouter: &api.SmartRouterObject{
 					TerminationRoute: &api.TerminationRoute{
-						Protocol: constants.HttpProtocol,
+						Protocol:      constants.HttpProtocol,
+						Key:           "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						Certificate:   "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						CaCertificate: "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
 					},
 				},
 			},
@@ -7657,6 +7667,7 @@ func TestSmartRouterWithEdgeTerminationEnabledHttp(t *testing.T) {
 
 	env := getAndCheckEnv(t, cr)
 	checkTLSAndRoute(t, env.SmartRouter.Routes[0].Spec.TLS, constants.EdgeTermination, env.SmartRouter.Routes[0])
+	checkTLSCerts(t, env.SmartRouter.Routes[0].Spec.TLS)
 	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.SmartRouter.Routes[0].Spec.Port.TargetPort)
 }
 
@@ -7688,7 +7699,10 @@ func TestDashbuilderWithEdgeTerminationEnabledHttp(t *testing.T) {
 			Objects: api.KieAppObjects{
 				Dashbuilder: &api.DashbuilderObject{
 					TerminationRoute: &api.TerminationRoute{
-						Protocol: constants.HttpProtocol,
+						Protocol:      constants.HttpProtocol,
+						Key:           "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						Certificate:   "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						CaCertificate: "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
 					},
 				},
 			},
@@ -7697,6 +7711,7 @@ func TestDashbuilderWithEdgeTerminationEnabledHttp(t *testing.T) {
 
 	env := getAndCheckEnv(t, cr)
 	checkTLSAndRoute(t, env.Dashbuilder.Routes[0].Spec.TLS, constants.EdgeTermination, env.Dashbuilder.Routes[0])
+	checkTLSCerts(t, env.Dashbuilder.Routes[0].Spec.TLS)
 	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: constants.HttpProtocol}, env.Dashbuilder.Routes[0].Spec.Port.TargetPort)
 }
 
@@ -7751,7 +7766,10 @@ func TestProcessMigrationWithEdgeTerminationEnabledHttp(t *testing.T) {
 			Objects: api.KieAppObjects{
 				ProcessMigration: &api.ProcessMigrationObject{
 					TerminationRoute: &api.TerminationRoute{
-						Protocol: protocol,
+						Protocol:      protocol,
+						Key:           "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						Certificate:   "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
+						CaCertificate: "|-\n      -----BEGIN PRIVATE KEY-----\n      [...]\n      -----END PRIVATE KEY-----",
 					},
 				},
 			},
@@ -7760,6 +7778,7 @@ func TestProcessMigrationWithEdgeTerminationEnabledHttp(t *testing.T) {
 
 	env := getAndCheckEnv(t, cr)
 	checkTLSAndRoute(t, env.ProcessMigration.Routes[0].Spec.TLS, constants.EdgeTermination, env.ProcessMigration.Routes[0])
+	checkTLSCerts(t, env.ProcessMigration.Routes[0].Spec.TLS)
 	assert.Equal(t, intstr.IntOrString{Type: 1, IntVal: 0, StrVal: protocol}, env.ProcessMigration.Routes[0].Spec.Port.TargetPort)
 }
 
@@ -7815,4 +7834,11 @@ func checkTLSAndRoute(t *testing.T, tls *routesv1.TLSConfig, termination string,
 	assert.NotNil(t, tls)
 	assert.Equal(t, tls.Termination, routesv1.TLSTerminationType(termination))
 	assert.Equal(t, tls.InsecureEdgeTerminationPolicy, routesv1.InsecureEdgeTerminationPolicyType("Redirect"))
+}
+
+func checkTLSCerts(t *testing.T, tls *routesv1.TLSConfig) {
+	assert.NotNil(t, tls)
+	assert.NotNil(t, tls.Key)
+	assert.NotNil(t, tls.Certificate)
+	assert.NotNil(t, tls.CACertificate)
 }

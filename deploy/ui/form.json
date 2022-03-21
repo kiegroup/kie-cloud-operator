@@ -527,6 +527,27 @@
                       "label": "http"
                     }
                   ]
+                },
+                {
+                  "label": "Key",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.key",
+                  "description": "Private Key for Edge termination (optional)",
+                  "type": "textArea"
+                },
+                {
+                  "label": "Certificate",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.certificate",
+                  "description": "Certificate for Edge termination (optional)",
+                  "type": "textArea"
+                },
+                {
+                  "label": "CaCertificate",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.console.terminationRoute.caCertificate",
+                  "description": "CaCertificate for Edge termination (optional)",
+                  "type": "textArea"
                 }
               ]
             },
@@ -1038,6 +1059,27 @@
                           "label": "http"
                         }
                       ]
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.servers[*].terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
                     }
                   ]
                 },
@@ -2282,6 +2324,27 @@
                           "label": "http"
                         }
                       ]
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.dashbuilder.terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
                     }
                   ]
                 },
@@ -2907,6 +2970,27 @@
                           "label": "http"
                         }
                       ]
+                    },
+                    {
+                      "label": "Key",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.key",
+                      "description": "Private Key for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "Certificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.certificate",
+                      "description": "Certificate for Edge termination (optional)",
+                      "type": "textArea"
+                    },
+                    {
+                      "label": "CaCertificate",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.smartRouter.terminationRoute.caCertificate",
+                      "description": "CaCertificate for Edge termination (optional)",
+                      "type": "textArea"
                     }
                   ]
                 },
@@ -3146,37 +3230,58 @@
           "label": "Process Instance Migration",
           "visible": true,
           "fields": [
-              {
-                "label": "Process Instance Migration",
-                "required": false,
-                "jsonPath": "$.spec.objects.processMigration",
-                "type": "object",
-                "max": 1,
-                "fields": [
-                  {
-                    "label": "Enable Edge termination",
-                    "description": "If checked, the route will use edge termination (http).",
-                    "required": false,
-                    "jsonPath": "$.spec.objects.processMigration.terminationRoute.enableInsecureEdgeTermination",
-                    "type": "object",
-                    "fields": [
-                      {
-                        "label": "Port on Edge termination",
-                        "type": "dropDown",
-                        "required": false,
-                        "description": "Port to use with edge termination .",
-                        "jsonPath": "$.spec.objects.processMigration.terminationRoute.protocol",
-                        "originalJsonPath": "$.spec.objects.processMigration.terminationRoute.protocol",
-                        "default": "http",
-                        "options": [
-                          {
-                            "value": "http",
-                            "label": "http"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                {
+                  "label": "Process Instance Migration",
+                  "required": false,
+                  "jsonPath": "$.spec.objects.processMigration",
+                  "type": "object",
+                  "max": 1,
+                  "fields": [
+                    {
+                      "label": "Enable Edge termination",
+                      "description": "If checked, the route will use edge termination (http).",
+                      "required": false,
+                      "jsonPath": "$.spec.objects.processMigration.terminationRoute.EnableTlsSection",
+                      "type": "object",
+                      "fields": [
+                        {
+                          "label": "Port on Edge termination",
+                          "type": "dropDown",
+                          "required": false,
+                          "description": "Port to use with edge termination .",
+                          "jsonPath": "$.spec.objects.processMigration.terminationRoute.Protocol",
+                          "originalJsonPath": "$.spec.objects.processMigration.terminationRoute.Protocol",
+                          "default": "http",
+                          "options": [
+                            {
+                              "value": "http",
+                              "label": "http"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Key",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.processMigration.terminationRoute.key",
+                          "description": "Private Key for Edge termination (optional)",
+                          "type": "textArea"
+                        },
+                        {
+                          "label": "Certificate",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.processMigration.terminationRoute.certificate",
+                          "description": "Certificate for Edge termination (optional)",
+                          "type": "textArea"
+                        },
+                        {
+                          "label": "CaCertificate",
+                          "required": false,
+                          "jsonPath": "$.spec.objects.processMigration.terminationRoute.caCertificate",
+                          "description": "CaCertificate for Edge termination (optional)",
+                          "type": "textArea"
+                        }
+                      ]
+                    },
                 {
                   "label": "Image Context",
                   "required": false,
