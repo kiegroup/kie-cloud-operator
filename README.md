@@ -91,8 +91,6 @@ INFO  Image built and available under following tags: quay.io/<your_quay_usernam
 
 VERSION=$(go run getversion.go)
 
-USERNAME=<your_quay_username>
-
 ```bash
 $ docker push quay.io/${USERNAME}/rhpam-operator-bundle:${VERSION}
 ```
@@ -149,7 +147,7 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: quay.io/<your_quay_id>/rhpam-operator-index:7.12.1
+  image: quay.io/<your_quay_id>/rhpam-operator-index:7.13.0
   displayName: My Operator Catalog
   publisher: grpc
 ```
