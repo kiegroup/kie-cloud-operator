@@ -54,6 +54,11 @@ spec:
                   ldap:
                     description: LDAPAuthConfig Authentication configuration for LDAP
                     properties:
+                      allowEmptyPasswords:
+                        description: Does this realm support blank password direct
+                          verification? Blank password attempt will be rejected otherwise.
+                          Boolean flag, defaults to false.
+                        type: boolean
                       baseCtxDN:
                         description: LDAP Base DN of the top-level context to begin
                           the user search.
@@ -2918,6 +2923,11 @@ spec:
                         description: LDAPAuthConfig Authentication configuration for
                           LDAP
                         properties:
+                          allowEmptyPasswords:
+                            description: Does this realm support blank password direct
+                              verification? Blank password attempt will be rejected
+                              otherwise. Boolean flag, defaults to false.
+                            type: boolean
                           baseCtxDN:
                             description: LDAP Base DN of the top-level context to
                               begin the user search.

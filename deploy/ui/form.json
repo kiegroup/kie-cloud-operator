@@ -335,6 +335,12 @@
                   "description": "LDAP Credentials used for authentication of bindDN"
                 },
                 {
+                  "label": "Allow empty passwords",
+                  "type": "text",
+                  "jsonPath": "$.spec.auth.ldap.allowEmptyPasswords",
+                  "description": "Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise. Boolean flag, defaults to false."
+                },
+                {
                   "label": "BaseCtxDN",
                   "type": "text",
                   "default": "ou=users,ou=example,ou=com",
