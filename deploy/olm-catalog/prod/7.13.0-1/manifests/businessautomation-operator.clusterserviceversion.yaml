@@ -7,10 +7,12 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-03-23 11:50:29"
+    createdAt: "2022-03-24 15:07:49"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
+    operators.openshift.io/valid-subscription: '["Red Hat Process Automation Manager",
+      "Red Hat Decision Manager"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat
     tectonic-visibility: ocs
@@ -414,7 +416,7 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-2
+  replaces: businessautomation-operator.7.12.1-1
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator

@@ -157,6 +157,7 @@ func main() {
 				"tectonic-visibility": "ocs",
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
 				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
+				"operators.openshift.io/valid-subscription":      "[\"Red Hat Process Automation Manager\", \"Red Hat Decision Manager\"]",
 			},
 		)
 		templateStruct.SetLabels(
