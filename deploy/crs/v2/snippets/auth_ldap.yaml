@@ -13,6 +13,7 @@ spec:
       url: ldaps://myldap.example.com
       bindDN: uid=admin,ou=users,ou=exmample,ou=com
       bindCredential: s3cret
+      allowEmptyPasswords: true
       baseCtxDN: ou=users,ou=example,ou=com
       baseFilter: uid
       recursiveSearch: true

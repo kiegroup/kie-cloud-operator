@@ -371,6 +371,7 @@ func TestAuthLDAPConfig(t *testing.T) {
 					NewIdentityAttributes: "sn=BlankSurname;cn=BlankCommonName",
 					LoginModule:           "required",
 					LoginFailover:         true,
+					AllowEmptyPasswords:   true,
 				},
 			},
 		},
@@ -388,6 +389,7 @@ func TestAuthLDAPConfig(t *testing.T) {
 		{Name: "AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES", Value: "sn=BlankSurname;cn=BlankCommonName"},
 		{Name: "AUTH_LDAP_LOGIN_MODULE", Value: "required"},
 		{Name: "AUTH_LDAP_LOGIN_FAILOVER", Value: "true"},
+		{Name: "AUTH_LDAP_ALLOW_EMPTY_PASSWORDS", Value: "true"},
 	}
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)

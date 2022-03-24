@@ -406,6 +406,9 @@ type LDAPAuthConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// LDAP Credentials used for authentication
 	BindCredential string `json:"bindCredential,omitempty"`
+	// Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise.
+	// Boolean flag, defaults to false.
+	AllowEmptyPasswords bool `json:"allowEmptyPasswords,omitempty"`
 	// +kubebuilder:validation:Required
 	// LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space
 	URL string `json:"url"`
@@ -442,7 +445,6 @@ type LDAPAuthConfig struct {
 	// +kubebuilder:validation:Enum:=FOLLOW;IGNORE;THROW
 	// If LDAP referrals should be followed.
 	ReferralMode ReferralModeType `json:"referralMode,omitempty"`
-
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
 	// Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true.

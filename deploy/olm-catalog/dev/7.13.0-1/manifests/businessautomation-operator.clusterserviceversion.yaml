@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.0
-    createdAt: "2022-03-11 12:52:50"
+    createdAt: "2022-03-23 11:50:29"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +18,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
+  name: businessautomation-operator.7.13.0-1-dev-qvd7zztfbr
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -402,7 +402,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
+    operated-by: businessautomation-operator.7.13.0-1-dev-qvd7zztfbr
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -418,5 +418,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-tnrkd9hx9r
-  version: 7.13.0-1+tnrkd9hx9r
+      operated-by: businessautomation-operator.7.13.0-1-dev-qvd7zztfbr
+  version: 7.13.0-1+qvd7zztfbr

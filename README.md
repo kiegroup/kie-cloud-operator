@@ -37,7 +37,7 @@ otherwise all operator related images must be public.
 To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io (https://quay.io/) account to create
 an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication)
 instructions for Operator Courier to obtain an account token.
-This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
+This token is in the form of "basic <token>" and both words are required for the command.
 
 Also note that the push command does not overwrite an existing repository,
 and it needs to be deleted before a new version can be built and uploaded.
