@@ -2984,6 +2984,11 @@ spec:
                       upgrades, it is disabled by default. Requires spec.upgrades.enabled
                       to be true.
                     type: boolean
+                  scheduledImportPolicy:
+                    description: Set to true to enable scheduled import policy on
+                      the ImageStream. This will work only if you are using ImageStreamTag
+                      otherwise with image digests it will be ignored
+                    type: boolean
                 type: object
               useImageTags:
                 description: Set true to enable image tags, disabled by default. This
@@ -6014,6 +6019,11 @@ spec:
                         description: Set true to enable automatic minor product version
                           upgrades, it is disabled by default. Requires spec.upgrades.enabled
                           to be true.
+                        type: boolean
+                      scheduledImportPolicy:
+                        description: Set to true to enable scheduled import policy
+                          on the ImageStream. This will work only if you are using
+                          ImageStreamTag otherwise with image digests it will be ignored
                         type: boolean
                     type: object
                   useImageTags:
