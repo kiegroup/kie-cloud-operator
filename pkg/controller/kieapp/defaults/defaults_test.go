@@ -651,10 +651,11 @@ func checkAuthoringHAEnv(t *testing.T, cr *api.KieApp, env api.Environment, prod
 	// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
 	if isGE713(cr) {
 		assert.Equal(t, fmt.Sprintf("registry.redhat.io/datagrid/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
+		assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].BrokerImage, constants.VersionConstants[cr.Status.Applied.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	} else {
 		assert.Equal(t, fmt.Sprintf("registry.redhat.io/jboss-datagrid-7/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), env.Others[0].StatefulSets[0].Spec.Template.Spec.Containers[0].Image)
+		assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].BrokerImage, constants.VersionConstants[cr.Status.Applied.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 	}
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/amq7/%s:%s", constants.VersionConstants[cr.Status.Applied.Version].BrokerImage, constants.VersionConstants[cr.Status.Applied.Version].BrokerImageTag), env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0].Image)
 }
 
 // TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
