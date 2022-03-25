@@ -154,18 +154,31 @@ type KieServerSet struct {
 	// When set to true will configure the KIE Server image to disable all capabilities that are not related to decisions, Default to true for RHDM environments and false to RHPAM.
 	DecisionsOnly *bool `json:"decisionsOnly,omitempty"`
 	// Number of max KIE Executor sessions, it must be lower than the value of max-pool-size, by default is max-pool-size set to 60. Max pool size can be set by system property jboss.mdb.strict.max.pool.size (using javaOptsAppend: "-Djboss.mdb.strict.max.pool.size=40"), for more information see https://access.redhat.com/solutions/2955481.
-	KieExecutorMDBMaxSession *int `json:"kieExecutorMDBMaxSession,omitempty"`
+	KieExecutorMDBMaxSession *int              `json:"kieExecutorMDBMaxSession,omitempty"`
+	TerminationRoute         *TerminationRoute `json:"terminationRoute,omitempty"`
+}
+
+type TerminationRoute struct {
+	// Enable edge termination, it use http
+	EnableEdge bool `json:"enableEdge,omitempty"`
+	// Private Key if used on Edge termination (optional)
+	Key string `json:"key,omitempty"`
+	// Certificate if used on Edge termination (optional)
+	Certificate string `json:"certificate,omitempty"`
+	// CaCertificate if used on Edge termination (optional)
+	CaCertificate string `json:"caCertificate,omitempty"`
 }
 
 // ConsoleObject configuration of the RHPAM workbench
 type ConsoleObject struct {
-	KieAppObject `json:",inline"`
-	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
-	GitHooks     *GitHooksVolume    `json:"gitHooks,omitempty"`
-	Jvm          *JvmObject         `json:"jvm,omitempty"`
-	PvSize       string             `json:"pvSize,omitempty"`
-	Cors         *CORSFiltersObject `json:"cors,omitempty"`
-	DataGridAuth *DataGridAuth      `json:"dataGridAuth,omitempty"`
+	KieAppObject     `json:",inline"`
+	SSOClient        *SSOAuthClient     `json:"ssoClient,omitempty"`
+	GitHooks         *GitHooksVolume    `json:"gitHooks,omitempty"`
+	Jvm              *JvmObject         `json:"jvm,omitempty"`
+	PvSize           string             `json:"pvSize,omitempty"`
+	Cors             *CORSFiltersObject `json:"cors,omitempty"`
+	DataGridAuth     *DataGridAuth      `json:"dataGridAuth,omitempty"`
+	TerminationRoute *TerminationRoute  `json:"terminationRoute,omitempty"`
 }
 
 // DataGridAuth
@@ -179,11 +192,12 @@ type DataGridAuth struct {
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
 type DashbuilderObject struct {
-	KieAppObject `json:",inline"`
-	SSOClient    *SSOAuthClient     `json:"ssoClient,omitempty"`
-	Jvm          *JvmObject         `json:"jvm,omitempty"`
-	Config       *DashbuilderConfig `json:"config,omitempty"`
-	Cors         *CORSFiltersObject `json:"cors,omitempty"`
+	KieAppObject     `json:",inline"`
+	SSOClient        *SSOAuthClient     `json:"ssoClient,omitempty"`
+	Jvm              *JvmObject         `json:"jvm,omitempty"`
+	Config           *DashbuilderConfig `json:"config,omitempty"`
+	Cors             *CORSFiltersObject `json:"cors,omitempty"`
+	TerminationRoute *TerminationRoute  `json:"terminationRoute,omitempty"`
 }
 
 // SmartRouterObject configuration of the RHPAM smart router
@@ -193,8 +207,9 @@ type SmartRouterObject struct {
 	// Smart Router protocol, if no value is provided, http is the default protocol.
 	Protocol string `json:"protocol,omitempty"`
 	// If enabled, Business Central will use the external smartrouter route to communicate with it. Note that, valid SSL certificates should be used.
-	UseExternalRoute bool       `json:"useExternalRoute,omitempty"`
-	Jvm              *JvmObject `json:"jvm,omitempty"`
+	UseExternalRoute bool              `json:"useExternalRoute,omitempty"`
+	Jvm              *JvmObject        `json:"jvm,omitempty"`
+	TerminationRoute *TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
 // KieAppJmsObject messaging specification to be used by the KieApp
@@ -743,6 +758,7 @@ type ConsoleTemplate struct {
 	Cors                CORSFiltersObject `json:"cors,omitempty"`
 	StartupStrategy     StartupStrategy   `json:"startupStrategy,omitempty"`
 	DataGridAuth        DataGridAuth      `json:"dataGridAuth,omitempty"`
+	TerminationRoute    TerminationRoute  `json:"terminationRoute,omitempty"`
 }
 
 // ServerTemplate contains all the variables used in the yaml templates
@@ -775,7 +791,8 @@ type ServerTemplate struct {
 	// When set to true will configure the KIE Server image to disable all capabilities that are not related to decisions, Default to true for RHDM environments and false to RHPAM.
 	DecisionsOnly *bool `json:"decisionsOnly,omitempty"`
 	// KieExecutorMDBMaxSession number of KIE Executor sessions
-	KieExecutorMDBMaxSession *int `json:"kieExecutorMDBMaxSession,omitempty"`
+	KieExecutorMDBMaxSession *int             `json:"kieExecutorMDBMaxSession,omitempty"`
+	TerminationRoute         TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
 // DashbuilderTemplate contains all the variables used in the yaml templates
@@ -795,6 +812,7 @@ type DashbuilderTemplate struct {
 	RouteHostname    string            `json:"routeHostname,omitempty"`
 	Config           DashbuilderConfig `json:"config,omitempty"`
 	Cors             CORSFiltersObject `json:"cors,omitempty"`
+	TerminationRoute TerminationRoute  `json:"terminationRoute,omitempty"`
 }
 
 // DashbuilderConfig holds all configurations that can be applied to the Dashbuilder env
@@ -876,18 +894,19 @@ type DatabaseTemplate struct {
 
 // SmartRouterTemplate contains all the variables used in the yaml templates
 type SmartRouterTemplate struct {
-	OmitImageStream  bool      `json:"omitImageStream"`
-	Replicas         int32     `json:"replicas,omitempty"`
-	KeystoreSecret   string    `json:"keystoreSecret,omitempty"`
-	Protocol         string    `json:"protocol,omitempty"`
-	UseExternalRoute bool      `json:"useExternalRoute,omitempty"`
-	ImageContext     string    `json:"imageContext,omitempty"`
-	Image            string    `json:"image,omitempty"`
-	ImageTag         string    `json:"imageTag,omitempty"`
-	ImageURL         string    `json:"imageURL,omitempty"`
-	StorageClassName string    `json:"storageClassName,omitempty"`
-	RouteHostname    string    `json:"routeHostname,omitempty"`
-	Jvm              JvmObject `json:"jvm,omitempty"`
+	OmitImageStream  bool             `json:"omitImageStream"`
+	Replicas         int32            `json:"replicas,omitempty"`
+	KeystoreSecret   string           `json:"keystoreSecret,omitempty"`
+	Protocol         string           `json:"protocol,omitempty"`
+	UseExternalRoute bool             `json:"useExternalRoute,omitempty"`
+	ImageContext     string           `json:"imageContext,omitempty"`
+	Image            string           `json:"image,omitempty"`
+	ImageTag         string           `json:"imageTag,omitempty"`
+	ImageURL         string           `json:"imageURL,omitempty"`
+	StorageClassName string           `json:"storageClassName,omitempty"`
+	RouteHostname    string           `json:"routeHostname,omitempty"`
+	Jvm              JvmObject        `json:"jvm,omitempty"`
+	TerminationRoute TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
 // ReplicaConstants contains the default replica amounts for a component in a given environment type
@@ -984,7 +1003,8 @@ type ProcessMigrationObject struct {
 	Password string `json:"password,omitempty"`
 	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
 	// on the image before.
-	ExtraClassPath string `json:"extraClassPath,omitempty"`
+	ExtraClassPath   string            `json:"extraClassPath,omitempty"`
+	TerminationRoute *TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
 // ProcessMigrationTemplate ...
@@ -1002,7 +1022,8 @@ type ProcessMigrationTemplate struct {
 	Password string `json:"password,omitempty"`
 	// ExtraClassPath Allows to add extra jars to the application classpath separated by colon. Needs to be mounted
 	// on the image before.
-	ExtraClassPath string `json:"extraClassPath,omitempty"`
+	ExtraClassPath   string           `json:"extraClassPath,omitempty"`
+	TerminationRoute TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
 // KieServerClient ...

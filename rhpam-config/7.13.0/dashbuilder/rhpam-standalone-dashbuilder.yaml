@@ -418,10 +418,27 @@ dashbuilder:
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:
+      #[[if .Dashbuilder.TerminationRoute.EnableEdge]]
+          targetPort: http
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: edge
+        #[[if ne .Dashbuilder.TerminationRoute.Key ""]]
+          key: "[[.Dashbuilder.TerminationRoute.Key]]"
+        #[[end]]
+        #[[if ne .Dashbuilder.TerminationRoute.Certificate ""]]
+          certificate: "[[.Dashbuilder.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .Dashbuilder.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.Dashbuilder.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
+      #[[if not .Dashbuilder.TerminationRoute.EnableEdge]]
           targetPort: [[.RouteProtocol]]
         #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
         #[[end]]
-
+      #[[end]]
+      
