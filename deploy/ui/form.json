@@ -1875,7 +1875,7 @@
                       "label": "Max Number of Session",
                       "type": "integer",
                       "required": false,
-                      "jsonPath": "$.spec.objects.servers[*].MDBMaxSession",
+                      "jsonPath": "$.spec.objects.servers[*].kieExecutorMDBMaxSession",
                       "originalJsonPath": "$.spec.objects.servers[*].kieExecutorMDBMaxSession",
                       "description": "Number of max session used by the JMS Executor, it must be lower than the value of max-pool-size passed as jboss.mdb.strict.max.pool.size, if leaved empty the max.pool.size will be set to 60."
                     }
