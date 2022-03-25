@@ -351,6 +351,11 @@ spec:
                     description: The password to use for keystore generation.
                     format: password
                     type: string
+                  secretAdminCredentials:
+                    description: Name of the secret containing admin's credentials,
+                      the keys are username and password, if the adminUser and adminPassword
+                      are provided the secretAdminCredentials will be skipped
+                    type: string
                   startupStrategy:
                     description: Startup strategy for Console and Kieserver
                     properties:
@@ -3230,6 +3235,12 @@ spec:
                       keyStorePassword:
                         description: The password to use for keystore generation.
                         format: password
+                        type: string
+                      secretAdminCredentials:
+                        description: Name of the secret containing admin's credentials,
+                          the keys are username and password, if the adminUser and
+                          adminPassword are provided the secretAdminCredentials will
+                          be skipped
                         type: string
                       startupStrategy:
                         description: Startup strategy for Console and Kieserver

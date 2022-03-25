@@ -947,6 +947,8 @@ type CommonConfig struct {
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver
 	StartupStrategy *StartupStrategy `json:"startupStrategy,omitempty"`
+	// Name of the secret containing admin's credentials, the keys are username and password, if the adminUser and adminPassword are provided the secretAdminCredentials will be skipped
+	SecretAdminCredentials string `json:"secretAdminCredentials,omitempty"`
 }
 
 // VersionConfigs ...

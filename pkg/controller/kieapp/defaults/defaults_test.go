@@ -21,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -5039,6 +5040,10 @@ func TestGetProcessMigrationTemplate(t *testing.T) {
 						Objects: api.KieAppObjects{
 							ProcessMigration: &api.ProcessMigrationObject{},
 						},
+						CommonConfig: api.CommonConfig{
+							AdminUser:     constants.DefaultAdminUser,
+							AdminPassword: constants.DefaultPassword,
+						},
 					},
 				},
 				[]api.ServerTemplate{
@@ -7490,4 +7495,179 @@ func TestRhpamKieserverEnvWithoutDecisionsOnlyEnabled(t *testing.T) {
 	assert.Nil(t, cr.Status.Applied.Objects.Servers[0].DecisionsOnly)
 	result, _ := strconv.ParseBool(getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_DECISIONS_ONLY"))
 	assert.False(t, result)
+}
+
+func TestCredentialsWithAllCredentialsSet(t *testing.T) {
+	// with all credentials provided the behaviour use the legacy with username and password
+	username := "admin"
+	password := "password"
+	myNamespace := "myNamespace"
+	secretName := "mySecret"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: myNamespace,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
+				AdminPassword:          password,
+				AdminUser:              username,
+				SecretAdminCredentials: secretName,
+			},
+		},
+	}
+
+	service := test.MockService()
+	env, err := GetEnvironment(cr, service)
+	assert.Nil(t, err, "Error getting prod environment")
+	providedSecret := corev1.Secret{}
+	errS := service.Get(context.TODO(), types.NamespacedName{
+		Namespace: myNamespace,
+		Name:      secretName,
+	}, &providedSecret)
+	assert.Nil(t, errS, "Error secret provided")
+	assert.Equal(t, cr.Status.Applied.CommonConfig.SecretAdminCredentials, secretName, "Secret Admin Credentials is different that the expected value")
+	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+	adminUserFromSecret := providedSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
+	assert.Equal(t, adminPasswordFromSecret, password, "Password in the secret is different from the password provided in the cr")
+	assert.Equal(t, adminUserFromSecret, username, "Username in the secret is different from the username provided in the cr")
+	adminPasswordEnv := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	adminUserEnv := getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
+	assert.Equal(t, len(adminPasswordEnv), 0)
+	assert.Equal(t, len(adminUserEnv), 0)
+}
+
+func TestCredentialWithOnlySecretSet(t *testing.T) {
+	myNamespace := "myNamespace"
+	mySecretName := "mySecretAdmin"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: myNamespace,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
+				SecretAdminCredentials: mySecretName,
+			},
+		},
+	}
+
+	service := test.MockService()
+	adminUserFromSecret, adminPasswordFromSecret := checkAdminAndPasswordOntheSecret(t, cr, service, mySecretName, myNamespace)
+	assert.Equal(t, adminUserFromSecret, constants.DefaultAdminUser, "Username used for the secret is empty")
+	assert.True(t, len(adminPasswordFromSecret) > 0, "Password used for the secret is empty")
+	assert.Equal(t, adminUserFromSecret, constants.DefaultAdminUser)
+}
+
+func TestCredentialWithCredentialSecretAlreadyPresent(t *testing.T) {
+	mySecretUsername := "mySecretUsername"
+	mySecretPassword := "mySecretPassword"
+	myNamespace := "myNamespace"
+	mySecretName := "mySecretAdmin"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: myNamespace,
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
+				SecretAdminCredentials: mySecretName,
+			},
+		},
+	}
+
+	service := test.MockService()
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      mySecretName,
+			Namespace: myNamespace,
+		},
+		Type: "Opaque",
+		StringData: map[string]string{
+			constants.USERNAME_ADMIN_SECRET_KEY: mySecretUsername,
+			constants.PASSWORD_ADMIN_SECRET_KEY: mySecretPassword,
+		},
+	}
+
+	errCreateSecret := service.Create(context.TODO(), &secret)
+	assert.Nil(t, errCreateSecret, "Error creating Secret")
+	adminUserFromSecret, adminPasswordFromSecret := checkAdminAndPasswordOntheSecret(t, cr, service, mySecretName, myNamespace)
+	assert.True(t, len(adminUserFromSecret) > 0, "Username provided for secret is empty")
+	assert.True(t, len(adminPasswordFromSecret) > 0, "Password provided for secret is empty")
+
+	assert.Equal(t, adminUserFromSecret, mySecretUsername)
+	assert.Equal(t, adminPasswordFromSecret, mySecretPassword)
+}
+
+func checkAdminAndPasswordOntheSecret(t *testing.T, cr *api.KieApp, service *test.MockPlatformService, mySecretName string, myNamespace string) (string, string) {
+	_, err := GetEnvironment(cr, service)
+	assert.Nil(t, err, "Error getting prod environment")
+	providedSecret := corev1.Secret{}
+	errS := service.Get(context.TODO(), types.NamespacedName{
+		Name:      mySecretName,
+		Namespace: myNamespace,
+	}, &providedSecret)
+	assert.Nil(t, errS, "Error secret created")
+	assert.Equal(t, cr.Status.Applied.CommonConfig.SecretAdminCredentials, mySecretName, "SecretAdminCredentials on cr status applied is not correct")
+	adminUserFromSecret := providedSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
+	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+	return adminUserFromSecret, adminPasswordFromSecret
+}
+
+func TestLegacyCredentialDashbuilder(t *testing.T) {
+	username := "admin"
+	password := "password"
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "myNamespace",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamStandaloneDashbuilder,
+			CommonConfig: api.CommonConfig{
+				AdminPassword: password,
+				AdminUser:     username,
+			},
+		},
+	}
+
+	service := test.MockService()
+	env, err := GetEnvironment(cr, service)
+	assert.Nil(t, err, "Error getting Dashbuilder environment")
+	adminUserEnv := getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
+	adminPasswordEnv := getEnvVariable(env.Dashbuilder.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	assert.Equal(t, adminUserEnv, username)
+	assert.Equal(t, adminPasswordEnv, password)
+}
+
+func TestLegacyCredentialSmartRouter(t *testing.T) {
+	username := "admin"
+	password := "password"
+
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProduction,
+			CommonConfig: api.CommonConfig{
+				AdminPassword: password,
+				AdminUser:     username,
+			},
+			Objects: api.KieAppObjects{
+				SmartRouter: &api.SmartRouterObject{},
+			},
+		},
+	}
+
+	service := test.MockService()
+	env, err := GetEnvironment(cr, service)
+	assert.Nil(t, err, "Error getting Dashbuilder environment")
+	adminUserEnv := getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_USER")
+	adminPasswordEnv := getEnvVariable(env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_ADMIN_PWD")
+	assert.Equal(t, adminUserEnv, username)
+	assert.Equal(t, adminPasswordEnv, password)
 }
