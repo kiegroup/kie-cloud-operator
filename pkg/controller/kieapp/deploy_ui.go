@@ -251,7 +251,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 					Ports: []corev1.ContainerPort{{Name: "http", ContainerPort: httpPort}},
 					Env:   []corev1.EnvVar{debug},
 					ReadinessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
+						ProbeHandler: corev1.ProbeHandler{
 							HTTPGet: &corev1.HTTPGetAction{
 								Path: "/health",
 								Port: intstr.IntOrString{IntVal: httpPort},
@@ -262,7 +262,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 						FailureThreshold:    20,
 					},
 					LivenessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
+						ProbeHandler: corev1.ProbeHandler{
 							HTTPGet: &corev1.HTTPGetAction{
 								Path: "/health",
 								Port: intstr.IntOrString{IntVal: httpPort},
