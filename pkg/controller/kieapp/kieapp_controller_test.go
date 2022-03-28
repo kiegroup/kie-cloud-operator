@@ -748,11 +748,9 @@ func TestCreateRhpamImageStreamsUsingImageTagsWithScheduledImportPolicy(t *testi
 			Namespace: "test-ns",
 		},
 		Spec: api.KieAppSpec{
-			Upgrades: api.KieAppUpgrades{
-				ScheduledImportPolicy: true,
-			},
-			Environment:  api.RhpamProduction,
-			UseImageTags: true,
+			Environment:           api.RhpamProduction,
+			UseImageTags:          true,
+			ScheduledImportPolicy: true,
 		},
 	}
 	mockSvc := test.MockService()

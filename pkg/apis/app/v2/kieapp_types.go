@@ -27,6 +27,8 @@ type KieAppSpec struct {
 	Upgrades KieAppUpgrades `json:"upgrades,omitempty"`
 	// Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.
 	UseImageTags bool `json:"useImageTags,omitempty"`
+	// Set to true to enable scheduled import policy on the ImageStream. This will work only if you are using ImageStreamTag otherwise with image digests it will be ignored
+	ScheduledImportPolicy bool `json:"scheduledImportPolicy,omitempty"`
 	// Defines which truststore is used by the console, kieservers, smartrouter, and dashbuilder
 	Truststore *KieAppTruststore `json:"truststore,omitempty"`
 	// The version of the application deployment.
@@ -121,8 +123,6 @@ type KieAppUpgrades struct {
 	Enabled bool `json:"enabled,omitempty"`
 	// Set true to enable automatic minor product version upgrades, it is disabled by default. Requires spec.upgrades.enabled to be true.
 	Minor bool `json:"minor,omitempty"`
-	// Set to true to enable scheduled import policy on the ImageStream. This will work only if you are using ImageStreamTag otherwise with image digests it will be ignored
-	ScheduledImportPolicy bool `json:"scheduledImportPolicy,omitempty"`
 }
 
 // KieServerSet KIE Server configuration for a single set, or for multiple sets if deployments is set to >1

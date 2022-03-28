@@ -476,7 +476,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 	   https://issues.redhat.com/browse/RHPAM-4167
 	   If we are using ImageTags we can set scheduled at true for ImportPolicy
 	*/
-	if cr.Spec.UseImageTags && cr.Spec.Upgrades.ScheduledImportPolicy {
+	if cr.Spec.UseImageTags && cr.Spec.ScheduledImportPolicy {
 		isnew.Tag.ImportPolicy.Scheduled = true
 	}
 	log := log.With("kind", isnew.GetObjectKind().GroupVersionKind().Kind, "name", isnew.Name, "from", isnew.Tag.From.Name, "namespace", isnew.Namespace)

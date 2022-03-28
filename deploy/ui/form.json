@@ -42,14 +42,6 @@
                   "description": "Set true to enable automatic minor product version upgrades.",
                   "jsonPath": "$.spec.upgrades.minor",
                   "originalJsonPath": "$.spec.upgrades.minor"
-                },
-                {
-                  "label": "Enable scheduled import policy on the ImageStreamTag",
-                  "type": "checkbox",
-                  "required": false,
-                  "description": "Set to true to enable scheduled import policy on the ImageStream.",
-                  "jsonPath": "$.spec.upgrades.scheduledImportPolicy",
-                  "originalJsonPath": "$.spec.upgrades.scheduledImportPolicy"
                 }
               ]
             }
@@ -61,7 +53,27 @@
           "required": false,
           "description": "Set true to enable image tags, disabled by default. This will leverage image tags instead of the image digests.",
           "jsonPath": "$.spec.useImageTags",
-          "originalJsonPath": "$.spec.useImageTags"
+          "originalJsonPath": "$.spec.useImageTags",
+          "fields": [
+            {
+              "label": "Image Tags enabled",
+              "type": "fieldGroup",
+              "jsonPath": "$.spec.useImageTags",
+              "originalJsonPath": "$.spec.useImageTags",
+              "displayWhen": "true",
+              "visible": false,
+              "fields": [
+                {
+                  "label": "Enable scheduled import policy on the ImageStreamTag",
+                  "type": "checkbox",
+                  "required": false,
+                  "description": "Set to true to enable scheduled import policy on the ImageStream.",
+                  "jsonPath": "$.spec.scheduledImportPolicy",
+                  "originalJsonPath": "$.spec.scheduledImportPolicy"
+                }
+              ]
+            }
+          ]
         },
         {
           "label": "Disable SSL Routes",
