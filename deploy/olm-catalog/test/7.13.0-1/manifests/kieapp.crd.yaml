@@ -2962,6 +2962,11 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              scheduledImportPolicy:
+                description: Set to true to enable scheduled import policy on the
+                  ImageStream. This will work only if you are using ImageStreamTag
+                  otherwise with image digests it will be ignored
+                type: boolean
               truststore:
                 description: Defines which truststore is used by the console, kieservers,
                   smartrouter, and dashbuilder
@@ -5993,6 +5998,11 @@ spec:
                             type: boolean
                         type: object
                     type: object
+                  scheduledImportPolicy:
+                    description: Set to true to enable scheduled import policy on
+                      the ImageStream. This will work only if you are using ImageStreamTag
+                      otherwise with image digests it will be ignored
+                    type: boolean
                   truststore:
                     description: Defines which truststore is used by the console,
                       kieservers, smartrouter, and dashbuilder

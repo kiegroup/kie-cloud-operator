@@ -3,6 +3,7 @@ package kieapp
 import (
 	"context"
 	"fmt"
+	oimagev1 "github.com/openshift/api/image/v1"
 	"io/ioutil"
 	"reflect"
 	"strings"
@@ -648,6 +649,7 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 	assert.Equal(t, image, isTag.Name)
 	assert.Equal(t, cr.Status.Applied.Version, isTag.Tag.Name)
 	assert.Equal(t, cr.Namespace, isTag.Namespace)
+	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
 }
 
 func TestCreateRhdmImageStreams(t *testing.T) {
@@ -704,6 +706,58 @@ func TestCreateRhdmImageStreamsFor7121(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
+	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
+}
+
+func getISTag(mockSvc *test.MockPlatformService, cr *api.KieApp, tagRefName string, imageName string) (*oimagev1.ImageStreamTag, error) {
+	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
+	_, err := defaults.GetEnvironment(cr, mockSvc)
+	if err != nil {
+		return nil, err
+	}
+	reconciler := Reconciler{
+		Service: mockSvc,
+	}
+	err = reconciler.createLocalImageTag(tagRefName, "", cr)
+	isTag, err := isTagMock.Get(context.TODO(), imageName, metav1.GetOptions{})
+	return isTag, err
+}
+
+func TestCreateRhpamImageStreamsUsingImageTags(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: api.KieAppSpec{
+			Environment:  api.RhpamAuthoring,
+			UseImageTags: true,
+		},
+	}
+	mockSvc := test.MockService()
+	isTag, err := getISTag(mockSvc, cr, fmt.Sprintf("rhpam%s-kieserver-openshift:1.0", cr.Status.Applied.Version), fmt.Sprintf("test-ns/rhpam%s-kieserver-openshift:1.0", cr.Status.Applied.Version))
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
+}
+
+func TestCreateRhpamImageStreamsUsingImageTagsWithScheduledImportPolicy(t *testing.T) {
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-ns",
+		},
+		Spec: api.KieAppSpec{
+			Environment:           api.RhpamProduction,
+			UseImageTags:          true,
+			ScheduledImportPolicy: true,
+		},
+	}
+	mockSvc := test.MockService()
+	isTag, err := getISTag(mockSvc, cr, fmt.Sprintf("rhpam%s-kieserver-openshift:1.0", cr.Status.Applied.Version), fmt.Sprintf("test-ns/rhpam%s-kieserver-openshift:1.0", cr.Status.Applied.Version))
+	assert.Nil(t, err)
+	assert.NotNil(t, isTag)
+	assert.True(t, isTag.Tag.ImportPolicy.Scheduled)
 }
 
 func TestCreateTagVersionImageStreams(t *testing.T) {
@@ -731,6 +785,7 @@ func TestCreateTagVersionImageStreams(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
 	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:%s", constants.ImageRegistry, constants.VersionConstants[cr.Status.Applied.Version].DatagridImage, constants.VersionConstants[cr.Status.Applied.Version].DatagridImageTag), isTag.Tag.From.Name)
+	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
 }
 
 func TestCreateImageStreamsLatest(t *testing.T) {
@@ -759,6 +814,7 @@ func TestCreateImageStreamsLatest(t *testing.T) {
 	fmt.Print(isTag)
 	assert.NotNil(t, isTag)
 	assert.Equal(t, fmt.Sprintf("%s/jboss-datagrid-7/%s:latest", constants.ImageRegistry, constants.VersionConstants[cr.Status.Applied.Version].DatagridImage), isTag.Tag.From.Name)
+	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
 }
 
 func TestStatusDeploymentsProgression(t *testing.T) {
