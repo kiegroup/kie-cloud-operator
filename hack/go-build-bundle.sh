@@ -15,10 +15,10 @@ BUNDLE_NAME=rhpam-7/${BUNDLE}
 VERSION=$(go run getversion.go)
 CSVVERSION=$(go run getversion.go -csv)
 
-CFLAGS="docker --no-squash"
+CFLAGS="${1} --no-squash"
 if [[ ${LOCAL} != true ]]; then
     CFLAGS="osbs"
-    if [[ ${1} == "release" ]]; then
+    if [[ ${2} == "release" ]]; then
         CFLAGS+=" --release"
     fi
 fi

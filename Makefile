@@ -9,11 +9,9 @@ else
        Q = @
 endif
 
-#VERSION = $(shell git describe --dirty --tags --always)
-#REPO = github.com/kiegroup/kie-cloud-operator
-#BUILD_PATH = $(REPO)/cmd/manager
-
-#export CGO_ENABLED:=0
+# Container runtime engine used for building the images
+# set BUILDER env to define the builder, defaults to podman, can be podman, buildah or docker
+BUILDER ?= podman
 
 .PHONY: all
 all: build
@@ -54,27 +52,27 @@ lint:
 
 .PHONY: build
 build:
-	./hack/go-build.sh
+	./hack/go-build.sh ${BUILDER}
 
 .PHONY: bundle
 bundle:
-	LOCAL=true ./hack/go-build-bundle.sh
+	LOCAL=true ./hack/go-build-bundle.sh ${BUILDER}
 
 .PHONY: bundle-scratch
 bundle-scratch:
-	./hack/go-build-bundle.sh
+	./hack/go-build-bundle.sh ${BUILDER}
 
 .PHONY: bundle-release
 bundle-release:
-	./hack/go-build-bundle.sh release
+	./hack/go-build-bundle.sh ${BUILDER} release
 
 .PHONY: bundle-dev
 bundle-dev:
-	DEV=true LOCAL=true ./hack/go-build-bundle.sh
+	DEV=true LOCAL=true ./hack/go-build-bundle.sh ${BUILDER}
 
 .PHONY: rhel
 rhel:
-	LOCAL=true ./hack/go-build.sh rhel
+	LOCAL=true ./hack/go-build.sh ${BUILDER} rhel
 
 .PHONY: rhel-scratch
 rhel-scratch:
@@ -82,7 +80,7 @@ rhel-scratch:
 
 .PHONY: rhel-release
 rhel-release:
-	./hack/go-build.sh rhel release
+	./hack/go-build.sh ${BUILDER} rhel release
 
 .PHONY: csv
 csv: sdk-generate

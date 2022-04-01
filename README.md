@@ -17,6 +17,12 @@
 make
 ```
 
+The default builder is set to `podman`, to change set the *BUILDER* environment variable, e.g.:
+
+```bash
+BUILDER=docker make
+```
+
 ## Upload to a container registry
 
 e.g.

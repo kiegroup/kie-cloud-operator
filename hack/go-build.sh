@@ -11,7 +11,7 @@ TAR=modules/builder/${IMAGE}.tar.gz
 
 URL=${REPO}/archive/${OPERATOR_VERSION}.tar.gz
 
-CFLAGS="docker"
+CFLAGS="${1}"
 
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
@@ -22,10 +22,10 @@ fi
 if [[ -z ${CI} ]]; then
     echo Now building operator:
     echo
-    if [[ ${1} == "rhel" ]]; then
+    if [[ ${2} == "rhel" ]]; then
         if [[ ${LOCAL} != true ]]; then
             CFLAGS="osbs"
-            if [[ ${2} == "release" ]]; then
+            if [[ ${3} == "release" ]]; then
                 CFLAGS+=" --release"
             fi
         fi
