@@ -10,7 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -26,7 +26,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		return err
 	}
 
-	watchObjects := []runtime.Object{
+	watchObjects := []client.Object{
 		// Watch for changes to primary resource KieApp
 		&api.KieApp{},
 		&appsv1.Deployment{},
@@ -39,7 +39,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		}
 	}
 
-	watchOwnedObjects := []runtime.Object{
+	watchOwnedObjects := []client.Object{
 		&corev1.ConfigMap{},
 	}
 	ownerHandler := &handler.EnqueueRequestForOwner{
@@ -52,7 +52,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		}
 	}
 
-	watchOwnedObjects = []runtime.Object{
+	watchOwnedObjects = []client.Object{
 		&corev1.ConfigMap{},
 		&rbacv1.RoleBinding{},
 		&rbacv1.Role{},
@@ -70,7 +70,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		}
 	}
 
-	watchOwnedObjects = []runtime.Object{
+	watchOwnedObjects = []client.Object{
 		&oappsv1.DeploymentConfig{},
 		&appsv1.StatefulSet{},
 		&corev1.PersistentVolumeClaim{},
@@ -94,7 +94,7 @@ func Add(mgr manager.Manager, reconciler reconcile.Reconciler) error {
 		}
 	}
 
-	watchOwnedObjects = []runtime.Object{
+	watchOwnedObjects = []client.Object{
 		&corev1.ConfigMap{},
 	}
 	ownerHandler = &handler.EnqueueRequestForOwner{

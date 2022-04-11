@@ -2,28 +2,63 @@ package constants
 
 import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
+	"golang.org/x/mod/semver"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Ocp4Versions - OpenShift minor versions used for image curation
+var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
+
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.10.1"
-	// PriorVersion1 product version supported
-	PriorVersion1 = "7.10.0"
-	// PriorVersion2 product version supported
-	PriorVersion2 = "7.9.1"
+	CurrentVersion = "7.13.0"
+	// PriorVersion product version supported
+	PriorVersion = "7.12.1"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PriorVersion1, PriorVersion2}
+var SupportedVersions = []string{CurrentVersion, PriorVersion}
 
-// Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.7", "4.6", "4.5", "4.4", "4.3", "4.2", "4.1"}
+// VersionConstants ...
+var VersionConstants = map[string]*api.VersionConfigs{
+	CurrentVersion: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli4ImageURL,
+		OseCliComponent:     OseCli4Component,
+		BrokerImage:         Broker79Image,
+		BrokerImageTag:      Broker79ImageTag,
+		BrokerImageURL:      Broker79ImageURL,
+		DatagridImage:       Datagrid8Image,
+		DatagridImageTag:    Datagrid8ImageTag13,
+		DatagridImageURL:    Datagrid8ImageURL13,
+		DatagridComponent:   Datagrid8Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
+	},
+	PriorVersion: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli4ImageURL,
+		OseCliComponent:     OseCli4Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker78ImageTag,
+		BrokerImageURL:      Broker78ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
+	},
+}
 
 const (
 	// ProductName used for metering labels
-	ProductName = "process-automation"
+	ProductName = "Red_Hat_Process_Automation"
 	// LabelRHproductName used as metering label
 	LabelRHproductName = "rht.prod_name"
 	// LabelRHproductVersion used as metering label
@@ -85,6 +120,20 @@ const (
 	KeystoreAlias = "jboss"
 	// KeystoreName used when creating Secret
 	KeystoreName = "keystore.jks"
+	// TruststoreSecret is the default format for truststore secret names
+	TruststoreSecret = "-truststore"
+	// TruststoreName used when creating Secret
+	TruststoreName = "truststore.jks"
+	// TruststorePath used when mounting Secret
+	TruststorePath = "/etc/openshift-truststore-volume"
+	// TruststorePwd used when creating Secret
+	TruststorePwd = "changeit"
+	// CaBundleKey ...
+	CaBundleKey = "ca-bundle.crt"
+	// HttpProtocol ...
+	HttpProtocol = "http"
+	// HttpsProtocol ...
+	HttpsProtocol = "https"
 	// DatabaseVolumeSuffix Suffix to use for any database volume and volumeMounts
 	DatabaseVolumeSuffix = "pvol"
 	// DefaultDatabaseSize Default Database Persistence size
@@ -95,8 +144,6 @@ const (
 	ConsoleLinkName = "Installer"
 	// ConsoleDescription is how the link will be described in an installed CSV within the marketplace
 	ConsoleDescription = "**To use the guided installer to provision an environment, open the Installer link, in the links section on the left side of this page.**"
-	// SmartRouterProtocol - default SmartRouter protocol
-	SmartRouterProtocol = "http"
 	// GitHooksDefaultDir Default path where to mount the GitHooks volume
 	GitHooksDefaultDir = "/opt/kie/data/git/hooks"
 	// GitHooksVolume Name of the mounted volume name when GitHooks reference is set
@@ -119,9 +166,26 @@ const (
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
 	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
+	// ClusterLabel for Kube_ping
+	ClusterLabel = "cluster"
+	// ClusterLabelPrefix for Kube_ping
+	ClusterLabelPrefix = "jgrp.k8s."
+	// KubeNS Env name
+	KubeNS         = "KUBERNETES_NAMESPACE"
+	KubeLabels     = "KUBERNETES_LABELS"
+	KafkaTopicsEnv = "KIE_SERVER_KAFKA_EXT_TOPICS"
+	// ConsoleRouteEnv for backwards compatibility with Application Templates
+	ConsoleRouteEnv = "BUSINESS_CENTRAL_HOSTNAME_HTTP"
+	// ServersRouteEnv for backwards compatibility with Application Templates
+	ServersRouteEnv = "KIE_SERVER_HOSTNAME_HTTP"
+	// SmartRouterRouteEnv for backwards compatibility with Application Templates
+	SmartRouterRouteEnv = "SMART_ROUTER_HOSTNAME_HTTP"
+	// DashbuilderRouteEnv for backwards compatibility, similar to Console and Servers
+	DashbuilderRouteEnv = "DASHBUILDER_HOSTNAME_HTTP"
+	// ACFilters Default filters for CORS
+	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 
-	relatedImageVar = "RELATED_IMAGE_"
-
+	relatedImageVar        = "RELATED_IMAGE_"
 	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
 	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
 	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
@@ -134,7 +198,6 @@ const (
 	PamSmartRouterVar      = relatedImageVar + "PAM_SMARTROUTER_IMAGE_"
 
 	OauthVar             = relatedImageVar + "OAUTH_PROXY_IMAGE_"
-	Oauth3ImageLatestURL = ImageRegistry + "/openshift3/oauth-proxy:latest"
 	Oauth4ImageURL       = ImageRegistry + "/openshift4/ose-oauth-proxy"
 	Oauth4ImageLatestURL = Oauth4ImageURL + ":latest"
 	OauthComponent       = "golang-github-openshift-oauth-proxy-container"
@@ -149,42 +212,46 @@ const (
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
 	MySQL80Component = "rh-mysql80-container"
 
-	OseCliVar          = relatedImageVar + "OSE_CLI_IMAGE_"
-	OseCli311ImageURL  = ImageRegistry + "/openshift3/ose-cli:v3.11"
-	OseCli311Component = "openshift-enterprise-cli-container"
+	OseCliVar        = relatedImageVar + "OSE_CLI_IMAGE_"
+	OseCli4Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent = "amq-broker-openshift-container"
-	BrokerVar       = relatedImageVar + "BROKER_IMAGE_"
-	BrokerImage     = "amq-broker"
-	BrokerImageURL  = ImageRegistry + "/amq7/" + BrokerImage + ":"
+	BrokerComponent      = "amq-broker-openshift-container"
+	BrokerVar            = relatedImageVar + "BROKER_IMAGE_"
+	BrokerImage          = "amq-broker"
+	Broker79Image        = "amq-broker-rhel8"
+	BrokerImageURL       = ImageRegistry + "/amq7/" + BrokerImage + ":"
+	Broker79ImageBaseURL = ImageRegistry + "/amq7/" + Broker79Image + ":"
 
-	Broker77ImageTag = "7.7"
 	Broker78ImageTag = "7.8"
-	Broker77ImageURL = BrokerImageURL + Broker77ImageTag
+	Broker79ImageTag = "7.9"
 	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
+	Broker79ImageURL = Broker79ImageBaseURL + Broker79ImageTag
 
 	DatagridVar         = relatedImageVar + "DATAGRID_IMAGE_"
 	Datagrid73Image     = "datagrid73-openshift"
 	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
 
-	Datagrid73ImageTag15 = "1.5"
-	Datagrid73ImageURL15 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag15
+	Datagrid8Image     = "datagrid-8-rhel8"
+	Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
 
 	Datagrid73ImageTag16 = "1.6"
 	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
+
+	Datagrid8ImageTag13 = "1.3"
+	Datagrid8ImageURL13 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag13
 
 	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
 	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
 	RhelVersion = "-rhel8"
 
 	//Resources Limits and Requests
-	ConsoleProdCPULimit         = "1"
+	ConsoleProdCPULimit         = "2"
 	ConsoleProdMemLimit         = "2Gi"
 	ConsoleAuthoringCPULimit    = "2"
 	ConsoleAuthoringMemLimit    = "4Gi"
 	ConsoleAuthoringCPURequests = "1500m"
 	ConsoleAuthoringMemRequests = "3Gi"
-	ConsoleProdCPURequests      = "500m"
+	ConsoleProdCPURequests      = "1500m"
 	ConsoleProdMemRequests      = "1536Mi"
 	ConsolePvSize               = "1Gi"
 	ConsoleProdPvSize           = "64Mi"
@@ -195,47 +262,78 @@ const (
 	ServersCPULimit             = "1"
 	ServersMemLimit             = "2Gi"
 	ServersCPURequests          = "750m"
-	ServersMemRequests          = "1Gi"
+	ServersMemRequests          = "1536Mi"
+	ServersM2PvSize             = "1Gi"
+	ServersKiePvSize            = "10Mi"
 	SmartRouterCPULimit         = "500m"
 	SmartRouterMemLimit         = "1Gi"
 	SmartRouterCPURequests      = "250m"
 	SmartRouterMemRequests      = "1Gi"
+	ProcessMigrationCPULimit    = "500m"
+	ProcessMigrationMemLimit    = "512Mi"
+	ProcessMigrationCPURequests = "250m"
+	ProcessMigrationMemRequests = "512Mi"
 
 	//ImageNames for metering labels
 	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
 	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
 	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
 	RhdmControllerImageName   = RhdmPrefix + "-controller-" + RhelVersion
+
+	RhdmDecisionCentral     = "decisioncentral"
+	RhpamBusinessCentral    = "businesscentral"
+	RhpamBusinessCentralMon = "businesscentral-monitoring"
+
+	DashBuilder      = "dashbuilder"
+	Smartrouter      = "smartrouter"
+	ProcessMigration = "process-migration"
+	Production       = "production"
+
+	SUBCOMPONENT_TYPE_APP   = "application"
+	SUBCOMPONENT_TYPE_INFRA = "infrastructure"
+
+	DefaultDatagridUsername = "infinispan"
+
+	USERNAME_ADMIN_SECRET_KEY = "username"
+	PASSWORD_ADMIN_SECRET_KEY = "password"
 )
 
-// Console Resource Limits for BC Monitoring in Prod Env
+var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)
+
+// ConsoleProdLimits Console Resource Limits for BC Monitoring in Prod Env
 var ConsoleProdLimits = map[string]string{
 	"CPU": ConsoleProdCPULimit,
 	"MEM": ConsoleProdMemLimit,
 }
 
-// Console Resource Limits for BC in Authoring Env
+// ConsoleAuthoringLimits Resource Limits for BC in Authoring Env
 var ConsoleAuthoringLimits = map[string]string{
 	"CPU": ConsoleAuthoringCPULimit,
 	"MEM": ConsoleAuthoringMemLimit,
 }
 
-// Dashbuilder Resource Limits for Dasubuilder deployment
+// DashbuilderLimits Resource Limits for Dasubuilder
 var DashbuilderLimits = map[string]string{
 	"CPU": DashbuilderCPULimit,
 	"MEM": DashbuilderMemLimit,
 }
 
-// Server Limits for every Env
+// ServersLimits Resource Limits for KIE Servers
 var ServersLimits = map[string]string{
 	"CPU": ServersCPULimit,
 	"MEM": ServersMemLimit,
 }
 
-// SmartRouter Limits for every Env
+// SmartRouterLimits defines resource limits for Smart Router
 var SmartRouterLimits = map[string]string{
 	"CPU": SmartRouterCPULimit,
 	"MEM": SmartRouterMemLimit,
+}
+
+// ProcessMigrationLimits defines resource limits for PIM
+var ProcessMigrationLimits = map[string]string{
+	"CPU": ProcessMigrationCPULimit,
+	"MEM": ProcessMigrationMemLimit,
 }
 
 // ConsoleAuthoringRequests defines requests in Authoring environment
@@ -250,7 +348,7 @@ var ConsoleProdRequests = map[string]string{
 	"MEM": ConsoleProdMemRequests,
 }
 
-// Dashbuilder defines requests Dasubuilder deployment
+// DashbuilderRequests defines requests Dasubuilder deployment
 var DashbuilderRequests = map[string]string{
 	"CPU": DashbuilderCPURequests,
 	"MEM": DashbuilderMemRequests,
@@ -266,6 +364,12 @@ var ServerRequests = map[string]string{
 var SmartRouterRequests = map[string]string{
 	"CPU": SmartRouterCPURequests,
 	"MEM": SmartRouterMemRequests,
+}
+
+// ProcessMigrationRequests defines the requests for PIM deployment
+var ProcessMigrationRequests = map[string]string{
+	"CPU": ProcessMigrationCPURequests,
+	"MEM": ProcessMigrationMemRequests,
 }
 
 var Images = []ImageEnv{
@@ -349,62 +453,16 @@ type ImageRefTag struct {
 	From *corev1.ObjectReference `json:"from"`
 }
 
-// VersionConstants ...
-var VersionConstants = map[string]*api.VersionConfigs{
-	CurrentVersion: {
-		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL80ImageURL,
-		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
-	},
-	PriorVersion1: {
-		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL80ImageURL,
-		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
-	},
-	PriorVersion2: {
-		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli311ImageURL,
-		OseCliComponent:     OseCli311Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker77ImageTag,
-		BrokerImageURL:      Broker77ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL80ImageURL,
-		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
-	},
-}
-
-var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: "businesscentral", ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
-var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: "businesscentral-monitoring", ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
+var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
+var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: RhpamBusinessCentralMon, ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
 var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
-var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: "decisioncentral", ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
+
+// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
+var RhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhdmDecisionCentral, ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
+
+// 7.13.0 rhdm image changes
+// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
+var RhdmAppConstants713 = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -446,10 +504,10 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
 	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
 	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
-	api.RhdmTrial:                  {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoring:              {App: rhdmAppConstants, Replica: replicasTrial},
-	api.RhdmAuthoringHA:            {App: rhdmAppConstants, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:    {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmTrial:                  {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: RhdmAppConstants713, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: RhdmAppConstants713, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates
@@ -471,4 +529,15 @@ var DebugTrue = corev1.EnvVar{
 var DebugFalse = corev1.EnvVar{
 	Name:  "DEBUG",
 	Value: "false",
+}
+
+func highestOcpVersion(versions []string) string {
+	highest := ""
+	for _, ver := range versions {
+		ver = "v" + ver
+		if semver.IsValid(ver) && semver.Compare(ver, highest) > 0 {
+			highest = ver
+		}
+	}
+	return highest
 }

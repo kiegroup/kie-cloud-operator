@@ -1,0 +1,13 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: disble-ssl
+  annotations:
+    consoleName: snippet-disable-ssl
+    consoleTitle: Use plain text HTTP Routes
+    consoleDesc: Use this snippet to disable SSL routes
+    consoleSnippet: true
+spec:
+  commonConfig:
+    disableSsl: true
+

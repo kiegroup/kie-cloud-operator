@@ -7,6 +7,9 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ConsoleNotification is the extension for configuring openshift web console notifications.
+//
+// Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
+// +openshift:compatibility-gen:level=1
 type ConsoleNotification struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -19,6 +22,7 @@ type ConsoleNotificationSpec struct {
 	// text is the visible text of the notification.
 	Text string `json:"text"`
 	// location is the location of the notification in the console.
+	// Valid values are: "BannerTop", "BannerBottom", "BannerTopBottom".
 	// +optional
 	Location ConsoleNotificationLocation `json:"location,omitempty"`
 	// link is an object that holds notification link details.
@@ -48,6 +52,8 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
+// +openshift:compatibility-gen:level=1
 type ConsoleNotificationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`

@@ -16,8 +16,8 @@ spec:
   objects:
     servers:
       - build:
-          kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+          kieServerContainerDeployment: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT
           gitSource:
             uri: https://github.com/jboss-container-images/rhpam-7-openshift-image.git
-            reference: master
+            reference: main
             contextDir: quickstarts/library-process/library

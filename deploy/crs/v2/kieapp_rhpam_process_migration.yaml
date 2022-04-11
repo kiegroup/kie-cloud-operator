@@ -4,13 +4,15 @@ metadata:
   name: rhpam-process-migration
   annotations:
     consoleName: rhpam-process-migration
-    consoleTitle: PAM PIM
+    consoleTitle: Red Hat Process Automation Process Instance Migration
     consoleDesc: Deploys a PAM Process Instance Migration environment
 spec:
   environment: rhpam-trial
   objects:
     processMigration:
+      username: pimAdmin
+      password: somePasswordThatWillBeConvertedToMD5
       database:
         type: "postgresql"
-        size: 30Gi
+        size: 1Gi
         storageClassName: gold

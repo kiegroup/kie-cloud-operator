@@ -24,7 +24,7 @@ spec:
         env:
           # This environment variable must be specified to use the
           - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-            value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.5.0-SNAPSHOT
+            value: rhpam-kieserver-library=org.openshift.quickstarts:rhpam-kieserver-library:1.6.0-SNAPSHOT
       - name: kieserver-b
         # Replace the default image stream
         from:
@@ -34,4 +34,4 @@ spec:
         env:
           # This environment variable must be specified to use the
           - name: KIE_SERVER_CONTAINER_DEPLOYMENT
-            value: rhpam-kieserver-hr=org.openshift.quickstarts:rhpam-kieserver-approval:1.5.0-SNAPSHOT
+            value: rhpam-kieserver-hr=org.openshift.quickstarts:rhpam-kieserver-approval:1.6.0-SNAPSHOT

@@ -1,9 +1,9 @@
 package compare
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"reflect"
-	logs "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	logs "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var logger = logs.Log.WithName("comparator")
@@ -18,7 +18,7 @@ func NewMapComparator() MapComparator {
 	}
 }
 
-func (this *MapComparator) Compare(deployed map[reflect.Type][]resource.KubernetesResource, requested map[reflect.Type][]resource.KubernetesResource) map[reflect.Type]ResourceDelta {
+func (this *MapComparator) Compare(deployed map[reflect.Type][]client.Object, requested map[reflect.Type][]client.Object) map[reflect.Type]ResourceDelta {
 	delta := make(map[reflect.Type]ResourceDelta)
 	for deployedType, deployedArray := range deployed {
 		requestedArray := requested[deployedType]

@@ -13,13 +13,17 @@ spec:
       url: ldaps://myldap.example.com
       bindDN: uid=admin,ou=users,ou=exmample,ou=com
       bindCredential: s3cret
+      allowEmptyPasswords: true
       baseCtxDN: ou=users,ou=example,ou=com
-      baseFilter: (uid={0})
-      searchScope: SUBTREE_SCOPE
+      baseFilter: uid
+      recursiveSearch: true
       roleAttributeID: memberOf
       rolesCtxDN: ou=groups,ou=example,ou=com
       roleFilter: (memberOf={1})
       defaultRole: guest
+      newIdentityAttributes: sn=BlankSurname;cn=BlankCommonName
+      referralMode: FOLLOW
+      loginModule: optional
     roleMapper:
       rolesProperties: /config/roleMapper.properties
       replaceRole: true

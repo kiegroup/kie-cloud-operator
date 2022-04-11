@@ -3,14 +3,15 @@
 source ./hack/go-mod-env.sh
 
 REPO=https://github.com/kiegroup/kie-cloud-operator
-VERSION=$(go run getversion.go)
+PRODUCT_VERSION=$(go run getversion.go)
+OPERATOR_VERSION=$(go run getversion.go -csv)
 REGISTRY=quay.io/kiegroup
 IMAGE=kie-cloud-operator
 TAR=modules/builder/${IMAGE}.tar.gz
 
-URL=${REPO}/archive/${VERSION}.tar.gz
+URL=${REPO}/archive/${OPERATOR_VERSION}.tar.gz
 
-CFLAGS="docker"
+CFLAGS="${1}"
 
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
@@ -21,17 +22,17 @@ fi
 if [[ -z ${CI} ]]; then
     echo Now building operator:
     echo
-    if [[ ${1} == "rhel" ]]; then
+    if [[ ${2} == "rhel" ]]; then
         if [[ ${LOCAL} != true ]]; then
             CFLAGS="osbs"
-            if [[ ${2} == "release" ]]; then
+            if [[ ${3} == "release" ]]; then
                 CFLAGS+=" --release"
             fi
         fi
         wget -q ${URL} -O ${TAR}
         echo ${CFLAGS}
         cekit --verbose --redhat build \
-           --overrides '{version: '${VERSION}'}' \
+           --overrides '{version: '${PRODUCT_VERSION}'}' \
            ${CFLAGS}
         rm ${TAR}
     else
@@ -41,7 +42,7 @@ if [[ -z ${CI} ]]; then
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui
         echo
 
-        operator-sdk build --go-build-args -mod=vendor ${REGISTRY}/${IMAGE}:${VERSION}
+        operator-sdk build --go-build-args -mod=vendor ${REGISTRY}/${IMAGE}:${PRODUCT_VERSION}
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
@@ -31,7 +30,8 @@ import (
 )
 
 var consoleName = "console-cr-form"
-var operatorName string
+var operatorName = os.Getenv(constants.OpNameEnv)
+var caConfigMapName = operatorName + "-trusted-cabundle"
 
 func shouldDeployConsole() bool {
 	shouldDeploy := os.Getenv(constants.OpUIEnv)
@@ -46,7 +46,6 @@ func shouldDeployConsole() bool {
 func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	log.Debugf("Checking operator-ui deployment")
 	namespace := os.Getenv(constants.NameSpaceEnv)
-	operatorName = os.Getenv(constants.OpNameEnv)
 	role := getRole(namespace)
 	roleBinding := getRoleBinding(namespace)
 	sa := getServiceAccount(namespace)
@@ -80,7 +79,7 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 			}
 		}
 	}
-	requestedResources := []resource.KubernetesResource{role, roleBinding, sa, pod, service, route}
+	requestedResources := []client.Object{role, roleBinding, sa, pod, service, route}
 	resourceMap := compare.NewMapBuilder()
 	for _, resource := range requestedResources {
 		resourceMap.Add(resource)
@@ -97,9 +96,9 @@ func deployConsole(reconciler *Reconciler, operator *appsv1.Deployment) {
 	updateCSVlinks(reconciler, route, operator)
 }
 
-func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map[reflect.Type][]resource.KubernetesResource) (map[reflect.Type][]resource.KubernetesResource, error) {
+func loadCounterparts(reconciler *Reconciler, namespace string, requestedMap map[reflect.Type][]client.Object) (map[reflect.Type][]client.Object, error) {
 	reader := read.New(reconciler.Service).WithNamespace(namespace)
-	var deployedArray []resource.KubernetesResource
+	var deployedArray []client.Object
 	for resourceType, requestedArray := range requestedMap {
 		for _, requested := range requestedArray {
 			deployed, err := reader.Load(resourceType, requested.GetName())
@@ -210,12 +209,6 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	} else if val, exists := os.LookupEnv(constants.OauthVar + "LATEST"); exists {
 		oauthImage = val
 	}
-	if ocpMajor == "3" {
-		oauthImage = constants.Oauth3ImageLatestURL
-		if val, exists := os.LookupEnv(constants.OauthVar + "3"); exists {
-			oauthImage = val
-		}
-	}
 	sarString := fmt.Sprintf("--openshift-sar=%s", sar)
 	httpPort := int32(8080)
 	httpsPort := int32(8443)
@@ -258,7 +251,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 					Ports: []corev1.ContainerPort{{Name: "http", ContainerPort: httpPort}},
 					Env:   []corev1.EnvVar{debug},
 					ReadinessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
+						ProbeHandler: corev1.ProbeHandler{
 							HTTPGet: &corev1.HTTPGetAction{
 								Path: "/health",
 								Port: intstr.IntOrString{IntVal: httpPort},
@@ -269,7 +262,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 						FailureThreshold:    20,
 					},
 					LivenessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
+						ProbeHandler: corev1.ProbeHandler{
 							HTTPGet: &corev1.HTTPGetAction{
 								Path: "/health",
 								Port: intstr.IntOrString{IntVal: httpPort},
@@ -285,7 +278,7 @@ func getPod(namespace, image, sa, ocpVersion string, operator *appsv1.Deployment
 	// `inject-trusted-cabundle` ConfigMap only supported in OCP 4.2+
 	if semver.Compare(ocpVersion, "v4.2") >= 0 || ocpVersion == "" {
 		caVolume := corev1.Volume{
-			Name: operatorName + "-trusted-cabundle",
+			Name: caConfigMapName,
 		}
 		caVolume.ConfigMap = &corev1.ConfigMapVolumeSource{
 			Items: []corev1.KeyToPath{{Key: "ca-bundle.crt", Path: "ca-bundle.crt"}},
@@ -329,9 +322,6 @@ func getService(namespace, ocpVersion string) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	if semver.Major(ocpVersion) == "v3" {
-		svc.Annotations = map[string]string{"service.alpha.openshift.io/serving-cert-secret-name": operatorName + "-proxy-tls"}
-	}
 	return svc
 }
 
@@ -365,7 +355,7 @@ func getCaConfigMap(namespace string) *corev1.ConfigMap {
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      operatorName + "-trusted-cabundle",
+			Name:      caConfigMapName,
 			Namespace: namespace,
 			Labels:    labels,
 		},

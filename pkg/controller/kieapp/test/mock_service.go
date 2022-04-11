@@ -25,14 +25,14 @@ var log = logs.GetLogger("kieapp.test")
 type MockPlatformService struct {
 	Client              clientv1.Client
 	scheme              *runtime.Scheme
-	CreateFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error
-	DeleteFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOption) error
-	GetFunc             func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
-	ListFunc            func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error
-	UpdateFunc          func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error
-	PatchFunc           func(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error
-	DeleteAllOfFunc     func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error
-	GetCachedFunc       func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error
+	CreateFunc          func(ctx context.Context, obj clientv1.Object, opts ...clientv1.CreateOption) error
+	DeleteFunc          func(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteOption) error
+	GetFunc             func(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error
+	ListFunc            func(ctx context.Context, list clientv1.ObjectList, opts ...clientv1.ListOption) error
+	UpdateFunc          func(ctx context.Context, obj clientv1.Object, opts ...clientv1.UpdateOption) error
+	PatchFunc           func(ctx context.Context, obj clientv1.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error
+	DeleteAllOfFunc     func(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteAllOfOption) error
+	GetCachedFunc       func(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error
 	ImageStreamTagsFunc func(namespace string) imagev1.ImageStreamTagInterface
 	GetSchemeFunc       func() *runtime.Scheme
 	StatusFunc          func() clientv1.StatusWriter
@@ -104,28 +104,28 @@ func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
 	return &MockPlatformService{
 		Client: client,
 		scheme: scheme,
-		CreateFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
+		CreateFunc: func(ctx context.Context, obj clientv1.Object, opts ...clientv1.CreateOption) error {
 			return client.Create(ctx, obj, opts...)
 		},
-		DeleteFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOption) error {
+		DeleteFunc: func(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteOption) error {
 			return client.Delete(ctx, obj, opts...)
 		},
-		GetFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+		GetFunc: func(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 			return client.Get(ctx, key, obj)
 		},
-		ListFunc: func(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+		ListFunc: func(ctx context.Context, list clientv1.ObjectList, opts ...clientv1.ListOption) error {
 			return client.List(ctx, list, opts...)
 		},
-		UpdateFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
+		UpdateFunc: func(ctx context.Context, obj clientv1.Object, opts ...clientv1.UpdateOption) error {
 			return client.Update(ctx, obj, opts...)
 		},
-		PatchFunc: func(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
+		PatchFunc: func(ctx context.Context, obj clientv1.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
 			return client.Patch(ctx, obj, patch, opts...)
 		},
-		DeleteAllOfFunc: func(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error {
+		DeleteAllOfFunc: func(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteAllOfOption) error {
 			return client.DeleteAllOf(ctx, obj, opts...)
 		},
-		GetCachedFunc: func(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+		GetCachedFunc: func(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 			return client.Get(ctx, key, obj)
 		},
 		ImageStreamTagsFunc: func(namespace string) imagev1.ImageStreamTagInterface {
@@ -140,35 +140,35 @@ func MockServiceWithExtraScheme(objs ...runtime.Object) *MockPlatformService {
 	}
 }
 
-func (service *MockPlatformService) Create(ctx context.Context, obj runtime.Object, opts ...clientv1.CreateOption) error {
+func (service *MockPlatformService) Create(ctx context.Context, obj clientv1.Object, opts ...clientv1.CreateOption) error {
 	return service.CreateFunc(ctx, obj, opts...)
 }
 
-func (service *MockPlatformService) Delete(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteOption) error {
+func (service *MockPlatformService) Delete(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteOption) error {
 	return service.DeleteFunc(ctx, obj, opts...)
 }
 
-func (service *MockPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+func (service *MockPlatformService) Get(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 	return service.GetFunc(ctx, key, obj)
 }
 
-func (service *MockPlatformService) List(ctx context.Context, list runtime.Object, opts ...clientv1.ListOption) error {
+func (service *MockPlatformService) List(ctx context.Context, list clientv1.ObjectList, opts ...clientv1.ListOption) error {
 	return service.ListFunc(ctx, list, opts...)
 }
 
-func (service *MockPlatformService) Update(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
+func (service *MockPlatformService) Update(ctx context.Context, obj clientv1.Object, opts ...clientv1.UpdateOption) error {
 	return service.UpdateFunc(ctx, obj, opts...)
 }
 
-func (service *MockPlatformService) Patch(ctx context.Context, obj runtime.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
+func (service *MockPlatformService) Patch(ctx context.Context, obj clientv1.Object, patch clientv1.Patch, opts ...clientv1.PatchOption) error {
 	return service.PatchFunc(ctx, obj, patch, opts...)
 }
 
-func (service *MockPlatformService) DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...clientv1.DeleteAllOfOption) error {
+func (service *MockPlatformService) DeleteAllOf(ctx context.Context, obj clientv1.Object, opts ...clientv1.DeleteAllOfOption) error {
 	return service.DeleteAllOfFunc(ctx, obj, opts...)
 }
 
-func (service *MockPlatformService) GetCached(ctx context.Context, key clientv1.ObjectKey, obj runtime.Object) error {
+func (service *MockPlatformService) GetCached(ctx context.Context, key clientv1.ObjectKey, obj clientv1.Object) error {
 	return service.GetCachedFunc(ctx, key, obj)
 }
 
