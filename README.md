@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- go v1.16.x
+- go v1.17.x
 - operator-sdk v0.19.2
 - docker 
 - [opm](https://github.com/operator-framework/operator-registry/releases)
@@ -69,8 +69,8 @@ to load your operator bundle in OpenShift.
 
 ### Create your own Bundle
 
-i.e. 7.12.0-1 version
-Remove the following line from deploy/olm-catalog/dev/7.12.0-1/manifest/businessautomation-operator.clusterserviceversion.yaml
+i.e. 7.13.0-1 version
+Remove the following line from deploy/olm-catalog/dev/7.13.0-1/manifest/businessautomation-operator.clusterserviceversion.yaml
 
 ```console
 replaces: businessautomation-operator.<last-version>

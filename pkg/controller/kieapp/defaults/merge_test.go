@@ -730,7 +730,7 @@ func buildObjectMeta(name string) *metav1.ObjectMeta {
 
 func buildProbe(name string, delay, timeout int32) *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{
 					"/bin/" + name,
