@@ -107,4 +107,3 @@ spec:
         imagePullPolicy: Always
         name: business-automation-operator
         resources: {}
-      serviceAccountName: business-automation-operator
