@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-04-22 10:57:59"
+    createdAt: "2022-05-05 17:37:42"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -420,7 +420,7 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-2
+  replaces: businessautomation-operator.7.12.1-3
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator

@@ -6,13 +6,11 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "true"
-    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-05-05 17:37:42"
+    containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.12.1
+    createdAt: "2022-05-04 10:27:42"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.openshift.io/valid-subscription: '["Red Hat Process Automation Manager",
-      "Red Hat Decision Manager"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
     support: Red Hat
     tectonic-visibility: ocs
@@ -20,7 +18,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-j7t44zm2p5
+  name: businessautomation-operator.7.12.1-3
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -174,73 +172,75 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
-                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-kieserver-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-controller-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-smartrouter-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-process-migration-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.13.0
-                  value: registry-proxy.engineering.redhat.com/rhpam-7/rhpam-dashbuilder-rhel8:7.13.0
-                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.13.0
-                  value: registry.redhat.io/openshift4/ose-cli:v4.10
-                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.13.0
-                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.13.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.13.0
-                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.3
-                - name: RELATED_IMAGE_BROKER_IMAGE_7.13.0
-                  value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
                 - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.1
                 - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-controller-rhel8:7.12.1
                 - name: RELATED_IMAGE_DM_DC_IMAGE_7.12.1
-                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-controller-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.12.1
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.12.1
-                  value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.12.1
+                  value: registry.stage.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.12.1
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.12.1
-                  value: registry.redhat.io/openshift4/ose-cli:v4.10
+                  value: registry.redhat.io/openshift4/ose-cli:v4.8
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.12.1
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.1
                   value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_7.12.1
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.12.1
+                  value: registry.redhat.io/amq7/amq-broker:7.8
+                - name: RELATED_IMAGE_DM_KIESERVER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhdm-7/rhdm-kieserver-rhel8:7.12.0
+                - name: RELATED_IMAGE_DM_CONTROLLER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhdm-7/rhdm-controller-rhel8:7.12.0
+                - name: RELATED_IMAGE_DM_DC_IMAGE_7.12.0
+                  value: registry.redhat.io/rhdm-7/rhdm-decisioncentral-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-kieserver-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-controller-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-businesscentral-monitoring-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-smartrouter-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-process-migration-rhel8:7.12.0
+                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.12.0
+                  value: registry.redhat.io/rhpam-7/rhpam-dashbuilder-rhel8:7.12.0
+                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.12.0
+                  value: registry.redhat.io/openshift4/ose-cli:v4.8
+                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.12.0
+                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.12.0
+                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.12.0
+                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                - name: RELATED_IMAGE_BROKER_IMAGE_7.12.0
                   value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.9
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.9
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.8
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.10
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
-                image: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.13.0
+                image: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.12.1
                 imagePullPolicy: Always
                 name: business-automation-operator
                 resources: {}
@@ -408,21 +408,21 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-j7t44zm2p5
+    operated-by: businessautomation-operator.7.12.1-3
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
   - name: Documentation
-    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.13/#category-deploying-red-hat-process-automation-manager-on-openshift
+    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.12/#category-deploying-red-hat-process-automation-manager-on-openshift
   maintainers:
   - email: bsig-cloud@redhat.com
     name: Red Hat
-  maturity: test
+  maturity: stable
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-3
+  replaces: businessautomation-operator.7.12.1-2
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-j7t44zm2p5
-  version: 7.13.0-1+j7t44zm2p5
+      operated-by: businessautomation-operator.7.12.1-3
+  version: 7.12.1-3
