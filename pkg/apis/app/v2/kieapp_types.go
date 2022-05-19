@@ -190,6 +190,8 @@ type DataGridAuth struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for datagrid user
 	Password string `json:"password,omitempty"`
+	// Name of the secret containing Datagrid Authentication credentials instead of plain username and password, if isn't found will be created, the secret will use the password provided otherwise a generated password will be used
+	SecretDatagridCredentials string `json:"secretDatagridCredentials,omitempty"`
 }
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -423,6 +425,8 @@ type LDAPAuthConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// LDAP Credentials used for authentication
 	BindCredential string `json:"bindCredential,omitempty"`
+	// Name of the secret containing BindCredential, credentials instead of plain BindCredentials, if isn't found will be created, the secret will use the BindCredential provided otherwise a generated BindCredential will be used
+	SecretBindCredential string `json:"secretBindCredential,omitempty"`
 	// Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise.
 	// Boolean flag, defaults to false.
 	AllowEmptyPasswords bool `json:"allowEmptyPasswords,omitempty"`
@@ -950,6 +954,8 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for keystore generation.
 	KeyStorePassword string `json:"keyStorePassword,omitempty"`
+	// Name of the secret containing Keystore's password, if provided a secret with the secret name is used instead of a plain password, if isn't found will be created, the secret will use the password provided otherwise a generated password will be used
+	SecretKeyStorePassword string `json:"secretKeyStorePassword,omitempty"`
 	// The user to use for the admin.
 	AdminUser string `json:"adminUser,omitempty"`
 	// +kubebuilder:validation:Format:=password
@@ -958,12 +964,19 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for databases.
 	DBPassword string `json:"dbPassword,omitempty"`
+	// Name of the secret containing Database's password, if provided a secret with the secret name is used instead of a plain password, if isn't found will be created, the secret will use the password provided otherwise a generated password will be used
+	SecretDBPassword string `json:"secretDBPassword,omitempty"`
+
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq user.
 	AMQPassword string `json:"amqPassword,omitempty"`
+	// Name of the secret containing AMQ's password, if provided a secret with the secret name is used instead of a plain password, if isn't found will be created, the secret will use the password provided otherwise a generated password will be used
+	SecretAMQPassword string `json:"secretAmqPassword,omitempty"`
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	// Name of the secret containing AMQCluster's password, if provided a secret with the secret name is used instead of a plain password, if isn't found will be created, the secret will use the password provided otherwise a generated password will be used
+	SecretAMQClusterPassword string `json:"secretAmqClusterPassword,omitempty"`
 	// If set to true, plain text routes will be configured instead using SSL
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver

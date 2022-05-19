@@ -53,8 +53,17 @@ databases:
                   env:
                     - name: MYSQL_USER
                       value: "[[.Username]]"
+                    #[[if not $.SecretDBPassword]]
                     - name: MYSQL_PASSWORD
                       value: "[[$.DBPassword]]"
+                    #[[end]]
+                    #[[if $.SecretDBPassword]]
+                    - name: MYSQL_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretDBPassword]]"
+                          key: password
+                    #[[end]]
                     - name: MYSQL_DATABASE
                       value: "[[.DatabaseName]]"
                     - name: MYSQL_DEFAULT_AUTHENTICATION_PLUGIN

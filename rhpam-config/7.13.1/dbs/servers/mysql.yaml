@@ -41,8 +41,17 @@ servers:
                       value: "org.hibernate.dialect.MySQL8Dialect"
                     - name: RHPAM_USERNAME
                       value: "rhpam"
+                    #[[if not $.SecretDBPassword]]
                     - name: RHPAM_PASSWORD
                       value: "[[$.DBPassword]]"
+                    #[[end]]
+                    #[[if $.SecretDBPassword]]
+                    - name: RHPAM_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretDBPassword]]"
+                          key: password
+                    #[[end]]
                     - name: RHPAM_SERVICE_HOST
                       value: "[[.KieName]]-mysql"
                     - name: RHPAM_SERVICE_PORT

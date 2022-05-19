@@ -192,8 +192,17 @@ console:
                     value: "[[.Auth.LDAP.LoginFailover]]"
                   - name: AUTH_LDAP_BIND_DN
                     value: "[[.Auth.LDAP.BindDN]]"
+                  #[[if not .SecretAMQPassword]]
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
+                  #[[end]]
+                  #[[if .SecretAMQPassword]]
+                  - name: AUTH_LDAP_BIND_CREDENTIAL
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.Auth.LDAP.SecretBindCredential]]"
+                        key: password
+                  #[[end]]
                   - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
                     value: "[[.Auth.LDAP.AllowEmptyPasswords]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
@@ -970,8 +979,17 @@ servers:
                       value: "[[$.Auth.LDAP.LoginFailover]]"
                     - name: AUTH_LDAP_BIND_DN
                       value: "[[$.Auth.LDAP.BindDN]]"
+                    #[[if not $.Auth.LDAP.SecretBindCredential]]
                     - name: AUTH_LDAP_BIND_CREDENTIAL
                       value: "[[$.Auth.LDAP.BindCredential]]"
+                    #[[end]]
+                    #[[if $.Auth.LDAP.SecretBindCredential]]
+                    - name: AUTH_LDAP_BIND_CREDENTIAL
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.Auth.LDAP.SecretBindCredential]]"
+                          key: password
+                    #[[end]]
                     - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
                       value: "[[$.Auth.LDAP.AllowEmptyPasswords]]"
                     - name: AUTH_LDAP_BASE_CTX_DN

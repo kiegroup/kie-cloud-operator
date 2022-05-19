@@ -50,8 +50,17 @@ databases:
                   env:
                     - name: POSTGRESQL_USER
                       value: "[[.Username]]"
+                    #[[if not $.SecretDBPassword]]
                     - name: POSTGRESQL_PASSWORD
                       value: "[[$.DBPassword]]"
+                    #[[end]]
+                    #[[if $.SecretDBPassword]]
+                    - name: POSTGRESQL_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretDBPassword]]"
+                          key: password
+                    #[[end]]
                     - name: POSTGRESQL_DATABASE
                       value: "[[.DatabaseName]]"
                     - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS

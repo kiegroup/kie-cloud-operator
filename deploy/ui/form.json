@@ -260,320 +260,600 @@
             }
           ],
           "fields": [
-            {
-              "label": "SSO",
-              "type": "fieldGroup",
-              "required": true,
-              "jsonPath": "$.spec",
-              "displayWhen": "SSO",
-              "visible": false,
-              "fields": [
                 {
-                  "label": "URL",
-                  "type": "text",
-                  "default": "https://rh-sso.example.com/auth",
-                  "required": true,
-                  "jsonPath": "$.spec.auth.sso.url",
-                  "description": "RH-SSO URL"
-                },
-                {
-                  "label": "Realm",
-                  "type": "text",
-                  "required": true,
-                  "jsonPath": "$.spec.auth.sso.realm",
-                  "description": "RH-SSO Realm name"
-                },
-                {
-                  "label": "SSO admin user",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.sso.adminuser",
-                  "description": "RH-SSO Realm Admin Username used to create the Client if it doesn't exist"
-                },
-                {
-                  "label": "SSO admin password",
-                  "type": "password",
-                  "jsonPath": "$.spec.auth.sso.adminPassword",
-                  "description": "RH-SSO Realm Admin Password used to create the Client"
-                },
-                {
-                  "label": "Disable SSL cert validation",
-                  "type": "checkbox",
-                  "jsonPath": "$.spec.auth.sso.disableSSLCertValidation",
-                  "default": "false",
-                  "description": "Disable SSL Certificate Validation"
-                },
-                {
-                  "label": "Principal attribute",
-                  "type": "text",
-                  "default": "preferred_username",
-                  "jsonPath": "$.spec.auth.sso.principalAttribute",
-                  "description": "RH-SSO Principal Attribute to use as username"
-                },
-                {
-                  "label": "RoleMapper",
-                  "required": false,
-                  "jsonPath": "$.spec.auth.roleMapper",
+                  "label": "Internal",
                   "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "default",
                   "visible": true,
                   "fields": [
-                    {
-                      "label": "Roles properties file path or the desire roles to map",
-                      "type": "text",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-                      "description": "When present, the RoleMapping will be configured to use the provided properties file or roles. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
+                      {
+                        "label": "AMQ credentials",
+                        "type": "dropDown",
+                        "required": false,
+                        "jsonPath": "$.spec.commonConfig.amqPassword",
+                        "visible": true,
+                        "default": "defaultAMQCreds",
+                        "options": [
+                          {
+                            "value": "defaultAMQCreds",
+                            "label": "AMQ Password configuration"
+                          },
+                          {
+                            "value": "secretAMQ",
+                            "label": "AMQ Secret configuration"
+                          }
+                        ],
+                        "fields": [
+                          {
+                            "label": "AMQ Password",
+                            "type": "fieldGroup",
+                            "required": false,
+                            "jsonPath": "$.spec",
+                            "displayWhen": "defaultAMQCreds",
+                            "visible": true,
+                            "fields": [
+                              {
+                                "label": "AMQ Password",
+                                "required": false,
+                                "description": "The password to use for AMQ user. Generated if empty",
+                                "jsonPath": "$.spec.commonConfig.amqPassword",
+                                "type": "password"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "AMQ credentials secret",
+                            "type": "fieldGroup",
+                            "required": false,
+                            "jsonPath": "$.spec",
+                            "displayWhen": "secretAMQ",
+                            "visible": false,
+                            "fields": [
+                              {
+                                "label": "Secret that holds AMQ credentials information",
+                                "required": false,
+                                "description": "Name of secret with credentials username, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                                "jsonPath": "$.spec.commonConfig.secretAmqPassword",
+                                "type": "text"
+                              },
+                              {
+                                "label": "AMQ Password",
+                                "required": false,
+                                "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ password in the creation of the secret.",
+                                "jsonPath": "$.spec.commonConfig.amqPassword",
+                                "type": "password"
+                              }
+                            ]
+                          }
+                      ]
                     },
-                    {
-                      "label": "Roles keep mapped",
-                      "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
-                      "default": "false",
-                      "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
-                    },
-                    {
-                      "label": "Roles keep non mapped",
-                      "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
-                      "default": "false",
-                      "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
-                    },
-                    {
-                      "label": "RoleMapper Configuration object",
+                      {
+                      "label": "AMQ Cluster credentials",
+                      "type": "dropDown",
+                      "jsonPath": "$.spec.commonConfig.amqClusterPassword",
                       "required": false,
-                      "jsonPath": "$.spec.auth.roleMapper.from",
-                      "type": "fieldGroup",
-                      "fields": [
+                      "visible": true,
+                      "default": "defaultAMQCluster",
+                      "options": [
                         {
-                          "label": "Kind",
-                          "type": "dropDown",
-                          "jsonPath": "$.spec.auth.roleMapper.from.kind",
-                          "originalJsonPath": "$.spec.auth.roleMapper.from.kind",
-                          "default": "",
-                          "description": "Reference Kind for the RoleMapper."
+                          "value": "defaultAMQCluster",
+                          "label": "AMQ Cluster Password configuration"
                         },
                         {
-                          "label": "Name",
-                          "type": "text",
+                          "value": "secretAMQCluster",
+                          "label": "AMQ Cluster Secret configuration"
+                        }
+                      ],
+                      "fields": [
+                        {
+                          "label": "AMQ Cluster Password",
+                          "type": "fieldGroup",
                           "required": false,
-                          "jsonPath": "$.spec.auth.roleMapper.from.name",
-                          "description": "Reference object name for the RoleMapper."
+                          "jsonPath": "$.spec",
+                          "displayWhen": "defaultAMQCluster",
+                          "visible": true,
+                          "fields": [
+                            {
+                              "label": "AMQ Cluster Password",
+                              "required": false,
+                              "description": "The password to use for AMQ Cluster user. Generated if empty",
+                              "jsonPath": "$.spec.commonConfig.amqClusterPassword",
+                              "type": "password"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "AMQ Cluster credentials secret",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "secretAMQCluster",
+                          "visible": false,
+                          "fields": [
+                            {
+                              "label": "Secret that holds AMQ Cluster credentials information",
+                              "required": false,
+                              "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                              "jsonPath": "$.spec.commonConfig.secretAmqClusterPassword",
+                              "type": "text"
+                            },
+                            {
+                              "label": "AMQ Cluster Password",
+                              "required": false,
+                              "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                              "jsonPath": "$.spec.commonConfig.amqClusterPassword",
+                              "type": "password"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                      {
+                      "label": "Keystore credentials",
+                      "type": "dropDown",
+                      "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                      "required": false,
+                      "visible": true,
+                      "default": "defaultKeystore",
+                      "options": [
+                        {
+                          "value": "defaultKeystore",
+                          "label": "Keystore Password configuration"
+                        },
+                        {
+                          "value": "secretKeystore",
+                          "label": "Keystore Secret configuration"
+                        }
+                      ],
+                      "fields": [
+                        {
+                          "label": "Keystore Password",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "defaultKeystore",
+                          "visible": true,
+                          "fields": [
+                            {
+                              "label": "Keystore Password",
+                              "required": false,
+                              "description": "The password to use for Keystore user. Generated if empty",
+                              "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                              "type": "password"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Keystore credentials secret",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "secretKeystore",
+                          "visible": false,
+                          "fields": [
+                            {
+                              "label": "Secret that holds Keystore credentials information",
+                              "required": false,
+                              "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                              "jsonPath": "$.spec.commonConfig.secretKeyStorePassword",
+                              "type": "text"
+                            },
+                            {
+                              "label": "Keystore Password",
+                              "required": false,
+                              "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                              "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                              "type": "password"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                      {
+                      "label": "Database credentials",
+                      "type": "dropDown",
+                      "jsonPath": "$.spec.commonConfig.dbPassword",
+                      "required": false,
+                      "visible": true,
+                      "default": "defaultDatabase",
+                      "options": [
+                        {
+                          "value": "defaultDatabase",
+                          "label": "Database Password configuration"
+                        },
+                        {
+                          "value": "secretDatabase",
+                          "label": "Database Secret configuration"
+                        }
+                      ],
+                      "fields": [
+                        {
+                          "label": "Database Password",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "defaultDatabase",
+                          "visible": true,
+                          "fields": [
+                            {
+                              "label": "Database Password",
+                              "required": false,
+                              "description": "The password to use for Database user. Generated if empty",
+                              "jsonPath": "$.spec.commonConfig.dbPassword",
+                              "type": "password"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Database credentials secret",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "secretDatabase",
+                          "visible": false,
+                          "fields": [
+                            {
+                              "label": "Secret that holds Database credentials information",
+                              "required": false,
+                              "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                              "jsonPath": "$.spec.commonConfig.secretDBPassword",
+                              "type": "text"
+                            },
+                            {
+                              "label": "Database Password",
+                              "required": false,
+                              "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                              "jsonPath": "$.spec.commonConfig.dbPassword",
+                              "type": "password"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "SSO",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "SSO",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "URL",
+                      "type": "text",
+                      "default": "https://rh-sso.example.com/auth",
+                      "required": true,
+                      "jsonPath": "$.spec.auth.sso.url",
+                      "description": "RH-SSO URL"
+                    },
+                    {
+                      "label": "Realm",
+                      "type": "text",
+                      "required": true,
+                      "jsonPath": "$.spec.auth.sso.realm",
+                      "description": "RH-SSO Realm name"
+                    },
+                    {
+                      "label": "SSO admin user",
+                      "type": "text",
+                      "jsonPath": "$.spec.auth.sso.adminuser",
+                      "description": "RH-SSO Realm Admin Username used to create the Client if it doesn't exist"
+                    },
+                    {
+                      "label": "SSO admin password",
+                      "type": "password",
+                      "jsonPath": "$.spec.auth.sso.adminPassword",
+                      "description": "RH-SSO Realm Admin Password used to create the Client"
+                    },
+                    {
+                      "label": "Disable SSL cert validation",
+                      "type": "checkbox",
+                      "jsonPath": "$.spec.auth.sso.disableSSLCertValidation",
+                      "default": "false",
+                      "description": "Disable SSL Certificate Validation"
+                    },
+                    {
+                      "label": "Principal attribute",
+                      "type": "text",
+                      "default": "preferred_username",
+                      "jsonPath": "$.spec.auth.sso.principalAttribute",
+                      "description": "RH-SSO Principal Attribute to use as username"
+                    },
+                    {
+                      "label": "RoleMapper",
+                      "required": false,
+                      "jsonPath": "$.spec.auth.roleMapper",
+                      "type": "fieldGroup",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "Roles properties file path or the desire roles to map",
+                          "type": "text",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                          "description": "When present, the RoleMapping will be configured to use the provided properties file or roles. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
+                        },
+                        {
+                          "label": "Roles keep mapped",
+                          "type": "checkbox",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
+                          "default": "false",
+                          "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
+                        },
+                        {
+                          "label": "Roles keep non mapped",
+                          "type": "checkbox",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
+                          "default": "false",
+                          "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
+                        },
+                        {
+                          "label": "RoleMapper Configuration object",
+                          "required": false,
+                          "jsonPath": "$.spec.auth.roleMapper.from",
+                          "type": "fieldGroup",
+                          "fields": [
+                            {
+                              "label": "Kind",
+                              "type": "dropDown",
+                              "jsonPath": "$.spec.auth.roleMapper.from.kind",
+                              "originalJsonPath": "$.spec.auth.roleMapper.from.kind",
+                              "default": "",
+                              "description": "Reference Kind for the RoleMapper."
+                            },
+                            {
+                              "label": "Name",
+                              "type": "text",
+                              "required": false,
+                              "jsonPath": "$.spec.auth.roleMapper.from.name",
+                              "description": "Reference object name for the RoleMapper."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "LDAP",
+                  "type": "fieldGroup",
+                  "required": true,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "LDAP",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "URL",
+                      "type": "text",
+                      "default": "ldap://myldap.example.com",
+                      "required": true,
+                      "jsonPath": "$.spec.auth.ldap.url",
+                      "description": "LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space."
+                    },
+                    {
+                      "label": "LDAP Login Module Flag",
+                      "type": "dropDown",
+                      "jsonPath": "$.spec.auth.ldap.loginModule",
+                      "originalJsonPath": "$.spec.auth.ldap.loginModule",
+                      "description": "LDAP login module flag, adds backward compatibility with the legacy security subsystem on elytron. 'optional' is the only supported value, if set will create a distributed realm with ldap and filesystem realm with the user added using the KIE_ADMIN_USER."
+                    },
+                    {
+                      "label": "LDAP login failover",
+                      "type": "checkbox",
+                      "jsonPath": "$.spec.auth.ldap.loginFailover",
+                      "default": "false",
+                      "description": "Enable failover, if Ldap Url is unreachable, it will fail over to the KieFsRealm."
+                    },
+                    {
+                      "label": "BindDN",
+                      "type": "text",
+                      "default": "uid=admin,ou=users,ou=exmample,ou=com",
+                      "jsonPath": "$.spec.auth.ldap.bindDN",
+                      "description": "Bind DN used for authentication"
+                    },
+                    {
+                      "label": "LDAP Credentials used for authentication of bindDN",
+                      "type": "dropDown",
+                      "jsonPath": "$.spec.auth.ldap.bindCredential",
+                      "required": false,
+                      "visible": true,
+                      "default": "defaultLDAPBindDN",
+                      "options": [
+                        {
+                          "value": "defaultLDAPBindDN",
+                          "label": "BindDN password"
+                        },
+                        {
+                          "value": "secretBindCredential",
+                          "label": "BindDN Secret configuration"
+                        }
+                      ],
+                      "fields": [
+                        {
+                          "label": "BindDN Password",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "defaultLDAPBindDN",
+                          "visible": true,
+                          "fields": [
+                            {
+                              "label": "BindDN Password",
+                              "required": false,
+                              "description": "The password to use for BindDN. Generated if empty",
+                              "jsonPath": "$.spec.auth.ldap.bindCredential",
+                              "type": "password"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "BindDN credentials secret",
+                          "type": "fieldGroup",
+                          "required": false,
+                          "jsonPath": "$.spec",
+                          "displayWhen": "secretBindCredential",
+                          "visible": false,
+                          "fields": [
+                            {
+                              "label": "Secret that holds BindDN credentials information",
+                              "required": false,
+                              "description": "Name of secret with BindDN password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password",
+                              "jsonPath": "$.spec.auth.ldap.secretBindCredential",
+                              "type": "text"
+                            },
+                            {
+                              "label": "BindDN Password",
+                              "required": false,
+                              "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the BindDN password in the creation of the secret.",
+                              "jsonPath": "$.spec.auth.ldap.bindCredential",
+                              "type": "password"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+
+
+
+                    {
+                      "label": "Allow empty passwords",
+                      "type": "text",
+                      "jsonPath": "$.spec.auth.ldap.allowEmptyPasswords",
+                      "description": "Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise. Boolean flag, defaults to false."
+                    },
+                    {
+                      "label": "BaseCtxDN",
+                      "type": "text",
+                      "default": "ou=users,ou=example,ou=com",
+                      "jsonPath": "$.spec.auth.ldap.baseCtxDN",
+                      "description": "Base DN of the top-level context to begin the user search."
+                    },
+                    {
+                      "label": "Base filter",
+                      "type": "text",
+                      "default": "(uid={0})",
+                      "jsonPath": "$.spec.auth.ldap.baseFilter",
+                      "description": "Search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
+                    },
+                    {
+                      "label": "User recursive search",
+                      "type": "text",
+                      "default": "false",
+                      "jsonPath": "$.spec.auth.ldap.recursiveSearch",
+                      "description": "Indicates if the user queries are recursive."
+                    },
+                    {
+                      "label": "Search time limit",
+                      "type": "integer",
+                      "default": "10000",
+                      "jsonPath": "$.spec.auth.ldap.searchTimeLimit",
+                      "description": "The timeout in milliseconds for ldap searches."
+                    },
+                    {
+                      "label": "Role attribute ID",
+                      "type": "text",
+                      "default": "memberOf",
+                      "jsonPath": "$.spec.auth.ldap.roleAttributeID",
+                      "description": "Name of the attribute containing the user roles"
+                    },
+                    {
+                      "label": "Role context DN",
+                      "type": "text",
+                      "default": "ou=groups,ou=example,ou=com",
+                      "jsonPath": "$.spec.auth.ldap.rolesCtxDN",
+                      "description": "The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is."
+                    },
+                    {
+                      "label": "Role filter",
+                      "type": "text",
+                      "default": "(memberOf={1})",
+                      "jsonPath": "$.spec.auth.ldap.roleFilter",
+                      "description": "A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1})."
+                    },
+                    {
+                      "label": "Role recursion",
+                      "type": "integer",
+                      "jsonPath": "$.spec.auth.ldap.roleRecursion",
+                      "default": "1",
+                      "description": "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
+                    },
+                    {
+                      "label": "Default role",
+                      "type": "text",
+                      "default": "user",
+                      "jsonPath": "$.spec.auth.ldap.defaultRole",
+                      "description": "A role included for all authenticated users"
+                    },
+                    {
+                      "label": "Ldap New Identity Attributes",
+                      "type": "text",
+                      "jsonPath": "$.spec.auth.ldap.newIdentityAttributes",
+                      "description": "Provide new identities for Ldap  identity mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'"
+                    },
+                    {
+                      "label": "Referral mode",
+                      "type": "text",
+                      "jsonPath": "$.spec.auth.ldap.referralMode",
+                      "description": "If LDAP referrals should be followed. Supported options are FOLLOW, IGNORE or THROW"
+                    },
+                    {
+                      "label": "RoleMapper",
+                      "required": false,
+                      "jsonPath": "$.spec.auth.roleMapper",
+                      "type": "fieldGroup",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "Roles properties file",
+                          "type": "text",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
+                          "description": "When present, the RoleMapping will be configured to use the provided properties file or roles set. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
+                        },
+                        {
+                          "label": "Roles keep mapped",
+                          "type": "checkbox",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
+                          "default": "false",
+                          "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
+                        },
+                        {
+                          "label": "Roles keep non mapped",
+                          "type": "checkbox",
+                          "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
+                          "default": "false",
+                          "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
+                        },
+                        {
+                          "label": "RoleMapper Configuration object",
+                          "required": false,
+                          "jsonPath": "$.spec.auth.roleMapper.from",
+                          "type": "fieldGroup",
+                          "fields": [
+                            {
+                              "label": "Kind",
+                              "type": "dropDown",
+                              "jsonPath": "$.spec.auth.roleMapper.from.kind",
+                              "originalJsonPath": "$.spec.auth.roleMapper.from.kind",
+                              "default": "",
+                              "description": "Reference Kind for the RoleMapper."
+                            },
+                            {
+                              "label": "Name",
+                              "type": "text",
+                              "required": false,
+                              "jsonPath": "$.spec.auth.roleMapper.from.name",
+                              "description": "Reference object name for the RoleMapper."
+                            }
+                          ]
                         }
                       ]
                     }
                   ]
                 }
               ]
-            },
-            {
-              "label": "LDAP",
-              "type": "fieldGroup",
-              "required": true,
-              "jsonPath": "$.spec",
-              "displayWhen": "LDAP",
-              "visible": false,
-              "fields": [
-                {
-                  "label": "URL",
-                  "type": "text",
-                  "default": "ldap://myldap.example.com",
-                  "required": true,
-                  "jsonPath": "$.spec.auth.ldap.url",
-                  "description": "LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space."
-                },
-                {
-                  "label": "LDAP Login Module Flag",
-                  "type": "dropDown",
-                  "jsonPath": "$.spec.auth.ldap.loginModule",
-                  "originalJsonPath": "$.spec.auth.ldap.loginModule",
-                  "description": "LDAP login module flag, adds backward compatibility with the legacy security subsystem on elytron. 'optional' is the only supported value, if set will create a distributed realm with ldap and filesystem realm with the user added using the KIE_ADMIN_USER."
-                },
-                {
-                  "label": "LDAP login failover",
-                  "type": "checkbox",
-                  "jsonPath": "$.spec.auth.ldap.loginFailover",
-                  "default": "false",
-                  "description": "Enable failover, if Ldap Url is unreachable, it will fail over to the KieFsRealm."
-                },
-                {
-                  "label": "BindDN",
-                  "type": "text",
-                  "default": "uid=admin,ou=users,ou=exmample,ou=com",
-                  "jsonPath": "$.spec.auth.ldap.bindDN",
-                  "description": "Bind DN used for authentication"
-                },
-                {
-                  "label": "BindDN password",
-                  "type": "password",
-                  "jsonPath": "$.spec.auth.ldap.bindCredential",
-                  "description": "LDAP Credentials used for authentication of bindDN"
-                },
-                {
-                  "label": "Allow empty passwords",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.allowEmptyPasswords",
-                  "description": "Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise. Boolean flag, defaults to false."
-                },
-                {
-                  "label": "BaseCtxDN",
-                  "type": "text",
-                  "default": "ou=users,ou=example,ou=com",
-                  "jsonPath": "$.spec.auth.ldap.baseCtxDN",
-                  "description": "Base DN of the top-level context to begin the user search."
-                },
-                {
-                  "label": "Base filter",
-                  "type": "text",
-                  "default": "(uid={0})",
-                  "jsonPath": "$.spec.auth.ldap.baseFilter",
-                  "description": "Search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
-                },
-                {
-                  "label": "User recursive search",
-                  "type": "text",
-                  "default": "false",
-                  "jsonPath": "$.spec.auth.ldap.recursiveSearch",
-                  "description": "Indicates if the user queries are recursive."
-                },
-                {
-                  "label": "Search time limit",
-                  "type": "integer",
-                  "default": "10000",
-                  "jsonPath": "$.spec.auth.ldap.searchTimeLimit",
-                  "description": "The timeout in milliseconds for ldap searches."
-                },
-                {
-                  "label": "Role attribute ID",
-                  "type": "text",
-                  "default": "memberOf",
-                  "jsonPath": "$.spec.auth.ldap.roleAttributeID",
-                  "description": "Name of the attribute containing the user roles"
-                },
-                {
-                  "label": "Role context DN",
-                  "type": "text",
-                  "default": "ou=groups,ou=example,ou=com",
-                  "jsonPath": "$.spec.auth.ldap.rolesCtxDN",
-                  "description": "The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is."
-                },
-                {
-                  "label": "Role filter",
-                  "type": "text",
-                  "default": "(memberOf={1})",
-                  "jsonPath": "$.spec.auth.ldap.roleFilter",
-                  "description": "A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1})."
-                },
-                {
-                  "label": "Role recursion",
-                  "type": "integer",
-                  "jsonPath": "$.spec.auth.ldap.roleRecursion",
-                  "default": "1",
-                  "description": "The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0."
-                },
-                {
-                  "label": "Default role",
-                  "type": "text",
-                  "default": "user",
-                  "jsonPath": "$.spec.auth.ldap.defaultRole",
-                  "description": "A role included for all authenticated users"
-                },
-                {
-                  "label": "Ldap New Identity Attributes",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.newIdentityAttributes",
-                  "description": "Provide new identities for Ldap  identity mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'"
-                },
-                {
-                  "label": "Referral mode",
-                  "type": "text",
-                  "jsonPath": "$.spec.auth.ldap.referralMode",
-                  "description": "If LDAP referrals should be followed. Supported options are FOLLOW, IGNORE or THROW"
-                },
-                {
-                  "label": "RoleMapper",
-                  "required": false,
-                  "jsonPath": "$.spec.auth.roleMapper",
-                  "type": "fieldGroup",
-                  "visible": true,
-                  "fields": [
-                    {
-                      "label": "Roles properties file",
-                      "type": "text",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesProperties",
-                      "description": "When present, the RoleMapping will be configured to use the provided properties file or roles set. This parameter defines the fully-qualified file path and name of a properties file or a set of roles with the following pattern 'role=role1;another-role=role2'. The format of every entry in the file is original_role=role1,role2,role3"
-                    },
-                    {
-                      "label": "Roles keep mapped",
-                      "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepMapped",
-                      "default": "false",
-                      "description": "When set to 'true' the mapped roles will retain all roles, that have defined mappings."
-                    },
-                    {
-                      "label": "Roles keep non mapped",
-                      "type": "checkbox",
-                      "jsonPath": "$.spec.auth.roleMapper.rolesKeepNonMapped",
-                      "default": "false",
-                      "description": "When set to 'true' the mapped roles will retain all roles, that have no defined mappings."
-                    },
-                    {
-                      "label": "RoleMapper Configuration object",
-                      "required": false,
-                      "jsonPath": "$.spec.auth.roleMapper.from",
-                      "type": "fieldGroup",
-                      "fields": [
-                        {
-                          "label": "Kind",
-                          "type": "dropDown",
-                          "jsonPath": "$.spec.auth.roleMapper.from.kind",
-                          "originalJsonPath": "$.spec.auth.roleMapper.from.kind",
-                          "default": "",
-                          "description": "Reference Kind for the RoleMapper."
-                        },
-                        {
-                          "label": "Name",
-                          "type": "text",
-                          "required": false,
-                          "jsonPath": "$.spec.auth.roleMapper.from.name",
-                          "description": "Reference object name for the RoleMapper."
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "Other credentials",
-          "type": "fieldGroup",
-          "jsonPath": "$.spec",
-          "visible": true,
-          "fields": [
-            {
-              "label": "AMQ password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.amqPassword",
-              "description": "The password to use for AMQ user. Generated if empty"
-            },
-            {
-              "label": "AMQ cluster password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.amqClusterPassword",
-              "description": "Password for AMQ Cluster. Generated if empty"
-            },
-            {
-              "label": "Keystore password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.keyStorePassword",
-              "description": "The password to use for keystore generation. Generated if empty"
-            },
-            {
-              "label": "Database password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.dbPassword",
-              "description": "The password to use for databases. Generated if empty"
-            }
-          ]
         }
       ]
     },
@@ -1062,26 +1342,79 @@
                 }
               ]
             },
+
+
             {
-              "label": "DataGrid Auth used in HA Environments",
-              "type": "fieldGroup",
-              "jsonPath": "$.spec.objects.console.dataGridAuth",
-              "originalJsonPath": "$.spec.objects.console.dataGridAuth",
+              "label": "Datagrid configuration",
+              "type": "dropDown",
+              "required": false,
               "visible": true,
-              "fields": [
+              "default": "default",
+              "options": [
                 {
-                  "label": "HA Environment - Datagrid username",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.console.dataGridAuth.username",
-                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
-                  "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                  "value": "default",
+                  "label": "Username and Password configuration"
                 },
                 {
-                  "label": "HA Environment - Datagrid password",
-                  "type": "password",
-                  "jsonPath": "$.spec.objects.console.dataGridAuth.password",
-                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
-                  "description": "The password to use for Data Grid. Generated if empty"
+                  "value": "secret",
+                  "label": "Secret configuration"
+                }
+              ],
+              "fields": [
+                {
+                  "label": "Username and password",
+                  "type": "fieldGroup",
+                  "required": false,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "default",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "HA Environment - Datagrid username",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid password",
+                      "type": "password",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "description": "The password to use for Data Grid. Generated if empty"
+                    }
+                  ]
+                },
+                {
+                  "label": "Datagrid admin credentials secret",
+                  "type": "fieldGroup",
+                  "required": false,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "secret",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "HA Environment Secret that holds daytagrid credentials information",
+                      "required": false,
+                      "description": "Name of secret with datagrid credentials username and password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given username and password, if the given username and password will be empty a default username and a generated password will be used during the creation of the secret. ",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.secretDatagridCredentials",
+                      "type": "text"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid username",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid password",
+                      "type": "password",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "description": "The password to use for Data Grid. Generated if empty"
+                    }
+                  ]
                 }
               ]
             }

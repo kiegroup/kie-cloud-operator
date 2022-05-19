@@ -207,8 +207,17 @@ dashbuilder:
                   - name: AUTH_LDAP_LOGIN_FAILOVER
                     value: "[[.Auth.LDAP.LoginFailover]]"
                   - name: AUTH_LDAP_BIND_DN
-                    value: "[[.Auth.LDAP.BindDN]]"
+                  #[[if not .SecretAMQPassword]]
                   - name: AUTH_LDAP_BIND_CREDENTIAL
+                    value: "[[.Auth.LDAP.BindCredential]]"
+                  #[[end]]
+                  #[[if .SecretAMQPassword]]
+                  - name: AUTH_LDAP_BIND_CREDENTIAL
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.Auth.LDAP.SecretBindCredential]]"
+                        key: password
+                    #[[end]]
                     value: "[[.Auth.LDAP.BindCredential]]"
                   - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
                     value: "[[.Auth.LDAP.AllowEmptyPasswords]]"

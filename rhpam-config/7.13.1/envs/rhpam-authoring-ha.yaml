@@ -41,10 +41,24 @@ console:
                     value: "jmsBrokerUser"
                   - name: APPFORMER_JMS_BROKER_PASSWORD
                     value: "[[.AMQClusterPassword]]"
+                  #[[if not .Console.DataGridAuth.SecretDatagridCredentials]]
                   - name: APPFORMER_INFINISPAN_USERNAME
                     value: "[[.Console.DataGridAuth.Username]]"
                   - name: APPFORMER_INFINISPAN_PASSWORD
                     value: "[[.Console.DataGridAuth.Password]]"
+                  #[[end]]
+                  #[[if .Console.DataGridAuth.SecretDatagridCredentials]]
+                  - name: APPFORMER_INFINISPAN_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.Console.DataGridAuth.SecretDatagridCredentials]]"
+                        key: username
+                  - name: APPFORMER_INFINISPAN_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.Console.DataGridAuth.SecretDatagridCredentials]]"
+                        key: password
+                  #[[end]]
                   - name: APPFORMER_INFINISPAN_SASL_QOP
                     value: "auth"
                   - name: APPFORMER_INFINISPAN_SERVER_NAME
@@ -86,10 +100,24 @@ others:
             spec:
               containers:
                 - env:
+                    #[[if not .Console.DataGridAuth.SecretDatagridCredentials]]
                     - name: USER
                       value: "[[.Console.DataGridAuth.Username]]"
                     - name: PASS
                       value: "[[.Console.DataGridAuth.Password]]"
+                    #[[end]]
+                    #[[if .Console.DataGridAuth.SecretDatagridCredentials]]
+                    - name: USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.Console.DataGridAuth.SecretDatagridCredentials]]"
+                          key: username
+                    - name: PASS
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.Console.DataGridAuth.SecretDatagridCredentials]]"
+                          key: password
+                      #[[end]]
                     - name: SERVICE_NAME
                       value: "[[.ApplicationName]]-datagrid"
                     - name: SERVICE_PROFILE
@@ -201,8 +229,17 @@ others:
                 - env:
                     - name: AMQ_USER
                       value: "jmsBrokerUser"
+                    #[[if not $.SecretAMQPassword]]
                     - name: AMQ_PASSWORD
                       value: "[[.AMQPassword]]"
+                    #[[end]]
+                    #[[if $.SecretAMQPassword]]
+                    - name: AMQ_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAMQPassword]]"
+                          key: password
+                    #[[end]]
                     - name: AMQ_ROLE
                       value: admin
                     - name: AMQ_NAME
@@ -222,8 +259,17 @@ others:
                       value: "0"
                     - name: AMQ_CLUSTER_USER
                       value: "jmsBrokerUser"
+                    #[[if not $.SecretAMQClusterPassword]]
                     - name: AMQ_CLUSTER_PASSWORD
                       value: "[[.AMQClusterPassword]]"
+                    #[[end]]
+                    #[[if $.SecretAMQClusterPassword]]
+                    - name: AMQ_CLUSTER_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[.SecretAMQClusterPassword]]"
+                          key: password
+                    #[[end]]
                     - name: OPENSHIFT_DNS_PING_SERVICE_NAME
                       value: "[[.ApplicationName]]-amq-ping"
                     - name: AMQ_EXTRA_ARGS
