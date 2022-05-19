@@ -175,13 +175,6 @@ func handleAdminSecretUsernameAndPassword(cr *api.KieApp, service kubernetes.Pla
 		checkAndCreate(cr, cr.Spec.CommonConfig.AdminPassword, service)
 	} else if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
 		checkAndCreate(cr, "", service)
-	} else if len(cr.Spec.CommonConfig.AdminPassword) == 0 {
-		//in case of missing secretAdmin we use the AdminUsername AdminPassword and if missing we set the defaults
-		password := constants.DefaultPassword
-		if !isTrial(cr) {
-			password = string(shared.GeneratePassword(8))
-		}
-		cr.Spec.CommonConfig.AdminPassword = password
 	}
 }
 
@@ -537,6 +530,8 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		if cr.Status.Applied.Environment == api.RhpamAuthoringHA || cr.Status.Applied.Environment == api.RhdmAuthoringHA {
 			if cr.Status.Applied.Objects.Console.DataGridAuth != nil {
 				template.DataGridAuth = *cr.Status.Applied.Objects.Console.DataGridAuth
+			} else {
+				template.DataGridAuth = api.DataGridAuth{}
 			}
 		}
 
@@ -1274,13 +1269,18 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 	return ""
 }
 
-func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
+func setPasswords(spec *api.KieAppSpec, status api.KieAppStatus, isTrialEnv bool) {
 	passwords := []*string{
 		&spec.CommonConfig.KeyStorePassword,
 		&spec.CommonConfig.DBPassword,
 		&spec.CommonConfig.AMQPassword,
 		&spec.CommonConfig.AMQClusterPassword,
 	}
+
+	passwords = handleAdminCredentials(spec, status, passwords)
+
+	passwords = handleDatagridAuth(spec, status, passwords)
+
 	for i := range passwords {
 		if len(*passwords[i]) > 0 {
 			continue
@@ -1291,6 +1291,28 @@ func setPasswords(spec *api.KieAppSpec, isTrialEnv bool) {
 			*passwords[i] = string(shared.GeneratePassword(8))
 		}
 	}
+}
+
+func handleDatagridAuth(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if spec.Objects.Console != nil && spec.Objects.Console.DataGridAuth != nil && len(spec.Objects.Console.DataGridAuth.Password) == 0 {
+		if status.Applied.Objects.Console != nil && status.Applied.Objects.Console.DataGridAuth != nil && len(status.Applied.Objects.Console.DataGridAuth.Password) > 0 {
+			spec.Objects.Console.DataGridAuth.Password = status.Applied.Objects.Console.DataGridAuth.Password
+		} else {
+			passwords = append(passwords, &spec.Objects.Console.DataGridAuth.Password)
+		}
+	}
+	return passwords
+}
+
+func handleAdminCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if len(spec.CommonConfig.SecretAdminCredentials) == 0 {
+		if len(status.Applied.CommonConfig.AdminPassword) == 0 {
+			passwords = append(passwords, &spec.CommonConfig.AdminPassword)
+		} else if len(spec.CommonConfig.AdminPassword) == 0 {
+			spec.CommonConfig.AdminPassword = status.Applied.CommonConfig.AdminPassword
+		}
+	}
+	return passwords
 }
 
 func getWebhookSecret(webhookType api.WebhookType, webhooks []api.WebhookSecret) string {
@@ -1529,7 +1551,7 @@ func SetDefaults(cr *api.KieApp) {
 				}
 			} else {
 				//if not provided we create default credentials to allow the correct deployment of the HA env
-				specApply.Objects.Console.DataGridAuth = &api.DataGridAuth{Username: constants.DefaultDatagridUsername, Password: string(shared.GeneratePassword(8))}
+				specApply.Objects.Console.DataGridAuth = &api.DataGridAuth{Username: constants.DefaultDatagridUsername, Password: ""}
 			}
 		}
 	}
@@ -1550,7 +1572,7 @@ func SetDefaults(cr *api.KieApp) {
 	}
 
 	isTrialEnv := strings.HasSuffix(string(specApply.Environment), constants.TrialEnvSuffix)
-	setPasswords(specApply, isTrialEnv)
+	setPasswords(specApply, cr.Status, isTrialEnv)
 
 	cr.Status.Applied = *specApply
 }
