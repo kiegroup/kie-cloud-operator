@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-05-10 15:56:44"
+    createdAt: "2022-05-27 15:18:02"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -20,7 +20,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-67s8stz89v
+  name: businessautomation-operator.7.13.0-1-dev-gkr7dxfqx5
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-67s8stz89v
+    operated-by: businessautomation-operator.7.13.0-1-dev-gkr7dxfqx5
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -420,9 +420,9 @@ spec:
   maturity: test
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-3
+  replaces: businessautomation-operator.7.12.1-4
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-67s8stz89v
-  version: 7.13.0-1+67s8stz89v
+      operated-by: businessautomation-operator.7.13.0-1-dev-gkr7dxfqx5
+  version: 7.13.0-1+gkr7dxfqx5
