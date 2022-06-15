@@ -61,7 +61,7 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 		cr.Spec.Version = ""
 	}
 
-	handleAdminSecretUsernameAndPassword(cr, service)
+	handleSecrets(cr, service)
 
 	envTemplate, err := getEnvTemplate(cr)
 	if err != nil {
@@ -158,6 +158,10 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 	return mergedEnv, nil
 }
 
+func handleSecrets(cr *api.KieApp, service kubernetes.PlatformService) {
+	handleAdminSecretUsernameAndPassword(cr, service)
+}
+
 func handleAdminSecretUsernameAndPassword(cr *api.KieApp, service kubernetes.PlatformService) {
 	/* The default secret will be like this
 	apiVersion: v1
@@ -171,15 +175,32 @@ func handleAdminSecretUsernameAndPassword(cr *api.KieApp, service kubernetes.Pla
 	  //RedHat
 	  password: UmVkSGF0
 	*/
-	if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) > 0 {
-		checkAndCreate(cr, cr.Spec.CommonConfig.AdminPassword, service)
-	} else if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
-		checkAndCreate(cr, "", service)
+
+	found := false
+	if len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 {
+		secr, _ := getSecret(service, cr.Namespace, cr.Spec.CommonConfig.SecretAdminCredentials)
+		if len(secr.Name) > 0 && len(secr.Data) > 0 {
+			found = true
+		}
+	} else if len(cr.Status.Applied.CommonConfig.SecretAdminCredentials) > 0 {
+		secr, _ := getSecret(service, cr.Namespace, cr.Status.Applied.CommonConfig.SecretAdminCredentials)
+		if len(secr.Name) > 0 && len(secr.Data) > 0 {
+			found = true
+		}
+	}
+
+	if !found && len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) > 0 {
+
+		checkAndCreateCredentialsWithUsername(cr, cr.Spec.CommonConfig.AdminPassword, cr.Spec.CommonConfig.SecretAdminCredentials, service)
+
+	} else if !found && len(cr.Spec.CommonConfig.SecretAdminCredentials) > 0 && len(cr.Spec.CommonConfig.AdminPassword) == 0 {
+
+		checkAndCreateCredentialsWithUsername(cr, "", cr.Spec.CommonConfig.SecretAdminCredentials, service)
 	}
 }
 
-func checkAndCreate(cr *api.KieApp, adminPassword string, service kubernetes.PlatformService) {
-	_, err := getSecret(service, cr.Namespace, cr.Spec.CommonConfig.SecretAdminCredentials)
+func checkAndCreateCredentialsWithUsername(cr *api.KieApp, adminPassword string, secretName string, service kubernetes.PlatformService) {
+	_, err := getSecret(service, cr.Namespace, secretName)
 	if err != nil {
 		localUsername := cr.Spec.CommonConfig.AdminUser
 		localPassword := adminPassword
@@ -192,7 +213,13 @@ func checkAndCreate(cr *api.KieApp, adminPassword string, service kubernetes.Pla
 		if len(cr.Spec.CommonConfig.AdminUser) == 0 {
 			localUsername = constants.DefaultAdminUser
 		}
-		errSecret := createSecret(service, cr.Spec.CommonConfig.SecretAdminCredentials, localUsername, localPassword, cr)
+
+		secretData := map[string]string{
+			constants.USERNAME_ADMIN_SECRET_KEY: localUsername,
+			constants.PASSWORD_SECRET_KEY:       localPassword,
+		}
+
+		errSecret := createSecret(service, secretName, secretData, cr)
 		if errSecret != nil {
 			log.Error("Can't create Admin Secret. ", errSecret)
 		}
@@ -1270,15 +1297,12 @@ func getDefaultQueue(append bool, defaultJmsQueue string, jmsQueue string) strin
 }
 
 func setPasswords(spec *api.KieAppSpec, status api.KieAppStatus, isTrialEnv bool) {
-	passwords := []*string{
-		&spec.CommonConfig.KeyStorePassword,
-		&spec.CommonConfig.DBPassword,
-		&spec.CommonConfig.AMQPassword,
-		&spec.CommonConfig.AMQClusterPassword,
-	}
-
+	passwords := []*string{}
+	passwords = handleDBCredentials(spec, status, passwords)
+	passwords = handleAMQCredentials(spec, status, passwords)
+	passwords = handleAMQClusterCredentials(spec, status, passwords)
+	passwords = handleKeyStoreCredentials(spec, status, passwords)
 	passwords = handleAdminCredentials(spec, status, passwords)
-
 	passwords = handleDatagridAuth(spec, status, passwords)
 
 	for i := range passwords {
@@ -1311,6 +1335,42 @@ func handleAdminCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passw
 		} else if len(spec.CommonConfig.AdminPassword) == 0 {
 			spec.CommonConfig.AdminPassword = status.Applied.CommonConfig.AdminPassword
 		}
+	}
+	return passwords
+}
+
+func handleKeyStoreCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if len(status.Applied.CommonConfig.KeyStorePassword) == 0 {
+		passwords = append(passwords, &spec.CommonConfig.KeyStorePassword)
+	} else if len(spec.CommonConfig.KeyStorePassword) == 0 {
+		spec.CommonConfig.KeyStorePassword = status.Applied.CommonConfig.KeyStorePassword
+	}
+	return passwords
+}
+
+func handleDBCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if len(status.Applied.CommonConfig.DBPassword) == 0 {
+		passwords = append(passwords, &spec.CommonConfig.DBPassword)
+	} else if len(spec.CommonConfig.DBPassword) == 0 {
+		spec.CommonConfig.DBPassword = status.Applied.CommonConfig.DBPassword
+	}
+	return passwords
+}
+
+func handleAMQCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if len(status.Applied.CommonConfig.AMQPassword) == 0 {
+		passwords = append(passwords, &spec.CommonConfig.AMQPassword)
+	} else if len(spec.CommonConfig.AMQPassword) == 0 {
+		spec.CommonConfig.AMQPassword = status.Applied.CommonConfig.AMQPassword
+	}
+	return passwords
+}
+
+func handleAMQClusterCredentials(spec *api.KieAppSpec, status api.KieAppStatus, passwords []*string) []*string {
+	if len(status.Applied.CommonConfig.AMQClusterPassword) == 0 {
+		passwords = append(passwords, &spec.CommonConfig.AMQClusterPassword)
+	} else if len(spec.CommonConfig.AMQClusterPassword) == 0 {
+		spec.CommonConfig.AMQClusterPassword = status.Applied.CommonConfig.AMQClusterPassword
 	}
 	return passwords
 }
@@ -2223,7 +2283,7 @@ func getRouteHostname(obj interface{}) (host string) {
 	return host
 }
 
-func createSecret(service kubernetes.PlatformService, secretName string, username string, password string, cr *api.KieApp) error {
+func createSecret(service kubernetes.PlatformService, secretName string, secretData map[string]string, cr *api.KieApp) error {
 
 	ownerRef := []metav1.OwnerReference{
 		{
@@ -2243,11 +2303,8 @@ func createSecret(service kubernetes.PlatformService, secretName string, usernam
 			OwnerReferences: ownerRef,
 			Labels:          setLabels(cr, nil, subcomponent, getSubComponentTypeByImageName(getFormattedComponentName(cr, constants.KieServerServicePrefix))),
 		},
-		Type: "Opaque",
-		StringData: map[string]string{
-			constants.USERNAME_ADMIN_SECRET_KEY: username,
-			constants.PASSWORD_ADMIN_SECRET_KEY: password,
-		},
+		Type:       "Opaque",
+		StringData: secretData,
 	}
 
 	err := service.Create(context.TODO(), &secret)
