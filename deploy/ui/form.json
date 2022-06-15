@@ -261,6 +261,260 @@
           ],
           "fields": [
             {
+              "label": "Internal",
+              "type": "fieldGroup",
+              "required": true,
+              "jsonPath": "$.spec",
+              "displayWhen": "default",
+              "visible": true,
+              "fields": [
+                {
+                  "label": "AMQ credentials",
+                  "type": "dropDown",
+                  "required": false,
+                  "jsonPath": "$.spec.commonConfig.amqPassword",
+                  "visible": true,
+                  "default": "defaultAMQCreds",
+                  "options": [
+                    {
+                      "value": "defaultAMQCreds",
+                      "label": "AMQ Password configuration"
+                    },
+                    {
+                      "value": "secretAMQ",
+                      "label": "AMQ Secret configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "AMQ Password",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "defaultAMQCreds",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "AMQ Password",
+                          "required": false,
+                          "description": "The password to use for AMQ user. Generated if empty",
+                          "jsonPath": "$.spec.commonConfig.amqPassword",
+                          "type": "password"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "AMQ credentials secret",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "secretAMQ",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Secret that holds AMQ credentials information",
+                          "required": false,
+                          "description": "Name of secret with credentials username, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                          "jsonPath": "$.spec.commonConfig.secretAmqPassword",
+                          "type": "text"
+                        },
+                        {
+                          "label": "AMQ Password",
+                          "required": false,
+                          "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ password in the creation of the secret.",
+                          "jsonPath": "$.spec.commonConfig.amqPassword",
+                          "type": "password"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "AMQ Cluster credentials",
+                  "type": "dropDown",
+                  "jsonPath": "$.spec.commonConfig.amqClusterPassword",
+                  "required": false,
+                  "visible": true,
+                  "default": "defaultAMQCluster",
+                  "options": [
+                    {
+                      "value": "defaultAMQCluster",
+                      "label": "AMQ Cluster Password configuration"
+                    },
+                    {
+                      "value": "secretAMQCluster",
+                      "label": "AMQ Cluster Secret configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "AMQ Cluster Password",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "defaultAMQCluster",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "AMQ Cluster Password",
+                          "required": false,
+                          "description": "The password to use for AMQ Cluster user. Generated if empty",
+                          "jsonPath": "$.spec.commonConfig.amqClusterPassword",
+                          "type": "password"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "AMQ Cluster credentials secret",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "secretAMQCluster",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Secret that holds AMQ Cluster credentials information",
+                          "required": false,
+                          "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                          "jsonPath": "$.spec.commonConfig.secretAmqClusterPassword",
+                          "type": "text"
+                        },
+                        {
+                          "label": "AMQ Cluster Password",
+                          "required": false,
+                          "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                          "jsonPath": "$.spec.commonConfig.amqClusterPassword",
+                          "type": "password"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Keystore credentials",
+                  "type": "dropDown",
+                  "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                  "required": false,
+                  "visible": true,
+                  "default": "defaultKeystore",
+                  "options": [
+                    {
+                      "value": "defaultKeystore",
+                      "label": "Keystore Password configuration"
+                    },
+                    {
+                      "value": "secretKeystore",
+                      "label": "Keystore Secret configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "Keystore Password",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "defaultKeystore",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "Keystore Password",
+                          "required": false,
+                          "description": "The password to use for Keystore user. Generated if empty",
+                          "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                          "type": "password"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "Keystore credentials secret",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "secretKeystore",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Secret that holds Keystore credentials information",
+                          "required": false,
+                          "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                          "jsonPath": "$.spec.commonConfig.secretKeyStorePassword",
+                          "type": "text"
+                        },
+                        {
+                          "label": "Keystore Password",
+                          "required": false,
+                          "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                          "jsonPath": "$.spec.commonConfig.keyStorePassword",
+                          "type": "password"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Database credentials",
+                  "type": "dropDown",
+                  "jsonPath": "$.spec.commonConfig.dbPassword",
+                  "required": false,
+                  "visible": true,
+                  "default": "defaultDatabase",
+                  "options": [
+                    {
+                      "value": "defaultDatabase",
+                      "label": "Database Password configuration"
+                    },
+                    {
+                      "value": "secretDatabase",
+                      "label": "Database Secret configuration"
+                    }
+                  ],
+                  "fields": [
+                    {
+                      "label": "Database Password",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "defaultDatabase",
+                      "visible": true,
+                      "fields": [
+                        {
+                          "label": "Database Password",
+                          "required": false,
+                          "description": "The password to use for Database user. Generated if empty",
+                          "jsonPath": "$.spec.commonConfig.dbPassword",
+                          "type": "password"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "Database credentials secret",
+                      "type": "fieldGroup",
+                      "required": false,
+                      "jsonPath": "$.spec",
+                      "displayWhen": "secretDatabase",
+                      "visible": false,
+                      "fields": [
+                        {
+                          "label": "Secret that holds Database credentials information",
+                          "required": false,
+                          "description": "Name of secret with credentials password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given password, if the given username and password will be empty a default username and a generated password (except for trial environment) will be used during the creation of the secret. For trial environment a default password will be used",
+                          "jsonPath": "$.spec.commonConfig.secretDBPassword",
+                          "type": "text"
+                        },
+                        {
+                          "label": "Database Password",
+                          "required": false,
+                          "description": "If the password is already provided with the secret this field is not needed, otherwise it could be used for the AMQ Cluster password in the creation of the secret.",
+                          "jsonPath": "$.spec.commonConfig.dbPassword",
+                          "type": "password"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "label": "SSO",
               "type": "fieldGroup",
               "required": true,
@@ -540,38 +794,6 @@
                   ]
                 }
               ]
-            }
-          ]
-        },
-        {
-          "label": "Other credentials",
-          "type": "fieldGroup",
-          "jsonPath": "$.spec",
-          "visible": true,
-          "fields": [
-            {
-              "label": "AMQ password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.amqPassword",
-              "description": "The password to use for AMQ user. Generated if empty"
-            },
-            {
-              "label": "AMQ cluster password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.amqClusterPassword",
-              "description": "Password for AMQ Cluster. Generated if empty"
-            },
-            {
-              "label": "Keystore password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.keyStorePassword",
-              "description": "The password to use for keystore generation. Generated if empty"
-            },
-            {
-              "label": "Database password",
-              "type": "password",
-              "jsonPath": "$.spec.commonConfig.dbPassword",
-              "description": "The password to use for databases. Generated if empty"
             }
           ]
         }
@@ -1062,26 +1284,79 @@
                 }
               ]
             },
+
+
             {
-              "label": "DataGrid Auth used in HA Environments",
-              "type": "fieldGroup",
-              "jsonPath": "$.spec.objects.console.dataGridAuth",
-              "originalJsonPath": "$.spec.objects.console.dataGridAuth",
+              "label": "Datagrid configuration",
+              "type": "dropDown",
+              "required": false,
               "visible": true,
-              "fields": [
+              "default": "default",
+              "options": [
                 {
-                  "label": "HA Environment - Datagrid username",
-                  "type": "text",
-                  "jsonPath": "$.spec.objects.console.dataGridAuth.username",
-                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
-                  "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                  "value": "default",
+                  "label": "Username and Password configuration"
                 },
                 {
-                  "label": "HA Environment - Datagrid password",
-                  "type": "password",
-                  "jsonPath": "$.spec.objects.console.dataGridAuth.password",
-                  "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
-                  "description": "The password to use for Data Grid. Generated if empty"
+                  "value": "secret",
+                  "label": "Secret configuration"
+                }
+              ],
+              "fields": [
+                {
+                  "label": "Username and password",
+                  "type": "fieldGroup",
+                  "required": false,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "default",
+                  "visible": true,
+                  "fields": [
+                    {
+                      "label": "HA Environment - Datagrid username",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid password",
+                      "type": "password",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "description": "The password to use for Data Grid. Generated if empty"
+                    }
+                  ]
+                },
+                {
+                  "label": "Datagrid admin credentials secret",
+                  "type": "fieldGroup",
+                  "required": false,
+                  "jsonPath": "$.spec",
+                  "displayWhen": "secret",
+                  "visible": false,
+                  "fields": [
+                    {
+                      "label": "HA Environment Secret that holds daytagrid credentials information",
+                      "required": false,
+                      "description": "Name of secret with datagrid credentials username and password, if the provided secret is not found or is missing, one with the provided secretname will be created with the given username and password, if the given username and password will be empty a default username and a generated password will be used during the creation of the secret. ",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.secretDatagridCredentials",
+                      "type": "text"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid username",
+                      "type": "text",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.username",
+                      "description": "The username to use for Data Grid. If empty the default used is infinispan"
+                    },
+                    {
+                      "label": "HA Environment - Datagrid password",
+                      "type": "password",
+                      "jsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "originalJsonPath": "$.spec.objects.console.dataGridAuth.password",
+                      "description": "The password to use for Data Grid. Generated if empty"
+                    }
+                  ]
                 }
               ]
             }
@@ -2176,7 +2451,7 @@
                             {
                               "label": "Maximum connection pool size",
                               "type": "text",
-                              "jsonPath": "$.spec.objects.servers[*].database.externalConfig.maxPoolSize",
+                              "jsonPath": "$.spec.objects.servers[*].database.externalConfig.minPoolSize",
                               "description": "Sets xa-pool/max-pool-size for the configured datasource."
                             },
                             {
@@ -3432,3 +3707,4 @@
     }
   ]
 }
+kie

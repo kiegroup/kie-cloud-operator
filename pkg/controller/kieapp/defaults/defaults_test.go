@@ -7532,7 +7532,7 @@ func TestCredentialsWithAllCredentialsSet(t *testing.T) {
 	}, &providedSecret)
 	assert.Nil(t, errS, "Error secret provided")
 	assert.Equal(t, cr.Status.Applied.CommonConfig.SecretAdminCredentials, secretName, "Secret Admin Credentials is different that the expected value")
-	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_SECRET_KEY]
 	adminUserFromSecret := providedSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
 	assert.Equal(t, adminPasswordFromSecret, password, "Password in the secret is different from the password provided in the cr")
 	assert.Equal(t, adminUserFromSecret, username, "Username in the secret is different from the username provided in the cr")
@@ -7592,7 +7592,7 @@ func TestCredentialWithCredentialSecretAlreadyPresent(t *testing.T) {
 		Type: "Opaque",
 		StringData: map[string]string{
 			constants.USERNAME_ADMIN_SECRET_KEY: mySecretUsername,
-			constants.PASSWORD_ADMIN_SECRET_KEY: mySecretPassword,
+			constants.PASSWORD_SECRET_KEY:       mySecretPassword,
 		},
 	}
 
@@ -7617,7 +7617,7 @@ func checkAdminAndPasswordOntheSecret(t *testing.T, cr *api.KieApp, service *tes
 	assert.Nil(t, errS, "Error secret created")
 	assert.Equal(t, cr.Status.Applied.CommonConfig.SecretAdminCredentials, mySecretName, "SecretAdminCredentials on cr status applied is not correct")
 	adminUserFromSecret := providedSecret.StringData[constants.USERNAME_ADMIN_SECRET_KEY]
-	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_ADMIN_SECRET_KEY]
+	adminPasswordFromSecret := providedSecret.StringData[constants.PASSWORD_SECRET_KEY]
 	return adminUserFromSecret, adminPasswordFromSecret
 }
 

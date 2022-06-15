@@ -12,9 +12,9 @@ var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.13.0"
+	CurrentVersion = "7.13.1"
 	// PriorVersion product version supported
-	PriorVersion = "7.12.1"
+	PriorVersion = "7.13.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -295,7 +295,7 @@ const (
 	DefaultDatagridUsername = "infinispan"
 
 	USERNAME_ADMIN_SECRET_KEY = "username"
-	PASSWORD_ADMIN_SECRET_KEY = "password"
+	PASSWORD_SECRET_KEY       = "password"
 )
 
 var OseCli4ImageURL = ImageRegistry + "/openshift4/ose-cli:" + highestOcpVersion(Ocp4Versions)

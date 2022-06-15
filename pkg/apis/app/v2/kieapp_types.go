@@ -190,6 +190,8 @@ type DataGridAuth struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for datagrid user
 	Password string `json:"password,omitempty"`
+	// Name of the secret containing Datagrid Authentication credentials
+	SecretDatagridCredentials string `json:"secretDatagridCredentials,omitempty"`
 }
 
 // DashbuilderObject configuration of the RHPAM Dashbuilder
@@ -950,6 +952,8 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for keystore generation.
 	KeyStorePassword string `json:"keyStorePassword,omitempty"`
+	// Name of the secret containing Keystore's password, the key is password
+	SecretKeyStorePassword string `json:"secretKeyStorePassword,omitempty"`
 	// The user to use for the admin.
 	AdminUser string `json:"adminUser,omitempty"`
 	// +kubebuilder:validation:Format:=password
@@ -958,12 +962,18 @@ type CommonConfig struct {
 	// +kubebuilder:validation:Format:=password
 	// The password to use for databases.
 	DBPassword string `json:"dbPassword,omitempty"`
+	// Name of the secret containing Database's password, the key is password
+	SecretDBPassword string `json:"secretDBPassword,omitempty"`
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq user.
 	AMQPassword string `json:"amqPassword,omitempty"`
+	// Name of the secret containing AMQ's password, the key is password
+	SecretAMQPassword string `json:"secretAmqPassword,omitempty"`
 	// +kubebuilder:validation:Format:=password
 	// The password to use for amq cluster user.
 	AMQClusterPassword string `json:"amqClusterPassword,omitempty"`
+	// Name of the secret containing AMQCluster's password, the key is password
+	SecretAMQClusterPassword string `json:"secretAmqClusterPassword,omitempty"`
 	// If set to true, plain text routes will be configured instead using SSL
 	DisableSsl bool `json:"disableSsl,omitempty"`
 	// Startup strategy for Console and Kieserver

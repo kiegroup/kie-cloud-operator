@@ -1,0 +1,120 @@
+## KIE Databases BEGIN
+databases:
+  ## RANGE BEGINS
+  #[[ range $index, $Map := .Databases ]]
+  - deploymentConfigs:
+      ## MySQL deployment BEGIN
+      - metadata:
+          name: "[[.ServerName]]-mysql"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.ServerName]]-mysql"
+        spec:
+          strategy:
+            type: Recreate
+          triggers:
+            - type: ConfigChange
+          replicas: 1
+          selector:
+            deploymentConfig: "[[.ServerName]]-mysql"
+          template:
+            metadata:
+              name: "[[.ServerName]]-mysql"
+              labels:
+                deploymentConfig: "[[.ServerName]]-mysql"
+                app: "[[$.ApplicationName]]"
+                application: "[[$.ApplicationName]]"
+                service: "[[.ServerName]]-mysql"
+            spec:
+              terminationGracePeriodSeconds: 60
+              containers:
+                - name: "[[.ServerName]]-mysql"
+                  image: "[[$.Constants.MySQLImageURL]]"
+                  imagePullPolicy: Always
+                  livenessProbe:
+                    tcpSocket:
+                      port: 3306
+                    initialDelaySeconds: 30
+                    timeoutSeconds: 1
+                  readinessProbe:
+                    exec:
+                      command:
+                        - "/bin/sh"
+                        - "-i"
+                        - "-c"
+                        - "MYSQL_PWD=$MYSQL_PASSWORD mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"
+                      port: 3306
+                    initialDelaySeconds: 5
+                    timeoutSeconds: 1
+                  ports:
+                    - containerPort: 3306
+                      protocol: TCP
+                  env:
+                    - name: MYSQL_USER
+                      value: "[[.Username]]"
+                    #[[if not $.SecretDBPassword]]
+                    - name: MYSQL_PASSWORD
+                      value: "[[$.DBPassword]]"
+                    #[[end]]
+                    #[[if $.SecretDBPassword]]
+                    - name: MYSQL_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretDBPassword]]"
+                          key: password
+                    #[[end]]
+                    - name: MYSQL_DATABASE
+                      value: "[[.DatabaseName]]"
+                    - name: MYSQL_DEFAULT_AUTHENTICATION_PLUGIN
+                      value: "mysql_native_password"
+                  volumeMounts:
+                    - mountPath: "/var/lib/mysql/data"
+                      name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+              ## [[ if ne .Size "" ]]
+              volumes:
+                - name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+                  persistentVolumeClaim:
+                    claimName: "[[.ServerName]]-mysql-claim"
+    ## MySQL persistent volume claim BEGIN
+    persistentVolumeClaims:
+      - metadata:
+          name: "[[.ServerName]]-mysql-claim"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.ServerName]]-mysql"
+        spec:
+          # [[ if ne .StorageClassName "" ]]
+          storageClassName: "[[.StorageClassName]]"
+          # [[ end ]]
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "[[.Size]]"
+              ## MySQL persistent volume claim END
+              ## [[ else ]]
+              volumes:
+                - name: "[[.ServerName]]-mysql-[[$.Constants.DatabaseVolumeSuffix]]"
+                  emptyDir: {}
+    ## [[ end ]]
+    ## MySQL deployment END
+    services:
+      - spec:
+          ports:
+            - port: 3306
+              targetPort: 3306
+          selector:
+            deploymentConfig: "[[.ServerName]]-mysql"
+        metadata:
+          name: "[[.ServerName]]-mysql"
+          labels:
+            app: "[[$.ApplicationName]]"
+            application: "[[$.ApplicationName]]"
+            service: "[[.ServerName]]-mysql"
+          annotations:
+            description: The MySQL server's port.
+  #[[end]]
+  ## RANGE ends
+## KIE Databases END
