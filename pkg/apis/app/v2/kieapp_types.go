@@ -160,6 +160,7 @@ type KieServerSet struct {
 	TerminationRoute         *TerminationRoute `json:"terminationRoute,omitempty"`
 }
 
+// TerminationRoute configuration of the routes used by RHPAM components
 type TerminationRoute struct {
 	// Enable edge termination, it use http
 	EnableEdge bool `json:"enableEdge,omitempty"`
