@@ -58,8 +58,8 @@
             {
               "label": "Image Tags enabled",
               "type": "fieldGroup",
-              "jsonPath": "$.spec.useImageTags",
-              "originalJsonPath": "$.spec.useImageTags",
+              "jsonPath": "$.spec",
+              "originalJsonPath": "$.spec",
               "displayWhen": "true",
               "visible": false,
               "fields": [
