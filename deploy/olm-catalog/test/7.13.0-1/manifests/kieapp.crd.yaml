@@ -822,6 +822,8 @@ spec:
                           for kie pvc's.
                         type: string
                       terminationRoute:
+                        description: TerminationRoute configuration of the routes
+                          used by RHPAM components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -1291,6 +1293,8 @@ spec:
                           for kie pvc's.
                         type: string
                       terminationRoute:
+                        description: TerminationRoute configuration of the routes
+                          used by RHPAM components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -1664,6 +1668,8 @@ spec:
                           for kie pvc's.
                         type: string
                       terminationRoute:
+                        description: TerminationRoute configuration of the routes
+                          used by RHPAM components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -2642,6 +2648,8 @@ spec:
                             for kie pvc's.
                           type: string
                         terminationRoute:
+                          description: TerminationRoute configuration of the routes
+                            used by RHPAM components
                           properties:
                             caCertificate:
                               description: CaCertificate if used on Edge termination
@@ -2940,6 +2948,8 @@ spec:
                           for kie pvc's.
                         type: string
                       terminationRoute:
+                        description: TerminationRoute configuration of the routes
+                          used by RHPAM components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -3803,6 +3813,8 @@ spec:
                               use for kie pvc's.
                             type: string
                           terminationRoute:
+                            description: TerminationRoute configuration of the routes
+                              used by RHPAM components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -4282,6 +4294,8 @@ spec:
                               use for kie pvc's.
                             type: string
                           terminationRoute:
+                            description: TerminationRoute configuration of the routes
+                              used by RHPAM components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -4661,6 +4675,8 @@ spec:
                               use for kie pvc's.
                             type: string
                           terminationRoute:
+                            description: TerminationRoute configuration of the routes
+                              used by RHPAM components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -5673,6 +5689,8 @@ spec:
                                 use for kie pvc's.
                               type: string
                             terminationRoute:
+                              description: TerminationRoute configuration of the routes
+                                used by RHPAM components
                               properties:
                                 caCertificate:
                                   description: CaCertificate if used on Edge termination
@@ -5974,6 +5992,8 @@ spec:
                               use for kie pvc's.
                             type: string
                           terminationRoute:
+                            description: TerminationRoute configuration of the routes
+                              used by RHPAM components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
