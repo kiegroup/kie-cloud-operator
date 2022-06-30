@@ -7,9 +7,9 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/rhpam-7/rhpam-rhel8-operator:7.13.0
-    createdAt: "2022-05-27 15:18:02"
-    description: Deploys and manages Red Hat Process Automation Manager and Red Hat
-      Decision Manager environments.
+    createdAt: "2022-06-30 16:48:18"
+    description: Deploys and manages IBM Business Automation Manager Open Editions
+      environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Process Automation Manager",
       "Red Hat Decision Manager"]'
@@ -26,7 +26,7 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: A project prescription running an RHPAM/RHDM environment.
+    - description: A project prescription running an IBM BAMOE environment.
       displayName: KieApp
       kind: KieApp
       name: kieapps.app.kiegroup.org
@@ -111,7 +111,7 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v2
   description: |-
-    Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
+    Deploys and manages IBM Business Automation Manager Open Editions environment.
 
     * **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
 
@@ -420,7 +420,6 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-4
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator

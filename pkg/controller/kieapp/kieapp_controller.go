@@ -413,11 +413,10 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 	if len(result) == 1 {
 		result = append(result, "latest")
 	}
-	product := defaults.GetProduct(cr)
+
 	tagName := fmt.Sprintf("%s:%s", result[0], result[1])
 	imageName := tagName
-	major, _, _ := defaults.GetMajorMinorMicro(cr.Status.Applied.Version)
-	regContext := fmt.Sprintf("%s-%s", product, major)
+	regContext := constants.IBMBamoeImageContext
 	if _, _, imageContext := defaults.GetImage(imageURL); imageContext != "" {
 		regContext = imageContext
 	}
@@ -430,7 +429,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 		registry = cr.Status.Applied.ImageRegistry
 	}
 	if registry.Registry == "" {
-		registry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry)
+		registry.Registry = logs.GetEnv("REGISTRY", constants.ConnectImageRegistry)
 	}
 	registryAddress := registry.Registry
 	if strings.Contains(result[0], "datagrid") {

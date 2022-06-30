@@ -7,9 +7,9 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.0
-    createdAt: "2022-05-27 15:18:02"
-    description: Deploys and manages Red Hat Process Automation Manager and Red Hat
-      Decision Manager environments.
+    createdAt: "2022-06-30 16:48:18"
+    description: Deploys and manages IBM Business Automation Manager Open Editions
+      environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Process Automation Manager",
       "Red Hat Decision Manager"]'
@@ -20,13 +20,13 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
+  name: businessautomation-operator.7.13.0-1-dev-224lb9bq9z
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: A project prescription running an RHPAM/RHDM environment.
+    - description: A project prescription running an IBM BAMOE environment.
       displayName: KieApp
       kind: KieApp
       name: kieapps.app.kiegroup.org
@@ -111,7 +111,7 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v2
   description: |-
-    Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
+    Deploys and manages IBM Business Automation Manager Open Editions environment.
 
     * **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
 
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
+    operated-by: businessautomation-operator.7.13.0-1-dev-224lb9bq9z
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -420,9 +420,8 @@ spec:
   maturity: dev
   provider:
     name: Red Hat
-  replaces: businessautomation-operator.7.12.1-4
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
-  version: 7.13.0-1+lkbnqwfddr
+      operated-by: businessautomation-operator.7.13.0-1-dev-224lb9bq9z
+  version: 7.13.0-1+224lb9bq9z

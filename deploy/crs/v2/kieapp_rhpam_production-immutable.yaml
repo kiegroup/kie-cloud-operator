@@ -4,8 +4,8 @@ metadata:
   name: rhpam-production-immutable
   annotations:
     consoleName: rhpam-production-immutable
-    consoleTitle: PAM Production Immutable
-    consoleDesc: Deploys a PAM Production Immutable environment
+    consoleTitle: BAMOE Production Immutable
+    consoleDesc: Deploys a BAMOE Production Immutable environment
 spec:
   environment: rhpam-production-immutable
   objects:

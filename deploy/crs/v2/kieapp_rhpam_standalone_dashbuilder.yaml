@@ -4,7 +4,7 @@ metadata:
   name: rhpam-standalone-dashbuilder
   annotations:
     consoleName: rhpam-standalone-dashbuilder
-    consoleTitle: PAM Standalone Dashbuilder
-    consoleDesc: Deploys a PAM Standalone Dashbuilder environment
+    consoleTitle: BAMOE Standalone Dashbuilder
+    consoleDesc: Deploys a BAMOE Standalone Dashbuilder environment
 spec:
   environment: rhpam-standalone-dashbuilder

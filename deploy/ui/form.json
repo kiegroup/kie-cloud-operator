@@ -112,7 +112,7 @@
               "label": "Image registry",
               "default": "registry.redhat.io",
               "required": false,
-              "description": "URL of a custom registry where RHPAM images are stored",
+              "description": "URL of a custom registry where IBM BAMOE images are stored",
               "jsonPath": "$.spec.imageRegistry.registry",
               "type": "text"
             },
@@ -155,7 +155,7 @@
                   "label": "Username",
                   "default": "adminUser",
                   "required": false,
-                  "description": "Administrative username for RHPAM components",
+                  "description": "Administrative username for IBM BAMOE components",
                   "jsonPath": "$.spec.commonConfig.adminUser",
                   "type": "text"
                 },
@@ -786,7 +786,7 @@
               "label": "Enable JVM configuration",
               "type": "checkbox",
               "required": false,
-              "description": "When set to true will configure the RHPAM Workbench with JVM configuration, if no configuration is added, the defaults will be used.",
+              "description": "When set to true will configure the IBM BAMOE Workbench with JVM configuration, if no configuration is added, the defaults will be used.",
               "jsonPath": "$.spec.objects.console.jvm.enableConfiguration",
               "originalJsonPath": "$.spec.objects.console.jvm.enableConfiguration",
               "fields": [

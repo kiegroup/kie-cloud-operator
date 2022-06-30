@@ -212,9 +212,7 @@ func setProductLabels(cr *api.KieApp, env *api.Environment) {
 func getConsoleName(cr *api.KieApp) string {
 	env := string(cr.Spec.Environment)
 	consoleName := constants.RhpamBusinessCentral
-	if strings.Contains(env, constants.RhdmPrefix) && !isGE713(cr) {
-		consoleName = constants.RhdmDecisionCentral
-	} else if strings.Contains(env, constants.RhpamPrefix) && strings.Contains(env, constants.Production) {
+	if strings.Contains(env, constants.RhpamPrefix) && strings.Contains(env, constants.Production) {
 		consoleName = constants.RhpamBusinessCentralMon
 	}
 	return consoleName
@@ -222,9 +220,7 @@ func getConsoleName(cr *api.KieApp) string {
 
 func getSubComponentTypeByImageName(imageName string) string {
 	retValue := constants.SUBCOMPONENT_TYPE_APP
-	if imageName == constants.RhpamSmartRouterImageName || imageName == constants.RhpamControllerImageName ||
-		imageName == constants.RhdmSmartRouterImageName || imageName == constants.RhdmControllerImageName {
-
+	if imageName == constants.RhpamSmartRouterImageName || imageName == constants.RhpamControllerImageName {
 		retValue = constants.SUBCOMPONENT_TYPE_INFRA
 	}
 	return retValue
@@ -427,13 +423,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	template := api.ConsoleTemplate{}
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if cr.Status.Applied.Objects.Console != nil && envConstants != nil {
-		// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-		if !isGE713(cr) && !isRHPAM(cr) {
-			envConstants.App = constants.RhdmAppConstants
-		} else if isGE713(cr) && !isRHPAM(cr) {
-			envConstants.App = constants.RhdmAppConstants713
-		}
-		product := GetProduct(cr)
+
 		// Set replicas
 		if !hasEnv {
 			return template
@@ -444,9 +434,8 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		}
 		template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 		template.Name = envConstants.App.Prefix
-		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
 
-		template.ImageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		template.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 
 		template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 		if template.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
@@ -559,8 +548,7 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		dashbuilderTemplate.Replicas = *cr.Status.Applied.Objects.Dashbuilder.Replicas
 		dashbuilderTemplate.Name = envConstants.App.Prefix
 
-		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
-		dashbuilderTemplate.ImageURL = constants.ImageRegistry + "/" + envConstants.App.Product + "-" + cMajor + "/" + envConstants.App.Product + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		dashbuilderTemplate.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		dashbuilderTemplate.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 		if dashbuilderTemplate.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			dashbuilderTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-"))
@@ -697,8 +685,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
-		cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
-		template.ImageURL = constants.ImageRegistry + "/" + constants.RhpamPrefix + "-" + cMajor + "/" + constants.RhpamPrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		template.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		if !cr.Status.Applied.UseImageTags {
 			if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists {
 				template.ImageURL = val
@@ -1124,12 +1111,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
-	if product == constants.RhdmPrefix && isGE713(cr) {
-		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
-	}
-
-	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
-	imageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	imageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + "kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
 
 	if !cr.Status.Applied.UseImageTags && !forBuild {
 		if val, exists := os.LookupEnv(envVar); exists {
@@ -1460,11 +1442,7 @@ func Pbool(b bool) *bool {
 func GetProduct(cr *api.KieApp) (product string) {
 	envConstants := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if envConstants != nil {
-		if isGE713(cr) && !isRHPAM(cr) {
-			product = "rhpam"
-		} else {
-			product = envConstants.App.Product
-		}
+		product = envConstants.App.Product
 	}
 	return
 }

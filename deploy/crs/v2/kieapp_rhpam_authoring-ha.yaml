@@ -4,7 +4,7 @@ metadata:
   name: rhpam-authoring-ha
   annotations:
     consoleName: rhpam-authoring-ha
-    consoleTitle: PAM Authoring HA
-    consoleDesc: Deploys a PAM Authoring HA environment
+    consoleTitle: BAMOE Authoring HA
+    consoleDesc: Deploys a BAMOE Authoring HA environment
 spec:
   environment: rhpam-authoring-ha

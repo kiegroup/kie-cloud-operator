@@ -636,8 +636,8 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 		Service: mockSvc,
 	}
 
-	image := fmt.Sprintf("rhpam-businesscentral-openshift:%s", cr.Status.Applied.Version)
-	imageURL := constants.ImageRegistry + "/" + cr.Spec.Objects.Console.ImageContext + "/" + image
+	image := fmt.Sprintf("bamoe-businesscentral-openshift:%s", cr.Status.Applied.Version)
+	imageURL := constants.ConnectImageRegistry + "/" + cr.Spec.Objects.Console.ImageContext + "/" + image
 	err = reconciler.createLocalImageTag(image, imageURL, cr)
 	assert.Nil(t, err)
 
@@ -676,7 +676,11 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
+	assert.Equal(t, fmt.Sprintf("%s/%s/rhpam%s-businesscentral-openshift:1.0",
+		constants.ConnectImageRegistry,
+		constants.IBMBamoeImageContext,
+		cr.Status.Applied.Version),
+		isTag.Tag.From.Name)
 }
 
 func getISTag(mockSvc *test.MockPlatformService, cr *api.KieApp, tagRefName string, imageName string) (*oimagev1.ImageStreamTag, error) {

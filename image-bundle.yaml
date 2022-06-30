@@ -1,6 +1,6 @@
 schema_version: 1
 name: "rhpam-7/rhpam-operator-bundle"
-description: "Red Hat Business Automation Operator Bundle"
+description: "IBM Business Automation Manager Open Editions Operator Bundle"
 version: ""
 from: "scratch"
 labels:
@@ -9,11 +9,11 @@ labels:
   - name: com.redhat.component
     value: rhpam-operator-bundle-container
   - name: io.k8s.description
-    value: Operator Bundle for deploying RHPAM & RHDM
+    value: Operator Bundle for deploying IBM BAMOE
   - name: io.k8s.display-name
-    value: Red Hat Business Automation Operator Bundle
+    value: IBM Business Automation Manager Open Editions Operator Bundle
   - name: io.openshift.tags
-    value: rhpam,rhdm,operator
+    value: rhpam,rhdm,operator,ibm-bamoe
   - name: operators.operatorframework.io.bundle.mediatype.v1
     value: registry+v1
   - name: operators.operatorframework.io.bundle.manifests.v1

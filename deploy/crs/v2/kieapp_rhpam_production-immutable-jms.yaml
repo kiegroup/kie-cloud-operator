@@ -4,8 +4,8 @@ metadata:
   name: rhpam-production-immutable-jms
   annotations:
     consoleName: rhpam-production-immutable-jms
-    consoleTitle: PAM Production Immutable JMS
-    consoleDesc: Deploys a PAM Production Immutable JMS environment
+    consoleTitle: BAMOE Production Immutable JMS
+    consoleDesc: Deploys a BAMOE Production Immutable JMS environment
 spec:
   environment: rhpam-production-immutable
   objects:
