@@ -157,12 +157,6 @@ func TestRHDMTrialEnvironment(t *testing.T) {
 	runTrialEnvironmentTests(t, "rhdmcentr", api.RhdmTrial, bcImage, rhpamkieServerImage, "")
 }
 
-// can be deleted after 7.12.1 is not supported version anymore.
-// for 7.12.1 old rhdm images needs to ne used
-func TestRHDMTrialEnvironmentFor7121(t *testing.T) {
-	runTrialEnvironmentTests(t, "rhdmcentr", api.RhdmTrial, dcImage, rhdmkieServerImage, "7.12.1")
-}
-
 func runTrialEnvironmentTests(t *testing.T, consoleName string, environment api.EnvironmentType, consoleImage string, ksImage string, version string) {
 	deployments := 2
 	cr := &api.KieApp{
@@ -566,30 +560,6 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	}
 }
 
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-func TestRhdmAuthoringHAEnvironmentFor7_12_1(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Version:     "7.12.1",
-			Environment: api.RhdmAuthoringHA,
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	checkAuthoringHAEnv(t, cr, env, constants.RhdmPrefix)
-	assert.Equal(t, "1Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
-	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
-	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
-	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
-	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-decisioncentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	for i := 0; i < len(env.Servers); i++ {
-		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
-	}
-}
-
 func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -658,35 +628,6 @@ func checkAuthoringHAEnv(t *testing.T, cr *api.KieApp, env api.Environment, prod
 	}
 }
 
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-func TestRhdmProdImmutableEnvironment7_12_1(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: api.KieAppSpec{
-			Version:     "7.12.1",
-			Environment: api.RhdmProductionImmutable,
-		},
-	}
-	env, err := GetEnvironment(cr, test.MockService())
-	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, fmt.Sprintf(rhdmkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
-	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
-	assert.Nil(t, env.Console.PersistentVolumeClaims)
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_SERVICE"), "Variable should not exist")
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PORT"), "Variable should not exist")
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_ROUTER_PROTOCOL"), "Variable should not exist")
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
-	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
-	assert.Equal(t, "OpenShiftStartupStrategy", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_STARTUP_STRATEGY"), "Variable should exist")
-	assert.Nil(t, env.Console.DeploymentConfigs)
-	assert.Nil(t, cr.Status.Applied.Objects.Console, "Console should be nil")
-}
-
-//
 func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -2692,22 +2633,6 @@ func TestRhdmTrialConsoleEnv(t *testing.T) {
 	})
 
 	testJvmEnv(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
-
-	// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-	// test 7.12.1
-	cr7_12_1 := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Spec: api.KieAppSpec{
-			Version:      "7.12.1",
-			Environment:  api.RhdmTrial,
-			UseImageTags: true,
-		},
-	}
-	env7_12_1, _ := GetEnvironment(cr7_12_1, test.MockService())
-	assert.Equal(t, fmt.Sprintf("rhdm-decisioncentral-rhel8:%s", cr7_12_1.Status.Applied.Version), env7_12_1.Console.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
-	assert.Equal(t, fmt.Sprintf("rhdm-kieserver-rhel8:%s", cr7_12_1.Status.Applied.Version), env7_12_1.Servers[0].DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 }
 
 func TestKieAppDefaults(t *testing.T) {
@@ -4279,15 +4204,6 @@ func TestEnvCustomImageTag(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhpamPrefix+"-7/"+constants.RhpamPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
-	// for 7.12.1, it still need to use rhdm
-	// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-	os.Setenv(constants.DmKieImageVar+cr.Status.Applied.Version, imageURL)
-	cr.Spec.Version = "7.12.1"
-	env1, err := GetEnvironment(cr, test.MockService())
-	assert.Equal(t, constants.ImageRegistry+"/"+constants.RhdmPrefix+"-7/"+constants.RhdmPrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env1.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
-
-	// test that setting imagetag in CR overrides env vars
-	cr.Spec.Version = "7.13.0" // remove this line TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
 	cr.Spec.Environment = api.RhpamAuthoring
 	imageURL = image + ":" + imageTag
 	os.Setenv(envConstants.App.ImageVar+constants.CurrentVersion, imageURL)
