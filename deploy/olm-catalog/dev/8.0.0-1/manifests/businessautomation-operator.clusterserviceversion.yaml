@@ -3,11 +3,10 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
-    capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.0
-    createdAt: "2022-07-12 16:13:29"
+    createdAt: "2022-07-12 17:30:30"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.8.0.0-1-dev-ndpnt92k7h
+  name: businessautomation-operator.8.0.0-1-dev-n6hsg7dl7s
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -194,30 +193,6 @@ spec:
                   value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
                 - name: RELATED_IMAGE_BROKER_IMAGE_8.0.0
                   value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
-                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-controller-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_BC_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:7.13.0
-                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_7.13.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:7.13.0
-                - name: RELATED_IMAGE_OSE_CLI_IMAGE_7.13.0
-                  value: registry.redhat.io/openshift4/ose-cli:v4.10
-                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.13.0
-                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.13.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
-                - name: RELATED_IMAGE_DATAGRID_IMAGE_7.13.0
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
-                - name: RELATED_IMAGE_BROKER_IMAGE_7.13.0
-                  value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.9
@@ -398,7 +373,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.8.0.0-1-dev-ndpnt92k7h
+    operated-by: businessautomation-operator.8.0.0-1-dev-n6hsg7dl7s
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -410,5 +385,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.8.0.0-1-dev-ndpnt92k7h
-  version: 8.0.0-1+ndpnt92k7h
+      operated-by: businessautomation-operator.8.0.0-1-dev-n6hsg7dl7s
+  version: 8.0.0-1+n6hsg7dl7s
