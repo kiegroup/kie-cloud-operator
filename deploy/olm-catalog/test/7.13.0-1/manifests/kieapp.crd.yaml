@@ -401,15 +401,15 @@ spec:
                     type: string
                 type: object
               objects:
-                description: Configuration of the RHPAM components
+                description: Configuration of the IBM BAMOE components
                 properties:
                   console:
-                    description: ConsoleObject configuration of the RHPAM workbench
+                    description: ConsoleObject configuration of the IBM BAMOE workbench
                     properties:
                       cors:
-                        description: CORS Cross Origin Resource Sharing configuration
-                          to be used by the KieApp for the KIE Server, workbench and
-                          RHPAM Dashbuilder
+                        description: CORSFiltersObject Cors Cross Origin Resource
+                          Sharing configuration to be used by the KieApp for the KIE
+                          Server, workbench and IBM BAMOE Dashbuilder
                         properties:
                           allowCredentialsName:
                             description: 'Access Control Allow Credentials Filter
@@ -823,7 +823,7 @@ spec:
                         type: string
                       terminationRoute:
                         description: TerminationRoute configuration of the routes
-                          used by RHPAM components
+                          used by IBM BAMOE components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -841,7 +841,8 @@ spec:
                         type: object
                     type: object
                   dashbuilder:
-                    description: DashbuilderObject configuration of the RHPAM Dashbuilder
+                    description: DashbuilderObject configuration of the IBM BAMOE
+                      Dashbuilder
                     properties:
                       config:
                         description: DashbuilderConfig holds all configurations that
@@ -951,9 +952,9 @@ spec:
                             type: integer
                         type: object
                       cors:
-                        description: CORS Cross Origin Resource Sharing configuration
-                          to be used by the KieApp for the KIE Server, workbench and
-                          RHPAM Dashbuilder
+                        description: CORSFiltersObject Cors Cross Origin Resource
+                          Sharing configuration to be used by the KieApp for the KIE
+                          Server, workbench and IBM BAMOE Dashbuilder
                         properties:
                           allowCredentialsName:
                             description: 'Access Control Allow Credentials Filter
@@ -1294,7 +1295,7 @@ spec:
                         type: string
                       terminationRoute:
                         description: TerminationRoute configuration of the routes
-                          used by RHPAM components
+                          used by IBM BAMOE components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -1312,7 +1313,7 @@ spec:
                         type: object
                     type: object
                   processMigration:
-                    description: ProcessMigrationObject configuration of the RHPAM
+                    description: ProcessMigrationObject configuration of the IBM BAMOE
                       PIM
                     properties:
                       database:
@@ -1669,7 +1670,7 @@ spec:
                         type: string
                       terminationRoute:
                         description: TerminationRoute configuration of the routes
-                          used by RHPAM components
+                          used by IBM BAMOE components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -1941,9 +1942,9 @@ spec:
                               type: array
                           type: object
                         cors:
-                          description: CORS Cross Origin Resource Sharing configuration
-                            to be used by the KieApp for the KIE Server, workbench
-                            and RHPAM Dashbuilder
+                          description: CORSFiltersObject Cors Cross Origin Resource
+                            Sharing configuration to be used by the KieApp for the
+                            KIE Server, workbench and IBM BAMOE Dashbuilder
                           properties:
                             allowCredentialsName:
                               description: 'Access Control Allow Credentials Filter
@@ -2649,7 +2650,7 @@ spec:
                           type: string
                         terminationRoute:
                           description: TerminationRoute configuration of the routes
-                            used by RHPAM components
+                            used by IBM BAMOE components
                           properties:
                             caCertificate:
                               description: CaCertificate if used on Edge termination
@@ -2670,8 +2671,8 @@ spec:
                       type: object
                     type: array
                   smartRouter:
-                    description: SmartRouterObject configuration of the RHPAM smart
-                      router
+                    description: SmartRouterObject configuration of the IBM BAMOE
+                      smart router
                     properties:
                       env:
                         items:
@@ -2949,7 +2950,7 @@ spec:
                         type: string
                       terminationRoute:
                         description: TerminationRoute configuration of the routes
-                          used by RHPAM components
+                          used by IBM BAMOE components
                         properties:
                           caCertificate:
                             description: CaCertificate if used on Edge termination
@@ -3384,15 +3385,16 @@ spec:
                         type: string
                     type: object
                   objects:
-                    description: Configuration of the RHPAM components
+                    description: Configuration of the IBM BAMOE components
                     properties:
                       console:
-                        description: ConsoleObject configuration of the RHPAM workbench
+                        description: ConsoleObject configuration of the IBM BAMOE
+                          workbench
                         properties:
                           cors:
-                            description: CORS Cross Origin Resource Sharing configuration
-                              to be used by the KieApp for the KIE Server, workbench
-                              and RHPAM Dashbuilder
+                            description: CORSFiltersObject Cors Cross Origin Resource
+                              Sharing configuration to be used by the KieApp for the
+                              KIE Server, workbench and IBM BAMOE Dashbuilder
                             properties:
                               allowCredentialsName:
                                 description: 'Access Control Allow Credentials Filter
@@ -3814,7 +3816,7 @@ spec:
                             type: string
                           terminationRoute:
                             description: TerminationRoute configuration of the routes
-                              used by RHPAM components
+                              used by IBM BAMOE components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -3834,7 +3836,7 @@ spec:
                             type: object
                         type: object
                       dashbuilder:
-                        description: DashbuilderObject configuration of the RHPAM
+                        description: DashbuilderObject configuration of the IBM BAMOE
                           Dashbuilder
                         properties:
                           config:
@@ -3949,9 +3951,9 @@ spec:
                                 type: integer
                             type: object
                           cors:
-                            description: CORS Cross Origin Resource Sharing configuration
-                              to be used by the KieApp for the KIE Server, workbench
-                              and RHPAM Dashbuilder
+                            description: CORSFiltersObject Cors Cross Origin Resource
+                              Sharing configuration to be used by the KieApp for the
+                              KIE Server, workbench and IBM BAMOE Dashbuilder
                             properties:
                               allowCredentialsName:
                                 description: 'Access Control Allow Credentials Filter
@@ -4295,7 +4297,7 @@ spec:
                             type: string
                           terminationRoute:
                             description: TerminationRoute configuration of the routes
-                              used by RHPAM components
+                              used by IBM BAMOE components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -4315,8 +4317,8 @@ spec:
                             type: object
                         type: object
                       processMigration:
-                        description: ProcessMigrationObject configuration of the RHPAM
-                          PIM
+                        description: ProcessMigrationObject configuration of the IBM
+                          BAMOE PIM
                         properties:
                           database:
                             description: ProcessMigrationDatabaseObject Defines how
@@ -4676,7 +4678,7 @@ spec:
                             type: string
                           terminationRoute:
                             description: TerminationRoute configuration of the routes
-                              used by RHPAM components
+                              used by IBM BAMOE components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination
@@ -4961,9 +4963,9 @@ spec:
                                   type: array
                               type: object
                             cors:
-                              description: CORS Cross Origin Resource Sharing configuration
-                                to be used by the KieApp for the KIE Server, workbench
-                                and RHPAM Dashbuilder
+                              description: CORSFiltersObject Cors Cross Origin Resource
+                                Sharing configuration to be used by the KieApp for
+                                the KIE Server, workbench and IBM BAMOE Dashbuilder
                               properties:
                                 allowCredentialsName:
                                   description: 'Access Control Allow Credentials Filter
@@ -5690,7 +5692,7 @@ spec:
                               type: string
                             terminationRoute:
                               description: TerminationRoute configuration of the routes
-                                used by RHPAM components
+                                used by IBM BAMOE components
                               properties:
                                 caCertificate:
                                   description: CaCertificate if used on Edge termination
@@ -5711,7 +5713,7 @@ spec:
                           type: object
                         type: array
                       smartRouter:
-                        description: SmartRouterObject configuration of the RHPAM
+                        description: SmartRouterObject configuration of the IBM BAMOE
                           smart router
                         properties:
                           env:
@@ -5993,7 +5995,7 @@ spec:
                             type: string
                           terminationRoute:
                             description: TerminationRoute configuration of the routes
-                              used by RHPAM components
+                              used by IBM BAMOE components
                             properties:
                               caCertificate:
                                 description: CaCertificate if used on Edge termination

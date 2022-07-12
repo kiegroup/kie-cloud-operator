@@ -4,7 +4,7 @@ metadata:
   name: rhpam-authoring
   annotations:
     consoleName: rhpam-authoring
-    consoleTitle: PAM Authoring
-    consoleDesc: Deploys a PAM Authoring environment
+    consoleTitle: BAMOE Authoring
+    consoleDesc: Deploys a BAMOE Authoring environment
 spec:
   environment: rhpam-authoring

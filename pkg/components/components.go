@@ -133,6 +133,7 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 			if registry == constants.ImageContextBrew {
 				imageContext = getBrewContext(i.Context)
 			}
+
 			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  i.Var + imageVersion,
 				Value: registry + imageContext + ":" + imageVersion,

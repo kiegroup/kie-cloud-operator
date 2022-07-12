@@ -4,7 +4,7 @@ metadata:
   name: rhpam-production
   annotations:
     consoleName: rhpam-production
-    consoleTitle: PAM Production
-    consoleDesc: Deploys a PAM Production environment
+    consoleTitle: BAMOE Production
+    consoleDesc: Deploys a BAMOE Production environment
 spec:
   environment: rhpam-production

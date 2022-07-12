@@ -5,7 +5,7 @@ metadata:
   annotations:
     consoleName: rhpam-process-migration
     consoleTitle: Red Hat Process Automation Process Instance Migration
-    consoleDesc: Deploys a PAM Process Instance Migration environment
+    consoleDesc: Deploys a BAMOE Process Instance Migration environment
 spec:
   environment: rhpam-trial
   objects:

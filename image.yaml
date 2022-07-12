@@ -19,7 +19,7 @@
 
 - schema_version: 1
   name: "rhpam-7/rhpam-rhel8-operator"
-  description: "Red Hat Business Automation Operator"
+  description: "IBM Business Automation Manager Open Editions Operator"
   version: ""
   from: "registry.redhat.io/ubi8-minimal"
   labels:
@@ -28,11 +28,11 @@
     - name: com.redhat.component
       value: rhpam-7-rhel8-operator-container
     - name: io.k8s.description
-      value: Operator for deploying RHPAM & RHDM
+      value: Operator for deploying IBM BAMOE
     - name: io.k8s.display-name
-      value: Red Hat Business Automation Operator
+      value: IBM Business Automation Manager Open Editions Operator
     - name: io.openshift.tags
-      value: rhpam,rhdm,operator
+      value: rhpam,rhdm,operator,ibm-bamoe
   modules:
     repositories:
       - name: runtime

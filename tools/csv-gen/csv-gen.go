@@ -38,13 +38,13 @@ import (
 var log = logs.GetLogger("csv.generator")
 
 var (
-	rh              = "Red Hat"
-	channel         = "stable"
+	ibm             = "IBM"
+	channel         = "8.x-stable"
 	major, minor, _ = defaults.GetMajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
 			Name:         "businessautomation",
-			DisplayName:  "Business Automation (DEV)",
+			DisplayName:  "IBM Business Automation (DEV)",
 			OperatorName: "business-automation-operator",
 			Registry:     "quay.io",
 			Context:      "kiegroup",
@@ -55,21 +55,21 @@ var (
 		},
 		{
 			Name:         "businessautomation",
-			DisplayName:  "Business Automation",
+			DisplayName:  "IBM Business Automation",
 			OperatorName: "business-automation-operator",
 			Registry:     constants.ImageRegistryBrew,
 			Context:      constants.ImageContextBrew,
-			ImageName:    "rhpam-" + major + "-rhpam-rhel8-operator",
+			ImageName:    "bamoe-" + major + "-rhpam-rhel8-operator",
 			Tag:          version.Version,
 			Maturity:     "test",
 		},
 		{
 			Name:         "businessautomation",
-			DisplayName:  "Business Automation",
+			DisplayName:  "IBM Business Automation",
 			OperatorName: "business-automation-operator",
-			Registry:     constants.ImageRegistryStage,
-			Context:      "rhpam-" + major,
-			ImageName:    "rhpam-rhel8-operator",
+			Registry:     constants.ConnectImageRegistry,
+			Context:      constants.IBMBamoeImageContext,
+			ImageName:    constants.IBMBamoeImagePrefix + "-rhel8-operator",
 			Tag:          version.Version,
 			Maturity:     channel,
 		},
@@ -141,7 +141,7 @@ func main() {
 		templateStruct.Name = csvVersionedName
 		templateStruct.Spec.Version = csvVersion
 		templateStruct.Namespace = "placeholder"
-		descrip := "Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments."
+		descrip := "Deploys and manages IBM Business Automation Manager Open Editions environment."
 		repository := "https://github.com/kiegroup/kie-cloud-operator"
 		examples := []string{"{\x22apiVersion\x22:\x22app.kiegroup.org/v2\x22,\x22kind\x22:\x22KieApp\x22,\x22metadata\x22:{\x22name\x22:\x22rhpam-trial\x22},\x22spec\x22:{\x22environment\x22:\x22rhpam-trial\x22}}"}
 		templateStruct.SetAnnotations(
@@ -153,11 +153,10 @@ func main() {
 				"certified":           "true",
 				"capabilities":        "Seamless Upgrades",
 				"repository":          repository,
-				"support":             rh,
+				"support":             ibm,
 				"tectonic-visibility": "ocs",
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
 				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
-				"operators.openshift.io/valid-subscription":      "[\"Red Hat Process Automation Manager\", \"Red Hat Decision Manager\"]",
 			},
 		)
 		templateStruct.SetLabels(
@@ -168,12 +167,12 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		templateStruct.Spec.Replaces = operatorName + "." + *replaces
-		templateStruct.Spec.Description = descrip + "\n\n* **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.\n\n[See more](https://www.redhat.com/en/products/process-automation)."
+		// Uncomment after IBM BAMOE 8.0.0 release
+		// templateStruct.Spec.Replaces = operatorName + "." + *replaces
+		templateStruct.Spec.Description = descrip + "\n\n* **IBM Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.\n\n * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = csv.Maturity
-		templateStruct.Spec.Maintainers = []csvv1.Maintainer{{Name: rh, Email: "bsig-cloud@redhat.com"}}
-		templateStruct.Spec.Provider = csvv1.AppLink{Name: rh}
+		templateStruct.Spec.Provider = csvv1.AppLink{Name: ibm}
 		templateStruct.Spec.Links = []csvv1.AppLink{
 			{Name: "Product Page", URL: "https://access.redhat.com/products/red-hat-process-automation-manager"},
 			{Name: "Documentation", URL: "https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/" + major + "." + minor + "/#category-deploying-red-hat-process-automation-manager-on-openshift"},
@@ -201,7 +200,7 @@ func main() {
 				Version:     api.SchemeGroupVersion.Version,
 				Kind:        "KieApp",
 				DisplayName: "KieApp",
-				Description: "A project prescription running an RHPAM/RHDM environment.",
+				Description: "A project prescription running an IBM BAMOE environment.",
 				Name:        "kieapps." + api.SchemeGroupVersion.Group,
 				Resources: []csvv1.APIResourceReference{
 					{

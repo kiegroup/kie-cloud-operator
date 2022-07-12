@@ -12,9 +12,9 @@ var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.13.0"
+	CurrentVersion = "8.0.0"
 	// PriorVersion product version supported
-	PriorVersion = "7.12.1"
+	PriorVersion = "7.13.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -73,12 +73,18 @@ const (
 	LabelRHsubcomponentType = "rht.subcomp_t"
 	// LabelRHcompany used as metering label
 	LabelRHcompany = "com.company"
+	// IBMBamoeImageContext IBM image context
+	IBMBamoeImageContext = "ibm-bamoe"
+	// IBMBamoeImagePrefix IBM image prefix
+	IBMBamoeImagePrefix = "bamoe"
 	// RhpamPrefix RHPAM prefix
 	RhpamPrefix = "rhpam"
 	// RhdmPrefix RHDM prefix
 	RhdmPrefix = "rhdm"
 	// KieServerServicePrefix prefix to use for the servers
 	KieServerServicePrefix = "kieserver"
+	// ConnectImageRegistry default BAMOE registry
+	ConnectImageRegistry = "registry.connect.redhat.com"
 	// ImageRegistry default registry
 	ImageRegistry = "registry.redhat.io"
 	// ImageRegistryStage default registry
@@ -165,7 +171,7 @@ const (
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
-	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
+	ProcessMigrationDefaultImageURL = ConnectImageRegistry + PamContext + "process-migration" + RhelVersion
 	// ClusterLabel for Kube_ping
 	ClusterLabel = "cluster"
 	// ClusterLabelPrefix for Kube_ping
@@ -186,9 +192,6 @@ const (
 	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 
 	relatedImageVar        = "RELATED_IMAGE_"
-	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
-	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
-	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
 	PamKieImageVar         = relatedImageVar + "PAM_KIESERVER_IMAGE_"
 	PamControllerVar       = relatedImageVar + "PAM_CONTROLLER_IMAGE_"
 	PamBusinessCentralVar  = relatedImageVar + "PAM_BC_IMAGE_"
@@ -207,15 +210,12 @@ const (
 	PostgreSQL10Component = "rh-postgresql10-container"
 
 	MySQLVar         = relatedImageVar + "MYSQL_PROXY_IMAGE_"
-	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
-	MySQL57Component = "rh-mysql57-container"
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
 	MySQL80Component = "rh-mysql80-container"
 
 	OseCliVar        = relatedImageVar + "OSE_CLI_IMAGE_"
 	OseCli4Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent      = "amq-broker-openshift-container"
 	BrokerVar            = relatedImageVar + "BROKER_IMAGE_"
 	BrokerImage          = "amq-broker"
 	Broker79Image        = "amq-broker-rhel8"
@@ -240,8 +240,7 @@ const (
 	Datagrid8ImageTag11 = "1.1"
 	Datagrid8ImageURL11 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag11
 
-	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
-	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
+	PamContext  = "/" + IBMBamoeImageContext + "/" + IBMBamoeImagePrefix + "-"
 	RhelVersion = "-rhel8"
 
 	//Resources Limits and Requests
@@ -275,12 +274,9 @@ const (
 	ProcessMigrationMemRequests = "512Mi"
 
 	//ImageNames for metering labels
-	RhpamSmartRouterImageName = RhpamPrefix + "-smartrouter-" + RhelVersion
-	RhpamControllerImageName  = RhpamPrefix + "-controller-" + RhelVersion
-	RhdmSmartRouterImageName  = RhdmPrefix + "-smartrouter-" + RhelVersion
-	RhdmControllerImageName   = RhdmPrefix + "-controller-" + RhelVersion
+	RhpamSmartRouterImageName = IBMBamoeImagePrefix + "-smartrouter-" + RhelVersion
+	RhpamControllerImageName  = IBMBamoeImagePrefix + "-controller-" + RhelVersion
 
-	RhdmDecisionCentral     = "decisioncentral"
 	RhpamBusinessCentral    = "businesscentral"
 	RhpamBusinessCentralMon = "businesscentral-monitoring"
 
@@ -374,63 +370,45 @@ var ProcessMigrationRequests = map[string]string{
 
 var Images = []ImageEnv{
 	{
-		Var:       DmKieImageVar,
-		Component: RhdmPrefix + "-7-kieserver-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "kieserver" + RhelVersion,
-	},
-	{
-		Var:       DmControllerVar,
-		Component: RhdmPrefix + "-7-controller-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "controller" + RhelVersion,
-	},
-	{
-		Var:       DmDecisionCentralVar,
-		Component: RhdmPrefix + "-7-decisioncentral-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "decisioncentral" + RhelVersion,
-	},
-	{
 		Var:       PamKieImageVar,
 		Component: RhpamPrefix + "-7-kieserver-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       PamControllerVar,
 		Component: RhpamPrefix + "-7-controller-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       PamBusinessCentralVar,
 		Component: RhpamPrefix + "-7-businesscentral-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "businesscentral" + RhelVersion,
 	},
 	{
 		Var:       PamBCMonitoringVar,
 		Component: RhpamPrefix + "-7-businesscentral-monitoring-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "businesscentral-monitoring" + RhelVersion,
 	},
 	{
 		Var:       PamSmartRouterVar,
 		Component: RhpamPrefix + "-7-smartrouter-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "smartrouter" + RhelVersion,
 	},
 	{
 		Var:       PamProcessMigrationVar,
 		Component: RhpamPrefix + "-7-process-migration-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "process-migration" + RhelVersion,
 	},
 	{
 		Var:       PamDashbuilderVar,
 		Component: RhpamPrefix + "-7-dashbuilder-rhel8-container",
-		Registry:  ImageRegistry,
+		Registry:  ConnectImageRegistry,
 		Context:   PamContext + "dashbuilder" + RhelVersion,
 	},
 }
@@ -456,13 +434,7 @@ type ImageRefTag struct {
 var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
 var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: RhpamBusinessCentralMon, ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
 var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
-
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-var RhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhdmDecisionCentral, ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
-
-// 7.13.0 rhdm image changes
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-var RhdmAppConstants713 = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
+var RhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -504,10 +476,10 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
 	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
 	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
-	api.RhdmTrial:                  {App: RhdmAppConstants713, Replica: replicasTrial},
-	api.RhdmAuthoring:              {App: RhdmAppConstants713, Replica: replicasTrial},
-	api.RhdmAuthoringHA:            {App: RhdmAppConstants713, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:    {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmTrial:                  {App: RhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: RhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: RhdmAppConstants, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: RhdmAppConstants, Replica: replicasRhpamProduction},
 }
 
 // TemplateConstants set of constant values to use in templates
