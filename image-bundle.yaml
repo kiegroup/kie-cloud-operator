@@ -1,5 +1,5 @@
 schema_version: 1
-name: "rhpam-7/rhpam-operator-bundle"
+name: "ibm-bamoe/bamoe-operator-bundle"
 description: "IBM Business Automation Manager Open Editions Operator Bundle"
 version: ""
 from: "scratch"
