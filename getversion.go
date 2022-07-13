@@ -15,12 +15,20 @@ var (
 
 func main() {
 	flag.Parse()
-	if *prior {
-		fmt.Println(version.PriorVersion)
-	} else if *csv {
+	// TODO uncomment for next 8.x release.
+	//if *prior {
+	//	fmt.Println(version.PriorVersion)
+	//} else if *csv {
+	//	fmt.Println(version.CsvVersion)
+	//} else if *csvPrior {
+	//	fmt.Println(version.CsvPriorVersion)
+	//} else {
+	//	fmt.Println(version.Version)
+	//}
+
+	// TODO remove for next 8.x release.
+	if *csv {
 		fmt.Println(version.CsvVersion)
-	} else if *csvPrior {
-		fmt.Println(version.CsvPriorVersion)
 	} else {
 		fmt.Println(version.Version)
 	}

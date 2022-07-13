@@ -14,11 +14,15 @@ const (
 	// CurrentVersion product version supported
 	CurrentVersion = "8.0.0"
 	// PriorVersion product version supported
-	PriorVersion = "7.13.0"
+	// TODO uncomment for next 8.x release.
+	// PriorVersion = "7.13.0"
 )
 
 // SupportedVersions - product versions this operator supports
-var SupportedVersions = []string{CurrentVersion, PriorVersion}
+// TODO uncomment for next 8.x release.
+// var SupportedVersions = []string{CurrentVersion, PriorVersion}
+// TODO remove for next 8.x release.
+var SupportedVersions = []string{CurrentVersion}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
@@ -38,22 +42,23 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	PriorVersion: {
-		APIVersion:          api.SchemeGroupVersion.Version,
-		OseCliImageURL:      OseCli4ImageURL,
-		OseCliComponent:     OseCli4Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
-		MySQLImageURL:       MySQL80ImageURL,
-		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
-	},
+	// TODO uncomment for next 8.x release.
+	//PriorVersion: {
+	//	APIVersion:          api.SchemeGroupVersion.Version,
+	//	OseCliImageURL:      OseCli4ImageURL,
+	//	OseCliComponent:     OseCli4Component,
+	//	BrokerImage:         BrokerImage,
+	//	BrokerImageTag:      Broker78ImageTag,
+	//	BrokerImageURL:      Broker78ImageURL,
+	//	DatagridImage:       Datagrid73Image,
+	//	DatagridImageTag:    Datagrid73ImageTag16,
+	//	DatagridImageURL:    Datagrid73ImageURL16,
+	//	DatagridComponent:   Datagrid73Component,
+	//	MySQLImageURL:       MySQL80ImageURL,
+	//	MySQLComponent:      MySQL80Component,
+	//	PostgreSQLImageURL:  PostgreSQL10ImageURL,
+	//	PostgreSQLComponent: PostgreSQL10Component,
+	//},
 }
 
 const (

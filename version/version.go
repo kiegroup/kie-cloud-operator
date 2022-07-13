@@ -10,7 +10,9 @@ var (
 	// CsvVersion - csv release
 	CsvVersion = Version + "-1"
 	// PriorVersion - prior version
-	PriorVersion = constants.PriorVersion
+	// TODO uncomment for next 8.x release.
+	// PriorVersion = constants.PriorVersion
 	// CsvPriorVersion - prior csv release
-	CsvPriorVersion = PriorVersion + "-1"
+	// TODO uncomment for next 8.x release.
+	// CsvPriorVersion = PriorVersion + "-1"
 )
