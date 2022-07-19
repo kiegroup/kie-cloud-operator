@@ -429,7 +429,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 		registry = cr.Status.Applied.ImageRegistry
 	}
 	if registry.Registry == "" {
-		registry.Registry = logs.GetEnv("REGISTRY", constants.ConnectImageRegistry)
+		registry.Registry = logs.GetEnv("REGISTRY", constants.ImageRegistry)
 	}
 	registryAddress := registry.Registry
 	if strings.Contains(result[0], "datagrid") {

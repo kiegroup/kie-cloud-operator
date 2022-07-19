@@ -7,7 +7,7 @@ labels:
   - name: maintainer
     value: bsig-cloud@redhat.com
   - name: com.redhat.component
-    value: rhpam-operator-bundle-container
+    value: ibm-bamoe-operator-bundle-container
   - name: io.k8s.description
     value: Operator Bundle for deploying IBM BAMOE
   - name: io.k8s.display-name

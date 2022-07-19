@@ -435,7 +435,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 		template.Replicas = *cr.Status.Applied.Objects.Console.Replicas
 		template.Name = envConstants.App.Prefix
 
-		template.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		template.ImageURL = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 
 		template.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 		if template.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
@@ -548,7 +548,7 @@ func getDashbuilderTemplate(cr *api.KieApp, serversConfig []api.ServerTemplate, 
 		dashbuilderTemplate.Replicas = *cr.Status.Applied.Objects.Dashbuilder.Replicas
 		dashbuilderTemplate.Name = envConstants.App.Prefix
 
-		dashbuilderTemplate.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		dashbuilderTemplate.ImageURL = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + envConstants.App.ImageName + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		dashbuilderTemplate.KeystoreSecret = cr.Status.Applied.Objects.Console.KeystoreSecret
 		if dashbuilderTemplate.KeystoreSecret == "" && !cr.Status.Applied.CommonConfig.DisableSsl {
 			dashbuilderTemplate.KeystoreSecret = fmt.Sprintf(constants.KeystoreSecret, strings.Join([]string{cr.Status.Applied.CommonConfig.ApplicationName, "dashbuilder"}, "-"))
@@ -685,7 +685,7 @@ func getSmartRouterTemplate(cr *api.KieApp) api.SmartRouterTemplate {
 
 		template.UseExternalRoute = cr.Status.Applied.Objects.SmartRouter.UseExternalRoute
 		template.StorageClassName = cr.Status.Applied.Objects.SmartRouter.StorageClassName
-		template.ImageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+		template.ImageURL = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-smartrouter" + constants.RhelVersion + ":" + cr.Status.Applied.Version
 		if !cr.Status.Applied.UseImageTags {
 			if val, exists := os.LookupEnv(constants.PamSmartRouterVar + cr.Status.Applied.Version); exists {
 				template.ImageURL = val
@@ -1111,7 +1111,7 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
-	imageURL = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + "kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
+	imageURL = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-" + "kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version
 
 	if !cr.Status.Applied.UseImageTags && !forBuild {
 		if val, exists := os.LookupEnv(envVar); exists {

@@ -29,11 +29,11 @@ import (
 )
 
 var (
-	bcmImage = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-businesscentral-monitoring" + constants.RhelVersion
-	bcImage  = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-businesscentral" + constants.RhelVersion
+	bcmImage = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-businesscentral-monitoring" + constants.RhelVersion
+	bcImage  = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-businesscentral" + constants.RhelVersion
 	//dcImage              = constants.ImageRegistry + "/" + constants.RhdmPrefix + "/" + constants.RhdmPrefix + "-decisioncentral" + constants.RhelVersion
-	dashImage           = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-dashbuilder" + constants.RhelVersion
-	rhpamkieServerImage = constants.ConnectImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-kieserver" + constants.RhelVersion
+	dashImage           = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-dashbuilder" + constants.RhelVersion
+	rhpamkieServerImage = constants.ImageRegistry + "/" + constants.IBMBamoeImageContext + "/" + constants.IBMBamoeImagePrefix + "-kieserver" + constants.RhelVersion
 	//rhdmkieServerImage   = constants.ImageRegistry + "/" + constants.RhdmPrefix + "-7/" + constants.RhdmPrefix + "-kieserver" + constants.RhelVersion
 	latestTag            = ":latest"
 	helloRules           = "hello-rules" + latestTag
@@ -554,7 +554,7 @@ func TestRhdmAuthoringHAEnvironment(t *testing.T) {
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should exist")
 	assert.Equal(t, "ws", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should exist")
 	assert.Equal(t, "test-rhdmcentr", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should exist")
-	assert.Equal(t, constants.ConnectImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	for i := 0; i < len(env.Servers); i++ {
 		assert.Equal(t, "DEVELOPMENT", getEnvVariable(env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_MODE"))
 	}
@@ -592,7 +592,7 @@ func TestRhpamAuthoringHAEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	checkAuthoringHAEnv(t, cr, env, constants.RhpamPrefix)
 	assert.Equal(t, "3Gi", env.Console.PersistentVolumeClaims[0].Spec.Resources.Requests.Storage().String())
-	assert.Equal(t, constants.ConnectImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-businesscentral-rhel8"+":"+cr.Status.Applied.Version, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	amqClusterPassword := getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "APPFORMER_JMS_BROKER_PASSWORD")
 	assert.Equal(t, "cluster", amqClusterPassword, "Expected provided password to take effect, but found %v", amqClusterPassword)
 	amqPassword := getEnvVariable(env.Others[0].StatefulSets[1].Spec.Template.Spec.Containers[0], "AMQ_PASSWORD")
@@ -1669,7 +1669,7 @@ func TestKieAppContainerDeploymentWithoutS2iAndNotUseImageTags_BuildConfigNotSet
 	// Since there is not Build section with GitSource
 	assert.Len(t, env.Servers[0].BuildConfigs, 0)
 	assert.Equal(t, fmt.Sprintf("%s/%s/%s-kieserver-rhel8:%s",
-		constants.ConnectImageRegistry,
+		constants.ImageRegistry,
 		constants.IBMBamoeImageContext,
 		constants.IBMBamoeImagePrefix,
 		constants.CurrentVersion),
@@ -2286,7 +2286,7 @@ func TestConstructDashbuilderObject(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%s-rhpamdash", name), env.Dashbuilder.DeploymentConfigs[0].Name)
 	assert.Equal(t, int32(1), env.Dashbuilder.DeploymentConfigs[0].Spec.Replicas)
-	assert.Equal(t, fmt.Sprintf("%s/%s/%s-dashbuilder-rhel8:%s", constants.ConnectImageRegistry,
+	assert.Equal(t, fmt.Sprintf("%s/%s/%s-dashbuilder-rhel8:%s", constants.ImageRegistry,
 		constants.IBMBamoeImageContext,
 		constants.IBMBamoeImagePrefix,
 		cr.Status.Applied.Version),
@@ -4215,7 +4215,7 @@ func TestEnvCustomImageTag(t *testing.T) {
 	cr.Spec.UseImageTags = true
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err)
-	assert.Equal(t, constants.ConnectImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, constants.ImageRegistry+"/"+constants.IBMBamoeImageContext+"/"+constants.IBMBamoeImagePrefix+"-kieserver"+constants.RhelVersion+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	cr.Spec.Environment = api.RhpamAuthoring
 	imageURL = image + ":" + imageTag
@@ -6373,8 +6373,8 @@ func testContext(t *testing.T, image, version, context, label string) {
 	if context != "" {
 		assert.Equal(t, context+"/"+constants.IBMBamoeImagePrefix+"-"+label+constants.RhelVersion+":"+version, image)
 	} else {
-		fmt.Println(constants.ConnectImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
-		assert.Equal(t, constants.ConnectImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
+		fmt.Println(constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
+		assert.Equal(t, constants.ImageRegistry+constants.PamContext+label+constants.RhelVersion+":"+version, image)
 	}
 }
 

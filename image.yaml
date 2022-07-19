@@ -26,7 +26,7 @@
     - name: maintainer
       value: bsig-cloud@redhat.com
     - name: com.redhat.component
-      value: rhpam-7-rhel8-operator-container
+      value: ibm-bamoe-rhel8-operator-container
     - name: io.k8s.description
       value: Operator for deploying IBM BAMOE
     - name: io.k8s.display-name
@@ -52,7 +52,7 @@
             - x86_64
     extra_dir: osbs-extra
     repository:
-      name: containers/rhpam-7-operator
-      branch: rhba-7-rhel-8
+      name: containers/ibm-bamoe-operator
+      branch: ibm-bamoe-rhel-8
   run:
     user: "1001"
