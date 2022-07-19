@@ -88,8 +88,6 @@ const (
 	RhdmPrefix = "rhdm"
 	// KieServerServicePrefix prefix to use for the servers
 	KieServerServicePrefix = "kieserver"
-	// ConnectImageRegistry default BAMOE registry
-	ConnectImageRegistry = "registry.connect.redhat.com"
 	// ImageRegistry default registry
 	ImageRegistry = "registry.redhat.io"
 	// ImageRegistryStage default registry
@@ -176,7 +174,7 @@ const (
 	// DefaultProcessMigrationDatabaseUsername Default database username for Process Migration
 	DefaultProcessMigrationDatabaseUsername = "pim"
 	// ProcessMigrationDefaultImageURL Process Migration Image
-	ProcessMigrationDefaultImageURL = ConnectImageRegistry + PamContext + "process-migration" + RhelVersion
+	ProcessMigrationDefaultImageURL = ImageRegistry + PamContext + "process-migration" + RhelVersion
 	// ClusterLabel for Kube_ping
 	ClusterLabel = "cluster"
 	// ClusterLabelPrefix for Kube_ping
@@ -377,43 +375,43 @@ var Images = []ImageEnv{
 	{
 		Var:       PamKieImageVar,
 		Component: RhpamPrefix + "-7-kieserver-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "kieserver" + RhelVersion,
 	},
 	{
 		Var:       PamControllerVar,
 		Component: RhpamPrefix + "-7-controller-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "controller" + RhelVersion,
 	},
 	{
 		Var:       PamBusinessCentralVar,
 		Component: RhpamPrefix + "-7-businesscentral-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "businesscentral" + RhelVersion,
 	},
 	{
 		Var:       PamBCMonitoringVar,
 		Component: RhpamPrefix + "-7-businesscentral-monitoring-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "businesscentral-monitoring" + RhelVersion,
 	},
 	{
 		Var:       PamSmartRouterVar,
 		Component: RhpamPrefix + "-7-smartrouter-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "smartrouter" + RhelVersion,
 	},
 	{
 		Var:       PamProcessMigrationVar,
 		Component: RhpamPrefix + "-7-process-migration-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "process-migration" + RhelVersion,
 	},
 	{
 		Var:       PamDashbuilderVar,
 		Component: RhpamPrefix + "-7-dashbuilder-rhel8-container",
-		Registry:  ConnectImageRegistry,
+		Registry:  ImageRegistry,
 		Context:   PamContext + "dashbuilder" + RhelVersion,
 	},
 }

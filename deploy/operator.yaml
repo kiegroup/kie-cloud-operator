@@ -38,19 +38,19 @@ spec:
         - name: DEBUG
           value: "false"
         - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-controller-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
         - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.0
-          value: registry.connect.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
+          value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
         - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.0
           value: registry.redhat.io/openshift4/ose-cli:v4.10
         - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.0

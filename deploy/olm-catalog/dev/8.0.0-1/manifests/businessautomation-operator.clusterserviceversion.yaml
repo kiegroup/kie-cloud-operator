@@ -6,7 +6,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.0
-    createdAt: "2022-07-13 09:44:32"
+    createdAt: "2022-07-19 14:22:17"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -17,7 +17,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.8.0.0-1-dev-m9wvpbsrht
+  name: businessautomation-operator.8.0.0-1-dev-s44qlpxrvj
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -170,19 +170,19 @@ spec:
                 - name: DEBUG
                   value: "false"
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-controller-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.0
-                  value: registry.connect.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
+                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.0
                   value: registry.redhat.io/openshift4/ose-cli:v4.10
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.0
@@ -373,7 +373,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.8.0.0-1-dev-m9wvpbsrht
+    operated-by: businessautomation-operator.8.0.0-1-dev-s44qlpxrvj
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -385,5 +385,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.8.0.0-1-dev-m9wvpbsrht
-  version: 8.0.0-1+m9wvpbsrht
+      operated-by: businessautomation-operator.8.0.0-1-dev-s44qlpxrvj
+  version: 8.0.0-1+s44qlpxrvj

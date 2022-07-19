@@ -637,7 +637,7 @@ func TestCreateRhpamImageStreams(t *testing.T) {
 	}
 
 	image := fmt.Sprintf("bamoe-businesscentral-openshift:%s", cr.Status.Applied.Version)
-	imageURL := constants.ConnectImageRegistry + "/" + cr.Spec.Objects.Console.ImageContext + "/" + image
+	imageURL := constants.ImageRegistry + "/" + cr.Spec.Objects.Console.ImageContext + "/" + image
 	err = reconciler.createLocalImageTag(image, imageURL, cr)
 	assert.Nil(t, err)
 
@@ -677,7 +677,7 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, isTag)
 	assert.Equal(t, fmt.Sprintf("%s/%s/rhpam%s-businesscentral-openshift:1.0",
-		constants.ConnectImageRegistry,
+		constants.ImageRegistry,
 		constants.IBMBamoeImageContext,
 		cr.Status.Applied.Version),
 		isTag.Tag.From.Name)

@@ -66,7 +66,7 @@ var (
 			Name:         "businessautomation",
 			DisplayName:  "IBM Business Automation",
 			OperatorName: "business-automation-operator",
-			Registry:     constants.ConnectImageRegistry,
+			Registry:     constants.ImageRegistryStage,
 			Context:      constants.IBMBamoeImageContext,
 			ImageName:    constants.IBMBamoeImagePrefix + "-rhel8-operator",
 			Tag:          version.Version,
