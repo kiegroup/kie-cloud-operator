@@ -13,6 +13,10 @@ servers:
         spec:
           template:
             spec:
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               containers:
                 - name: "[[.KieName]]"
                   env:

@@ -3,6 +3,10 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
         strategy:
           rollingParams:
             maxSurge: 100%
@@ -33,6 +37,10 @@ servers:
         spec:
           template:
             spec:
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               containers:
                 - name: "[[.KieName]]"
                   env:

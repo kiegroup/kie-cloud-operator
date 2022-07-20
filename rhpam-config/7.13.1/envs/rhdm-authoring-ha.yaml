@@ -23,6 +23,10 @@ console:
           metadata:
             name: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 volumeMounts:
@@ -84,6 +88,10 @@ others:
                 deploymentConfig: "[[.ApplicationName]]-datagrid"
               name: "[[.ApplicationName]]-datagrid"
             spec:
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               containers:
                 - env:
                     - name: USER
@@ -147,7 +155,10 @@ others:
               dnsPolicy: ClusterFirst
               restartPolicy: Always
               schedulerName: default-scheduler
-              securityContext: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               terminationGracePeriodSeconds: 60
               volumes:
                 - empty-dir: {}
@@ -272,7 +283,10 @@ others:
               dnsPolicy: ClusterFirst
               restartPolicy: Always
               schedulerName: default-scheduler
-              securityContext: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               terminationGracePeriodSeconds: 60
           volumeClaimTemplates:
             - metadata:

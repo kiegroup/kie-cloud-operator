@@ -147,7 +147,10 @@ others:
               dnsPolicy: ClusterFirst
               restartPolicy: Always
               schedulerName: default-scheduler
-              securityContext: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               terminationGracePeriodSeconds: 60
               volumes:
                 - empty-dir: {}
@@ -272,7 +275,10 @@ others:
               dnsPolicy: ClusterFirst
               restartPolicy: Always
               schedulerName: default-scheduler
-              securityContext: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               terminationGracePeriodSeconds: 60
           volumeClaimTemplates:
             - metadata:

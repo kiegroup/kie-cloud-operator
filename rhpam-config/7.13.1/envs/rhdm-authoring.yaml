@@ -7,6 +7,10 @@ console:
           metadata:
             name: "[[.ApplicationName]]-[[.Console.Name]]"
           spec:
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 env:

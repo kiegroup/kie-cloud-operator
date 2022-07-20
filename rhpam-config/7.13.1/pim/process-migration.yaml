@@ -37,6 +37,10 @@ processMigration:
           spec:
             serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             containers:
               - name: "[[.ApplicationName]]-process-migration"
                 image: "[[.ProcessMigration.ImageURL]]"

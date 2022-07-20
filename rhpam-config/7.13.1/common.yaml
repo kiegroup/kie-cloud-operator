@@ -35,6 +35,10 @@ console:
               service: "[[.ApplicationName]]-[[.Console.Name]]"
               cluster: "jgrp.k8s.[[.ApplicationName]].[[.Console.Name]]"
           spec:
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             serviceAccountName: "[[.ApplicationName]]-[[.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
             containers:
@@ -428,6 +432,10 @@ console:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]-claim"
       spec:
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
         # [[ if ne .Console.StorageClassName "" ]]
         storageClassName: "[[.Console.StorageClassName]]"
         # [[ end ]]
@@ -439,6 +447,10 @@ console:
   #[[end]]
   services:
     - spec:
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
         ports:
           - name: http
             port: 8080
@@ -554,6 +566,10 @@ smartRouter:
               deploymentConfig: "[[.ApplicationName]]-smartrouter"
               service: "[[.ApplicationName]]-smartrouter"
           spec:
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
             terminationGracePeriodSeconds: 60
             containers:
@@ -810,6 +826,10 @@ servers:
                 services.server.kie.org/kie-server-id: "[[.KieServerID]]"
                 cluster: "jgrp.k8s.[[.KieName]]"
             spec:
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
               terminationGracePeriodSeconds: 90
               containers:

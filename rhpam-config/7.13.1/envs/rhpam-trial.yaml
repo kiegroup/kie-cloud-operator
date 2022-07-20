@@ -5,6 +5,10 @@ console:
       spec:
         template:
           spec:
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              runAsNonRoot: true
             containers:
               - name: "[[.ApplicationName]]-[[.Console.Name]]"
                 env:
@@ -49,6 +53,10 @@ servers:
             metadata:
               name: "[[.KieName]]"
             spec:
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                runAsNonRoot: true
               containers:
                 - name: "[[.KieName]]"
                   resources:
