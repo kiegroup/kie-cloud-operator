@@ -39,8 +39,8 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		DatagridComponent:   Datagrid8Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
+		PostgreSQLImageURL:  PostgreSQL12ImageURL,
+		PostgreSQLComponent: PostgreSQL12Component,
 	},
 	// TODO uncomment for next 8.x release.
 	//PriorVersion: {
@@ -211,6 +211,8 @@ const (
 	PostgreSQLVar         = relatedImageVar + "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
 	PostgreSQL10Component = "rh-postgresql10-container"
+	PostgreSQL12ImageURL  = ImageRegistry + "/rhscl/postgresql-12-rhel7:latest"
+	PostgreSQL12Component = "rh-postgresql12-container"
 
 	MySQLVar         = relatedImageVar + "MYSQL_PROXY_IMAGE_"
 	MySQL80ImageURL  = ImageRegistry + "/rhscl/mysql-80-rhel7:latest"
