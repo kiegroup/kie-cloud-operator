@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.0
-    createdAt: "2022-05-27 15:18:02"
+    createdAt: "2022-08-23 14:38:12"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -20,7 +20,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
+  name: businessautomation-operator.7.13.0-1-dev-6btxl9gwv6
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -193,7 +193,7 @@ spec:
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.13.0
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.13.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-12-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_7.13.0
                   value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.13.0
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
+    operated-by: businessautomation-operator.7.13.0-1-dev-6btxl9gwv6
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -424,5 +424,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.0-1-dev-lkbnqwfddr
-  version: 7.13.0-1+lkbnqwfddr
+      operated-by: businessautomation-operator.7.13.0-1-dev-6btxl9gwv6
+  version: 7.13.0-1+6btxl9gwv6
