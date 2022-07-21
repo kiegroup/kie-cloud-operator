@@ -493,7 +493,7 @@ func (reconciler *Reconciler) createLocalImageTag(tagRefName, imageURL string, c
 	return nil
 }
 
-//loadRoutes attempts to load as many of the specified routes as it can find
+// loadRoutes attempts to load as many of the specified routes as it can find
 func (reconciler *Reconciler) loadRoutes(requestedRoutes []client.Object) (map[types.NamespacedName]routev1.Route, error) {
 	deployedRoutes := make(map[types.NamespacedName]routev1.Route)
 	for _, requested := range requestedRoutes {
