@@ -151,8 +151,8 @@ func main() {
 				"description":    descrip,
 				"categories":     "Integration & Delivery",
 				"certified":      "true",
-				// TODO uncomment for next 8.x release.
-				// "capabilities":        "Seamless Upgrades",
+				// TODO after next 8.0.0 release replace Basic Install with Seamless Upgrades
+				"capabilities":        "Basic Install",
 				"repository":          repository,
 				"support":             ibm,
 				"tectonic-visibility": "ocs",
