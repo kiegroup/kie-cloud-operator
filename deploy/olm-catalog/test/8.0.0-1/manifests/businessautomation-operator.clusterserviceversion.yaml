@@ -3,10 +3,11 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
+    capabilities: Basic Install
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.0
-    createdAt: "2022-07-19 18:52:56"
+    createdAt: "2022-07-22 11:26:38"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -17,7 +18,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.8.0.0-1-dev-htq5qn6c4l
+  name: businessautomation-operator.8.0.0-1-dev-2q7kjjtzgz
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -373,7 +374,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.8.0.0-1-dev-htq5qn6c4l
+    operated-by: businessautomation-operator.8.0.0-1-dev-2q7kjjtzgz
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -385,5 +386,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.8.0.0-1-dev-htq5qn6c4l
-  version: 8.0.0-1+htq5qn6c4l
+      operated-by: businessautomation-operator.8.0.0-1-dev-2q7kjjtzgz
+  version: 8.0.0-1+2q7kjjtzgz

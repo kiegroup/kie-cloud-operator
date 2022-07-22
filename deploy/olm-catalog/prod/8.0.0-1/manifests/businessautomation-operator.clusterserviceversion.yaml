@@ -3,10 +3,11 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
+    capabilities: Basic Install
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.0
-    createdAt: "2022-07-19 18:52:56"
+    createdAt: "2022-07-22 11:26:38"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
