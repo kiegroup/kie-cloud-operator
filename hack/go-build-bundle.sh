@@ -26,7 +26,7 @@ fi
 echo "Cekit build flags : ${CFLAGS}"
 
 OLMDIR=deploy/olm-catalog/prod
-CSV=businessautomation-operator.clusterserviceversion.yaml
+CSV=bamoe-businessautomation-operator.clusterserviceversion.yaml
 if [[ ${DEV} == true ]]; then
     OLMDIR=deploy/olm-catalog/dev
     BUNDLE_NAME=quay.io/${USERNAME}/${BUNDLE}

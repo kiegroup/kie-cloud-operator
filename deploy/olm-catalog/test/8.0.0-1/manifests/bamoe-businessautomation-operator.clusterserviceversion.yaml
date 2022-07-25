@@ -5,9 +5,9 @@ metadata:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
     capabilities: Basic Install
     categories: Integration & Delivery
-    certified: "false"
-    containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.0
-    createdAt: "2022-07-22 11:26:38"
+    certified: "true"
+    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.0
+    createdAt: "2022-07-25 15:01:51"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -15,10 +15,10 @@ metadata:
     support: IBM
     tectonic-visibility: ocs
   labels:
-    operator-businessautomation: "true"
+    operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.8.0.0-1-dev-t2qgvph4qn
+  name: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -114,7 +114,7 @@ spec:
     * **IBM Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
 
      * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.
-  displayName: IBM Business Automation (DEV)
+  displayName: IBM Business Automation
   icon:
   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MS44IiBoZWlnaHQ9IjE5LjMzIiB2aWV3Qm94PSIwIDAgNTEuOCAxOS4zMyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0MjZhYjM7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM4Ljc2LDkuMiwzOC4zLDcuODZIMzAuNjFWOS4yWm0uOSwyLjU3LS40Ny0xLjM1SDMwLjYxdjEuMzVabTUuNzEsMTUuMzdoNi43MVYyNS44SDQ1LjM3djEuMzRabTAtMi41Nmg2LjcxVjIzLjIzSDQ1LjM3djEuMzVabTAtMi41N2g0VjIwLjY3aC00VjIyWm00LTMuOWgtNHYxLjM0aDRWMTguMTFabS00LTEuMjJoNFYxNS41NUg0MS43M2wtLjM4LDEuMDhMNDEsMTUuNTVIMzMuM3YxLjM0aDRWMTUuNjZsLjQ0LDEuMjNoNy4xOGwuNDMtMS4yM3YxLjIzWm00LTMuOUg0Mi42MmwtLjQ3LDEuMzRINDkuNFYxM1pNMzMuMywxOS40NWg0VjE4LjExaC00djEuMzRabTAsMi41Nmg0VjIwLjY3aC00VjIyWm0tMi42OSwyLjU3aDYuNzFWMjMuMjNIMzAuNjF2MS4zNVptMCwyLjU2aDYuNzFWMjUuOEgzMC42MXYxLjM0Wk00NC40LDcuODYsNDMuOTMsOS4yaDguMTVWNy44NlpNNDMsMTEuNzdoOVYxMC40Mkg0My41MUw0MywxMS43N1pNMzMuMywxNC4zM2g3LjI1TDQwLjA4LDEzSDMzLjN2MS4zNFptNS4zNSw1LjEySDQ0bC40Ny0xLjM0SDM4LjE4bC40NywxLjM0Wm0uOSwyLjU2aDMuNTlsLjQ3LTEuMzRIMzkuMDhMMzkuNTUsMjJabS45LDIuNTdoMS43OWwuNDctMS4zNUg0MGwuNDcsMS4zNVptLjksMi41Ni40Ni0xLjM0aC0uOTNsLjQ3LDEuMzRabS0yNi44NCwwaDkuODhhNS4xMSw1LjExLDAsMCwwLDMuNDYtMS4zNEgxNC41MXYxLjM0Wk0yNSwyMC42N1YyMmg0LjUxYTUuNDEsNS40MSwwLDAsMC0uMTctMS4zNFpNMTcuMTksMjJoNFYyMC42N2gtNFYyMlpNMjUsMTQuMzNoNC4zNEE1LjQxLDUuNDEsMCwwLDAsMjkuNTEsMTNIMjV2MS4zNFptLTcuODEsMGg0VjEzaC00djEuMzRabTcuMi02LjQ3SDE0LjUxVjkuMkgyNy44NWE1LjEzLDUuMTMsMCwwLDAtMy40Ni0xLjM0Wm00LjQ0LDIuNTZIMTQuNTF2MS4zNUgyOS4zN2E1LjMsNS4zLDAsMCwwLS41NC0xLjM1Wk0xNy4xOSwxNS41NXYxLjM0SDI3LjcxYTUuMzYsNS4zNiwwLDAsMCwxLjEyLTEuMzRabTEwLjUyLDIuNTZIMTcuMTl2MS4zNEgyOC44M2E1LjM2LDUuMzYsMCwwLDAtMS4xMi0xLjM0Wm0tMTMuMiw2LjQ3SDI4LjgzYTUuMyw1LjMsMCwwLDAsLjU0LTEuMzVIMTQuNTF2MS4zNVpNMy43Nyw5LjJoOS40VjcuODZIMy43N1Y5LjJabTAsMi41N2g5LjRWMTAuNDJIMy43N3YxLjM1Wk0xMC40OCwxM2gtNHYxLjM0aDRWMTNabS00LDMuOWg0VjE1LjU1aC00djEuMzRabTAsMi41Nmg0VjE4LjExaC00djEuMzRabTAsMi41Nmg0VjIwLjY3aC00VjIyWk0zLjc3LDI0LjU4aDkuNFYyMy4yM0gzLjc3djEuMzVabTAsMS4yMmg5LjR2MS4zNEgzLjc3VjI1LjhabTUwLjgyLjMyYy4wOSwwLC4xMywwLC4xMy0uMTJ2LS4wN2MwLS4wOCwwLS4xMi0uMTMtLjEySDU0LjR2LjMxWm0tLjE5LjU2aC0uMjZWMjUuNjFoLjQ5QS4zMi4zMiwwLDAsMSw1NSwyNmEuMzIuMzIsMCwwLDEtLjIuMzJsLjI1LjQxaC0uMjlsLS4yLS4zN0g1NC40di4zN1ptLjk0LS40OHYtLjEzYS43OS43OSwwLDAsMC0xLjU3LDB2LjEzYS43OS43OSwwLDAsMCwxLjU3LDBabS0xLjgxLS4wNmExLDEsMCwxLDEsMSwxLjA1LDEsMSwwLDAsMS0xLTEuMDVaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMy43NyAtNy44NikiLz48L3N2Zz4=
     mediatype: image/svg+xml
@@ -132,14 +132,14 @@ spec:
           - create
           - update
           - delete
-        serviceAccountName: business-automation-operator
+        serviceAccountName: bamoe-business-automation-operator
       deployments:
-      - name: business-automation-operator
+      - name: bamoe-business-automation-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: business-automation-operator
+              name: bamoe-business-automation-operator
           strategy:
             rollingUpdate:
               maxSurge: 1
@@ -148,7 +148,7 @@ spec:
           template:
             metadata:
               labels:
-                name: business-automation-operator
+                name: bamoe-business-automation-operator
             spec:
               containers:
               - command:
@@ -171,19 +171,19 @@ spec:
                 - name: DEBUG
                   value: "false"
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-controller-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:8.0.0
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.0
-                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.0
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.0
                   value: registry.redhat.io/openshift4/ose-cli:v4.10
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.0
@@ -206,11 +206,11 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.10
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
-                image: quay.io/kiegroup/kie-cloud-operator:8.0.0
+                image: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.0
                 imagePullPolicy: Always
-                name: business-automation-operator
+                name: bamoe-business-automation-operator
                 resources: {}
-              serviceAccountName: business-automation-operator
+              serviceAccountName: bamoe-business-automation-operator
       permissions:
       - rules:
         - apiGroups:
@@ -351,7 +351,7 @@ spec:
           - patch
           - update
           - watch
-        serviceAccountName: business-automation-operator
+        serviceAccountName: bamoe-business-automation-operator
     strategy: deployment
   installModes:
   - supported: true
@@ -373,18 +373,18 @@ spec:
   - automation
   - operator
   labels:
-    alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.8.0.0-1-dev-t2qgvph4qn
+    alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
+    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
   - name: Documentation
     url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/8.0/#category-deploying-red-hat-process-automation-manager-on-openshift
-  maturity: dev
+  maturity: test
   provider:
     name: IBM
   selector:
     matchLabels:
-      alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.8.0.0-1-dev-t2qgvph4qn
-  version: 8.0.0-1+t2qgvph4qn
+      alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
+      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
+  version: 8.0.0-1+297jn89zch

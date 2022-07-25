@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.0
-    createdAt: "2022-07-22 11:26:38"
+    createdAt: "2022-07-25 15:01:51"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -15,10 +15,10 @@ metadata:
     support: IBM
     tectonic-visibility: ocs
   labels:
-    operator-businessautomation: "true"
+    operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.8.0.0-1
+  name: bamoe-businessautomation-operator.8.0.0-1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -132,14 +132,14 @@ spec:
           - create
           - update
           - delete
-        serviceAccountName: business-automation-operator
+        serviceAccountName: bamoe-business-automation-operator
       deployments:
-      - name: business-automation-operator
+      - name: bamoe-business-automation-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: business-automation-operator
+              name: bamoe-business-automation-operator
           strategy:
             rollingUpdate:
               maxSurge: 1
@@ -148,7 +148,7 @@ spec:
           template:
             metadata:
               labels:
-                name: business-automation-operator
+                name: bamoe-business-automation-operator
             spec:
               containers:
               - command:
@@ -208,9 +208,9 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
                 image: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.0
                 imagePullPolicy: Always
-                name: business-automation-operator
+                name: bamoe-business-automation-operator
                 resources: {}
-              serviceAccountName: business-automation-operator
+              serviceAccountName: bamoe-business-automation-operator
       permissions:
       - rules:
         - apiGroups:
@@ -351,7 +351,7 @@ spec:
           - patch
           - update
           - watch
-        serviceAccountName: business-automation-operator
+        serviceAccountName: bamoe-business-automation-operator
     strategy: deployment
   installModes:
   - supported: true
@@ -373,8 +373,8 @@ spec:
   - automation
   - operator
   labels:
-    alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.8.0.0-1
+    alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
+    operated-by: bamoe-businessautomation-operator.8.0.0-1
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -385,6 +385,6 @@ spec:
     name: IBM
   selector:
     matchLabels:
-      alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.8.0.0-1
+      alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
+      operated-by: bamoe-businessautomation-operator.8.0.0-1
   version: 8.0.0-1

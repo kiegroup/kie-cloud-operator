@@ -42,9 +42,9 @@ var (
 	major, minor, _ = defaults.GetMajorMinorMicro(constants.CurrentVersion)
 	csvs            = []csvSetting{
 		{
-			Name:         "businessautomation",
+			Name:         "bamoe-businessautomation",
 			DisplayName:  "IBM Business Automation (DEV)",
-			OperatorName: "business-automation-operator",
+			OperatorName: "bamoe-business-automation-operator",
 			Registry:     "quay.io",
 			Context:      "kiegroup",
 			ImageName:    "kie-cloud-operator",
@@ -53,9 +53,9 @@ var (
 			Dev:          true,
 		},
 		{
-			Name:         "businessautomation",
+			Name:         "bamoe-businessautomation",
 			DisplayName:  "IBM Business Automation",
-			OperatorName: "business-automation-operator",
+			OperatorName: "bamoe-business-automation-operator",
 			Registry:     constants.ImageRegistryBrew,
 			Context:      constants.ImageContextBrew,
 			ImageName:    "bamoe-" + major + "-rhpam-rhel8-operator",
@@ -63,9 +63,9 @@ var (
 			Maturity:     "test",
 		},
 		{
-			Name:         "businessautomation",
+			Name:         "bamoe-businessautomation",
 			DisplayName:  "IBM Business Automation",
-			OperatorName: "business-automation-operator",
+			OperatorName: "bamoe-business-automation-operator",
 			Registry:     constants.ImageRegistryStage,
 			Context:      constants.IBMBamoeImageContext,
 			ImageName:    constants.IBMBamoeImagePrefix + "-rhel8-operator",
