@@ -23,9 +23,9 @@ labels:
   - name: operators.operatorframework.io.bundle.package.v1
     value: businessautomation-operator
   - name: operators.operatorframework.io.bundle.channels.v1
-    value: stable
+    value: 8.x-stable
   - name: operators.operatorframework.io.bundle.channel.default.v1
-    value: stable
+    value: 8.x-stable
   - name: operators.operatorframework.io.metrics.mediatype.v1
     value: metrics+v1
   - name: operators.operatorframework.io.metrics.builder
