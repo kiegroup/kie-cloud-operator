@@ -70,10 +70,10 @@ to load your operator bundle in OpenShift.
 ### Create your own Bundle
 
 i.e. 7.13.0-1 version
-Remove the following line from deploy/olm-catalog/dev/7.13.0-1/manifest/businessautomation-operator.clusterserviceversion.yaml
+Remove the following line from deploy/olm-catalog/dev/7.13.0-1/manifest/bamoe-businessautomation-operator.clusterserviceversion.yaml
 
 ```console
-replaces: businessautomation-operator.<last-version>
+replaces: bamoe-businessautomation-operator.<last-version>
 ```
 Set your registry id, like quay username 
 with USERNAME as env
@@ -172,11 +172,11 @@ A subscription keeps CSVs up to date by tracking a channel in a package.
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: businessautomation-operator
+  name: bamoe-businessautomation-operator
   namespace: <your-namespace>
 spec:
   channel: stable
-  name: businessautomation-operator
+  name: bamoe-businessautomation-operator
   source: $CATALOG_SOURCE_NAME
   sourceNamespace: openshift-marketplace
 ```
@@ -187,11 +187,11 @@ Example of subscription.yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: businessautomation-operator
+  name: bamoe-businessautomation-operator
   namespace: my-namespace
 spec:
   channel: stable
-  name: businessautomation-operator
+  name: bamoe-businessautomation-operator
   source: my-operator-manifests
   sourceNamespace: openshift-marketplace
 ```

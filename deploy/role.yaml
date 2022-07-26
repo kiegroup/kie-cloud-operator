@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: business-automation-operator
+  name: bamoe-business-automation-operator
 rules:
 - apiGroups:
   - ""

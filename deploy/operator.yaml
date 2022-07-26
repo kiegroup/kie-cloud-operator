@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: business-automation-operator
+  name: bamoe-business-automation-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: business-automation-operator
+      name: bamoe-business-automation-operator
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        name: business-automation-operator
+        name: bamoe-business-automation-operator
     spec:
       containers:
       - command:
@@ -75,6 +75,6 @@ spec:
           value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
         image: quay.io/kiegroup/kie-cloud-operator:8.0.0
         imagePullPolicy: Always
-        name: business-automation-operator
+        name: bamoe-business-automation-operator
         resources: {}
-      serviceAccountName: business-automation-operator
+      serviceAccountName: bamoe-business-automation-operator
