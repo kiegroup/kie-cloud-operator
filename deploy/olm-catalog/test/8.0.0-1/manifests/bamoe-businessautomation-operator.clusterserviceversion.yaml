@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.0
-    createdAt: "2022-07-25 15:01:51"
+    createdAt: "2022-07-27 10:00:02"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +18,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
+  name: bamoe-businessautomation-operator.8.0.0-1-dev-4tvjhl29pz
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -374,17 +374,17 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
+    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-4tvjhl29pz
   links:
   - name: Product Page
-    url: https://access.redhat.com/products/red-hat-process-automation-manager
+    url: 'https://ibm.com '
   - name: Documentation
-    url: https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/8.0/#category-deploying-red-hat-process-automation-manager-on-openshift
+    url: https://www.ibm.com/docs/en/ibamoe
   maturity: test
   provider:
     name: IBM
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-297jn89zch
-  version: 8.0.0-1+297jn89zch
+      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-4tvjhl29pz
+  version: 8.0.0-1+4tvjhl29pz

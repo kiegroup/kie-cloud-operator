@@ -175,8 +175,8 @@ func main() {
 		templateStruct.Spec.Maturity = csv.Maturity
 		templateStruct.Spec.Provider = csvv1.AppLink{Name: ibm}
 		templateStruct.Spec.Links = []csvv1.AppLink{
-			{Name: "Product Page", URL: "https://access.redhat.com/products/red-hat-process-automation-manager"},
-			{Name: "Documentation", URL: "https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/" + major + "." + minor + "/#category-deploying-red-hat-process-automation-manager-on-openshift"},
+			{Name: "Product Page", URL: "https://ibm.com "},
+			{Name: "Documentation", URL: "https://www.ibm.com/docs/en/ibamoe"},
 		}
 		templateStruct.Spec.Icon = []csvv1.Icon{
 			{
