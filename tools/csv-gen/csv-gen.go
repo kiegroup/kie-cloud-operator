@@ -154,7 +154,7 @@ func main() {
 				// TODO after next 8.0.0 release replace Basic Install with Seamless Upgrades
 				"capabilities":        "Basic Install",
 				"repository":          repository,
-				"support":             ibm,
+				"support":             "https://www.ibm.com/mysupport",
 				"tectonic-visibility": "ocs",
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
 				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
@@ -177,6 +177,9 @@ func main() {
 		templateStruct.Spec.Links = []csvv1.AppLink{
 			{Name: "Product Page", URL: "https://ibm.com "},
 			{Name: "Documentation", URL: "https://www.ibm.com/docs/en/ibamoe"},
+		}
+		templateStruct.Spec.Maintainers = []csvv1.Maintainer{
+			{Name: ibm, Email: "mysphelp@us.ibm.com"},
 		}
 		templateStruct.Spec.Icon = []csvv1.Icon{
 			{

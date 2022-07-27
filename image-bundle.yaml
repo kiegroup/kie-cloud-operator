@@ -5,7 +5,7 @@ version: ""
 from: "scratch"
 labels:
   - name: maintainer
-    value: bsig-cloud@redhat.com
+    value: mysphelp@us.ibm.com
   - name: com.redhat.component
     value: ibm-bamoe-operator-bundle-container
   - name: io.k8s.description
