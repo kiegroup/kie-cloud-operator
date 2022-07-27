@@ -175,7 +175,7 @@ func main() {
 		templateStruct.Spec.Maturity = csv.Maturity
 		templateStruct.Spec.Provider = csvv1.AppLink{Name: ibm}
 		templateStruct.Spec.Links = []csvv1.AppLink{
-			{Name: "Product Page", URL: "https://ibm.com "},
+			{Name: "Product Page", URL: "https://ibm.com"},
 			{Name: "Documentation", URL: "https://www.ibm.com/docs/en/ibamoe"},
 		}
 		templateStruct.Spec.Maintainers = []csvv1.Maintainer{
