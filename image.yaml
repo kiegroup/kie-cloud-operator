@@ -24,7 +24,7 @@
   from: "registry.redhat.io/ubi8-minimal"
   labels:
     - name: maintainer
-      value: bsig-cloud@redhat.com
+      value: mysphelp@us.ibm.com
     - name: com.redhat.component
       value: ibm-bamoe-rhel8-operator-container
     - name: io.k8s.description

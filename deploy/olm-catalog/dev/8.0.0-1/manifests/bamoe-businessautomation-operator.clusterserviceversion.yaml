@@ -7,18 +7,18 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.0
-    createdAt: "2022-07-27 10:00:02"
+    createdAt: "2022-07-27 11:46:20"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/kiegroup/kie-cloud-operator
-    support: IBM
+    support: https://www.ibm.com/mysupport
     tectonic-visibility: ocs
   labels:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.0-1-dev-9hzjfqt2dz
+  name: bamoe-businessautomation-operator.8.0.0-1-dev-rsrn4q5cml
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -374,17 +374,20 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-9hzjfqt2dz
+    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-rsrn4q5cml
   links:
   - name: Product Page
     url: 'https://ibm.com '
   - name: Documentation
     url: https://www.ibm.com/docs/en/ibamoe
+  maintainers:
+  - email: mysphelp@us.ibm.com
+    name: IBM
   maturity: dev
   provider:
     name: IBM
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-9hzjfqt2dz
-  version: 8.0.0-1+9hzjfqt2dz
+      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-rsrn4q5cml
+  version: 8.0.0-1+rsrn4q5cml
