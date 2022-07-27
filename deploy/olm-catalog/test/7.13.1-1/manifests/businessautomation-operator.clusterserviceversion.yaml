@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/rhpam-7-rhpam-rhel8-operator:7.13.1
-    createdAt: "2022-05-31 15:00:04"
+    createdAt: "2022-07-27 13:24:10"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -20,7 +20,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.1-1-dev-j5l6lldt8t
+  name: businessautomation-operator.7.13.1-1-dev-bkjrxzfqlb
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -114,8 +114,6 @@ spec:
     Deploys and manages Red Hat Process Automation Manager and Red Hat Decision Manager environments.
 
     * **Red Hat Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
-
-     * **Red Hat Decision Manager** is a platform for developing containerized microservices and applications that automate business decisions. It includes business rules management, complex event processing, and resource optimization technologies. Organizations can incorporate sophisticated decision logic into line-of-business applications and quickly update underlying business rules as market conditions change.
 
     [See more](https://www.redhat.com/en/products/process-automation).
   displayName: Business Automation
@@ -402,7 +400,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.1-1-dev-j5l6lldt8t
+    operated-by: businessautomation-operator.7.13.1-1-dev-bkjrxzfqlb
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -418,5 +416,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.1-1-dev-j5l6lldt8t
-  version: 7.13.1-1+j5l6lldt8t
+      operated-by: businessautomation-operator.7.13.1-1-dev-bkjrxzfqlb
+  version: 7.13.1-1+bkjrxzfqlb
