@@ -302,7 +302,11 @@ func getComparator() compare.MapComparator {
 		}
 		equal := compare.EqualPairs(pairs)
 		if !equal {
-			log.Infof("Resources are not equal -- deployed %+v -- requested %+v", deployed, requested)
+			if logs.IsDebugLevel() {
+				log.Debugf("Resources are not equal -- deployed %+v -- requested %+v", deployed, requested)
+			} else {
+				log.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+			}
 		}
 		return equal
 	})

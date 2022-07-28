@@ -30,7 +30,7 @@ github.com/PuerkitoBio/urlesc
 ## explicit; go 1.13
 github.com/RHsyseng/console-cr-form/pkg/web
 github.com/RHsyseng/console-cr-form/pkg/web/packrd
-# github.com/RHsyseng/operator-utils v1.4.8-0.20220315191302-fddf2bcf3073
+# github.com/RHsyseng/operator-utils v1.4.11
 ## explicit; go 1.17
 github.com/RHsyseng/operator-utils/internal/platform
 github.com/RHsyseng/operator-utils/pkg/logs
@@ -243,8 +243,8 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.50.0
-## explicit; go 1.14
+# github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.55.1
+## explicit; go 1.17
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
 # github.com/prometheus/client_golang v1.11.0
