@@ -12,17 +12,13 @@ var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "8.0.0"
+	CurrentVersion = "8.0.1"
 	// PriorVersion product version supported
-	// TODO uncomment for next 8.x release.
-	// PriorVersion = "7.13.0"
+	PriorVersion = "8.0.0"
 )
 
 // SupportedVersions - product versions this operator supports
-// TODO uncomment for next 8.x release.
-// var SupportedVersions = []string{CurrentVersion, PriorVersion}
-// TODO remove for next 8.x release.
-var SupportedVersions = []string{CurrentVersion}
+var SupportedVersions = []string{CurrentVersion, PriorVersion}
 
 // VersionConstants ...
 var VersionConstants = map[string]*api.VersionConfigs{
@@ -42,23 +38,22 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
 		PostgreSQLComponent: PostgreSQL10Component,
 	},
-	// TODO uncomment for next 8.x release.
-	//PriorVersion: {
-	//	APIVersion:          api.SchemeGroupVersion.Version,
-	//	OseCliImageURL:      OseCli4ImageURL,
-	//	OseCliComponent:     OseCli4Component,
-	//	BrokerImage:         BrokerImage,
-	//	BrokerImageTag:      Broker78ImageTag,
-	//	BrokerImageURL:      Broker78ImageURL,
-	//	DatagridImage:       Datagrid73Image,
-	//	DatagridImageTag:    Datagrid73ImageTag16,
-	//	DatagridImageURL:    Datagrid73ImageURL16,
-	//	DatagridComponent:   Datagrid73Component,
-	//	MySQLImageURL:       MySQL80ImageURL,
-	//	MySQLComponent:      MySQL80Component,
-	//	PostgreSQLImageURL:  PostgreSQL10ImageURL,
-	//	PostgreSQLComponent: PostgreSQL10Component,
-	//},
+	PriorVersion: {
+		APIVersion:          api.SchemeGroupVersion.Version,
+		OseCliImageURL:      OseCli4ImageURL,
+		OseCliComponent:     OseCli4Component,
+		BrokerImage:         BrokerImage,
+		BrokerImageTag:      Broker78ImageTag,
+		BrokerImageURL:      Broker78ImageURL,
+		DatagridImage:       Datagrid73Image,
+		DatagridImageTag:    Datagrid73ImageTag16,
+		DatagridImageURL:    Datagrid73ImageURL16,
+		DatagridComponent:   Datagrid73Component,
+		MySQLImageURL:       MySQL80ImageURL,
+		MySQLComponent:      MySQL80Component,
+		PostgreSQLImageURL:  PostgreSQL10ImageURL,
+		PostgreSQLComponent: PostgreSQL10Component,
+	},
 }
 
 const (
