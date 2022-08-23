@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.0
-    createdAt: "2022-07-27 15:37:39"
+    createdAt: "2022-08-23 15:25:14"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +18,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.0-1-dev-ljr7njjkqc
+  name: bamoe-businessautomation-operator.8.0.0-1-dev-mj98pgsccz
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -187,7 +187,7 @@ spec:
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.0
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.0
-                  value: registry.redhat.io/rhscl/postgresql-10-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-12-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.0
                   value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
                 - name: RELATED_IMAGE_BROKER_IMAGE_8.0.0
@@ -372,7 +372,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-ljr7njjkqc
+    operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-mj98pgsccz
   links:
   - name: Product Page
     url: https://ibm.com
@@ -387,5 +387,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-ljr7njjkqc
-  version: 8.0.0-1+ljr7njjkqc
+      operated-by: bamoe-businessautomation-operator.8.0.0-1-dev-mj98pgsccz
+  version: 8.0.0-1+mj98pgsccz
