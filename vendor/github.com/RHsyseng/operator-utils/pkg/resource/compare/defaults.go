@@ -2,6 +2,7 @@ package compare
 
 import (
 	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
@@ -176,7 +177,11 @@ func equalDeploymentConfigs(deployed client.Object, requested client.Object) boo
 	pairs = append(pairs, [2]interface{}{dc1.Spec, dc2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -237,7 +242,7 @@ func equalDeployment(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{d1.Spec, d2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
 	}
 	return equal
 }
@@ -430,7 +435,11 @@ func equalServices(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{service1.Spec, service2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -476,7 +485,11 @@ func equalRoutes(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{route1.Spec, route2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -492,7 +505,11 @@ func equalRoles(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{role1.Rules, role2.Rules})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -507,7 +524,11 @@ func equalServiceAccounts(deployed client.Object, requested client.Object) bool 
 	pairs = append(pairs, [2]interface{}{sa1.Annotations, sa2.Annotations})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -524,7 +545,11 @@ func equalRoleBindings(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{binding1.RoleRef.Name, binding2.RoleRef.Name})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -542,7 +567,11 @@ func equalSecrets(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{secret1.Data, secret2.Data})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -615,7 +644,11 @@ func equalBuildConfigs(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{bc1.Spec, bc2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
@@ -643,7 +676,11 @@ func EqualPairs(objects [][2]interface{}) bool {
 func Equals(deployed interface{}, requested interface{}) bool {
 	equal := reflect.DeepEqual(deployed, requested)
 	if !equal {
-		logger.Info("Objects are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Objects are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Objects are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }

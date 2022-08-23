@@ -107,8 +107,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RHsyseng/console-cr-form v0.0.0-20210323180350-be2aa15abde0 h1:o9Cbv3MVngsbDEUdSDBA3lZ2uO3u1Y7sxH9Sa7OzT0M=
 github.com/RHsyseng/console-cr-form v0.0.0-20210323180350-be2aa15abde0/go.mod h1:C1ZIfbcXaSyLzEjK55s2qWdnOo+mzhFLvzyreV3qmUY=
-github.com/RHsyseng/operator-utils v1.4.8-0.20220315191302-fddf2bcf3073 h1:+9TXahZgGqzpQLsKGUWdwd8dBYGKvtST/OGst6mgEkI=
-github.com/RHsyseng/operator-utils v1.4.8-0.20220315191302-fddf2bcf3073/go.mod h1:m53ezRTH9FEzJbTXiBbaaXPuUZF8nKT1KZU5k+cBQhI=
+github.com/RHsyseng/operator-utils v1.4.11 h1:GLZe1jIzIbsr8jkfVcXMvmDZdrQ9XZ31CJQqBAkuBOs=
+github.com/RHsyseng/operator-utils v1.4.11/go.mod h1:eGHPCHnHqYl/51mIWsw+WM3ZmOaagTIQQT+y5dxwHI0=
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
@@ -888,8 +888,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/pquerna/cachecontrol v0.0.0-20171018203845-0dec1b30a021/go.mod h1:prYjPmNq4d1NPVmpShWobRqXY3q7Vp+80DqgxxUrUIA=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.50.0 h1:eIYVhtUPLDah0nhcHaWItFM595UAGVFKECaWoW02FUA=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.50.0/go.mod h1:3WYi4xqXxGGXWDdQIITnLNmuDzO5n6wYva9spVhR4fg=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.55.1 h1:IIEF5Sp5jDnqRNoHH5fPLNOsScMhmfyWmFP7m04jokc=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.55.1/go.mod h1:/xf16Bu3krDP6G5WhrJL9avDnLW/AN0g7hAIK63mbes=
 github.com/prometheus/alertmanager v0.18.0/go.mod h1:WcxHBl40VSPuOaqWae6l6HpnEOVRIycEJ7i9iYkadEE=
 github.com/prometheus/alertmanager v0.20.0/go.mod h1:9g2i48FAyZW6BtbsnvHtMHQXl2aVtrORKwKVCQ+nbrg=
 github.com/prometheus/client_golang v0.0.0-20180209125602-c332b6f63c06/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
