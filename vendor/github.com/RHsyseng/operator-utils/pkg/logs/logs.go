@@ -117,3 +117,8 @@ func GetEnv(key, fallback string) string {
 	}
 	return value
 }
+
+// IsDebugLevel returns whether the current log level is Debug
+func IsDebugLevel() bool {
+	return GetBoolEnv(DebugTrue.Name)
+}
