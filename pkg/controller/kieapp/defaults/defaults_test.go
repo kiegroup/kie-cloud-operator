@@ -3003,12 +3003,11 @@ func TestSetProductLabels(t *testing.T) {
 	assert.Equal(t, constants.CurrentVersion, cr.Status.Applied.Version)
 	testObjectLabels(t, cr, env)
 
-	// TODO uncomment for next 8.x release.
-	//cr.Spec.Version = constants.PriorVersion
-	//env, err = GetEnvironment(cr, test.MockService())
-	//assert.Nil(t, err, "Error getting trial environment")
-	//assert.Equal(t, constants.PriorVersion, cr.Status.Applied.Version)
-	//testObjectLabels(t, cr, env)
+	cr.Spec.Version = constants.PriorVersion
+	env, err = GetEnvironment(cr, test.MockService())
+	assert.Nil(t, err, "Error getting trial environment")
+	assert.Equal(t, constants.PriorVersion, cr.Status.Applied.Version)
+	testObjectLabels(t, cr, env)
 }
 
 func testObjectLabels(t *testing.T, cr *api.KieApp, env api.Environment) {

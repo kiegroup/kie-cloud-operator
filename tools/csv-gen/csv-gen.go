@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/tidwall/sjson"
 	"io"
 	"os"
 	"path/filepath"
@@ -76,9 +77,8 @@ var (
 )
 
 var (
-	ver = flag.String("version", version.CsvVersion, "set CSV version")
-	// TODO uncomment for next 8.x release.
-	// replaces = flag.String("replaces", version.CsvPriorVersion, "set CSV version to replace")
+	ver      = flag.String("version", version.CsvVersion, "set CSV version")
+	replaces = flag.String("replaces", version.CsvPriorVersion, "set CSV version to replace")
 )
 
 type csvSetting struct {
@@ -146,13 +146,12 @@ func main() {
 		examples := []string{"{\x22apiVersion\x22:\x22app.kiegroup.org/v2\x22,\x22kind\x22:\x22KieApp\x22,\x22metadata\x22:{\x22name\x22:\x22rhpam-trial\x22},\x22spec\x22:{\x22environment\x22:\x22rhpam-trial\x22}}"}
 		templateStruct.SetAnnotations(
 			map[string]string{
-				"createdAt":      time.Now().Format("2006-01-02 15:04:05"),
-				"containerImage": deployment.Spec.Template.Spec.Containers[0].Image,
-				"description":    descrip,
-				"categories":     "Integration & Delivery",
-				"certified":      "true",
-				// TODO after next 8.0.0 release replace Basic Install with Seamless Upgrades
-				"capabilities":        "Basic Install",
+				"createdAt":           time.Now().Format("2006-01-02 15:04:05"),
+				"containerImage":      deployment.Spec.Template.Spec.Containers[0].Image,
+				"description":         descrip,
+				"categories":          "Integration & Delivery",
+				"certified":           "true",
+				"capabilities":        "Seamless Upgrades",
 				"repository":          repository,
 				"support":             "https://www.ibm.com/mysupport",
 				"tectonic-visibility": "ocs",
@@ -168,8 +167,7 @@ func main() {
 			},
 		)
 		templateStruct.Spec.Keywords = []string{"kieapp", "pam", "decision", "kie", "cloud", "bpm", "process", "automation", "operator"}
-		// TODO Uncomment after IBM BAMOE 8.0.0 release
-		// templateStruct.Spec.Replaces = operatorName + "." + *replaces
+		templateStruct.Spec.Replaces = operatorName + "." + *replaces
 		templateStruct.Spec.Description = descrip + "\n\n* **IBM Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding."
 		templateStruct.Spec.DisplayName = csv.DisplayName
 		templateStruct.Spec.Maturity = csv.Maturity
@@ -355,38 +353,37 @@ func main() {
 		annotationsFile := bundleDir + "metadata/annotations.yaml"
 		createFile(annotationsFile, &annotationsdata)
 
-		// TODO uncomment for next 8.x release.
 		// create prior-version snippet yaml sample
-		//versionSnippet := &api.KieApp{}
-		//versionSnippet.Name = "prior-version"
-		//versionSnippet.SetAnnotations(map[string]string{
-		//	"consoleName":    "snippet-" + versionSnippet.Name,
-		//	"consoleTitle":   "Prior Product Version",
-		//	"consoleDesc":    "Use this snippet to deploy a prior product version",
-		//	"consoleSnippet": "true",
-		//})
-		//versionSnippet.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
-		//jsonByte, err := json.Marshal(versionSnippet)
-		//if err != nil {
-		//	log.Error(err)
-		//}
-		//if jsonByte, err = sjson.DeleteBytes(jsonByte, "metadata.creationTimestamp"); err != nil {
-		//	log.Error(err)
-		//}
-		//if jsonByte, err = sjson.DeleteBytes(jsonByte, "status"); err != nil {
-		//	log.Error(err)
-		//}
-		//if jsonByte, err = sjson.DeleteBytes(jsonByte, "spec"); err != nil {
-		//	log.Error(err)
-		//}
-		//if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion)); err != nil {
-		//	log.Error(err)
-		//}
-		//var snippetObj interface{}
-		//if err = json.Unmarshal(jsonByte, &snippetObj); err != nil {
-		//	log.Error(err)
-		//}
-		//createFile("deploy/crs/"+api.SchemeGroupVersion.Version+"/snippets/prior_version.yaml", snippetObj)
+		versionSnippet := &api.KieApp{}
+		versionSnippet.Name = "prior-version"
+		versionSnippet.SetAnnotations(map[string]string{
+			"consoleName":    "snippet-" + versionSnippet.Name,
+			"consoleTitle":   "Prior Product Version",
+			"consoleDesc":    "Use this snippet to deploy a prior product version",
+			"consoleSnippet": "true",
+		})
+		versionSnippet.SetGroupVersionKind(api.SchemeGroupVersion.WithKind("KieApp"))
+		jsonByte, err := json.Marshal(versionSnippet)
+		if err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "metadata.creationTimestamp"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "status"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.DeleteBytes(jsonByte, "spec"); err != nil {
+			log.Error(err)
+		}
+		if jsonByte, err = sjson.SetBytes(jsonByte, "spec.version", []byte(constants.PriorVersion)); err != nil {
+			log.Error(err)
+		}
+		var snippetObj interface{}
+		if err = json.Unmarshal(jsonByte, &snippetObj); err != nil {
+			log.Error(err)
+		}
+		createFile("deploy/crs/"+api.SchemeGroupVersion.Version+"/snippets/prior_version.yaml", snippetObj)
 	}
 }
 
