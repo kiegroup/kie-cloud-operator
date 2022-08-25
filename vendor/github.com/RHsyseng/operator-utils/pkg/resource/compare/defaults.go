@@ -242,7 +242,11 @@ func equalDeployment(deployed client.Object, requested client.Object) bool {
 	pairs = append(pairs, [2]interface{}{d1.Spec, d2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
-		logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		if logs.IsDebugLevel() {
+			logger.Debugf("Resources are not equal", "deployed", deployed, "requested", requested)
+		} else {
+			logger.Info("Resources are not equal. For more details set the Operator log level to DEBUG.")
+		}
 	}
 	return equal
 }
