@@ -86,10 +86,24 @@ dashbuilder:
                     containerPort: 8443
                     protocol: TCP
                 env:
+                  #[[if not .SecretAdminCredentials]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
+                  #[[end]]
+                  #[[if .SecretAdminCredentials]]
+                  - name: KIE_ADMIN_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: username
+                  - name: KIE_ADMIN_PWD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: password
+                  #[[end]]
                   ## Dashbuilder config BEGIN
                   #[[if .Dashbuilder.Config.AllowExternalFileRegister]]
                   - name: DASHBUILDER_ALLOW_EXTERNAL_FILE_REGISTER
@@ -196,6 +210,8 @@ dashbuilder:
                     value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
+                  - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
+                    value: "[[.Auth.LDAP.AllowEmptyPasswords]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
@@ -402,10 +418,27 @@ dashbuilder:
         to:
           name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         port:
+      #[[if .Dashbuilder.TerminationRoute.EnableEdge]]
+          targetPort: http
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: edge
+        #[[if ne .Dashbuilder.TerminationRoute.Key ""]]
+          key: "[[.Dashbuilder.TerminationRoute.Key]]"
+        #[[end]]
+        #[[if ne .Dashbuilder.TerminationRoute.Certificate ""]]
+          certificate: "[[.Dashbuilder.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .Dashbuilder.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.Dashbuilder.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
+      #[[if not .Dashbuilder.TerminationRoute.EnableEdge]]
           targetPort: [[.RouteProtocol]]
         #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
         #[[end]]
-
+      #[[end]]
+      

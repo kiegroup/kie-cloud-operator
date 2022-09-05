@@ -427,12 +427,7 @@ func getConsoleTemplate(cr *api.KieApp) api.ConsoleTemplate {
 	template := api.ConsoleTemplate{}
 	envConstants, hasEnv := constants.EnvironmentConstants[cr.Status.Applied.Environment]
 	if cr.Status.Applied.Objects.Console != nil && envConstants != nil {
-		// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-		if !isGE713(cr) && !isRHPAM(cr) {
-			envConstants.App = constants.RhdmAppConstants
-		} else if isGE713(cr) && !isRHPAM(cr) {
-			envConstants.App = constants.RhdmAppConstants713
-		}
+
 		product := GetProduct(cr)
 		// Set replicas
 		if !hasEnv {
@@ -1124,9 +1119,6 @@ func getDefaultKieServerImage(product string, cr *api.KieApp, serverSet *api.Kie
 		return *serverSet.From, omitImageTrigger, imageURL
 	}
 	envVar := constants.PamKieImageVar + cr.Status.Applied.Version
-	if product == constants.RhdmPrefix && isGE713(cr) {
-		envVar = constants.DmKieImageVar + cr.Status.Applied.Version
-	}
 
 	cMajor, _, _ := GetMajorMinorMicro(cr.Status.Applied.Version)
 	imageURL = constants.ImageRegistry + "/" + product + "-" + cMajor + "/" + product + "-kieserver" + constants.RhelVersion + ":" + cr.Status.Applied.Version

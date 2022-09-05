@@ -679,36 +679,6 @@ func TestCreateRhdmImageStreams(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhpam-7/rhpam%s-businesscentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
 }
 
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-func TestCreateRhdmImageStreamsFor7121(t *testing.T) {
-	cr := &api.KieApp{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test-ns",
-		},
-		Spec: api.KieAppSpec{
-			Version:     "7.12.1",
-			Environment: api.RhdmTrial,
-		},
-	}
-	mockSvc := test.MockService()
-	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
-	_, err := defaults.GetEnvironment(cr, mockSvc)
-	assert.Nil(t, err)
-	reconciler := Reconciler{
-		Service: mockSvc,
-	}
-
-	err = reconciler.createLocalImageTag(fmt.Sprintf("rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), "", cr)
-	assert.Nil(t, err)
-
-	isTag, err := isTagMock.Get(context.TODO(), fmt.Sprintf("test-ns/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), metav1.GetOptions{})
-	assert.Nil(t, err)
-	assert.NotNil(t, isTag)
-	assert.Equal(t, fmt.Sprintf("registry.redhat.io/rhdm-7/rhdm%s-decisioncentral-openshift:1.0", cr.Status.Applied.Version), isTag.Tag.From.Name)
-	assert.False(t, isTag.Tag.ImportPolicy.Scheduled)
-}
-
 func getISTag(mockSvc *test.MockPlatformService, cr *api.KieApp, tagRefName string, imageName string) (*oimagev1.ImageStreamTag, error) {
 	isTagMock := mockSvc.ImageStreamTagsFunc(cr.Namespace)
 	_, err := defaults.GetEnvironment(cr, mockSvc)

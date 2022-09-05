@@ -266,6 +266,22 @@ processMigration:
           kind: Service
           name: "[[.ApplicationName]]-process-migration"
         port:
+      #[[if .ProcessMigration.TerminationRoute.EnableEdge]]
           targetPort: http
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: edge
+        #[[if ne .ProcessMigration.TerminationRoute.Key ""]]
+          key: "[[.ProcessMigration.TerminationRoute.Key]]"
+        #[[end]]
+        #[[if ne .ProcessMigration.TerminationRoute.Certificate ""]]
+          certificate: "[[.ProcessMigration.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .ProcessMigration.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.ProcessMigration.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
+      #[[if not .ProcessMigration.TerminationRoute.EnableEdge]]
+          targetPort: http
+      #[[end]]
 ## KIE ProcessMigration END
-

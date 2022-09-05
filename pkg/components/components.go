@@ -309,6 +309,30 @@ func GetRole(operatorName string) *rbacv1.Role {
 	return role
 }
 
+func GetRoleBinding(operatorName string) *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: rbacv1.SchemeGroupVersion.String(),
+			Kind:       "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: operatorName,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.SchemeGroupVersion.Group,
+			Kind:     "Role",
+			Name:     operatorName,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				APIGroup: rbacv1.SchemeGroupVersion.Group,
+				Kind:     "ServiceAccount",
+				Name:     operatorName,
+			},
+		},
+	}
+}
+
 func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
 	return &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
@@ -329,6 +353,43 @@ func GetClusterRole(operatorName string) *rbacv1.ClusterRole {
 					"delete",
 				},
 			},
+		},
+	}
+}
+
+func GetClusterRoleBinding(operatorName string) *rbacv1.ClusterRoleBinding {
+	return &rbacv1.ClusterRoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: rbacv1.SchemeGroupVersion.String(),
+			Kind:       "ClusterRoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: operatorName,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.SchemeGroupVersion.Group,
+			Kind:     "ClusterRole",
+			Name:     operatorName,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				APIGroup:  rbacv1.SchemeGroupVersion.Group,
+				Kind:      "ServiceAccount",
+				Name:      operatorName,
+				Namespace: "placeholder",
+			},
+		},
+	}
+}
+
+func GetServiceAccount(operatorName string) *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "ServiceAccount",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: operatorName,
 		},
 	}
 }

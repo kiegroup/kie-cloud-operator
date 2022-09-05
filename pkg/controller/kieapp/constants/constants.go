@@ -12,9 +12,9 @@ var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.13.0"
+	CurrentVersion = "7.13.1"
 	// PriorVersion product version supported
-	PriorVersion = "7.12.1"
+	PriorVersion = "7.13.0"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -30,13 +30,13 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		BrokerImageTag:      Broker79ImageTag,
 		BrokerImageURL:      Broker79ImageURL,
 		DatagridImage:       Datagrid8Image,
-		DatagridImageTag:    Datagrid8ImageTag11,
-		DatagridImageURL:    Datagrid8ImageURL11,
+		DatagridImageTag:    Datagrid8ImageTag13,
+		DatagridImageURL:    Datagrid8ImageURL13,
 		DatagridComponent:   Datagrid8Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL10ImageURL,
-		PostgreSQLComponent: PostgreSQL10Component,
+		PostgreSQLImageURL:  PostgreSQL12ImageURL,
+		PostgreSQLComponent: PostgreSQL12Component,
 	},
 	PriorVersion: {
 		APIVersion:          api.SchemeGroupVersion.Version,
@@ -45,10 +45,10 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		BrokerImage:         BrokerImage,
 		BrokerImageTag:      Broker78ImageTag,
 		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
+		DatagridImage:       Datagrid8Image,
+		DatagridImageTag:    Datagrid8ImageTag11,
+		DatagridImageURL:    Datagrid8ImageURL11,
+		DatagridComponent:   Datagrid8Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
 		PostgreSQLImageURL:  PostgreSQL10ImageURL,
@@ -186,9 +186,6 @@ const (
 	ACFilters = "AC_ALLOW_ORIGIN,AC_ALLOW_METHODS,AC_ALLOW_HEADERS,AC_ALLOW_CREDENTIALS,AC_MAX_AGE"
 
 	relatedImageVar        = "RELATED_IMAGE_"
-	DmKieImageVar          = relatedImageVar + "DM_KIESERVER_IMAGE_"
-	DmDecisionCentralVar   = relatedImageVar + "DM_DC_IMAGE_"
-	DmControllerVar        = relatedImageVar + "DM_CONTROLLER_IMAGE_"
 	PamKieImageVar         = relatedImageVar + "PAM_KIESERVER_IMAGE_"
 	PamControllerVar       = relatedImageVar + "PAM_CONTROLLER_IMAGE_"
 	PamBusinessCentralVar  = relatedImageVar + "PAM_BC_IMAGE_"
@@ -205,6 +202,8 @@ const (
 	PostgreSQLVar         = relatedImageVar + "POSTGRESQL_PROXY_IMAGE_"
 	PostgreSQL10ImageURL  = ImageRegistry + "/rhscl/postgresql-10-rhel7:latest"
 	PostgreSQL10Component = "rh-postgresql10-container"
+	PostgreSQL12ImageURL  = ImageRegistry + "/rhscl/postgresql-12-rhel7:latest"
+	PostgreSQL12Component = "rh-postgresql12-container"
 
 	MySQLVar         = relatedImageVar + "MYSQL_PROXY_IMAGE_"
 	MySQL57ImageURL  = ImageRegistry + "/rhscl/mysql-57-rhel7:latest"
@@ -234,11 +233,11 @@ const (
 	Datagrid8Image     = "datagrid-8-rhel8"
 	Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
 
-	Datagrid73ImageTag16 = "1.6"
-	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
-
 	Datagrid8ImageTag11 = "1.1"
 	Datagrid8ImageURL11 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag11
+
+	Datagrid8ImageTag13 = "1.3"
+	Datagrid8ImageURL13 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag13
 
 	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
 	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
@@ -374,24 +373,6 @@ var ProcessMigrationRequests = map[string]string{
 
 var Images = []ImageEnv{
 	{
-		Var:       DmKieImageVar,
-		Component: RhdmPrefix + "-7-kieserver-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "kieserver" + RhelVersion,
-	},
-	{
-		Var:       DmControllerVar,
-		Component: RhdmPrefix + "-7-controller-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "controller" + RhelVersion,
-	},
-	{
-		Var:       DmDecisionCentralVar,
-		Component: RhdmPrefix + "-7-decisioncentral-rhel8-container",
-		Registry:  ImageRegistry,
-		Context:   DmContext + "decisioncentral" + RhelVersion,
-	},
-	{
 		Var:       PamKieImageVar,
 		Component: RhpamPrefix + "-7-kieserver-rhel8-container",
 		Registry:  ImageRegistry,
@@ -456,13 +437,7 @@ type ImageRefTag struct {
 var rhpamAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central"}
 var rhpamMonitorAppConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamcentrmon", ImageName: RhpamBusinessCentralMon, ImageVar: PamBCMonitoringVar, MavenRepo: "RHPAMCENTR", FriendlyName: "Business Central Monitoring"}
 var rhpamDashbuilderConstants = api.AppConstants{Product: RhpamPrefix, Prefix: "rhpamdash", ImageName: "dashbuilder", ImageVar: PamDashbuilderVar, FriendlyName: "Dashbuilder"}
-
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-var RhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhdmDecisionCentral, ImageVar: DmDecisionCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Decision Central"}
-
-// 7.13.0 rhdm image changes
-// TODO remove after 7.12.1 is not a supported version for the current operator version and point to rhpam images
-var RhdmAppConstants713 = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
+var rhdmAppConstants = api.AppConstants{Product: RhdmPrefix, Prefix: "rhdmcentr", ImageName: RhpamBusinessCentral, ImageVar: PamBusinessCentralVar, MavenRepo: "RHDMCENTR", FriendlyName: "Business Central"}
 
 var replicasTrial = api.ReplicaConstants{
 	Console:     api.Replicas{Replicas: 1, DenyScale: true},
@@ -504,10 +479,10 @@ var EnvironmentConstants = map[api.EnvironmentType]*api.EnvironmentConstants{
 	api.RhpamAuthoring:             {App: rhpamAppConstants, Replica: replicasTrial, Database: databaseRhpamAuthoring},
 	api.RhpamAuthoringHA:           {App: rhpamAppConstants, Replica: replicasAuthoringHA, Database: databaseRhpamAuthoringHA},
 	api.RhpamStandaloneDashbuilder: {App: rhpamDashbuilderConstants, Replica: replicasDashbuilder},
-	api.RhdmTrial:                  {App: RhdmAppConstants713, Replica: replicasTrial},
-	api.RhdmAuthoring:              {App: RhdmAppConstants713, Replica: replicasTrial},
-	api.RhdmAuthoringHA:            {App: RhdmAppConstants713, Replica: replicasAuthoringHA},
-	api.RhdmProductionImmutable:    {App: RhdmAppConstants713, Replica: replicasTrial},
+	api.RhdmTrial:                  {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoring:              {App: rhdmAppConstants, Replica: replicasTrial},
+	api.RhdmAuthoringHA:            {App: rhdmAppConstants, Replica: replicasAuthoringHA},
+	api.RhdmProductionImmutable:    {App: rhdmAppConstants, Replica: replicasTrial},
 }
 
 // TemplateConstants set of constant values to use in templates
