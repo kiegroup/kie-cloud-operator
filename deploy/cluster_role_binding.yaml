@@ -7,6 +7,7 @@ roleRef:
   kind: ClusterRole
   name: business-automation-operator
 subjects:
-- kind: ServiceAccount
+- apiGroup: rbac.authorization.k8s.io
+  kind: ServiceAccount
   name: business-automation-operator
   namespace: placeholder
