@@ -84,10 +84,24 @@ console:
                     value: "/opt/kie/data/configuration/application-users.properties"
                   - name: APPLICATION_ROLES_PROPERTIES
                     value: "/opt/kie/data/configuration/application-roles.properties"
+                  #[[if not .SecretAdminCredentials]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
+                  #[[end]]
+                  #[[if .SecretAdminCredentials]]
+                  - name: KIE_ADMIN_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: username
+                  - name: KIE_ADMIN_PWD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: password
+                  #[[end]]
                   - name: KIE_MBEANS
                     value: enabled
                   #[[if or .Console.GitHooks.MountPath .Console.GitHooks.From]]
@@ -180,6 +194,8 @@ console:
                     value: "[[.Auth.LDAP.BindDN]]"
                   - name: AUTH_LDAP_BIND_CREDENTIAL
                     value: "[[.Auth.LDAP.BindCredential]]"
+                  - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
+                    value: "[[.Auth.LDAP.AllowEmptyPasswords]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
@@ -459,12 +475,29 @@ console:
         to:
           name: "[[.ApplicationName]]-[[.Console.Name]]"
         port:
+      #[[if .Console.TerminationRoute.EnableEdge]]
+          targetPort: http
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: edge
+        #[[if ne .Console.TerminationRoute.Key ""]]
+          key: "[[.Console.TerminationRoute.Key]]"
+        #[[end]]
+        #[[if ne .Console.TerminationRoute.Certificate ""]]
+          certificate: "[[.Console.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .Console.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.Console.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
+      #[[if not .Console.TerminationRoute.EnableEdge]]
           targetPort: [[.RouteProtocol]]
         #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
         #[[end]]
+      #[[end]]
 ## KIE smartrouter BEGIN
 smartRouter:
   persistentVolumeClaims:
@@ -561,10 +594,24 @@ smartRouter:
                   - name: KIE_SERVER_ROUTER_TLS_KEYSTORE
                     value: "/etc/smartrouter-secret-volume/keystore.jks"
                   #[[end]]
+                  #[[if not .SecretAdminCredentials]]
                   - name: KIE_ADMIN_USER
                     value: "[[.AdminUser]]"
                   - name: KIE_ADMIN_PWD
                     value: "[[.AdminPassword]]"
+                  #[[end]]
+                  #[[if .SecretAdminCredentials]]
+                  - name: KIE_ADMIN_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: username
+                  - name: KIE_ADMIN_PWD
+                    valueFrom:
+                      secretKeyRef:
+                        name: "[[.SecretAdminCredentials]]"
+                        key: password
+                  #[[end]]
                   - name: KIE_SERVER_CONTROLLER_SERVICE
                     value: "[[.ApplicationName]]-[[.Console.Name]]"
                   - name: KIE_SERVER_CONTROLLER_PROTOCOL
@@ -691,12 +738,30 @@ smartRouter:
         to:
           name: "[[.ApplicationName]]-smartrouter"
         port:
+
+      #[[if .SmartRouter.TerminationRoute.EnableEdge]]
+          targetPort: http
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: edge
+        #[[if ne .SmartRouter.TerminationRoute.Key ""]]
+          key: "[[.SmartRouter.TerminationRoute.Key]]"
+        #[[end]]
+        #[[if ne .SmartRouter.TerminationRoute.Certificate ""]]
+          certificate: "[[.SmartRouter.TerminationRoute.Certificate]]"
+        #[[end]]
+        #[[if ne .SmartRouter.TerminationRoute.CaCertificate ""]]
+          caCertificate: "[[.SmartRouter.TerminationRoute.CaCertificate]]"
+        #[[end]]
+      #[[end]]
+      #[[if not .SmartRouter.TerminationRoute.EnableEdge]]
           targetPort: [[.RouteProtocol]]
         #[[if not .DisableSsl]]
         tls:
           insecureEdgeTerminationPolicy: Redirect
           termination: passthrough
         #[[end]]
+      #[[end]]
 ## KIE smartrouter END
 ## KIE Servers BEGIN
 servers:
@@ -771,10 +836,24 @@ servers:
                     - name: KIE_SERVER_CONTROLLER_PROTOCOL
                       value: ws
                     #[[end]]
+                    #[[if not $.SecretAdminCredentials]]
                     - name: KIE_ADMIN_USER
                       value: "[[$.AdminUser]]"
                     - name: KIE_ADMIN_PWD
                       value: "[[$.AdminPassword]]"
+                    #[[end]]
+                    #[[if $.SecretAdminCredentials]]
+                    - name: KIE_ADMIN_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretAdminCredentials]]"
+                          key: username
+                    - name: KIE_ADMIN_PWD
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretAdminCredentials]]"
+                          key: password
+                    #[[end]]
                     - name: KIE_SERVER_STARTUP_STRATEGY
                       value: "[[.StartupStrategy.StrategyName]]"
                     #[[if eq .StartupStrategy.StrategyName "OpenShiftStartupStrategy" ]]
@@ -803,10 +882,24 @@ servers:
                           fieldPath: metadata.labels['services.server.kie.org/kie-server-id']
                     - name: KIE_SERVER_ROUTE_NAME
                       value: "[[.KieName]]"
+                    #[[if not $.SecretAdminCredentials]]
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
                       value: "[[$.AdminUser]]"
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
                       value: "[[$.AdminPassword]]"
+                    #[[end]]
+                    #[[if $.SecretAdminCredentials]]
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_USERNAME"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretAdminCredentials]]"
+                          key: username
+                    - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_PASSWORD"
+                      valueFrom:
+                        secretKeyRef:
+                          name: "[[$.SecretAdminCredentials]]"
+                          key: password
+                    #[[end]]
                     - name: "[[$.Constants.MavenRepo]]_MAVEN_REPO_SERVICE"
                       value: "[[$.ApplicationName]]-[[$.Console.Name]]"
                     - name: MAVEN_REPOS
@@ -879,6 +972,8 @@ servers:
                       value: "[[$.Auth.LDAP.BindDN]]"
                     - name: AUTH_LDAP_BIND_CREDENTIAL
                       value: "[[$.Auth.LDAP.BindCredential]]"
+                    - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
+                      value: "[[$.Auth.LDAP.AllowEmptyPasswords]]"
                     - name: AUTH_LDAP_BASE_CTX_DN
                       value: "[[$.Auth.LDAP.BaseCtxDN]]"
                     - name: AUTH_LDAP_BASE_FILTER
@@ -1099,10 +1194,14 @@ servers:
                       #[[end]]
                   #[[end]]
                   ## CORS END
-                  #[[if .KieExecutorMDBMaxSession]]
+                      #[[if .KieExecutorMDBMaxSession]]
                     - name: KIE_EXECUTOR_MDB_MAX_SESSIONS
                       value: "[[.KieExecutorMDBMaxSession]]"
-                  #[[end]]
+                      #[[end]]
+                      #[[if .DecisionsOnly]]
+                    - name: KIE_SERVER_DECISIONS_ONLY
+                      value: "[[.DecisionsOnly]]"
+                      #[[end]]
                   livenessProbe:
                     httpGet:
                       path: /services/rest/server/healthcheck
@@ -1266,12 +1365,29 @@ servers:
           to:
             name: "[[.KieName]]"
           port:
+        #[[if .TerminationRoute.EnableEdge]]
+            targetPort: http
+          tls:
+            insecureEdgeTerminationPolicy: Redirect
+            termination: edge
+          #[[if ne .TerminationRoute.Key ""]]
+            key: "[[.TerminationRoute.Key]]"
+          #[[end]]
+          #[[if ne .TerminationRoute.Certificate ""]]
+            certificate: "[[.TerminationRoute.Certificate]]"
+          #[[end]]
+          #[[if ne .TerminationRoute.CaCertificate ""]]
+            caCertificate: "[[.TerminationRoute.CaCertificate]]"
+          #[[end]]
+        #[[end]]
+        #[[if not .TerminationRoute.EnableEdge]]
             targetPort: [[$.RouteProtocol]]
           #[[if not $.DisableSsl]]
           tls:
             insecureEdgeTerminationPolicy: Redirect
             termination: passthrough
           #[[end]]
+        #[[end]]
       ## KIE server routes END
 #[[end]]
 ## RANGE ends

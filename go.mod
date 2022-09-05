@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/RHsyseng/console-cr-form v0.0.0-00010101000000-000000000000
-	github.com/RHsyseng/operator-utils v1.4.8-0.20220315191302-fddf2bcf3073
+	github.com/RHsyseng/operator-utils v1.4.11
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.9
@@ -18,7 +18,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.19.2
 	github.com/pavel-v-chernykh/keystore-go/v4 v4.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.50.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.55.1
 	github.com/prometheus/common v0.28.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
