@@ -101,4 +101,13 @@ spec:
         imagePullPolicy: Always
         name: business-automation-operator
         resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          runAsNonRoot: true
+      securityContext:
+        runAsNonRoot: true
       serviceAccountName: business-automation-operator
