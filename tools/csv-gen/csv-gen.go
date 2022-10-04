@@ -130,6 +130,18 @@ func main() {
 		templateStruct.Spec.InstallStrategy.StrategySpec = templateStrategySpec
 		templateStruct.Spec.InstallStrategy.StrategyName = "deployment"
 
+		deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsNonRoot: defaults.Pbool(true),
+		}
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+			RunAsNonRoot:             defaults.Pbool(true),
+			AllowPrivilegeEscalation: defaults.Pbool(false),
+			Privileged:               defaults.Pbool(false),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+		}
+
 		csvVersionedName := operatorName + "." + *ver
 		random := rand.String(10)
 		csvVersion := csvversion.OperatorVersion{}

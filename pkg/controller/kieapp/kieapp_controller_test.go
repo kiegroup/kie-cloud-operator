@@ -5,6 +5,7 @@ import (
 	"fmt"
 	oimagev1 "github.com/openshift/api/image/v1"
 	"io/ioutil"
+	v1 "k8s.io/api/apps/v1"
 	"reflect"
 	"strings"
 	"testing"
@@ -31,6 +32,54 @@ import (
 
 var depMessage = "Deployment should be completed"
 var caConfigMap = &corev1.ConfigMap{}
+
+func TestSecContextDefaults(t *testing.T) {
+	crNamespacedName := getNamespacedName("namespace", "cr")
+	cr := getInstance(crNamespacedName)
+	cr.Spec = api.KieAppSpec{
+		Environment: api.RhpamAuthoringHA,
+	}
+	service := test.MockService()
+	err := service.Create(context.TODO(), cr)
+	assert.Nil(t, err)
+	reconciler := Reconciler{Service: service}
+
+	// it is necessary to reconcile twice to get the resources updated.
+	_, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+
+	_, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
+	assert.Nil(t, err)
+
+	console := &oappsv1.DeploymentConfig{}
+	server := &oappsv1.DeploymentConfig{}
+	amq := &v1.StatefulSet{}
+	infinispan := &v1.StatefulSet{}
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), console)
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-kieserver"), server)
+
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-amq"), amq)
+	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-datagrid"), infinispan)
+
+	specScc := &corev1.PodSecurityContext{RunAsNonRoot: defaults.Pbool(true)}
+	assert.Equal(t, specScc, server.Spec.Template.Spec.SecurityContext)
+	assert.Equal(t, specScc, console.Spec.Template.Spec.SecurityContext)
+	assert.Equal(t, specScc, amq.Spec.Template.Spec.SecurityContext)
+	assert.Equal(t, specScc, infinispan.Spec.Template.Spec.SecurityContext)
+
+	containerScc := &corev1.SecurityContext{
+		RunAsNonRoot:             defaults.Pbool(true),
+		AllowPrivilegeEscalation: defaults.Pbool(false),
+		Privileged:               defaults.Pbool(false),
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		},
+	}
+	assert.Equal(t, containerScc, server.Spec.Template.Spec.Containers[0].SecurityContext)
+	assert.Equal(t, containerScc, console.Spec.Template.Spec.Containers[0].SecurityContext)
+	assert.Equal(t, containerScc, amq.Spec.Template.Spec.Containers[0].SecurityContext)
+	assert.Equal(t, containerScc, infinispan.Spec.Template.Spec.Containers[0].SecurityContext)
+}
 
 func TestGenerateSecret(t *testing.T) {
 	scheme, err := api.SchemeBuilder.Build()
