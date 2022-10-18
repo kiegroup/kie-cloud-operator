@@ -819,6 +819,21 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 	}
 	for index := range object.DeploymentConfigs {
 		object.DeploymentConfigs[index].SetGroupVersionKind(oappsv1.GroupVersion.WithKind("DeploymentConfig"))
+		object.DeploymentConfigs[index].Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsNonRoot: defaults.Pbool(true),
+		}
+
+		for indexC := range object.DeploymentConfigs[index].Spec.Template.Spec.Containers {
+			object.DeploymentConfigs[index].Spec.Template.Spec.Containers[indexC].SecurityContext = &corev1.SecurityContext{
+				RunAsNonRoot:             defaults.Pbool(true),
+				AllowPrivilegeEscalation: defaults.Pbool(false),
+				Privileged:               defaults.Pbool(false),
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
+				},
+			}
+		}
+
 		allObjects = append(allObjects, &object.DeploymentConfigs[index])
 	}
 	for index := range object.Services {
@@ -827,6 +842,22 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 	}
 	for index := range object.StatefulSets {
 		object.StatefulSets[index].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
+
+		object.StatefulSets[index].Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsNonRoot: defaults.Pbool(true),
+		}
+
+		for indexC := range object.StatefulSets[index].Spec.Template.Spec.Containers {
+			object.StatefulSets[index].Spec.Template.Spec.Containers[indexC].SecurityContext = &corev1.SecurityContext{
+				RunAsNonRoot:             defaults.Pbool(true),
+				AllowPrivilegeEscalation: defaults.Pbool(false),
+				Privileged:               defaults.Pbool(false),
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
+				},
+			}
+		}
+
 		allObjects = append(allObjects, &object.StatefulSets[index])
 	}
 	for index := range object.Routes {
