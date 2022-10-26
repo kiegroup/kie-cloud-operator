@@ -1,14 +1,15 @@
 package constants
 
 import (
-	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"golang.org/x/mod/semver"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 )
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.10", "4.9", "4.8", "4.7", "4.6"}
+var Ocp4Versions = []string{"4.11", "4.10", "4.9", "4.8", "4.7", "4.6"}
 
 const (
 	// CurrentVersion product version supported
