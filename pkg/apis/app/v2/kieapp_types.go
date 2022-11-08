@@ -441,7 +441,11 @@ type LDAPAuthConfig struct {
 	BindDN string `json:"bindDN,omitempty"`
 	// LDAP Base DN of the top-level context to begin the user search.
 	BaseCtxDN string `json:"baseCtxDN,omitempty"`
-	// DAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}).
+	// Legacy LDAP search filter used to locate the context of the user to authenticate. The input username or userDN
+	// obtained from the login module callback is substituted into the filter anywhere a {0} expression is used.
+	// A common example for the search filter is (uid={0}).
+	// For Elytron based subsystem this property should be configured only with the search filter parameter, without
+	// any search expression. Example  (uid={0}) became just uid.
 	BaseFilter string `json:"baseFilter,omitempty"`
 	// Indicates if the user queries are recursive.
 	RecursiveSearch bool `json:"recursiveSearch,omitempty"`
@@ -449,27 +453,38 @@ type LDAPAuthConfig struct {
 	SearchTimeLimit int32 `json:"searchTimeLimit,omitempty"`
 	// Name of the attribute containing the user roles.
 	RoleAttributeID string `json:"roleAttributeID,omitempty"`
-	// The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is.
+	// The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the
+	// DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server,
+	// this is the DN where the user account is.
 	RolesCtxDN string `json:"rolesCtxDN,omitempty"`
-	// A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1}).
+	// A search filter used to locate the roles associated with the authenticated user. The input username or
+	// userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used.
+	// The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that ,
+	// matches on the input username is (member={0}). An alternative that matches on the authenticated
+	// userDN is (member={1}).
 	RoleFilter string `json:"roleFilter,omitempty"`
 	// +kubebuilder:validation:Format:=int16
-	// The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0.
+	// The number of levels of recursion the role search will go below a matching context. Disable recursion
+	// by setting this to 0.
 	RoleRecursion int16 `json:"roleRecursion,omitempty"`
 	// A role included for all authenticated users
 	DefaultRole string `json:"defaultRole,omitempty"`
-	// Provide new identities for Ldap  identity mapping, the pattern to be used with this env is 'attribute_name=attribute_value;another_attribute_name=value'
+	// Provide new identities for Ldap  identity mapping, the pattern to be used with this env is
+	// 'attribute_name=attribute_value;another_attribute_name=value'
 	NewIdentityAttributes string `json:"newIdentityAttributes,omitempty"`
 	// +kubebuilder:validation:Enum:=FOLLOW;IGNORE;THROW
 	// If LDAP referrals should be followed.
 	ReferralMode ReferralModeType `json:"referralMode,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true.
+	// Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name
+	// is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas,
+	// such as Microsoft Active Directory, require this attribute to be set to true.
 	RoleAttributeIsDN bool `json:"roleAttributeIsDN,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute.
+	// Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN
+	// property is set to true, this property is used to find the role object’s name attribute.
 	RoleNameAttributeID string `json:"roleNameAttributeID,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
@@ -480,27 +495,38 @@ type LDAPAuthConfig struct {
 	JAASSecurityDomain string `json:"jaasSecurityDomain,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used.
+	// The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN
+	// of the user itself contains special characters, backslash for example, that prevent correct user mapping.
+	// If the attribute does not exist, the entry’s DN is used.
 	DistinguishedNameAttribute string `json:"distinguishedNameAttribute,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString.
+	// A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the
+	// username. If set to false the DN is not parsed for the username. This option is used together with
+	// usernameBeginString and usernameEndString.
 	ParseUsername bool `json:"parseUsername,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true.
+	// Defines the String which is to be removed from the start of the DN to reveal the username. This option
+	// is used together with usernameEndString and only taken into account if parseUsername is set to true.
 	UsernameBeginString string `json:"usernameBeginString,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameBeginString and only taken into account if parseUsername is set to true.
+	// Defines the String which is to be removed from the end of the DN to reveal the username. This option
+	// is used together with usernameBeginString and only taken into account if parseUsername is set to true.
 	UsernameEndString string `json:"usernameEndString,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries.
+	// A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true,
+	// the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the
+	// roleNameAttributeID. This flag can improve the performance of LDAP queries.
 	ParseRoleNameFromDN bool `json:"parseRoleNameFromDN,omitempty"`
 	// +kubebuilder:deprecatedversion
 	// Deprecated - parameter not supported by Elytron
-	// If you are not using referrals, you can ignore this option. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
+	// If you are not using referrals, you can ignore this option. When using referrals, this option denotes the
+	// attribute name which contains users defined for a certain role, for example member,
+	// if the role object is inside the referral. Users are checked against the content of this attribute name.
+	// If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
 	ReferralUserAttributeIDToCheck string `json:"referralUserAttributeIDToCheck,omitempty"`
 }
 
