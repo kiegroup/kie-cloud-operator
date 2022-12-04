@@ -8,4 +8,4 @@ metadata:
     consoleTitle: Prior Product Version
   name: prior-version
 spec:
-  version: 8.0.0
+  version: 8.0.1
