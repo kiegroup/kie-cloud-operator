@@ -424,7 +424,7 @@
                   "type": "text",
                   "default": "(uid={0})",
                   "jsonPath": "$.spec.auth.ldap.baseFilter",
-                  "description": "Search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0})."
+                  "description": "search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}). For Elytron based subsystem this property should be configured only with the search filter parameter, without any search expression. Example  (uid={0}) became just uid."
                 },
                 {
                   "label": "User recursive search",
