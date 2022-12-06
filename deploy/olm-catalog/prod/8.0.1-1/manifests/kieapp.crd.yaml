@@ -64,11 +64,14 @@ spec:
                           the user search.
                         type: string
                       baseFilter:
-                        description: DAP search filter used to locate the context
-                          of the user to authenticate. The input username or userDN
-                          obtained from the login module callback is substituted into
-                          the filter anywhere a {0} expression is used. A common example
-                          for the search filter is (uid={0}).
+                        description: Legacy LDAP search filter used to locate the
+                          context of the user to authenticate. The input username
+                          or userDN obtained from the login module callback is substituted
+                          into the filter anywhere a {0} expression is used. A common
+                          example for the search filter is (uid={0}). For Elytron
+                          based subsystem this property should be configured only
+                          with the search filter parameter, without any search expression.
+                          Example  (uid={0}) became just uid.
                         type: string
                       bindCredential:
                         description: LDAP Credentials used for authentication
@@ -162,7 +165,7 @@ spec:
                           obtained from the login module callback is substituted into
                           the filter anywhere a {0} expression is used. The authenticated
                           userDN is substituted into the filter anywhere a {1} is
-                          used. An example search filter that matches on the input
+                          used. An example search filter that , matches on the input
                           username is (member={0}). An alternative that matches on
                           the authenticated userDN is (member={1}).
                         type: string
@@ -3035,11 +3038,15 @@ spec:
                               begin the user search.
                             type: string
                           baseFilter:
-                            description: DAP search filter used to locate the context
-                              of the user to authenticate. The input username or userDN
-                              obtained from the login module callback is substituted
-                              into the filter anywhere a {0} expression is used. A
-                              common example for the search filter is (uid={0}).
+                            description: Legacy LDAP search filter used to locate
+                              the context of the user to authenticate. The input username
+                              or userDN obtained from the login module callback is
+                              substituted into the filter anywhere a {0} expression
+                              is used. A common example for the search filter is (uid={0}).
+                              For Elytron based subsystem this property should be
+                              configured only with the search filter parameter, without
+                              any search expression. Example  (uid={0}) became just
+                              uid.
                             type: string
                           bindCredential:
                             description: LDAP Credentials used for authentication
@@ -3138,7 +3145,7 @@ spec:
                               substituted into the filter anywhere a {0} expression
                               is used. The authenticated userDN is substituted into
                               the filter anywhere a {1} is used. An example search
-                              filter that matches on the input username is (member={0}).
+                              filter that , matches on the input username is (member={0}).
                               An alternative that matches on the authenticated userDN
                               is (member={1}).
                             type: string
