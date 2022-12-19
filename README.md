@@ -276,3 +276,9 @@ CSV Generation
 ```bash
 make csv
 ```
+
+## Upgrade Postgresql Images between different versions of the Operator
+Upgrade from 10 to 12 https://github.com/sclorg/postgresql-container/tree/master/12#upgrading-database-by-switching-to-newer-postgresql-image-version
+
+Upgrade from 12 to 13 https://github.com/sclorg/postgresql-container/tree/master/13#upgrading-database-by-switching-to-newer-postgresql-image-version
+
