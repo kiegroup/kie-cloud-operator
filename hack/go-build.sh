@@ -28,6 +28,9 @@ if [[ -z ${CI} ]]; then
             if [[ ${3} == "release" ]]; then
                 CFLAGS+=" --release"
             fi
+            if [[ ! -z ${CEKIT_RESPOND_YES+z} ]]; then
+                    CFLAGS+=" -y"
+            fi
         fi
         wget -q ${URL} -O ${TAR}
         echo ${CFLAGS}

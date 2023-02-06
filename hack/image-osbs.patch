@@ -1,0 +1,33 @@
+Index: image.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/image.yaml b/image.yaml
+--- a/image.yaml	(revision ea3b410332a6a46999155fbe9d87179efe847d5c)
++++ b/image.yaml	(date 1675078624612)
+@@ -9,13 +9,6 @@
+         path: modules/builder
+     install:
+       - name: builder
+-  osbs:      
+-    configuration:
+-      container:
+-        image_build_method: imagebuilder
+-        platforms:
+-          only:
+-            - x86_64
+ 
+ - schema_version: 1
+   name: "rhpam-7/rhpam-rhel8-operator"
+@@ -42,10 +35,6 @@
+   osbs:
+     configuration:
+       container:
+-        go:
+-          modules:
+-          - module: github.com/kiegroup/kie-cloud-operator
+-            archive: kie-cloud-operator.tar.gz
+         image_build_method: imagebuilder
+         platforms:
+           only:
