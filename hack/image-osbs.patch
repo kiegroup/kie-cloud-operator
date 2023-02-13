@@ -1,0 +1,33 @@
+Index: image.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/image.yaml b/image.yaml
+--- a/image.yaml	(revision 0e9d3786e8f4d4955e8cc25c704e3488a044337f)
++++ b/image.yaml	(revision 39f2f3d4764c6ddc37177ff751f12715f2d5a03b)
+@@ -9,13 +9,6 @@
+         path: modules/builder
+     install:
+       - name: builder
+-  osbs:      
+-    configuration:
+-      container:
+-        image_build_method: imagebuilder
+-        platforms:
+-          only:
+-            - x86_64
+ 
+ - schema_version: 1
+   name: "ibm-bamoe/bamoe-rhel8-operator"
+@@ -42,10 +35,6 @@
+   osbs:
+     configuration:
+       container:
+-        go:
+-          modules:
+-          - module: github.com/kiegroup/kie-cloud-operator
+-            archive: kie-cloud-operator.tar.gz
+         image_build_method: imagebuilder
+         platforms:
+           only:
