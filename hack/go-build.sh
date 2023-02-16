@@ -27,17 +27,18 @@ if [[ -z ${CI} ]]; then
             CFLAGS="osbs"
             if [[ ${3} == "release" ]]; then
                 CFLAGS+=" --release"
+                wget -q ${URL} -O ${TAR}
             fi
             if [[ ! -z ${CEKIT_RESPOND_YES+z} ]]; then
                     CFLAGS+=" -y"
             fi
         fi
-        wget -q ${URL} -O ${TAR}
+
         echo ${CFLAGS}
         cekit --verbose --redhat build \
            --overrides '{version: '${PRODUCT_VERSION}'}' \
            ${CFLAGS}
-        rm ${TAR}
+        rm ${TAR} 2>&1 /dev/null
     else
         echo
         echo Will build console first:
