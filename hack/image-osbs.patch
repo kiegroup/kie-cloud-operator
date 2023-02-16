@@ -4,8 +4,8 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
 diff --git a/image.yaml b/image.yaml
---- a/image.yaml	(revision 0e9d3786e8f4d4955e8cc25c704e3488a044337f)
-+++ b/image.yaml	(revision 39f2f3d4764c6ddc37177ff751f12715f2d5a03b)
+--- a/image.yaml	(revision 3df0b86fdd99365e36908cf521a9bef89c4cf031)
++++ b/image.yaml	(date 1676566740252)
 @@ -9,13 +9,6 @@
          path: modules/builder
      install:
@@ -31,3 +31,11 @@ diff --git a/image.yaml b/image.yaml
          image_build_method: imagebuilder
          platforms:
            only:
+@@ -53,6 +42,6 @@
+     extra_dir: osbs-extra
+     repository:
+       name: containers/ibm-bamoe-operator
+-      branch: ibm-bamoe-rhel-8
++      branch: ibm-bamoe-rhel-8-nightly
+   run:
+     user: "1001"
