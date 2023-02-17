@@ -4,8 +4,8 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
 diff --git a/image.yaml b/image.yaml
---- a/image.yaml	(revision ea3b410332a6a46999155fbe9d87179efe847d5c)
-+++ b/image.yaml	(date 1675078624612)
+--- a/image.yaml	(revision 2a8a654492f5f9036f66148ded70143ce9ed70ad)
++++ b/image.yaml	(date 1676560013043)
 @@ -9,13 +9,6 @@
          path: modules/builder
      install:
@@ -31,3 +31,11 @@ diff --git a/image.yaml b/image.yaml
          image_build_method: imagebuilder
          platforms:
            only:
+@@ -53,6 +42,6 @@
+     extra_dir: osbs-extra
+     repository:
+       name: containers/rhpam-7-operator
+-      branch: rhba-7-rhel-8
++      branch: rhba-7-rhel-8-nightly
+   run:
+     user: "1001"
