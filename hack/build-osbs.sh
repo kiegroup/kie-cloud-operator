@@ -190,4 +190,4 @@ fi
 cd ../
 git apply hack/image-osbs.patch
 # Building the operator
-make rhel-release
+make rhel-nightly
