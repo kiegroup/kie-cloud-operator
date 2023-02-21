@@ -7,7 +7,7 @@
     repositories:
       - path: modules/builder-prod
     install:
-      - name: rhpam.builder.prod
+      - name: bamoe.builder.prod
 
   osbs:
     configuration:
@@ -15,7 +15,7 @@
         image_build_method: imagebuilder
         remote_source:
           repo: https://github.com/kiegroup/kie-cloud-operator
-          ref: 7b5d7503589e7c19bd76a6fa5a33bf313ee685ba
+          ref: b3ef99928c1694236ecd092cf246e4f34d86fd97
           pkg_managers:
             - gomod
         platforms:
@@ -23,21 +23,21 @@
             - x86_64
 
 - schema_version: 1
-  name: "rhpam-7/rhpam-rhel8-operator"
-  description: "Red Hat Business Automation Operator"
+  name: "ibm-bamoe/bamoe-rhel8-operator"
+  description: "IBM Business Automation Manager Open Editions Operator"
   version: ""
   from: "registry.redhat.io/ubi8-minimal"
   labels:
     - name: maintainer
-      value: bsig-cloud@redhat.com
+      value: mysphelp@us.ibm.com
     - name: com.redhat.component
-      value: rhpam-7-rhel8-operator-container
+      value: ibm-bamoe-rhel8-operator-container
     - name: io.k8s.description
-      value: Operator for deploying RHPAM & RHDM
+      value: Operator for deploying IBM BAMOE
     - name: io.k8s.display-name
-      value: Red Hat Business Automation Operator
+      value: IBM Business Automation Manager Open Editions Operator
     - name: io.openshift.tags
-      value: rhpam,rhdm,operator
+      value: rhpam,rhdm,operator,ibm-bamoe
   modules:
     repositories:
       - name: runtime
@@ -48,7 +48,7 @@
   osbs:
     extra_dir: osbs-extra
     repository:
-      name: containers/rhpam-7-operator
-      branch: rhba-7-rhel-8
+      name: containers/ibm-bamoe-operator
+      branch: ibm-bamoe-rhel-8
   run:
     user: "1001"

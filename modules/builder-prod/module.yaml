@@ -1,6 +1,6 @@
 schema_version: 1
 
-name: rhpam.builder.prod
+name: bamoe.builder.prod
 version: "1.0"
 execute:
   - script: install
