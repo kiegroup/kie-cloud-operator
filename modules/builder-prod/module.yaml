@@ -1,6 +1,6 @@
 schema_version: 1
 
-name: builder
+name: rhpam.builder.prod
 version: "1.0"
 execute:
   - script: install

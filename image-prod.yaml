@@ -5,10 +5,9 @@
   from: "registry.redhat.io/ubi8/go-toolset:1.17.7"
   modules:
     repositories:
-      - name: builder
-        path: modules/builder-prod
+      - path: modules/builder-prod
     install:
-      - name: builder
+      - name: rhpam.builder.prod
 
   osbs:
     configuration:
