@@ -3,7 +3,9 @@
 go version
 export GOFLAGS=-mod=vendor
 
-OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
+if [[ -z "$OPERATOR_PATH" ]] ; then
+    OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
+fi
 UI_PATH=/usr/local/bin/console-cr-form
 
 cd $REMOTE_SOURCE_DIR/app && pwd
