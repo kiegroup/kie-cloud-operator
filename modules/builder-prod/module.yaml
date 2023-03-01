@@ -1,0 +1,6 @@
+schema_version: 1
+
+name: bamoe.builder.prod
+version: "1.0"
+execute:
+  - script: install

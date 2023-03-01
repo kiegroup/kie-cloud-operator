@@ -1,0 +1,54 @@
+- schema_version: 1
+  name: "builder"
+  description: "Golang builder image"
+  version: ""
+  from: "registry.redhat.io/ubi8/go-toolset:1.17.7"
+  modules:
+    repositories:
+      - path: modules/builder-prod
+    install:
+      - name: bamoe.builder.prod
+
+  osbs:
+    configuration:
+      container:
+        image_build_method: imagebuilder
+        remote_source:
+          repo: https://github.com/kiegroup/kie-cloud-operator
+          ref: b3ef99928c1694236ecd092cf246e4f34d86fd97
+          pkg_managers:
+            - gomod
+        platforms:
+          only:
+            - x86_64
+
+- schema_version: 1
+  name: "ibm-bamoe/bamoe-rhel8-operator"
+  description: "IBM Business Automation Manager Open Editions Operator"
+  version: ""
+  from: "registry.redhat.io/ubi8-minimal"
+  labels:
+    - name: maintainer
+      value: mysphelp@us.ibm.com
+    - name: com.redhat.component
+      value: ibm-bamoe-rhel8-operator-container
+    - name: io.k8s.description
+      value: Operator for deploying IBM BAMOE
+    - name: io.k8s.display-name
+      value: IBM Business Automation Manager Open Editions Operator
+    - name: io.openshift.tags
+      value: rhpam,rhdm,operator,ibm-bamoe
+  modules:
+    repositories:
+      - name: runtime
+        path: modules/runtime
+    install:
+      - name: runtime
+
+  osbs:
+    extra_dir: osbs-extra
+    repository:
+      name: containers/ibm-bamoe-operator
+      branch: ibm-bamoe-rhel-8
+  run:
+    user: "1001"
