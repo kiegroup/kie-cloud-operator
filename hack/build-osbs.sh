@@ -6,7 +6,9 @@ DEBUG=
 GIT_USER=${GIT_USER:-"Your Name"}
 GIT_EMAIL=${GIT_EMAIL:-"yourname@email.com"}
 WORK_DIR=$(pwd)/build-temp
-CEKIT_RESPOND_YES=true
+
+export CEKIT_OSBS_BUILD=true
+export CEKIT_RESPOND_YES=true
 
 function help()
 {
@@ -23,6 +25,7 @@ function help()
     echo ""
     echo "Optional:"
     echo "  -h                        Print this help message"
+    echo "  -c COMPONENT              Component for which an image is being built."
     echo "  -p KERBEROS_PRINCIPAL     Kerberos principal to use with to access build systems. If not specified,"
     echo "                            the script assumes there is a valid kerberos ticket in force. If it is specified"
     echo "                            then one of KERBEROS_KEYTAB or KERBEROS_PASSWORD is required."
@@ -36,6 +39,7 @@ function help()
     echo "  -e GIT_EMAIL              Email config for git commits to internal repositories. Default is 'yourname@email.com'"
     echo "  -o CEKIT_BUILD_OPTIONS    Additional options to pass through to the cekit build command, should be quoted"
     echo "  -l CEKIT_CACHE_LOCAL      Comma-separated list of urls to download and add to the local cekit cache"
+    echo "  -d CEKIT_OSBS_SUBDIR      The cekit local directory for the OSBS content (on Jenkins it should be /home/jenkins/.cekit/osbs/containers/rhpam-7-operator)"
     echo "  -g                        Debug setting, currently sets verbose flag on cekit commands"
 }
 
@@ -108,7 +112,7 @@ function set_git_config() {
 }
 
 
-while getopts gu:e:v:t:o:r:n:d:p:k:s:b:l:i:w:h option; do
+while getopts gu:e:v:c:t:o:r:n:d:p:k:s:b:l:i:w:h option; do
     case $option in
         g)
             DEBUG=true
@@ -121,6 +125,9 @@ while getopts gu:e:v:t:o:r:n:d:p:k:s:b:l:i:w:h option; do
             ;;
         v)
             PROD_VERSION=$OPTARG
+            ;;
+        c)
+            COMPONENT=$OPTARG
             ;;
         t)
             OSBS_BUILD_TARGET=$OPTARG
@@ -142,6 +149,9 @@ while getopts gu:e:v:t:o:r:n:d:p:k:s:b:l:i:w:h option; do
             ;;
         l)
             CEKIT_CACHE_LOCAL=$OPTARG
+            ;;
+        d)
+            CEKIT_OSBS_SUBDIR=$OPTARG
             ;;
         i)
             OSBS_BUILD_USER=$OPTARG
@@ -187,7 +197,14 @@ if [ -n "$OSBS_BUILD_USER" ]; then
     builduser="$OSBS_BUILD_USER"
 fi
 
+if [ -n "$CEKIT_OSBS_SUBDIR" ]; then
+    export OPERATOR_PATH="$CEKIT_OSBS_SUBDIR"
+fi
+
 cd ../
-git apply hack/image-osbs.patch
+
+COMMIT_HASH=$(git rev-parse HEAD)
+sed -i "s/ref:.*/ref: $COMMIT_HASH/g" image-prod.yaml
+sed -i "s/rhba-7-rhel-8/rhba-7-rhel-8-nightly/g" image-prod.yaml
 # Building the operator
 make rhel-nightly
