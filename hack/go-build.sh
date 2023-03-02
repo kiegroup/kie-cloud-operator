@@ -43,7 +43,7 @@ if [[ -z ${CI} || -n ${CEKIT_OSBS_BUILD} ]]; then
         fi
 
         echo ${CFLAGS}
-        cekit --verbose ${OVERRIDE_IMG_DESCRIPTOR} --redhat build \
+        cekit --verbose --redhat ${OVERRIDE_IMG_DESCRIPTOR} build \
            --overrides '{version: '${PRODUCT_VERSION}'}' \
            ${CFLAGS}
         if [[ -f ${TAR} ]]; then
