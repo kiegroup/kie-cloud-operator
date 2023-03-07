@@ -84,7 +84,7 @@ rhel-release:
 
 .PHONY: rhel-nightly
 rhel-nightly:
-	./hack/go-build.sh ${BUILDER} rhel nightly
+	./hack/go-build.sh ${BUILDER} rhel nightly $(build_user)
 
 .PHONY: csv
 csv: sdk-generate
