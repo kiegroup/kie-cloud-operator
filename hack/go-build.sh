@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -e
 
 source ./hack/go-mod-env.sh
 
@@ -41,12 +43,12 @@ if [[ -z ${CI} || -n ${CEKIT_OSBS_BUILD} ]]; then
                     CFLAGS+=" -y"
             fi
         fi
+        OSBS_USER="--user ${4}"
+        set -x
+        cekit --verbose --redhat ${OVERRIDE_IMG_DESCRIPTOR} build --overrides "{"version": "${PRODUCT_VERSION}"}"  ${CFLAGS} ${OSBS_USER}
+        set +x
 
-        echo ${CFLAGS}
-        cekit --verbose --redhat ${OVERRIDE_IMG_DESCRIPTOR} build \
-           --overrides '{version: '${PRODUCT_VERSION}'}' \
-           ${CFLAGS}
-        if [[ -f ${TAR} ]] ; then
+        if [[ -f ${TAR} ]]; then
           rm ${TAR}
         fi
     else

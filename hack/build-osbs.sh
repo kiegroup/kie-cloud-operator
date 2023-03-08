@@ -187,11 +187,6 @@ else
     echo No kerberos principal specified, assuming there is a current kerberos ticket
 fi
 
-debug=
-if [ -n "$DEBUG" ]; then
-    debug="--verbose"
-fi
-
 builduser=
 if [ -n "$OSBS_BUILD_USER" ]; then
     builduser="$OSBS_BUILD_USER"
@@ -203,7 +198,14 @@ fi
 
 cd ../
 COMMIT_HASH=$(git rev-parse HEAD)
-sed -i "s/ref:.*/ref: $COMMIT_HASH/g" image-prod.yaml
-sed -i "s/ibm-bamoe-rhel-8/ibm-bamoe-rhel-8-nightly/g" image-prod.yaml
+IMAGE_DESCRIPTOR="image-prod.yaml"
+sed -i "s/ref:.*/ref: $COMMIT_HASH/g" ${IMAGE_DESCRIPTOR}
+sed -i "s/\<ibm-bamoe-rhel-8\>/ibm-bamoe-rhel-8-nightly/g" image-prod.yaml
+if [ -n "$DEBUG" ]; then
+    echo "using the following ${IMAGE_DESCRIPTOR}"
+    cat ${IMAGE_DESCRIPTOR}
+    echo -e "\n"
+fi
+
 # Building the operator
-make rhel-nightly
+make rhel-nightly build_user="$builduser"
