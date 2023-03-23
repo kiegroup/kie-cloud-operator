@@ -181,7 +181,7 @@ if [ -n "$KERBEROS_PRINCIPAL" ]; then
     if [ ! -n "$OSBS_BUILD_USER" ]; then
       echo "setting OSBS_BUILD_USER to KERBEROS_PRINCIPAL"
       # need to catch only the first part of the principal, before the / otherwise 'rhpkg' will fail
-      OSBS_BUILD_USER=$(echo ${KERBEROS_PRINCIPAL} | awk -F"/" '{print $1}')
+      OSBS_BUILD_USER=$(echo ${KERBEROS_PRINCIPAL} | awk -F"@" '{print $1}')
     fi
 else
     echo No kerberos principal specified, assuming there is a current kerberos ticket
