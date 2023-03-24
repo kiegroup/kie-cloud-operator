@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.3
-    createdAt: "2023-01-31 13:02:33"
+    createdAt: "2023-03-24 15:21:51"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -183,7 +183,7 @@ spec:
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.3
                   value: registry.stage.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.3
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.3
-                  value: registry.redhat.io/openshift4/ose-cli:v4.11
+                  value: registry.redhat.io/openshift4/ose-cli:v4.12
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.3
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.3
@@ -207,7 +207,7 @@ spec:
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.2
                   value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.2
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.2
-                  value: registry.redhat.io/openshift4/ose-cli:v4.11
+                  value: registry.redhat.io/openshift4/ose-cli:v4.12
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.2
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.2
@@ -218,14 +218,8 @@ spec:
                   value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.9
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.9
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.8
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.8
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.12
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.11
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.11
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.10
