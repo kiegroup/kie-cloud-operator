@@ -6,8 +6,8 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "false"
-    containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.3
-    createdAt: "2023-03-29 13:42:28"
+    containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.2
+    createdAt: "2023-03-29 13:30:34"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -18,7 +18,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.3-1-dev-9ksznkdqgn
+  name: bamoe-businessautomation-operator.8.0.2-3-dev-hhk4sb5mm5
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -183,7 +183,7 @@ spec:
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.3
                   value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.3
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.3
-                  value: registry.redhat.io/openshift4/ose-cli:v4.12
+                  value: registry.redhat.io/openshift4/ose-cli:v4.11
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.3
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.3
@@ -207,7 +207,7 @@ spec:
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.2
                   value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.2
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.2
-                  value: registry.redhat.io/openshift4/ose-cli:v4.12
+                  value: registry.redhat.io/openshift4/ose-cli:v4.11
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.2
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.2
@@ -218,13 +218,19 @@ spec:
                   value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.12
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.9
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.9
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.8
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.8
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.7
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.7
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.6
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.6
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.11
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.11
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.10
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
-                image: quay.io/kiegroup/kie-cloud-operator:8.0.3
+                image: quay.io/kiegroup/kie-cloud-operator:8.0.2
                 imagePullPolicy: Always
                 name: bamoe-business-automation-operator
                 resources: {}
@@ -399,7 +405,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.3-1-dev-9ksznkdqgn
+    operated-by: bamoe-businessautomation-operator.8.0.2-3-dev-hhk4sb5mm5
   links:
   - name: Product Page
     url: https://ibm.com
@@ -411,9 +417,9 @@ spec:
   maturity: dev
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.2-3
+  replaces: bamoe-businessautomation-operator.8.0.2-2
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.3-1-dev-9ksznkdqgn
-  version: 8.0.3-1+9ksznkdqgn
+      operated-by: bamoe-businessautomation-operator.8.0.2-3-dev-hhk4sb5mm5
+  version: 8.0.2-3+hhk4sb5mm5
