@@ -8,13 +8,13 @@ import (
 )
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.11", "4.10", "4.9", "4.8", "4.7", "4.6"}
+var Ocp4Versions = []string{"4.12", "4.11", "4.10"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.13.2"
+	CurrentVersion = "7.13.3"
 	// PriorVersion product version supported
-	PriorVersion = "7.13.1"
+	PriorVersion = "7.13.2"
 )
 
 // SupportedVersions - product versions this operator supports
