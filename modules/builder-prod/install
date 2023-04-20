@@ -1,0 +1,25 @@
+#!/bin/sh
+
+go version
+export GOFLAGS=-mod=vendor
+
+if [[ -z "$OPERATOR_PATH" ]] ; then
+    OPERATOR_PATH=/usr/local/bin/kie-cloud-operator
+fi
+UI_PATH=/usr/local/bin/console-cr-form
+
+cd $REMOTE_SOURCE_DIR/app && pwd
+
+go generate ./...
+go vet ./...
+go test ./...
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o ${OPERATOR_PATH} ./cmd/manager
+if [[ ! -f ${OPERATOR_PATH} ]] ; then
+    echo "${OPERATOR_PATH} does not exist, aborting."
+    exit 1
+fi
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o ${UI_PATH} ./cmd/ui
+if [[ ! -f ${UI_PATH} ]] ; then
+    echo "${UI_PATH} does not exist, aborting."
+    exit 1
+fi
