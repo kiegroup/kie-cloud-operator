@@ -80,11 +80,11 @@ spec:
         - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.13.2
           value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
         - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.13.2
-          value: registry.redhat.io/rhscl/postgresql-12-rhel7:latest
+          value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
         - name: RELATED_IMAGE_DATAGRID_IMAGE_7.13.2
-          value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+          value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.3
         - name: RELATED_IMAGE_BROKER_IMAGE_7.13.2
-          value: registry.redhat.io/amq7/amq-broker:7.8
+          value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
           value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
         - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
