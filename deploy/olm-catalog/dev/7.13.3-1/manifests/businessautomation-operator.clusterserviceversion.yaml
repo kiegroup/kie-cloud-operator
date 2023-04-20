@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.3
-    createdAt: "2023-04-19 13:23:25"
+    createdAt: "2023-04-20 14:17:18"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
@@ -20,7 +20,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.3-1-dev-w6cn4snj76
+  name: businessautomation-operator.7.13.3-1-dev-d557lzvhpt
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -215,11 +215,11 @@ spec:
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_7.13.2
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_7.13.2
-                  value: registry.redhat.io/rhscl/postgresql-12-rhel7:latest
+                  value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_7.13.2
-                  value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
+                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.3
                 - name: RELATED_IMAGE_BROKER_IMAGE_7.13.2
-                  value: registry.redhat.io/amq7/amq-broker:7.8
+                  value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
@@ -403,7 +403,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.3-1-dev-w6cn4snj76
+    operated-by: businessautomation-operator.7.13.3-1-dev-d557lzvhpt
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -419,5 +419,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.3-1-dev-w6cn4snj76
-  version: 7.13.3-1+w6cn4snj76
+      operated-by: businessautomation-operator.7.13.3-1-dev-d557lzvhpt
+  version: 7.13.3-1+d557lzvhpt

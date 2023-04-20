@@ -42,17 +42,17 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli4ImageURL,
 		OseCliComponent:     OseCli4Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
-		DatagridImage:       Datagrid73Image,
-		DatagridImageTag:    Datagrid73ImageTag16,
-		DatagridImageURL:    Datagrid73ImageURL16,
-		DatagridComponent:   Datagrid73Component,
+		BrokerImage:         Broker79Image,
+		BrokerImageTag:      Broker79ImageTag,
+		BrokerImageURL:      Broker79ImageURL,
+		DatagridImage:       Datagrid8Image,
+		DatagridImageTag:    Datagrid8ImageTag13,
+		DatagridImageURL:    Datagrid8ImageURL13,
+		DatagridComponent:   Datagrid8Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL12ImageURL,
-		PostgreSQLComponent: PostgreSQL12Component,
+		PostgreSQLImageURL:  PostgreSQL13ImageURL,
+		PostgreSQLComponent: PostgreSQL13Component,
 	},
 }
 
@@ -214,32 +214,21 @@ const (
 	OseCliVar        = relatedImageVar + "OSE_CLI_IMAGE_"
 	OseCli4Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent      = "amq-broker-openshift-container"
 	BrokerVar            = relatedImageVar + "BROKER_IMAGE_"
 	BrokerImage          = "amq-broker"
 	Broker79Image        = "amq-broker-rhel8"
-	BrokerImageURL       = ImageRegistry + "/amq7/" + BrokerImage + ":"
 	Broker79ImageBaseURL = ImageRegistry + "/amq7/" + Broker79Image + ":"
 
-	Broker78ImageTag = "7.8"
 	Broker79ImageTag = "7.9"
-	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
 	Broker79ImageURL = Broker79ImageBaseURL + Broker79ImageTag
 
-	DatagridVar         = relatedImageVar + "DATAGRID_IMAGE_"
-	Datagrid73Image     = "datagrid73-openshift"
-	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
-
+	DatagridVar        = relatedImageVar + "DATAGRID_IMAGE_"
 	Datagrid8Image     = "datagrid-8-rhel8"
 	Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
-
-	Datagrid73ImageTag16 = "1.6"
-	Datagrid73ImageURL16 = ImageRegistry + "/jboss-datagrid-7/" + Datagrid73Image + ":" + Datagrid73ImageTag16
 
 	Datagrid8ImageTag13 = "1.3"
 	Datagrid8ImageURL13 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag13
 
-	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
 	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
 	RhelVersion = "-rhel8"
 
