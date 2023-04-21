@@ -409,11 +409,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-<<<<<<< HEAD
-    operated-by: businessautomation-operator.7.13.2-1-dev-vknt4cq2dw
-=======
     operated-by: businessautomation-operator.7.13.2-1-dev-ct4ptlc7zl
->>>>>>> main
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
