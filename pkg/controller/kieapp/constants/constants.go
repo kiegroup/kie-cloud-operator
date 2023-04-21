@@ -8,13 +8,13 @@ import (
 )
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.11", "4.10", "4.9", "4.8", "4.7", "4.6"}
+var Ocp4Versions = []string{"4.12", "4.11", "4.10"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "7.13.2"
+	CurrentVersion = "7.13.3"
 	// PriorVersion product version supported
-	PriorVersion = "7.13.1"
+	PriorVersion = "7.13.2"
 )
 
 // SupportedVersions - product versions this operator supports
@@ -42,17 +42,17 @@ var VersionConstants = map[string]*api.VersionConfigs{
 		APIVersion:          api.SchemeGroupVersion.Version,
 		OseCliImageURL:      OseCli4ImageURL,
 		OseCliComponent:     OseCli4Component,
-		BrokerImage:         BrokerImage,
-		BrokerImageTag:      Broker78ImageTag,
-		BrokerImageURL:      Broker78ImageURL,
+		BrokerImage:         Broker79Image,
+		BrokerImageTag:      Broker79ImageTag,
+		BrokerImageURL:      Broker79ImageURL,
 		DatagridImage:       Datagrid8Image,
-		DatagridImageTag:    Datagrid8ImageTag11,
-		DatagridImageURL:    Datagrid8ImageURL11,
+		DatagridImageTag:    Datagrid8ImageTag13,
+		DatagridImageURL:    Datagrid8ImageURL13,
 		DatagridComponent:   Datagrid8Component,
 		MySQLImageURL:       MySQL80ImageURL,
 		MySQLComponent:      MySQL80Component,
-		PostgreSQLImageURL:  PostgreSQL12ImageURL,
-		PostgreSQLComponent: PostgreSQL12Component,
+		PostgreSQLImageURL:  PostgreSQL13ImageURL,
+		PostgreSQLComponent: PostgreSQL13Component,
 	},
 }
 
@@ -214,32 +214,21 @@ const (
 	OseCliVar        = relatedImageVar + "OSE_CLI_IMAGE_"
 	OseCli4Component = "openshift-enterprise-cli-container"
 
-	BrokerComponent      = "amq-broker-openshift-container"
 	BrokerVar            = relatedImageVar + "BROKER_IMAGE_"
 	BrokerImage          = "amq-broker"
 	Broker79Image        = "amq-broker-rhel8"
-	BrokerImageURL       = ImageRegistry + "/amq7/" + BrokerImage + ":"
 	Broker79ImageBaseURL = ImageRegistry + "/amq7/" + Broker79Image + ":"
 
-	Broker78ImageTag = "7.8"
 	Broker79ImageTag = "7.9"
-	Broker78ImageURL = BrokerImageURL + Broker78ImageTag
 	Broker79ImageURL = Broker79ImageBaseURL + Broker79ImageTag
 
-	DatagridVar         = relatedImageVar + "DATAGRID_IMAGE_"
-	Datagrid73Image     = "datagrid73-openshift"
-	Datagrid73Component = "jboss-datagrid-7-datagrid73-openshift-container"
-
+	DatagridVar        = relatedImageVar + "DATAGRID_IMAGE_"
 	Datagrid8Image     = "datagrid-8-rhel8"
 	Datagrid8Component = "datagrid-datagrid-8-rhel8-container"
-
-	Datagrid8ImageTag11 = "1.1"
-	Datagrid8ImageURL11 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag11
 
 	Datagrid8ImageTag13 = "1.3"
 	Datagrid8ImageURL13 = ImageRegistry + "/datagrid/" + Datagrid8Image + ":" + Datagrid8ImageTag13
 
-	DmContext   = "/" + RhdmPrefix + "-7/" + RhdmPrefix + "-"
 	PamContext  = "/" + RhpamPrefix + "-7/" + RhpamPrefix + "-"
 	RhelVersion = "-rhel8"
 
