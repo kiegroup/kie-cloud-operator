@@ -3772,6 +3772,58 @@ func TestDatabaseExternalPostgreSQLXAUrl(t *testing.T) {
 
 }
 
+func TestDatabaseExternalWithNoURL(t *testing.T) {
+	deployments := 1
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						Database: &api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.ExternalDatabaseObject{
+								Port: "1000",
+								Host: "hosta-com",
+								Name: "rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mariadb",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "user",
+										Password:             "password",
+									},
+								},
+								Dialect: "org.hibernate.dialect.MariaDB10Dialect",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_URL"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_Url"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_URL"))
+	assert.Equal(t, "rhpam", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE"))
+	assert.Equal(t, "hosta-com", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_HOST"))
+	assert.Equal(t, "1000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_PORT"))
+}
+
 func TestDatabaseH2(t *testing.T) {
 	deployments := 2
 	cr := &api.KieApp{
