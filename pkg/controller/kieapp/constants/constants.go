@@ -13,9 +13,9 @@ var Ocp4Versions = []string{"4.12", "4.11", "4.10"}
 
 const (
 	// CurrentVersion product version supported
-	CurrentVersion = "8.0.3"
+	CurrentVersion = "8.0.4"
 	// PriorVersion product version supported
-	PriorVersion = "8.0.2"
+	PriorVersion = "8.0.3"
 )
 
 // SupportedVersions - product versions this operator supports
