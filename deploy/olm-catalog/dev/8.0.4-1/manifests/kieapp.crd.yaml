@@ -83,6 +83,11 @@ spec:
                       defaultRole:
                         description: A role included for all authenticated users
                         type: string
+                      directVerification:
+                        description: Does this realm support verification of credentials
+                          by directly connecting to LDAP as the account being authenticated?
+                          Boolean flag, defaults to false.
+                        type: boolean
                       distinguishedNameAttribute:
                         description: Deprecated - parameter not supported by Elytron
                           The name of the attribute in the user entry that contains
@@ -3058,6 +3063,11 @@ spec:
                           defaultRole:
                             description: A role included for all authenticated users
                             type: string
+                          directVerification:
+                            description: Does this realm support verification of credentials
+                              by directly connecting to LDAP as the account being
+                              authenticated? Boolean flag, defaults to false.
+                            type: boolean
                           distinguishedNameAttribute:
                             description: Deprecated - parameter not supported by Elytron
                               The name of the attribute in the user entry that contains

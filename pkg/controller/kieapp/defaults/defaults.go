@@ -1343,7 +1343,7 @@ func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	}
 	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Funcs(funcs).Parse(objYaml)
 	if err != nil {
-		log.Error("Error creating new Go template.")
+		log.Error("Error creating new Go template.", err)
 		return []byte{}, err
 	}
 
