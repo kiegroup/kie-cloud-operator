@@ -1360,8 +1360,7 @@ func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	// template replacement
 	err = tmpl.Execute(&b, env)
 	if err != nil {
-		log.Error("Error applying Go template.")
-
+		log.Error("Error applying Go template.", err)
 		return []byte{}, err
 	}
 

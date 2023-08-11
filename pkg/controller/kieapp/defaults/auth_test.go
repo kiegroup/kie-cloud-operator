@@ -351,6 +351,14 @@ func TestAuthLDAPEmptyConfig(t *testing.T) {
 }
 
 func TestAuthLDAPConfig(t *testing.T) {
+	commonTestLDAPConfig(t, true, false)
+}
+
+func TestAuthLDAPConfigWithDirectVerification(t *testing.T) {
+	commonTestLDAPConfig(t, false, true)
+}
+
+func commonTestLDAPConfig(t *testing.T, emptyPass bool, directVerification bool) {
 	cr := &api.KieApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -371,11 +379,16 @@ func TestAuthLDAPConfig(t *testing.T) {
 					NewIdentityAttributes: "sn=BlankSurname;cn=BlankCommonName",
 					LoginModule:           "required",
 					LoginFailover:         true,
-					AllowEmptyPasswords:   true,
+					AllowEmptyPasswords:   emptyPass,
 				},
 			},
 		},
 	}
+
+	if directVerification {
+		cr.Spec.Auth.LDAP.DirectVerification = directVerification
+	}
+
 	env, err := GetEnvironment(cr, test.MockService())
 
 	assert.Nil(t, err, "Error getting trial environment")
@@ -389,8 +402,13 @@ func TestAuthLDAPConfig(t *testing.T) {
 		{Name: "AUTH_LDAP_NEW_IDENTITY_ATTRIBUTES", Value: "sn=BlankSurname;cn=BlankCommonName"},
 		{Name: "AUTH_LDAP_LOGIN_MODULE", Value: "required"},
 		{Name: "AUTH_LDAP_LOGIN_FAILOVER", Value: "true"},
-		{Name: "AUTH_LDAP_ALLOW_EMPTY_PASSWORDS", Value: "true"},
+		{Name: "AUTH_LDAP_ALLOW_EMPTY_PASSWORDS", Value: strconv.FormatBool(emptyPass)},
 	}
+
+	if directVerification {
+		expectedEnvs = append(expectedEnvs, corev1.EnvVar{Name: "AUTH_LDAP_DIRECT_VERIFICATION", Value: "true"})
+	}
+
 	for _, expectedEnv := range expectedEnvs {
 		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 		for i := range env.Servers {
