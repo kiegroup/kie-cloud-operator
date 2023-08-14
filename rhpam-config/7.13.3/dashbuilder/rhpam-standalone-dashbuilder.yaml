@@ -212,8 +212,6 @@ dashbuilder:
                     value: "[[.Auth.LDAP.BindCredential]]"
                   - name: AUTH_LDAP_ALLOW_EMPTY_PASSWORDS
                     value: "[[.Auth.LDAP.AllowEmptyPasswords]]"
-                  - name: AUTH_LDAP_DIRECT_VERIFICATION
-                    value: "[[$.Auth.LDAP.DirectVerification]]"
                   - name: AUTH_LDAP_BASE_CTX_DN
                     value: "[[.Auth.LDAP.BaseCtxDN]]"
                   - name: AUTH_LDAP_BASE_FILTER
