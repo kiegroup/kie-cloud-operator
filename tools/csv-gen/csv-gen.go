@@ -169,6 +169,7 @@ func main() {
 				"tectonic-visibility": "ocs",
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
 				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
+				"operators.openshift.io/valid-subscription":      "[\"IBM Business Automation Manager Open Edition\"]",
 			},
 		)
 		templateStruct.SetLabels(
