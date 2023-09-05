@@ -1347,8 +1347,11 @@ func loadYaml(service kubernetes.PlatformService, filename, productVersion, name
 
 func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	var b bytes.Buffer
-
-	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Parse(objYaml)
+	// add custom functions to the templates' if conditions
+	funcs := map[string]interface{}{
+		"contains": strings.Contains,
+	}
+	tmpl, err := template.New(env.ApplicationName).Delims("[[", "]]").Funcs(funcs).Parse(objYaml)
 	if err != nil {
 		log.Error("Error creating new Go template.")
 		return []byte{}, err
@@ -1357,8 +1360,7 @@ func parseTemplate(env api.EnvTemplate, objYaml string) ([]byte, error) {
 	// template replacement
 	err = tmpl.Execute(&b, env)
 	if err != nil {
-		log.Error("Error applying Go template.")
-
+		log.Error("Error applying Go template.", err)
 		return []byte{}, err
 	}
 
