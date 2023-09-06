@@ -3641,6 +3641,189 @@ func TestDatabaseExternal(t *testing.T) {
 	}
 }
 
+func TestDatabaseExternalMariaDBXAUrl(t *testing.T) {
+	deployments := 1
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						Database: &api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.ExternalDatabaseObject{
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:mariadb://host.abc.com:3306/bpms",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mariadb",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "user",
+										Password:             "password",
+									},
+								},
+								Dialect: "org.hibernate.dialect.MariaDB10Dialect",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
+	assert.Equal(t, "RHPAM", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "DATASOURCES"))
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JTA"))
+	assert.Equal(t, "10000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL"))
+	assert.Equal(t, "mariadb", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
+	assert.Equal(t, "user", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_USERNAME"))
+	assert.Equal(t, "password", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD"))
+	assert.Equal(t, "jdbc:mariadb://host.abc.com:3306/bpms", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_URL"))
+	assert.Equal(t, "jdbc:mariadb://host.abc.com:3306/bpms", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_Url"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_URL"))
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_BACKGROUND_VALIDATION"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_VALIDATION_MILLIS"))
+	assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_CONNECTION_CHECKER"))
+	assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_EXCEPTION_SORTER"))
+	assert.Equal(t, "java:/jboss/datasources/rhpam", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JNDI"))
+	assert.Equal(t, "org.hibernate.dialect.MariaDB10Dialect", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_PERSISTENCE_DIALECT"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_HOST"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_PORT"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_NONXA"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_MIN_POOL_SIZE"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_MAX_POOL_SIZE"))
+}
+
+func TestDatabaseExternalPostgreSQLXAUrl(t *testing.T) {
+	deployments := 1
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						Database: &api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.ExternalDatabaseObject{
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									JdbcURL: "jdbc:postgresql://host.abc.com:3306/bpms",
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "postgresql",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "user",
+										Password:             "password",
+									},
+								},
+								Dialect: "org.hibernate.dialect.PostgreSQL91Dialect",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
+	assert.Equal(t, "RHPAM", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "DATASOURCES"))
+	assert.Equal(t, "true", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JTA"))
+	assert.Equal(t, "10000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "TIMER_SERVICE_DATA_STORE_REFRESH_INTERVAL"))
+	assert.Equal(t, "postgresql", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DRIVER"))
+	assert.Equal(t, "user", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_USERNAME"))
+	assert.Equal(t, "password", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_PASSWORD"))
+	assert.Equal(t, "jdbc:postgresql://host.abc.com:3306/bpms", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_URL"))
+	assert.Equal(t, "jdbc:postgresql://host.abc.com:3306/bpms", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_Url"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_URL"))
+	assert.Equal(t, "false", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_BACKGROUND_VALIDATION"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_VALIDATION_MILLIS"))
+	assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_CONNECTION_CHECKER"))
+	assert.Equal(t, "org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_EXCEPTION_SORTER"))
+	assert.Equal(t, "java:/jboss/datasources/rhpam", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_JNDI"))
+	assert.Equal(t, "org.hibernate.dialect.PostgreSQL91Dialect", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_PERSISTENCE_DIALECT"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_HOST"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_PORT"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_NONXA"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_MIN_POOL_SIZE"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_MAX_POOL_SIZE"))
+
+}
+
+func TestDatabaseExternalWithNoURL(t *testing.T) {
+	deployments := 1
+	cr := &api.KieApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: api.KieAppSpec{
+			Environment: api.RhpamProductionImmutable,
+			Objects: api.KieAppObjects{
+				Servers: []api.KieServerSet{
+					{
+						Deployments: Pint(deployments),
+						Database: &api.DatabaseObject{
+							InternalDatabaseObject: api.InternalDatabaseObject{
+								Type: api.DatabaseExternal,
+							},
+							ExternalConfig: &api.ExternalDatabaseObject{
+								Port: "1000",
+								Host: "hosta-com",
+								Name: "rhpam",
+								CommonExtDBObjectURL: api.CommonExtDBObjectURL{
+									CommonExternalDatabaseObject: api.CommonExternalDatabaseObject{
+										Driver:               "mariadb",
+										ConnectionChecker:    "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker",
+										ExceptionSorter:      "org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter",
+										BackgroundValidation: "false",
+										Username:             "user",
+										Password:             "password",
+									},
+								},
+								Dialect: "org.hibernate.dialect.MariaDB10Dialect",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	env, err := GetEnvironment(cr, test.MockService())
+	env = ConsolidateObjects(env, cr)
+
+	assert.Nil(t, err, "Error getting prod environment")
+	assert.Nil(t, env.Console.DeploymentConfigs)
+
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_URL"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_Url"))
+	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_XA_CONNECTION_PROPERTY_URL"))
+	assert.Equal(t, "rhpam", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_DATABASE"))
+	assert.Equal(t, "hosta-com", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_HOST"))
+	assert.Equal(t, "1000", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "RHPAM_SERVICE_PORT"))
+}
+
 func TestDatabaseH2(t *testing.T) {
 	deployments := 2
 	cr := &api.KieApp{
