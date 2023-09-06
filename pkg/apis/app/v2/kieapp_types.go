@@ -427,6 +427,9 @@ type LDAPAuthConfig struct {
 	// Does this realm support blank password direct verification? Blank password attempt will be rejected otherwise.
 	// Boolean flag, defaults to false.
 	AllowEmptyPasswords bool `json:"allowEmptyPasswords,omitempty"`
+	// Does this realm support verification of credentials by directly connecting to LDAP as the account being
+	// authenticated? Boolean flag, defaults to false.
+	DirectVerification bool `json:"directVerification,omitempty"`
 	// +kubebuilder:validation:Required
 	// LDAP endpoint to connect for authentication. For failover set two or more LDAP endpoints separated by space
 	URL string `json:"url"`
