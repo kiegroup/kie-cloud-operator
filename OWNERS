@@ -1,14 +1,10 @@
 reviewers:
-  - bmozaffa
-  - tchughesiv
-  - ruromero
-  - spolti
-  - vaibhavjainwiz
-  - desmax74
-  - davidesalerno
+  - spolti 
+  - jakubschwan 
   - rgdoliveira
+  - mareknovotny
 approvers:
-  - bmozaffa
-  - tchughesiv
   - spolti
-  - vaibhavjainwiz
+  - rgdoliveira
+  - jakubschwan 
+  - mareknovotny
