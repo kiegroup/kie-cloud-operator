@@ -8,7 +8,7 @@ import (
 )
 
 // Ocp4Versions - OpenShift minor versions used for image curation
-var Ocp4Versions = []string{"4.12", "4.11", "4.10"}
+var Ocp4Versions = []string{"4.14", "4.13", "4.12"}
 
 const (
 	// CurrentVersion product version supported
