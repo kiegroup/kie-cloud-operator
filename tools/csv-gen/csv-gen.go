@@ -170,6 +170,13 @@ func main() {
 				"alm-examples":        "[" + strings.Join(examples, ",") + "]",
 				"operators.openshift.io/infrastructure-features": "[\"Disconnected\"]",
 				"operators.openshift.io/valid-subscription":      "[\"IBM Business Automation Manager Open Edition\"]",
+				"features.operators.openshift.io/disconnected":     "false",
+				"features.operators.openshift.io/fips-compliant":   "false",
+				"features.operators.openshift.io/proxy-aware":      "false",
+				"features.operators.openshift.io/tls-profiles":     "false",
+				"features.operators.openshift.io/token-auth-aws":   "false",
+				"features.operators.openshift.io/token-auth-azure": "false",
+				"features.operators.openshift.io/token-auth-gcp":   "false",
 			},
 		)
 		templateStruct.SetLabels(
