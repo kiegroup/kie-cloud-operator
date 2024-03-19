@@ -7,9 +7,16 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/kiegroup/kie-cloud-operator:7.13.5
-    createdAt: "2024-02-28 14:32:08"
+    createdAt: "2024-03-18 17:59:53"
     description: Deploys and manages Red Hat Process Automation Manager and Red Hat
       Decision Manager environments.
+    features.operators.openshift.io/disconnected: "false"
+    features.operators.openshift.io/fips-compliant: "false"
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Process Automation Manager",
       "Red Hat Decision Manager"]'
@@ -20,7 +27,7 @@ metadata:
     operator-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: businessautomation-operator.7.13.5-1-dev-wgzql99gn9
+  name: businessautomation-operator.7.13.5-1-dev-xx8gck4xxp
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -405,7 +412,7 @@ spec:
   - operator
   labels:
     alm-owner-businessautomation: businessautomation-operator
-    operated-by: businessautomation-operator.7.13.5-1-dev-wgzql99gn9
+    operated-by: businessautomation-operator.7.13.5-1-dev-xx8gck4xxp
   links:
   - name: Product Page
     url: https://access.redhat.com/products/red-hat-process-automation-manager
@@ -421,5 +428,5 @@ spec:
   selector:
     matchLabels:
       alm-owner-businessautomation: businessautomation-operator
-      operated-by: businessautomation-operator.7.13.5-1-dev-wgzql99gn9
-  version: 7.13.5-1+wgzql99gn9
+      operated-by: businessautomation-operator.7.13.5-1-dev-xx8gck4xxp
+  version: 7.13.5-1+xx8gck4xxp
