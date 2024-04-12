@@ -6,10 +6,17 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "true"
-    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.4
-    createdAt: "2024-02-13 14:42:39"
+    containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
+    createdAt: "2024-04-12 18:13:53"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
+    features.operators.openshift.io/disconnected: "false"
+    features.operators.openshift.io/fips-compliant: "false"
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["IBM Business Automation Manager
       Open Edition"]'
@@ -20,7 +27,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.4-3-dev-tf6sqbzcwm
+  name: bamoe-businessautomation-operator.8.0.5-1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -170,63 +177,63 @@ spec:
                   value: "true"
                 - name: DEBUG
                   value: "false"
+                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.5
+                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.5
+                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.5
+                - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.5
+                  value: registry.redhat.io/openshift4/ose-cli:v4.14
+                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.5
+                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
+                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.5
+                  value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
+                - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.5
+                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
+                - name: RELATED_IMAGE_BROKER_IMAGE_8.0.5
+                  value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-controller-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.4
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.4
-                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.4
+                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.4
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.4
-                  value: registry.redhat.io/openshift4/ose-cli:v4.12
+                  value: registry.redhat.io/openshift4/ose-cli:v4.14
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.4
                   value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.4
-                  value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
-                - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.4
-                  value: registry.redhat.io/datagrid/datagrid-8-rhel8:1.1
-                - name: RELATED_IMAGE_BROKER_IMAGE_8.0.4
-                  value: registry.redhat.io/amq7/amq-broker-rhel8:7.9
-                - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.3
-                - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.3
-                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.3
-                - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.3
-                  value: registry.redhat.io/openshift4/ose-cli:v4.12
-                - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.3
-                  value: registry.redhat.io/rhscl/mysql-80-rhel7:latest
-                - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.3
                   value: registry.redhat.io/rhscl/postgresql-12-rhel7:latest
-                - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.3
+                - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.4
                   value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift:1.6
-                - name: RELATED_IMAGE_BROKER_IMAGE_8.0.3
+                - name: RELATED_IMAGE_BROKER_IMAGE_8.0.4
                   value: registry.redhat.io/amq7/amq-broker:7.8
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_LATEST
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.14
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.14
+                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.13
+                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.13
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.12
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.11
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.11
-                - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.10
-                  value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.10
-                image: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.4
+                image: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
                 imagePullPolicy: Always
                 name: bamoe-business-automation-operator
                 resources: {}
@@ -401,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.4-3-dev-tf6sqbzcwm
+    operated-by: bamoe-businessautomation-operator.8.0.5-1
   links:
   - name: Product Page
     url: https://ibm.com
@@ -410,12 +417,12 @@ spec:
   maintainers:
   - email: mysphelp@us.ibm.com
     name: IBM
-  maturity: test
+  maturity: 8.x-stable
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.4-2
+  replaces: bamoe-businessautomation-operator.8.0.4-3
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.4-3-dev-tf6sqbzcwm
-  version: 8.0.4-3+tf6sqbzcwm
+      operated-by: bamoe-businessautomation-operator.8.0.5-1
+  version: 8.0.5-1
