@@ -6,8 +6,8 @@ metadata:
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
     certified: "true"
-    containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
-    createdAt: "2024-04-12 18:13:53"
+    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.5
+    createdAt: "2024-06-27 12:14:45"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     features.operators.openshift.io/disconnected: "false"
@@ -27,7 +27,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.5-1
+  name: bamoe-businessautomation-operator.8.0.5-3-dev-9z5xtdtc6w
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -178,19 +178,19 @@ spec:
                 - name: DEBUG
                   value: "false"
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-kieserver-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-controller-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-process-migration-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.5
+                  value: registry-proxy.engineering.redhat.com/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.5
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.5
                   value: registry.redhat.io/openshift4/ose-cli:v4.14
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.5
@@ -233,7 +233,7 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.13
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.12
-                image: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
+                image: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.5
                 imagePullPolicy: Always
                 name: bamoe-business-automation-operator
                 resources: {}
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.5-1
+    operated-by: bamoe-businessautomation-operator.8.0.5-3-dev-9z5xtdtc6w
   links:
   - name: Product Page
     url: https://ibm.com
@@ -417,12 +417,12 @@ spec:
   maintainers:
   - email: mysphelp@us.ibm.com
     name: IBM
-  maturity: 8.x-stable
+  maturity: test
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.4-3
+  replaces: bamoe-businessautomation-operator.8.0.5-2
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.5-1
-  version: 8.0.5-1
+      operated-by: bamoe-businessautomation-operator.8.0.5-3-dev-9z5xtdtc6w
+  version: 8.0.5-3+9z5xtdtc6w

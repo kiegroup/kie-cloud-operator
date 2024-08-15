@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
-    createdAt: "2024-04-12 18:13:53"
+    createdAt: "2024-05-27 19:28:58"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     features.operators.openshift.io/disconnected: "false"
@@ -27,7 +27,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.5-1
+  name: bamoe-businessautomation-operator.8.0.5-2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.5-1
+    operated-by: bamoe-businessautomation-operator.8.0.5-2
   links:
   - name: Product Page
     url: https://ibm.com
@@ -420,9 +420,9 @@ spec:
   maturity: 8.x-stable
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.4-3
+  replaces: bamoe-businessautomation-operator.8.0.5-1
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.5-1
-  version: 8.0.5-1
+      operated-by: bamoe-businessautomation-operator.8.0.5-2
+  version: 8.0.5-2

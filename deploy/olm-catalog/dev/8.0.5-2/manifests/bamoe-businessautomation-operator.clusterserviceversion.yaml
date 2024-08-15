@@ -5,9 +5,9 @@ metadata:
     alm-examples: '[{"apiVersion":"app.kiegroup.org/v2","kind":"KieApp","metadata":{"name":"rhpam-trial"},"spec":{"environment":"rhpam-trial"}}]'
     capabilities: Seamless Upgrades
     categories: Integration & Delivery
-    certified: "true"
-    containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
-    createdAt: "2024-04-12 18:13:53"
+    certified: "false"
+    containerImage: quay.io/kiegroup/kie-cloud-operator:8.0.5
+    createdAt: "2024-05-27 19:28:58"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     features.operators.openshift.io/disconnected: "false"
@@ -27,7 +27,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.5-1
+  name: bamoe-businessautomation-operator.8.0.5-2-dev-shnjghh68l
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -121,7 +121,7 @@ spec:
     Deploys and manages IBM Business Automation Manager Open Editions environment.
 
     * **IBM Process Automation Manager** is a platform for developing containerized microservices and applications that automate business decisions and processes. It includes business process management (BPM), business rules management (BRM), and business resource optimization and complex event processing (CEP) technologies. It also includes a user experience platform to create engaging user interfaces for process and decision services with minimal coding.
-  displayName: IBM Business Automation
+  displayName: IBM Business Automation (DEV)
   icon:
   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MS44IiBoZWlnaHQ9IjE5LjMzIiB2aWV3Qm94PSIwIDAgNTEuOCAxOS4zMyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0MjZhYjM7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM4Ljc2LDkuMiwzOC4zLDcuODZIMzAuNjFWOS4yWm0uOSwyLjU3LS40Ny0xLjM1SDMwLjYxdjEuMzVabTUuNzEsMTUuMzdoNi43MVYyNS44SDQ1LjM3djEuMzRabTAtMi41Nmg2LjcxVjIzLjIzSDQ1LjM3djEuMzVabTAtMi41N2g0VjIwLjY3aC00VjIyWm00LTMuOWgtNHYxLjM0aDRWMTguMTFabS00LTEuMjJoNFYxNS41NUg0MS43M2wtLjM4LDEuMDhMNDEsMTUuNTVIMzMuM3YxLjM0aDRWMTUuNjZsLjQ0LDEuMjNoNy4xOGwuNDMtMS4yM3YxLjIzWm00LTMuOUg0Mi42MmwtLjQ3LDEuMzRINDkuNFYxM1pNMzMuMywxOS40NWg0VjE4LjExaC00djEuMzRabTAsMi41Nmg0VjIwLjY3aC00VjIyWm0tMi42OSwyLjU3aDYuNzFWMjMuMjNIMzAuNjF2MS4zNVptMCwyLjU2aDYuNzFWMjUuOEgzMC42MXYxLjM0Wk00NC40LDcuODYsNDMuOTMsOS4yaDguMTVWNy44NlpNNDMsMTEuNzdoOVYxMC40Mkg0My41MUw0MywxMS43N1pNMzMuMywxNC4zM2g3LjI1TDQwLjA4LDEzSDMzLjN2MS4zNFptNS4zNSw1LjEySDQ0bC40Ny0xLjM0SDM4LjE4bC40NywxLjM0Wm0uOSwyLjU2aDMuNTlsLjQ3LTEuMzRIMzkuMDhMMzkuNTUsMjJabS45LDIuNTdoMS43OWwuNDctMS4zNUg0MGwuNDcsMS4zNVptLjksMi41Ni40Ni0xLjM0aC0uOTNsLjQ3LDEuMzRabS0yNi44NCwwaDkuODhhNS4xMSw1LjExLDAsMCwwLDMuNDYtMS4zNEgxNC41MXYxLjM0Wk0yNSwyMC42N1YyMmg0LjUxYTUuNDEsNS40MSwwLDAsMC0uMTctMS4zNFpNMTcuMTksMjJoNFYyMC42N2gtNFYyMlpNMjUsMTQuMzNoNC4zNEE1LjQxLDUuNDEsMCwwLDAsMjkuNTEsMTNIMjV2MS4zNFptLTcuODEsMGg0VjEzaC00djEuMzRabTcuMi02LjQ3SDE0LjUxVjkuMkgyNy44NWE1LjEzLDUuMTMsMCwwLDAtMy40Ni0xLjM0Wm00LjQ0LDIuNTZIMTQuNTF2MS4zNUgyOS4zN2E1LjMsNS4zLDAsMCwwLS41NC0xLjM1Wk0xNy4xOSwxNS41NXYxLjM0SDI3LjcxYTUuMzYsNS4zNiwwLDAsMCwxLjEyLTEuMzRabTEwLjUyLDIuNTZIMTcuMTl2MS4zNEgyOC44M2E1LjM2LDUuMzYsMCwwLDAtMS4xMi0xLjM0Wm0tMTMuMiw2LjQ3SDI4LjgzYTUuMyw1LjMsMCwwLDAsLjU0LTEuMzVIMTQuNTF2MS4zNVpNMy43Nyw5LjJoOS40VjcuODZIMy43N1Y5LjJabTAsMi41N2g5LjRWMTAuNDJIMy43N3YxLjM1Wk0xMC40OCwxM2gtNHYxLjM0aDRWMTNabS00LDMuOWg0VjE1LjU1aC00djEuMzRabTAsMi41Nmg0VjE4LjExaC00djEuMzRabTAsMi41Nmg0VjIwLjY3aC00VjIyWk0zLjc3LDI0LjU4aDkuNFYyMy4yM0gzLjc3djEuMzVabTAsMS4yMmg5LjR2MS4zNEgzLjc3VjI1LjhabTUwLjgyLjMyYy4wOSwwLC4xMywwLC4xMy0uMTJ2LS4wN2MwLS4wOCwwLS4xMi0uMTMtLjEySDU0LjR2LjMxWm0tLjE5LjU2aC0uMjZWMjUuNjFoLjQ5QS4zMi4zMiwwLDAsMSw1NSwyNmEuMzIuMzIsMCwwLDEtLjIuMzJsLjI1LjQxaC0uMjlsLS4yLS4zN0g1NC40di4zN1ptLjk0LS40OHYtLjEzYS43OS43OSwwLDAsMC0xLjU3LDB2LjEzYS43OS43OSwwLDAsMCwxLjU3LDBabS0xLjgxLS4wNmExLDEsMCwxLDEsMSwxLjA1LDEsMSwwLDAsMS0xLTEuMDVaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMy43NyAtNy44NikiLz48L3N2Zz4=
     mediatype: image/svg+xml
@@ -178,19 +178,19 @@ spec:
                 - name: DEBUG
                   value: "false"
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.5
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.5
-                  value: registry.stage.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.5
+                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.5
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.5
                   value: registry.redhat.io/openshift4/ose-cli:v4.14
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.5
@@ -233,7 +233,7 @@ spec:
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.13
                 - name: RELATED_IMAGE_OAUTH_PROXY_IMAGE_4.12
                   value: registry.redhat.io/openshift4/ose-oauth-proxy:v4.12
-                image: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel8-operator:8.0.5
+                image: quay.io/kiegroup/kie-cloud-operator:8.0.5
                 imagePullPolicy: Always
                 name: bamoe-business-automation-operator
                 resources: {}
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.5-1
+    operated-by: bamoe-businessautomation-operator.8.0.5-2-dev-shnjghh68l
   links:
   - name: Product Page
     url: https://ibm.com
@@ -417,12 +417,12 @@ spec:
   maintainers:
   - email: mysphelp@us.ibm.com
     name: IBM
-  maturity: 8.x-stable
+  maturity: dev
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.4-3
+  replaces: bamoe-businessautomation-operator.8.0.5-1
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.5-1
-  version: 8.0.5-1
+      operated-by: bamoe-businessautomation-operator.8.0.5-2-dev-shnjghh68l
+  version: 8.0.5-2+shnjghh68l
