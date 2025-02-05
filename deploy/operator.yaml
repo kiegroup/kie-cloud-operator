@@ -35,6 +35,8 @@ spec:
               fieldPath: metadata.namespace
         - name: OPERATOR_UI
           value: "true"
+        - name: OPERATOR_UI_HOSTNAME
+          value: ""
         - name: DEBUG
           value: "false"
         - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_7.13.5
