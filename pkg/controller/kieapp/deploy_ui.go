@@ -338,7 +338,7 @@ func getRoute(namespace string) *routev1.Route {
 			Labels:    labels,
 		},
 		Spec: routev1.RouteSpec{
-			Host: operatorUIHostname
+			Host: operatorUIHostname,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: consoleName,
