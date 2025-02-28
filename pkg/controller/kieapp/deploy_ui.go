@@ -438,7 +438,7 @@ func getServiceAccount(namespace string) *corev1.ServiceAccount {
 			Namespace: namespace,
 			Labels:    labels,
 			Annotations: map[string]string{
-				"serviceaccounts.openshift.io/internal-registry-pull-secret-ref:console-cr-form-dockercfg-q7bbpserviceaccounts.openshift.io/oauth-redirectreference.primary": string(annotation),
+				"serviceaccounts.openshift.io/console-cr-form-dockercfg-q7bbpserviceaccounts.openshift.io/oauth-redirectreference.primary": string(annotation),
 			},
 		},
 	}
