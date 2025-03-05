@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry-proxy.engineering.redhat.com/rh-osbs/bamoe-8-rhpam-rhel8-operator:8.0.7
-    createdAt: "2025-02-25 17:29:03"
+    createdAt: "2025-03-05 10:38:37"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     features.operators.openshift.io/disconnected: "false"
@@ -27,7 +27,7 @@ metadata:
     operator-bamoe-businessautomation: "true"
     operatorframework.io/arch.amd64: supported
     operatorframework.io/os.linux: supported
-  name: bamoe-businessautomation-operator.8.0.7-1-dev-559k2rb8lj
+  name: bamoe-businessautomation-operator.8.0.7-1-dev-pz2vhs88mp
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -408,7 +408,7 @@ spec:
   - operator
   labels:
     alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-    operated-by: bamoe-businessautomation-operator.8.0.7-1-dev-559k2rb8lj
+    operated-by: bamoe-businessautomation-operator.8.0.7-1-dev-pz2vhs88mp
   links:
   - name: Product Page
     url: https://ibm.com
@@ -420,9 +420,9 @@ spec:
   maturity: test
   provider:
     name: IBM
-  replaces: bamoe-businessautomation-operator.8.0.7-4
+  replaces: bamoe-businessautomation-operator.8.0.6-4
   selector:
     matchLabels:
       alm-owner-bamoe-businessautomation: bamoe-businessautomation-operator
-      operated-by: bamoe-businessautomation-operator.8.0.7-1-dev-559k2rb8lj
-  version: 8.0.7-1+559k2rb8lj
+      operated-by: bamoe-businessautomation-operator.8.0.7-1-dev-pz2vhs88mp
+  version: 8.0.7-1+pz2vhs88mp
