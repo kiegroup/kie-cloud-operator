@@ -102,6 +102,10 @@ func GetDeployment(operatorName, repository, context, imageName, tag, imagePullP
 									Value: "true",
 								},
 								{
+									Name:  "OPERATOR_UI_HOSTNAME",
+									Value: "",
+								},
+								{
 									Name:  "DEBUG",
 									Value: "false",
 								},
