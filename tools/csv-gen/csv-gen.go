@@ -21,7 +21,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/tools/util"
 	"github.com/kiegroup/kie-cloud-operator/version"
-	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	oimagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -226,8 +225,8 @@ func main() {
 				Name:        "kieapps." + api.SchemeGroupVersion.Group,
 				Resources: []csvv1.APIResourceReference{
 					{
-						Kind:    "DeploymentConfig",
-						Version: oappsv1.GroupVersion.String(),
+						Kind:    "Deployment",
+						Version: appsv1.SchemeGroupVersion.String(),
 					},
 					{
 						Kind:    "StatefulSet",
