@@ -1,5 +1,5 @@
 console:
-  deploymentConfigs:
+  deployments:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:

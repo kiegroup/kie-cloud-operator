@@ -1,5 +1,5 @@
 console:
-  deploymentConfigs:
+  deployments:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
@@ -40,7 +40,7 @@ console:
 servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
-  - deploymentConfigs:
+  - deployments:
       ## KIE server deployment config BEGIN
       - metadata:
           name: "[[.KieName]]"
