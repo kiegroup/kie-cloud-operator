@@ -202,19 +202,19 @@ spec:
                 - name: RELATED_IMAGE_BROKER_IMAGE_8.0.9
                   value: registry.redhat.io/amq7/amq-broker-rhel9:7.13
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-controller-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_BC_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_BC_MONITORING_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-businesscentral-monitoring-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_SMARTROUTER_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-smartrouter-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_PROCESS_MIGRATION_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-process-migration-rhel8:8.0.8
                 - name: RELATED_IMAGE_PAM_DASHBUILDER_IMAGE_8.0.8
-                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel9:8.0.8
+                  value: registry.redhat.io/ibm-bamoe/bamoe-dashbuilder-rhel8:8.0.8
                 - name: RELATED_IMAGE_OSE_CLI_IMAGE_8.0.8
                   value: registry.redhat.io/openshift4/ose-cli:v4.15
                 - name: RELATED_IMAGE_MYSQL_PROXY_IMAGE_8.0.8
