@@ -7,7 +7,7 @@ metadata:
     categories: Integration & Delivery
     certified: "true"
     containerImage: registry.stage.redhat.io/ibm-bamoe/bamoe-rhel9-operator:8.0.9
-    createdAt: "2026-02-09 12:21:04"
+    createdAt: "2026-02-16 13:53:46"
     description: Deploys and manages IBM Business Automation Manager Open Editions
       environment.
     features.operators.openshift.io/disconnected: "false"
@@ -38,9 +38,9 @@ spec:
       kind: KieApp
       name: kieapps.app.kiegroup.org
       resources:
-      - kind: Deployment
+      - kind: DeploymentConfig
         name: ""
-        version: apps/v1
+        version: apps.openshift.io/v1
       - kind: StatefulSet
         name: ""
         version: apps/v1
@@ -198,9 +198,9 @@ spec:
                 - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.9
                   value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
                 - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.9
-                  value: registry.redhat.io/datagrid/datagrid-8-rhel9:1.1
+                  value: registry.redhat.io/datagrid/datagrid-8-rhel9:1.5
                 - name: RELATED_IMAGE_BROKER_IMAGE_8.0.9
-                  value: registry.redhat.io/amq7/amq-broker-rhel9:7.9
+                  value: registry.redhat.io/amq7/amq-broker-rhel9:7.13
                 - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.8
                   value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel9:8.0.8
                 - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.8
