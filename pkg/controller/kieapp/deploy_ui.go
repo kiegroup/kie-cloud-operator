@@ -31,6 +31,7 @@ import (
 
 var consoleName = "console-cr-form"
 var operatorName = os.Getenv(constants.OpNameEnv)
+var operatorUIHostname = os.Getenv(constants.OPUIHostEnv)
 var caConfigMapName = operatorName + "-trusted-cabundle"
 
 func shouldDeployConsole() bool {
@@ -337,6 +338,7 @@ func getRoute(namespace string) *routev1.Route {
 			Labels:    labels,
 		},
 		Spec: routev1.RouteSpec{
+			Host: operatorUIHostname,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: consoleName,
