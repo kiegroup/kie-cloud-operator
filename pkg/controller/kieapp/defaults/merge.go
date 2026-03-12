@@ -63,6 +63,7 @@ func mergeCustomObject(baseline api.CustomObject, overwrite api.CustomObject) ap
 	object.Roles = mergeRoles(baseline.Roles, overwrite.Roles)
 	object.RoleBindings = mergeRoleBindings(baseline.RoleBindings, overwrite.RoleBindings)
 	object.DeploymentConfigs = mergeDeploymentConfigs(baseline.DeploymentConfigs, overwrite.DeploymentConfigs)
+	object.Deployments = mergeDeployments(baseline.Deployments, overwrite.Deployments)
 	object.StatefulSets = mergeStatefulSets(baseline.StatefulSets, overwrite.StatefulSets)
 	object.ImageStreams = mergeImageStreams(baseline.ImageStreams, overwrite.ImageStreams)
 	object.BuildConfigs = mergeBuildConfigs(baseline.BuildConfigs, overwrite.BuildConfigs)
@@ -239,6 +240,51 @@ func mergeDeploymentConfigs(baseline []oappsv1.DeploymentConfig, overwrite []oap
 
 }
 
+func mergeDeployments(baseline []appsv1.Deployment, overwrite []appsv1.Deployment) []appsv1.Deployment {
+	if len(overwrite) == 0 {
+		return baseline
+	}
+	if len(baseline) == 0 {
+		return overwrite
+	}
+	baselineRefs := getDeploymentReferenceSlice(baseline)
+	overwriteRefs := getDeploymentReferenceSlice(overwrite)
+	for overwriteIndex := range overwrite {
+		overwriteItem := &overwrite[overwriteIndex]
+		baselineIndex, _ := findOpenShiftObject(overwriteItem, baselineRefs)
+		if baselineIndex >= 0 {
+			baselineItem := baseline[baselineIndex]
+			err := mergo.Merge(&overwriteItem.ObjectMeta, baselineItem.ObjectMeta)
+			if err != nil {
+				log.Error("Error merging interfaces. ", err)
+				return nil
+			}
+			mergedSpec, err := mergeDeploymentSpec(baselineItem.Spec, overwriteItem.Spec)
+			if err != nil {
+				log.Error("Error merging Deployment Specs. ", err)
+				return nil
+			}
+			overwriteItem.Spec = mergedSpec
+		}
+	}
+	slice := make([]appsv1.Deployment, combinedSize(baselineRefs, overwriteRefs))
+	err := mergeObjects(baselineRefs, overwriteRefs, slice)
+	if err != nil {
+		log.Error("Error merging objects. ", err)
+		return nil
+	}
+	return slice
+
+}
+
+func getDeploymentReferenceSlice(objects []appsv1.Deployment) []api.OpenShiftObject {
+	slice := make([]api.OpenShiftObject, len(objects))
+	for index := range objects {
+		slice[index] = &objects[index]
+	}
+	return slice
+}
+
 func mergeStatefulSets(baseline []appsv1.StatefulSet, overwrite []appsv1.StatefulSet) []appsv1.StatefulSet {
 	if len(overwrite) == 0 {
 		return baseline
@@ -354,6 +400,20 @@ func mergeDCSpec(baseline oappsv1.DeploymentConfigSpec, overwrite oappsv1.Deploy
 	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
 	if err != nil {
 		return oappsv1.DeploymentConfigSpec{}, nil
+	}
+	return baseline, nil
+}
+
+func mergeDeploymentSpec(baseline appsv1.DeploymentSpec, overwrite appsv1.DeploymentSpec) (appsv1.DeploymentSpec, error) {
+	mergedTemplate, err := mergeTemplate(&baseline.Template, &overwrite.Template)
+	if err != nil {
+		return appsv1.DeploymentSpec{}, err
+	}
+	overwrite.Template = *mergedTemplate
+
+	err = mergo.Merge(&baseline, overwrite, mergo.WithOverride)
+	if err != nil {
+		return appsv1.DeploymentSpec{}, nil
 	}
 	return baseline, nil
 }

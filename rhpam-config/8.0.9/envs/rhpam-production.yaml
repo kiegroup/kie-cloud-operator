@@ -7,7 +7,7 @@ console:
           rollingParams:
             maxSurge: 100%
             maxUnavailable: 0
-          type: Rolling
+          type: RollingUpdate
         containers:
           - name: "[[.ApplicationName]]-[[.Console.Name]]"
             env:
