@@ -2,7 +2,7 @@
 databases:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Databases ]]
-  - deploymentConfigs:
+  - deployments:
       ## MySQL deployment BEGIN
       - metadata:
           name: "[[.ServerName]]-mysql"
@@ -13,16 +13,15 @@ databases:
         spec:
           strategy:
             type: Recreate
-          triggers:
-            - type: ConfigChange
           replicas: 1
           selector:
-            deploymentConfig: "[[.ServerName]]-mysql"
+            matchLabels:
+              app: "[[$.ApplicationName]]"
+              service: "[[.ServerName]]-mysql"
           template:
             metadata:
               name: "[[.ServerName]]-mysql"
               labels:
-                deploymentConfig: "[[.ServerName]]-mysql"
                 app: "[[$.ApplicationName]]"
                 application: "[[$.ApplicationName]]"
                 service: "[[.ServerName]]-mysql"
@@ -97,7 +96,8 @@ databases:
             - port: 3306
               targetPort: 3306
           selector:
-            deploymentConfig: "[[.ServerName]]-mysql"
+            app: "[[$.ApplicationName]]"
+            service: "[[.ServerName]]-mysql"
         metadata:
           name: "[[.ServerName]]-mysql"
           labels:
