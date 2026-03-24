@@ -3,7 +3,7 @@ servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
     ## KIE server deployment config BEGIN
-  - deploymentConfigs:
+  - deployments:
       - metadata:
           name: "[[.KieName]]"
         spec:

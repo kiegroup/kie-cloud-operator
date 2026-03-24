@@ -718,6 +718,7 @@ type CustomObject struct {
 	Roles                  []rbacv1.Role                  `json:"roles,omitempty"`
 	RoleBindings           []rbacv1.RoleBinding           `json:"roleBindings,omitempty"`
 	DeploymentConfigs      []oappsv1.DeploymentConfig     `json:"deploymentConfigs,omitempty"`
+	Deployments            []appsv1.Deployment            `json:"deployments,omitempty"`
 	StatefulSets           []appsv1.StatefulSet           `json:"statefulSets,omitempty"`
 	BuildConfigs           []buildv1.BuildConfig          `json:"buildConfigs,omitempty"`
 	ImageStreams           []oimagev1.ImageStream         `json:"imageStreams,omitempty"`

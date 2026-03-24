@@ -5,7 +5,7 @@ import (
 	"fmt"
 	oimagev1 "github.com/openshift/api/image/v1"
 	"io/ioutil"
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	"reflect"
 	"strings"
 	"testing"
@@ -18,7 +18,6 @@ import (
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/defaults"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/shared"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
-	oappsv1 "github.com/openshift/api/apps/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
@@ -51,10 +50,10 @@ func TestSecContextDefaults(t *testing.T) {
 	_, err = reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: crNamespacedName})
 	assert.Nil(t, err)
 
-	console := &oappsv1.DeploymentConfig{}
-	server := &oappsv1.DeploymentConfig{}
-	amq := &v1.StatefulSet{}
-	infinispan := &v1.StatefulSet{}
+	console := &appsv1.Deployment{}
+	server := &appsv1.Deployment{}
+	amq := &appsv1.StatefulSet{}
+	infinispan := &appsv1.StatefulSet{}
 	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-rhpamcentr"), console)
 	reconciler.Service.Get(context.TODO(), getNamespacedName(cr.Namespace, "cr-kieserver"), server)
 
@@ -118,9 +117,9 @@ func TestGenerateSecret(t *testing.T) {
 	consoleSecret := env.Console.Secrets[0]
 	serverSecret := env.Servers[0].Secrets[0]
 	consoleRoute := cr.Status.ConsoleHost
-	secretName := fmt.Sprintf(constants.KeystoreSecret, env.Servers[0].DeploymentConfigs[0].Name)
+	secretName := fmt.Sprintf(constants.KeystoreSecret, env.Servers[0].Deployments[0].Name)
 	assert.Equal(t, secretName, serverSecret.Name)
-	for _, volume := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+	for _, volume := range env.Servers[0].Deployments[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
 			assert.Equal(t, secretName, volume.Secret.SecretName)
 		}
@@ -317,9 +316,9 @@ func TestGenerateSecrets(t *testing.T) {
 	assert.Len(t, env.Console.Secrets, 1, "One secret should be generated for the trial workbench")
 	for _, server := range env.Servers {
 		assert.Len(t, server.Secrets, 1, "One secret should be generated for each trial kieserver")
-		secretName := fmt.Sprintf(constants.KeystoreSecret, server.DeploymentConfigs[0].Name)
+		secretName := fmt.Sprintf(constants.KeystoreSecret, server.Deployments[0].Name)
 		assert.Equal(t, secretName, server.Secrets[0].Name)
-		for _, volume := range server.DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+		for _, volume := range server.Deployments[0].Spec.Template.Spec.Volumes {
 			if volume.Secret != nil {
 				assert.Equal(t, secretName, volume.Secret.SecretName)
 			}
@@ -371,17 +370,17 @@ func TestSpecifySecret(t *testing.T) {
 	assert.Len(t, env.Console.Secrets, 0, "Zero secrets should be generated for the trial workbench")
 	assert.Len(t, env.Servers[0].Secrets, 0, "Zero secrets should be generated for the trial kieserver")
 	assert.Len(t, env.SmartRouter.Secrets, 0, "Zero secrets should be generated for the smartrouter")
-	for _, volume := range env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+	for _, volume := range env.Console.Deployments[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
 			assert.Equal(t, cr.Status.Applied.Objects.Console.KeystoreSecret, volume.Secret.SecretName)
 		}
 	}
-	for _, volume := range env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+	for _, volume := range env.Servers[0].Deployments[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
 			assert.Equal(t, cr.Status.Applied.Objects.Servers[0].KeystoreSecret, volume.Secret.SecretName)
 		}
 	}
-	for _, volume := range env.SmartRouter.DeploymentConfigs[0].Spec.Template.Spec.Volumes {
+	for _, volume := range env.SmartRouter.Deployments[0].Spec.Template.Spec.Volumes {
 		if volume.Secret != nil {
 			assert.Equal(t, cr.Status.Applied.Objects.SmartRouter.KeystoreSecret, volume.Secret.SecretName)
 		}
@@ -871,11 +870,11 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	//Let's now assume console pod is starting
 	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
-		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
-			for index := range list.(*oappsv1.DeploymentConfigList).Items {
-				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
-				if dc.Name == "cr-rhpamcentr" {
-					dc.Status.Replicas = 1
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&appsv1.DeploymentList{}) {
+			for index := range list.(*appsv1.DeploymentList).Items {
+				dep := &list.(*appsv1.DeploymentList).Items[index]
+				if dep.Name == "cr-rhpamcentr" {
+					dep.Status.Replicas = 1
 				}
 			}
 		}
@@ -895,11 +894,11 @@ func TestStatusDeploymentsProgression(t *testing.T) {
 	//Let's now assume both pods have started
 	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
-		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
-			for index := range list.(*oappsv1.DeploymentConfigList).Items {
-				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
-				dc.Status.Replicas = 1
-				dc.Status.ReadyReplicas = 1
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&appsv1.DeploymentList{}) {
+			for index := range list.(*appsv1.DeploymentList).Items {
+				dep := &list.(*appsv1.DeploymentList).Items[index]
+				dep.Status.Replicas = 1
+				dep.Status.ReadyReplicas = 1
 			}
 		}
 		return err
@@ -953,11 +952,11 @@ func TestConsoleLinkCreation(t *testing.T) {
 	//Let's now assume console pod is starting
 	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
-		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
-			for index := range list.(*oappsv1.DeploymentConfigList).Items {
-				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
-				if dc.Name == "cr-rhpamcentr" {
-					dc.Status.Replicas = 1
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&appsv1.DeploymentList{}) {
+			for index := range list.(*appsv1.DeploymentList).Items {
+				dep := &list.(*appsv1.DeploymentList).Items[index]
+				if dep.Name == "cr-rhpamcentr" {
+					dep.Status.Replicas = 1
 				}
 			}
 		}
@@ -977,11 +976,11 @@ func TestConsoleLinkCreation(t *testing.T) {
 	//Let's now assume both pods have started
 	service.ListFunc = func(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 		err := service.Client.List(ctx, list, opts...)
-		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&oappsv1.DeploymentConfigList{}) {
-			for index := range list.(*oappsv1.DeploymentConfigList).Items {
-				dc := &list.(*oappsv1.DeploymentConfigList).Items[index]
-				dc.Status.Replicas = 1
-				dc.Status.ReadyReplicas = 1
+		if err == nil && reflect.TypeOf(list) == reflect.TypeOf(&appsv1.DeploymentList{}) {
+			for index := range list.(*appsv1.DeploymentList).Items {
+				dep := &list.(*appsv1.DeploymentList).Items[index]
+				dep.Status.Replicas = 1
+				dep.Status.ReadyReplicas = 1
 			}
 		}
 		return err
