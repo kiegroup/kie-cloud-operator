@@ -79,6 +79,13 @@ Remove the following line from deploy/olm-catalog/dev/7.13.0-1/manifest/bamoe-bu
 ```console
 replaces: bamoe-businessautomation-operator.<last-version>
 ```
+
+Update the image name with your USERNAME
+
+```console
+containerImage: 'quay.io/kiegroup/kie-cloud-operator:8.0.9'
+```
+
 Set your registry id, like quay username 
 with USERNAME as env
 
@@ -237,7 +244,7 @@ metadata:
   name: bamoe-businessautomation-operator
   namespace: <your-namespace>
 spec:
-  channel: stable
+  channel: 8.x-stable
   name: bamoe-businessautomation-operator
   source: $CATALOG_SOURCE_NAME
   sourceNamespace: openshift-marketplace
