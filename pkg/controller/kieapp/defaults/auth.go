@@ -35,24 +35,6 @@ func ConfigureHostname(object *api.CustomObject, cr *api.KieApp, hostname string
 			}
 		}
 	}
-	// Also handle Deployments
-	for deployIdx := range object.Deployments {
-		deploy := &object.Deployments[deployIdx]
-		for containerIdx := range deploy.Spec.Template.Spec.Containers {
-			container := &deploy.Spec.Template.Spec.Containers[containerIdx]
-			if pos := shared.GetEnvVar(ssoClientVar, container.Env); pos == -1 {
-				continue
-			}
-			if pos := shared.GetEnvVar(ssoHostnameVar, container.Env); pos == -1 {
-				container.Env = append(container.Env, corev1.EnvVar{
-					Name:  ssoHostnameVar,
-					Value: hostname,
-				})
-			} else if len(container.Env[pos].Value) == 0 {
-				container.Env[pos].Value = hostname
-			}
-		}
-	}
 }
 
 func configureAuth(cr *api.KieApp, envTemplate *api.EnvTemplate) (err error) {

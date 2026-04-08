@@ -55,15 +55,11 @@ to load your operator bundle in OpenShift.
 
 - Create your own bundle
 - Push the bundle on the container registry
-- Make the bundle repository public on quay.io
 - Build the index
 - Push the index on the container registry
-- Make the index repository public on quay.io
 - Disable default catalog sources on Openshift
 - Write your Catalog-source
 - Create your catalog source on Openshift
-- Create a namespace for your operator
-- Create an OperatorGroup
 - Write your Subscription
 - Create your Subscription on Openshift
 
@@ -79,13 +75,6 @@ Remove the following line from deploy/olm-catalog/dev/7.13.0-1/manifest/bamoe-bu
 ```console
 replaces: bamoe-businessautomation-operator.<last-version>
 ```
-
-Update the image name with your USERNAME
-
-```console
-containerImage: 'quay.io/kiegroup/kie-cloud-operator:8.0.9'
-```
-
 Set your registry id, like quay username 
 with USERNAME as env
 
@@ -104,28 +93,13 @@ the last log line is something like this:
 ```console
 INFO  Image built and available under following tags: quay.io/<your_quay_username>/rhpam-operator-bundle:7.12.1, quay.io/${USERNAME}/rhpam-operator-bundle:latest
 ```
-
-Set the VERSION variable:
-
-```bash
-VERSION=$(go run getversion.go)
-```
-
 ###  Push the bundle on the container registry
+
+VERSION=$(go run getversion.go)
 
 ```bash
 $ docker push quay.io/${USERNAME}/rhpam-operator-bundle:${VERSION}
 ```
-
-### Make the bundle repository public on quay.io
-
-After pushing the bundle image, you need to make the repository public on quay.io:
-
-1. Log in to https://quay.io/
-2. Navigate to your repository: `quay.io/${USERNAME}/rhpam-operator-bundle`
-3. Go to Settings
-4. Change the repository visibility to "Public"
-5. Save the changes
 
 ### Build the index image
 
@@ -143,16 +117,6 @@ Push the index on your quay repository
 ```bash
 podman push quay.io/${USERNAME}/rhpam-operator-index:${VERSION}
 ```
-
-### Make the index repository public on quay.io
-
-After pushing the index image, you need to make the repository public on quay.io:
-
-1. Log in to https://quay.io/
-2. Navigate to your repository: `quay.io/${USERNAME}/rhpam-operator-index`
-3. Go to Settings
-4. Change the repository visibility to "Public"
-5. Save the changes
 
 #### Disable default catalog sources on Openshift
 
@@ -200,39 +164,6 @@ spec:
 oc create -f catalog-source.yaml
 ```
 
-#### Create a namespace for your operator
-
-Before creating the subscription, create a namespace where the operator will be installed:
-
-```bash
-oc create namespace my-namespace
-```
-
-Or use an existing namespace. Make sure to use the same namespace in your subscription.yaml and operatorgroup.yaml files.
-
-#### Create an OperatorGroup
-
-An OperatorGroup is required to install the operator. Create an operatorgroup.yaml file:
-
-```yaml
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: my-operatorgroup
-  namespace: my-namespace
-spec:
-  targetNamespaces:
-  - my-namespace
-```
-
-Create the OperatorGroup:
-
-```bash
-oc create -f operatorgroup.yaml
-```
-
-**Note**: For cluster-wide operators, you can omit the `targetNamespaces` field or set it to all namespaces.
-
 #### Write your Subscription
 
 A subscription keeps CSVs up to date by tracking a channel in a package.
@@ -244,7 +175,7 @@ metadata:
   name: bamoe-businessautomation-operator
   namespace: <your-namespace>
 spec:
-  channel: 8.x-stable
+  channel: stable
   name: bamoe-businessautomation-operator
   source: $CATALOG_SOURCE_NAME
   sourceNamespace: openshift-marketplace

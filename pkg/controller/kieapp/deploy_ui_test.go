@@ -112,7 +112,7 @@ func checkConsoleProxySettings(t *testing.T, version string) {
 }
 
 func checkCSV(t *testing.T, csv *operators.ClusterServiceVersion) {
-	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &corev1.Pod{})
+	service := test.MockServiceWithExtraScheme(&operators.ClusterServiceVersion{}, &appsv1.Deployment{}, &corev1.Pod{})
 	err := service.Create(context.TODO(), csv)
 	assert.Nil(t, err, "Error creating the CSV")
 

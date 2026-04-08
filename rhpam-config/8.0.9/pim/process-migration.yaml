@@ -1,42 +1,38 @@
 ## KIE ProcessMigration BEGIN
 processMigration:
-  deployments:
+  deploymentConfigs:
     - metadata:
         name: "[[.ApplicationName]]-process-migration"
         labels:
           app: "[[$.ApplicationName]]"
           application: "[[$.ApplicationName]]"
           service: "[[.ApplicationName]]-process-migration"
-        #[[if not .ProcessMigration.OmitImageStream]]
-        annotations:
-          # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
-          image.openshift.io/triggers: |
-            [
-              {
-                "from": {
-                  "kind": "ImageStreamTag",
-                  "name": "[[.ProcessMigration.Image]]:[[.ProcessMigration.ImageTag]]",
-                  "namespace": "openshift"
-                },
-                "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.ApplicationName]]-process-migration\")].image"
-              }
-            ]
-        #[[end]]
       spec:
         replicas: [[.ProcessMigration.Replicas]]
         selector:
-          matchLabels:
-            deployment: "[[.ApplicationName]]-process-migration"
-            app: "[[$.ApplicationName]]"
+          deploymentConfig: "[[.ApplicationName]]-process-migration"
         strategy:
           type: Recreate
+        triggers:
+          #[[if not .ProcessMigration.OmitImageStream]]
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - "[[.ApplicationName]]-process-migration"
+              from:
+                kind: ImageStreamTag
+                namespace: openshift
+                name: "[[.ProcessMigration.Image]]:[[.ProcessMigration.ImageTag]]"
+          #[[end]]
+          - type: ConfigChange
         template:
           metadata:
             name: "[[.ApplicationName]]-process-migration"
             labels:
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
-              deployment: "[[.ApplicationName]]-process-migration"
+              deploymentConfig: "[[.ApplicationName]]-process-migration"
               service: "[[.ApplicationName]]-process-migration"
           spec:
             serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
@@ -245,8 +241,7 @@ processMigration:
             protocol: TCP
             targetPort: 8080
         selector:
-          deployment: "[[.ApplicationName]]-process-migration"
-          app: "[[$.ApplicationName]]"
+          deploymentConfig: "[[.ApplicationName]]-process-migration"
       metadata:
         name: "[[.ApplicationName]]-process-migration"
         labels:

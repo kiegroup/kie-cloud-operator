@@ -1,5 +1,5 @@
 console:
-  deployments:
+  deploymentConfigs:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
@@ -7,7 +7,7 @@ console:
           rollingParams:
             maxSurge: 100%
             maxUnavailable: 0
-          type: RollingUpdate
+          type: Rolling
         containers:
           - name: "[[.ApplicationName]]-[[.Console.Name]]"
             env:
@@ -23,7 +23,7 @@ servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
     ## KIE server deployment config BEGIN
-  - deployments:
+  - deploymentConfigs:
       - metadata:
           name: "[[.KieName]]"
           labels:
