@@ -126,16 +126,6 @@ func GetEnvironment(cr *api.KieApp, service kubernetes.PlatformService) (api.Env
 				}
 				dc.Spec.Template.Spec.Containers[0].Env = newSlice
 			}
-			// Also handle Deployments
-			for _, deploy := range server.Deployments {
-				newSlice := []corev1.EnvVar{}
-				for _, envvar := range deploy.Spec.Template.Spec.Containers[0].Env {
-					if envvar.Name != "KIE_SERVER_ROUTER_SERVICE" && envvar.Name != "KIE_SERVER_ROUTER_PORT" && envvar.Name != "KIE_SERVER_ROUTER_PROTOCOL" {
-						newSlice = append(newSlice, envvar)
-					}
-				}
-				deploy.Spec.Template.Spec.Containers[0].Env = newSlice
-			}
 		}
 	}
 
@@ -240,9 +230,6 @@ func setObjectLabels(cr *api.KieApp, object *api.CustomObject, subcomponent stri
 	for index, obj := range object.DeploymentConfigs {
 		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
-	for index, obj := range object.Deployments {
-		object.Deployments[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
-	}
 	for index, obj := range object.StatefulSets {
 		object.StatefulSets[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
@@ -252,10 +239,6 @@ func setObjectLabelsForServer(cr *api.KieApp, object *api.CustomObject) {
 	for index, obj := range object.DeploymentConfigs {
 		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
 		object.DeploymentConfigs[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
-	}
-	for index, obj := range object.Deployments {
-		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
-		object.Deployments[index].Spec.Template.Labels = setLabels(cr, obj.Spec.Template.Labels, subcomponent, getSubComponentTypeByImageName(subcomponent))
 	}
 	for index, obj := range object.StatefulSets {
 		subcomponent := getFormattedComponentName(cr, constants.KieServerServicePrefix)
@@ -345,17 +328,11 @@ func mergeJms(service kubernetes.PlatformService, cr *api.KieApp, env api.Enviro
 
 func findCustomObjectByName(template api.CustomObject, objects []api.CustomObject) (api.CustomObject, bool) {
 	for i := range objects {
-		// Check Deployments first
-		if len(objects[i].Deployments) > 0 && len(template.Deployments) > 0 {
-			if objects[i].Deployments[0].ObjectMeta.Name == template.Deployments[0].ObjectMeta.Name {
-				return objects[i], true
-			}
+		if len(objects[i].DeploymentConfigs) == 0 || len(template.DeploymentConfigs) == 0 {
+			return api.CustomObject{}, false
 		}
-		// Fall back to DeploymentConfigs for backward compatibility
-		if len(objects[i].DeploymentConfigs) > 0 && len(template.DeploymentConfigs) > 0 {
-			if objects[i].DeploymentConfigs[0].ObjectMeta.Name == template.DeploymentConfigs[0].ObjectMeta.Name {
-				return objects[i], true
-			}
+		if objects[i].DeploymentConfigs[0].ObjectMeta.Name == template.DeploymentConfigs[0].ObjectMeta.Name {
+			return objects[i], true
 		}
 	}
 	return api.CustomObject{}, false
@@ -1055,20 +1032,6 @@ func ConstructObject(object api.CustomObject, appObject api.KieAppObject) api.Cu
 			dc.Spec.Template.Spec.Containers[containerIndex] = c
 		}
 		object.DeploymentConfigs[dcIndex] = dc
-	}
-	// Also handle Deployments
-	for deployIndex, deploy := range object.Deployments {
-		for containerIndex, c := range deploy.Spec.Template.Spec.Containers {
-			c.Env = shared.EnvOverride(c.Env, appObject.Env)
-			if appObject.Resources != nil {
-				err := mergo.Merge(&c.Resources, *appObject.Resources, mergo.WithOverride)
-				if err != nil {
-					log.Error("Error merging interfaces. ", err)
-				}
-			}
-			deploy.Spec.Template.Spec.Containers[containerIndex] = c
-		}
-		object.Deployments[deployIndex] = deploy
 	}
 	return object
 }
@@ -1928,10 +1891,6 @@ func mergeDashbuilder(service kubernetes.PlatformService, cr *api.KieApp, env ap
 	for _, dc := range dashbuilderEnv.Dashbuilder.DeploymentConfigs {
 		dc.Spec.Template.Spec.Containers[0].Env = append(dc.Spec.Template.Spec.Containers[0].Env, cleanedEnvVar...)
 	}
-	// Also handle Deployments
-	for _, deploy := range dashbuilderEnv.Dashbuilder.Deployments {
-		deploy.Spec.Template.Spec.Containers[0].Env = append(deploy.Spec.Template.Spec.Containers[0].Env, cleanedEnvVar...)
-	}
 
 	return env, nil
 }
@@ -1954,15 +1913,6 @@ func setKafkaTopics(object *api.CustomObject, value string) {
 		for indexEnv, env := range object.DeploymentConfigs[index].Spec.Template.Spec.Containers[index].Env {
 			if env.Name == constants.KafkaTopicsEnv {
 				object.DeploymentConfigs[index].Spec.Template.Spec.Containers[index].Env[indexEnv] = corev1.EnvVar{Name: constants.KafkaTopicsEnv, Value: value}
-				return
-			}
-		}
-	}
-	// Also handle Deployments
-	for index := range object.Deployments {
-		for indexEnv, env := range object.Deployments[index].Spec.Template.Spec.Containers[0].Env {
-			if env.Name == constants.KafkaTopicsEnv {
-				object.Deployments[index].Spec.Template.Spec.Containers[0].Env[indexEnv] = corev1.EnvVar{Name: constants.KafkaTopicsEnv, Value: value}
 				return
 			}
 		}
@@ -2085,10 +2035,10 @@ func mergeDBDeployment(service kubernetes.PlatformService, cr *api.KieApp, env a
 		}
 		deploymentName := dbTemplate.ServerName + "-" + string(dbTemplate.Type)
 		for _, db := range dbEnvs[dbTemplate.Type].Databases {
-			if len(db.Deployments) == 0 {
+			if len(db.DeploymentConfigs) == 0 {
 				continue
 			}
-			if deploymentName == db.Deployments[0].ObjectMeta.Name {
+			if deploymentName == db.DeploymentConfigs[0].ObjectMeta.Name {
 				env.Databases[i] = mergeCustomObject(env.Databases[i], db)
 			}
 		}

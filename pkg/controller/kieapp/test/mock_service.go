@@ -59,8 +59,6 @@ var knownTypes = map[schema.GroupVersion][]runtime.Object{
 		&oappsv1.DeploymentConfigList{},
 	},
 	appsv1.SchemeGroupVersion: {
-		&appsv1.Deployment{},
-		&appsv1.DeploymentList{},
 		&appsv1.StatefulSet{},
 		&appsv1.StatefulSetList{},
 	},

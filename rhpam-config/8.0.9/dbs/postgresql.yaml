@@ -2,7 +2,7 @@
 databases:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Databases ]]
-  - deployments:
+  - deploymentConfigs:
       ## PostgreSQL deployment config BEGIN
       - metadata:
           name: "[[.ServerName]]-postgresql"
@@ -13,15 +13,16 @@ databases:
         spec:
           strategy:
             type: Recreate
+          triggers:
+            - type: ConfigChange
           replicas: 1
           selector:
-            matchLabels:
-              app: "[[$.ApplicationName]]"
-              service: "[[.ServerName]]-postgresql"
+            deploymentConfig: "[[.ServerName]]-postgresql"
           template:
             metadata:
               name: "[[.ServerName]]-postgresql"
               labels:
+                deploymentConfig: "[[.ServerName]]-postgresql"
                 app: "[[$.ApplicationName]]"
                 application: "[[$.ApplicationName]]"
                 service: "[[.ServerName]]-postgresql"
@@ -101,8 +102,7 @@ databases:
             - port: 5432
               targetPort: 5432
           selector:
-            app: "[[$.ApplicationName]]"
-            service: "[[.ServerName]]-postgresql"
+            deploymentConfig: "[[.ServerName]]-postgresql"
     ## PostgreSQL service END
   #[[end]]
   ## RANGE ends

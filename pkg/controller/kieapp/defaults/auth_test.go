@@ -7,18 +7,18 @@ import (
 	api "github.com/kiegroup/kie-cloud-operator/pkg/apis/app/v2"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/constants"
 	"github.com/kiegroup/kie-cloud-operator/pkg/controller/kieapp/test"
+	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
-	kappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConfigureHostnameNoAuth(t *testing.T) {
 	object := &api.CustomObject{
-		Deployments: []kappsv1.Deployment{
+		DeploymentConfigs: []appsv1.DeploymentConfig{
 			{
-				Spec: kappsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
+				Spec: appsv1.DeploymentConfigSpec{
+					Template: &corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{},
@@ -38,16 +38,16 @@ func TestConfigureHostnameNoAuth(t *testing.T) {
 		Name:  ssoHostnameVar,
 		Value: hostname,
 	}
-	assert.NotContains(t, object.Deployments[0].Spec.Template.Spec.Containers[0].Env, httpsHostname)
+	assert.NotContains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, httpsHostname)
 }
 
 func TestConfigureHostname(t *testing.T) {
 	testHostname := "test-hostname.example.com"
 	object := &api.CustomObject{
-		Deployments: []kappsv1.Deployment{
+		DeploymentConfigs: []appsv1.DeploymentConfig{
 			{
-				Spec: kappsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
+				Spec: appsv1.DeploymentConfigSpec{
+					Template: &corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{
@@ -102,14 +102,14 @@ func TestConfigureHostname(t *testing.T) {
 		Name:  ssoHostnameVar,
 		Value: hostname,
 	}
-	assert.NotContains(t, object.Deployments[0].Spec.Template.Spec.Containers[0].Env, httpsHostname)
-	assert.Contains(t, object.Deployments[0].Spec.Template.Spec.Containers[1].Env, httpsHostname)
-	assert.Contains(t, object.Deployments[0].Spec.Template.Spec.Containers[2].Env, httpsHostname)
+	assert.NotContains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, httpsHostname)
+	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[1].Env, httpsHostname)
+	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[2].Env, httpsHostname)
 	httpsHostname = corev1.EnvVar{
 		Name:  ssoHostnameVar,
 		Value: testHostname,
 	}
-	assert.Contains(t, object.Deployments[0].Spec.Template.Spec.Containers[3].Env, httpsHostname)
+	assert.Contains(t, object.DeploymentConfigs[0].Spec.Template.Spec.Containers[3].Env, httpsHostname)
 }
 
 func TestAuthMultipleType(t *testing.T) {
@@ -193,9 +193,9 @@ func TestAuthSSOConfig(t *testing.T) {
 	assert.Nil(t, err, "Error getting trial environment")
 
 	for _, expectedEnv := range getExpectedSSOEnvs() {
-		assert.Contains(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
 	}
 
@@ -206,9 +206,9 @@ func TestAuthSSOConfig(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS"},
 	}
 	for _, expectedEnv := range expectedClientEnvs {
-		assert.Contains(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console should contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
 	}
 }
@@ -233,11 +233,11 @@ func TestAuthSSOConfigWithRHDMImmutable(t *testing.T) {
 	assert.Nil(t, err, "Error getting rhdm-production-immutable environment")
 
 	// console dc should be nil
-	assert.Nil(t, env.Console.Deployments, "Console should be nil")
+	assert.Nil(t, env.Console.DeploymentConfigs, "Console should be nil")
 
 	for _, expectedEnv := range getExpectedSSOEnvs() {
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v should contain env %v", i, expectedEnv)
 		}
 	}
 }
@@ -298,9 +298,9 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "SSO_PASSWORD"},
 	}
 	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
 		}
 	}
 
@@ -311,7 +311,7 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS", Value: "secure-test-rhpamcentr.example.com"},
 	}
 	for _, expectedEnv := range expectedConsoleClientEnvs {
-		assert.Contains(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 	}
 
 	expectedServerClientEnvs := []corev1.EnvVar{
@@ -319,8 +319,8 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "SSO_CLIENT", Value: "test-kieserver-a-client"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
-		assert.Contains(t, env.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 0 does not contain env %v", expectedEnv)
-		assert.Contains(t, env.Servers[1].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 0 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[1].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 1 does not contain env %v", expectedEnv)
 	}
 	expectedServerClientEnvs = []corev1.EnvVar{
 		{Name: "SSO_SECRET", Value: "supersecret-b"},
@@ -328,9 +328,9 @@ func TestAuthSSOConfigWithClients(t *testing.T) {
 		{Name: "HOSTNAME_HTTPS", Value: "test-kieserver-b.example.com"},
 	}
 	for _, expectedEnv := range expectedServerClientEnvs {
-		assert.Contains(t, env.Servers[2].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 2 does not contain env %v", expectedEnv)
-		assert.Contains(t, env.Servers[3].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 3 does not contain env %v", expectedEnv)
-		assert.Contains(t, env.Servers[4].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 4 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[2].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 2 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[3].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 3 does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Servers[4].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server 4 does not contain env %v", expectedEnv)
 	}
 }
 
@@ -410,9 +410,9 @@ func commonTestLDAPConfig(t *testing.T, emptyPass bool, directVerification bool)
 	}
 
 	for _, expectedEnv := range expectedEnvs {
-		assert.Contains(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
+		assert.Contains(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Console does not contain env %v", expectedEnv)
 		for i := range env.Servers {
-			assert.Contains(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
+			assert.Contains(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Server %v does not contain env %v", i, expectedEnv)
 		}
 	}
 }
@@ -594,21 +594,21 @@ func TestAuthRoleMapperConfig(t *testing.T) {
 			{Name: "AUTH_LDAP_MAPPER_KEEP_NON_MAPPED", Value: strconv.FormatBool(item.roleMapper.RolesKeepNonMapped)},
 		}
 		for _, expectedEnv := range expectedEnvs {
-			assert.Containsf(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Console does not contain env %v", item.name, expectedEnv)
+			assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Console does not contain env %v", item.name, expectedEnv)
 			if item.expectedVolume != nil {
-				assert.Containsf(t, env.Console.Deployments[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+				assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
 			}
 			if item.expectedVolumeMount != nil {
-				assert.Containsf(t, env.Console.Deployments[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+				assert.Containsf(t, env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
 			}
 
 			for i := range env.Servers {
-				assert.Containsf(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Server %v does not contain env %v", item.name, i, expectedEnv)
+				assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env, expectedEnv, "Test %s - Server %v does not contain env %v", item.name, i, expectedEnv)
 				if item.expectedVolume != nil {
-					assert.Containsf(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
+					assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Volumes, *item.expectedVolume, "Test %s failed", item.name)
 				}
 				if item.expectedVolumeMount != nil {
-					assert.Containsf(t, env.Servers[i].Deployments[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
+					assert.Containsf(t, env.Servers[i].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].VolumeMounts, *item.expectedVolumeMount, "Test %s failed", item.name)
 				}
 			}
 		}
@@ -638,8 +638,8 @@ func TestLDAPLoginModuleOptionalFlag(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting trial environment")
-	assert.Equal(t, "optional", getEnvVariable(env.Console.Deployments[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
-	assert.Equal(t, "optional", getEnvVariable(env.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
+	assert.Equal(t, "optional", getEnvVariable(env.Console.DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
+	assert.Equal(t, "optional", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "AUTH_LDAP_LOGIN_MODULE"))
 
 }
 

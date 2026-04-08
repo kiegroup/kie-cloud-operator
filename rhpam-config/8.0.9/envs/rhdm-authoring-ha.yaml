@@ -15,7 +15,7 @@ console:
           requests:
             storage: [[.Console.PvSize]]
 
-  deployments:
+  deploymentConfigs:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
       spec:
@@ -74,15 +74,14 @@ others:
           replicas: 2
           selector:
             matchLabels:
-              deployment: "[[.ApplicationName]]-datagrid"
-              app: "[[.ApplicationName]]"
+              deploymentConfig: "[[.ApplicationName]]-datagrid"
           serviceName: "[[.ApplicationName]]-datagrid"
           template:
             metadata:
               labels:
                 app: "[[.ApplicationName]]"
                 application: "[[.ApplicationName]]"
-                deployment: "[[.ApplicationName]]-datagrid"
+                deploymentConfig: "[[.ApplicationName]]-datagrid"
               name: "[[.ApplicationName]]-datagrid"
             spec:
               containers:
@@ -295,7 +294,7 @@ others:
             - port: 61616
               targetPort: 61616
           selector:
-            deployment: "[[.ApplicationName]]-amq"
+            deploymentConfig: "[[.ApplicationName]]-amq"
         metadata:
           name: "[[.ApplicationName]]-amq-tcp"
           labels:
@@ -312,7 +311,7 @@ others:
               protocol: TCP
               targetPort: 8888
           selector:
-            deployment: "[[.ApplicationName]]-amq"
+            deploymentConfig: "[[.ApplicationName]]-amq"
         metadata:
           name: "[[.ApplicationName]]-amq-ping"
           annotations:
@@ -330,7 +329,7 @@ others:
               protocol: TCP
               targetPort: 8888
           selector:
-            deployment: "[[.ApplicationName]]-datagrid"
+            deploymentConfig: "[[.ApplicationName]]-datagrid"
         metadata:
           name: "[[.ApplicationName]]-datagrid-ping"
           labels:
@@ -346,7 +345,7 @@ others:
               protocol: TCP
               targetPort: 11222
           selector:
-            deployment: "[[.ApplicationName]]-datagrid"
+            deploymentConfig: "[[.ApplicationName]]-datagrid"
         metadata:
           name: "[[.ApplicationName]]-datagrid"
           labels:

@@ -1,7 +1,7 @@
 ## KIE ProcessMigration BEGIN
 processMigration:
   ## KIE ProcessMigration Deployment config BEGIN
-  deployments:
+  deploymentConfigs:
     - metadata:
         name: "[[.ApplicationName]]-process-migration"
       spec:

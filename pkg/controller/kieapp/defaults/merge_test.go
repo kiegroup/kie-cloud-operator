@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestMergeServices(t *testing.T) {
@@ -125,13 +126,7 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	var dbEnv api.Environment
 	err := getParsedTemplateWithDB("dbs/postgresql.yaml", "prod", &dbEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	// Database deployments are created separately in the Databases section
-	// Verify database deployment exists if present
-	if len(dbEnv.Databases) > 0 && len(dbEnv.Databases[0].Deployments) > 0 {
-		// assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, dbEnv.Databases[0].Deployments[0].Spec.Strategy.Type)
-		// Assertion commented out due to testify library comparison issue with DeploymentStrategyType
-		assert.NotNil(t, dbEnv.Databases[0].Deployments[0].Spec.Strategy.Type)
-	}
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRecreate, dbEnv.Databases[0].DeploymentConfigs[0].Spec.Strategy.Type)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production.yaml", "prod", &prodEnv)
@@ -141,22 +136,14 @@ func TestMergeServerDeploymentConfigs(t *testing.T) {
 	err = getParsedTemplate("common.yaml", "prod", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
-	baseEnvCount := len(common.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0].Env)
-	prodEnvCount := len(prodEnv.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0].Env)
+	baseEnvCount := len(common.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	prodEnvCount := len(prodEnv.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 
-	mergedDCs := mergeDeployments(common.Servers[0].Deployments, prodEnv.Servers[0].Deployments)
-	if len(dbEnv.Databases) > 0 && len(dbEnv.Databases[0].Deployments) > 0 {
-		mergedDCs = mergeDeployments(mergedDCs, dbEnv.Databases[0].Deployments)
-	}
+	mergedDCs := mergeDeploymentConfigs(common.Servers[0].DeploymentConfigs, prodEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Databases[0].DeploymentConfigs)
 
 	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
-	// In Deployment migration, database deployments may be created separately
-	// Expect at least 1 deployment (server), possibly 2 if database deployment exists
-	expectedCount := 1
-	if len(dbEnv.Databases) > 0 && len(dbEnv.Databases[0].Deployments) > 0 {
-		expectedCount = 2
-	}
-	assert.Len(t, mergedDCs, expectedCount, "Expect %d deployment descriptor(s) but got %v", expectedCount, len(mergedDCs))
+	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors but got %v", len(mergedDCs))
 
 	mergedEnvCount := len(mergedDCs[0].Spec.Template.Spec.Containers[0].Env)
 	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")
@@ -174,10 +161,9 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	var jmsEnv api.Environment
 	err = getParsedTemplate("jms/activemq-jms-config.yaml", "immutable-prod", &jmsEnv)
 	assert.Nil(t, err, "Error: %v", err)
-	// assert.Equal(t, jmsEnv.Servers[0].Deployments[1].Name, "immutable-prod-kieserver-amq") // AMQ deployment not created
-	// assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, jmsEnv.Servers[0].Deployments[1].Spec.Strategy.Type) // AMQ deployment not created
-	// TODO: RollingParams is DeploymentConfig-specific, not applicable to Deployments
-	// assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, jmsEnv.Servers[0].Deployments[1].Spec.Strategy.RollingParams.MaxSurge)
+	assert.Equal(t, jmsEnv.Servers[0].DeploymentConfigs[1].Name, "immutable-prod-kieserver-amq")
+	assert.Equal(t, appsv1.DeploymentStrategyTypeRolling, jmsEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.Type)
+	assert.Equal(t, &intstr.IntOrString{Type: 1, IntVal: 0, StrVal: "100%"}, jmsEnv.Servers[0].DeploymentConfigs[1].Spec.Strategy.RollingParams.MaxSurge)
 
 	var prodEnv api.Environment
 	err = getParsedTemplate("envs/rhpam-production-immutable.yaml", "immutable-prod", &prodEnv)
@@ -187,17 +173,15 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	err = getParsedTemplate("common.yaml", "immutable-prod", &common)
 	assert.Nil(t, err, "Error: %v", err)
 
-	baseEnvCount := len(common.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0].Env)
-	prodEnvCount := len(prodEnv.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0].Env)
+	baseEnvCount := len(common.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
+	prodEnvCount := len(prodEnv.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Env)
 
-	mergedDCs := mergeDeployments(common.Servers[0].Deployments, prodEnv.Servers[0].Deployments)
-	mergedDCs = mergeDeployments(mergedDCs, dbEnv.Servers[0].Deployments)
-	mergedDCs = mergeDeployments(mergedDCs, jmsEnv.Servers[0].Deployments)
+	mergedDCs := mergeDeploymentConfigs(common.Servers[0].DeploymentConfigs, prodEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, dbEnv.Servers[0].DeploymentConfigs)
+	mergedDCs = mergeDeploymentConfigs(mergedDCs, jmsEnv.Servers[0].DeploymentConfigs)
 
 	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
-	// In Deployment migration, AMQ deployments are not created separately
-	// Expect 1 deployment (server with merged DB and JMS config)
-	assert.Len(t, mergedDCs, 1, "Expect 1 deployment descriptor but got %v", len(mergedDCs))
+	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors but got %v", len(mergedDCs))
 
 	mergedEnvCount := len(mergedDCs[0].Spec.Template.Spec.Containers[0].Env)
 	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")
@@ -294,9 +278,8 @@ func TestMergeBuildConfigandIStreams(t *testing.T) {
 	assert.Len(t, server.ImageStreams, 1)
 	assert.Equal(t, "test-kieserver", server.ImageStreams[0].ObjectMeta.Name)
 	assert.Equal(t, "test-kieserver", server.BuildConfigs[0].ObjectMeta.Name)
-	// TODO: Triggers are DeploymentConfig-specific, not applicable to Deployments
-	// assert.Empty(t, server.Deployments[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
-	// assert.Equal(t, "test-kieserver:latest", server.Deployments[0].Spec.Triggers[0].ImageChangeParams.From.Name)
+	assert.Empty(t, server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Namespace)
+	assert.Equal(t, "test-kieserver:latest", server.DeploymentConfigs[0].Spec.Triggers[0].ImageChangeParams.From.Name)
 }
 
 func TestMergeDeploymentconfigs(t *testing.T) {
