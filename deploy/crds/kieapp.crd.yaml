@@ -656,7 +656,7 @@ spec:
                             type: string
                         type: object
                       image:
-                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                        description: Image The image to use e.g. rhpam-<app>-rhel9,
                           this param is optional for custom image.
                         type: string
                       imageContext:
@@ -1129,7 +1129,7 @@ spec:
                           type: object
                         type: array
                       image:
-                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                        description: Image The image to use e.g. rhpam-<app>-rhel9,
                           this param is optional for custom image.
                         type: string
                       imageContext:
@@ -1518,7 +1518,7 @@ spec:
                           on the image before.
                         type: string
                       image:
-                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                        description: Image The image to use e.g. rhpam-<app>-rhel9,
                           this param is optional for custom image.
                         type: string
                       imageContext:
@@ -2284,7 +2284,7 @@ spec:
                           description: Server ID
                           type: string
                         image:
-                          description: Image The image to use e.g. rhpam-<app>-rhel8,
+                          description: Image The image to use e.g. rhpam-<app>-rhel9,
                             this param is optional for custom image.
                           type: string
                         imageContext:
@@ -2795,7 +2795,7 @@ spec:
                           type: object
                         type: array
                       image:
-                        description: Image The image to use e.g. rhpam-<app>-rhel8,
+                        description: Image The image to use e.g. rhpam-<app>-rhel9,
                           this param is optional for custom image.
                         type: string
                       imageContext:
@@ -3655,7 +3655,7 @@ spec:
                                 type: string
                             type: object
                           image:
-                            description: Image The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel9,
                               this param is optional for custom image.
                             type: string
                           imageContext:
@@ -4138,7 +4138,7 @@ spec:
                               type: object
                             type: array
                           image:
-                            description: Image The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel9,
                               this param is optional for custom image.
                             type: string
                           imageContext:
@@ -4533,7 +4533,7 @@ spec:
                               to be mounted on the image before.
                             type: string
                           image:
-                            description: Image The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel9,
                               this param is optional for custom image.
                             type: string
                           imageContext:
@@ -5320,7 +5320,7 @@ spec:
                               description: Server ID
                               type: string
                             image:
-                              description: Image The image to use e.g. rhpam-<app>-rhel8,
+                              description: Image The image to use e.g. rhpam-<app>-rhel9,
                                 this param is optional for custom image.
                               type: string
                             imageContext:
@@ -5847,7 +5847,7 @@ spec:
                               type: object
                             type: array
                           image:
-                            description: Image The image to use e.g. rhpam-<app>-rhel8,
+                            description: Image The image to use e.g. rhpam-<app>-rhel9,
                               this param is optional for custom image.
                             type: string
                           imageContext:

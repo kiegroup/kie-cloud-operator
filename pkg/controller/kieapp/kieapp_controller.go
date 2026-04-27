@@ -193,6 +193,10 @@ func (reconciler *Reconciler) checkStatus(ctx context.Context, instance, cachedI
 	var requeue bool
 	if hasUpdates {
 		requeue = status.SetProvisioning(instance)
+		// If status didn't change but we have updates, still requeue to monitor progress
+		if !requeue {
+			requeue = true
+		}
 	} else {
 		requeue = status.SetDeployed(instance)
 	}
@@ -250,6 +254,26 @@ func isNamespaced(resource client.Object) bool {
 
 func getComparator() compare.MapComparator {
 	resourceComparator := compare.DefaultComparator()
+	// Custom comparator for Deployments to avoid oscillation
+	deploymentType := reflect.TypeOf(appsv1.Deployment{})
+	defaultDeploymentComparator := resourceComparator.GetComparator(deploymentType)
+	resourceComparator.SetComparator(deploymentType, func(deployed client.Object, requested client.Object) bool {
+		dep1 := deployed.(*appsv1.Deployment).DeepCopy()
+		dep2 := requested.(*appsv1.Deployment).DeepCopy()
+
+		// Clear fields that are managed by Kubernetes and should not trigger updates
+		dep1.Status = appsv1.DeploymentStatus{}
+		dep2.Status = appsv1.DeploymentStatus{}
+		dep1.ObjectMeta.ResourceVersion = ""
+		dep2.ObjectMeta.ResourceVersion = ""
+		dep1.ObjectMeta.Generation = 0
+		dep2.ObjectMeta.Generation = 0
+		dep1.ObjectMeta.ManagedFields = nil
+		dep2.ObjectMeta.ManagedFields = nil
+
+		return defaultDeploymentComparator(dep1, dep2)
+	})
+
 	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
 	defaultDCComparator := resourceComparator.GetComparator(dcType)
 	resourceComparator.SetComparator(dcType, func(deployed client.Object, requested client.Object) bool {
