@@ -226,8 +226,8 @@ func main() {
 				Name:        "kieapps." + api.SchemeGroupVersion.Group,
 				Resources: []csvv1.APIResourceReference{
 					{
-						Kind:    "DeploymentConfig",
-						Version: oappsv1.GroupVersion.String(),
+						Kind:    "Deployment",
+						Version: appsv1.SchemeGroupVersion.String(),
 					},
 					{
 						Kind:    "StatefulSet",
