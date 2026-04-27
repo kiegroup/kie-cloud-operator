@@ -1434,6 +1434,21 @@ others:
               - update
               - watch
           - apiGroups:
+              - apps
+            resources:
+              - deployments
+              - replicasets
+              - statefulsets
+            verbs:
+              - create
+              - delete
+              - deletecollection
+              - get
+              - list
+              - patch
+              - update
+              - watch
+          - apiGroups:
               - apps.openshift.io
             resources:
               - deploymentconfigs
