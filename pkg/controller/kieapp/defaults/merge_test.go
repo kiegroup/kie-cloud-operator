@@ -195,9 +195,8 @@ func TestMergeServerDeploymentConfigsWithJms(t *testing.T) {
 	mergedDCs = mergeDeployments(mergedDCs, jmsEnv.Servers[0].Deployments)
 
 	assert.NotNil(t, mergedDCs, "Must have encountered an error, merged DCs should not be null")
-	// In Deployment migration, AMQ deployments are not created separately
-	// Expect 1 deployment (server with merged DB and JMS config)
-	assert.Len(t, mergedDCs, 1, "Expect 1 deployment descriptor but got %v", len(mergedDCs))
+	// JMS config creates 2 deployments: KIE server with merged DB and JMS config, plus AMQ broker
+	assert.Len(t, mergedDCs, 2, "Expect 2 deployment descriptors (KIE server + AMQ broker) but got %v", len(mergedDCs))
 
 	mergedEnvCount := len(mergedDCs[0].Spec.Template.Spec.Containers[0].Env)
 	assert.True(t, mergedEnvCount > baseEnvCount, "Merged DC should have a higher number of environment variables than the base server")

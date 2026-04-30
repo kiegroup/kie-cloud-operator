@@ -15,7 +15,7 @@ servers:
                       "/bin/bash",
                       "-c",
                       ">-
-                       replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get dc [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
+                       replicas=$(oc get deployment [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); until '[' $replicas -gt 0 ']'; do echo waiting for [[.KieName]]-postgresql; replicas=$(oc get deployment [[.KieName]]-postgresql -o=jsonpath='{.status.availableReplicas}'); sleep 2; done;",
                     ]
                   image: "[[$.Constants.OseCliImageURL]]"
                   imagePullPolicy: IfNotPresent

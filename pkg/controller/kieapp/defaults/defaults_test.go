@@ -1066,10 +1066,10 @@ func TestRhdmProdImmutableJMSEnvironment(t *testing.T) {
 	assert.Nil(t, err, "Error getting prod environment")
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
-	// JMS config still uses DeploymentConfigs in the YAML, but the system converts them to Deployments
-	// Currently only creates 1 deployment (KIE server), AMQ deployment is not being created
-	assert.Equal(t, 1, len(env.Servers[0].Deployments), "Should have 1 deployment")
+	// JMS config creates 2 deployments: KIE server and AMQ broker
+	assert.Equal(t, 2, len(env.Servers[0].Deployments), "Should have 2 deployments (KIE server + AMQ broker)")
 	assert.Equal(t, "test-jms-kieserver", env.Servers[0].Deployments[0].Name)
+	assert.Equal(t, "test-jms-kieserver-amq", env.Servers[0].Deployments[1].Name)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].Deployments[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")
