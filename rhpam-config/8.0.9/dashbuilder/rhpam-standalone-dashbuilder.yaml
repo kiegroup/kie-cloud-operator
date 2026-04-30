@@ -13,37 +13,41 @@ dashbuilder:
           requests:
             storage: 1Gi
   #[[end]]
-  deploymentConfigs:
+  deployments:
     - metadata:
         name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         labels:
           app: "[[.ApplicationName]]"
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+        #[[if not .Dashbuilder.OmitImageStream]]
+        annotations:
+          # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
+          image.openshift.io/triggers: |
+            [
+              {
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "[[.Dashbuilder.Image]]:[[.Dashbuilder.ImageTag]]",
+                  "namespace": "openshift"
+                },
+                "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.ApplicationName]]-[[.Dashbuilder.Name]]\")].image"
+              }
+            ]
+        #[[end]]
       spec:
         strategy:
           type: Recreate
-        triggers:
-          #[[if not .Dashbuilder.OmitImageStream]]
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
-              from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "[[.Dashbuilder.Image]]:[[.Dashbuilder.ImageTag]]"
-          #[[end]]
-          - type: ConfigChange
         replicas: [[.Dashbuilder.Replicas]]
         selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+          matchLabels:
+            deployment: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+            app: "[[.ApplicationName]]"
         template:
           metadata:
             name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
             labels:
-              deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+              deployment: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
               service: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
@@ -392,7 +396,8 @@ dashbuilder:
             port: 8443
             targetPort: 8443
         selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+          deployment: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
+          app: "[[.ApplicationName]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Dashbuilder.Name]]"
         labels:

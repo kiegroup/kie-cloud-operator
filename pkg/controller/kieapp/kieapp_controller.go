@@ -160,7 +160,7 @@ func (reconciler *Reconciler) Reconcile(ctx context.Context, request reconcile.R
 		reconciler.setFailedStatus(instance, api.UnknownReason, err)
 		return reconcile.Result{}, err
 	}
-	setDeploymentStatus(instance, deployed[reflect.TypeOf(oappsv1.DeploymentConfig{})])
+	setDeploymentStatus(instance, deployed[reflect.TypeOf(appsv1.Deployment{})])
 
 	hasUpdates, err := reconciler.reconcileResources(instance, requestedResources, deployed)
 	if err != nil {
@@ -193,6 +193,10 @@ func (reconciler *Reconciler) checkStatus(ctx context.Context, instance, cachedI
 	var requeue bool
 	if hasUpdates {
 		requeue = status.SetProvisioning(instance)
+		// If status didn't change but we have updates, still requeue to monitor progress
+		if !requeue {
+			requeue = true
+		}
 	} else {
 		requeue = status.SetDeployed(instance)
 	}
@@ -250,6 +254,26 @@ func isNamespaced(resource client.Object) bool {
 
 func getComparator() compare.MapComparator {
 	resourceComparator := compare.DefaultComparator()
+	// Custom comparator for Deployments to avoid oscillation
+	deploymentType := reflect.TypeOf(appsv1.Deployment{})
+	defaultDeploymentComparator := resourceComparator.GetComparator(deploymentType)
+	resourceComparator.SetComparator(deploymentType, func(deployed client.Object, requested client.Object) bool {
+		dep1 := deployed.(*appsv1.Deployment).DeepCopy()
+		dep2 := requested.(*appsv1.Deployment).DeepCopy()
+
+		// Clear fields that are managed by Kubernetes and should not trigger updates
+		dep1.Status = appsv1.DeploymentStatus{}
+		dep2.Status = appsv1.DeploymentStatus{}
+		dep1.ObjectMeta.ResourceVersion = ""
+		dep2.ObjectMeta.ResourceVersion = ""
+		dep1.ObjectMeta.Generation = 0
+		dep2.ObjectMeta.Generation = 0
+		dep1.ObjectMeta.ManagedFields = nil
+		dep2.ObjectMeta.ManagedFields = nil
+
+		return defaultDeploymentComparator(dep1, dep2)
+	})
+
 	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
 	defaultDCComparator := resourceComparator.GetComparator(dcType)
 	resourceComparator.SetComparator(dcType, func(deployed client.Object, requested client.Object) bool {
@@ -315,12 +339,12 @@ func getComparator() compare.MapComparator {
 }
 
 func setDeploymentStatus(instance *api.KieApp, resources []client.Object) {
-	var dcs []oappsv1.DeploymentConfig
+	var deps []appsv1.Deployment
 	for index := range resources {
-		dc := resources[index].(*oappsv1.DeploymentConfig)
-		dcs = append(dcs, *dc)
+		dep := resources[index].(*appsv1.Deployment)
+		deps = append(deps, *dep)
 	}
-	instance.Status.Deployments = olm.GetDeploymentConfigStatus(dcs)
+	instance.Status.Deployments = olm.GetDeploymentStatus(deps)
 }
 
 func (reconciler *Reconciler) verifyExternalReferences(cr *api.KieApp) error {
@@ -836,6 +860,27 @@ func (reconciler *Reconciler) getCustomObjectResources(object api.CustomObject, 
 
 		allObjects = append(allObjects, &object.DeploymentConfigs[index])
 	}
+	for index := range object.Deployments {
+		object.Deployments[index].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
+		// Clear resourceVersion to avoid "resourceVersion can not be set for Create requests" error
+		object.Deployments[index].SetResourceVersion("")
+		object.Deployments[index].Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsNonRoot: defaults.Pbool(true),
+		}
+
+		for indexC := range object.Deployments[index].Spec.Template.Spec.Containers {
+			object.Deployments[index].Spec.Template.Spec.Containers[indexC].SecurityContext = &corev1.SecurityContext{
+				RunAsNonRoot:             defaults.Pbool(true),
+				AllowPrivilegeEscalation: defaults.Pbool(false),
+				Privileged:               defaults.Pbool(false),
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
+				},
+			}
+		}
+
+		allObjects = append(allObjects, &object.Deployments[index])
+	}
 	for index := range object.Services {
 		object.Services[index].SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
 		allObjects = append(allObjects, &object.Services[index])
@@ -914,6 +959,8 @@ func (reconciler *Reconciler) createObj(object client.Object, err error) (reconc
 
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Object
+		// Clear resourceVersion to avoid "resourceVersion can not be set for Create requests" error
+		object.SetResourceVersion("")
 		log.Info("Creating")
 		err = reconciler.Service.Create(context.TODO(), object)
 		if err != nil {
@@ -1033,25 +1080,48 @@ func (reconciler *Reconciler) checkKieServerConfigMap(instance *api.KieApp, env 
 			for _, sDc := range server.DeploymentConfigs {
 				serverDcList[sDc.Name] = sDc.Spec.Replicas
 			}
+			// Also handle Deployments
+			for _, sDeploy := range server.Deployments {
+				serverDcList[sDeploy.Name] = *sDeploy.Spec.Replicas
+			}
 		}
 		// sort through ConfigMap list, focus on ones owned by kie servers whose replicas setting is zero
 		for _, cm := range cmList.Items {
 			for _, ownerRef := range cm.OwnerReferences {
-				if serverDcList[ownerRef.Name] == 0 && ownerRef.Kind == "DeploymentConfig" && cm.Labels[constants.KieServerCMLabel] != "" && cm.Labels[constants.KieServerCMLabel] != "DETACHED" {
-					dcObj := &oappsv1.DeploymentConfig{}
-					if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, dcObj); err != nil {
-						log.Error(err)
-					}
-					// if server DC replicas equal zero, execute DELETE against console
-					if dcObj.Status.AvailableReplicas == 0 {
-						cmObj := &corev1.ConfigMap{}
-						if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, cmObj); err != nil {
+				if serverDcList[ownerRef.Name] == 0 && (ownerRef.Kind == "DeploymentConfig" || ownerRef.Kind == "Deployment") && cm.Labels[constants.KieServerCMLabel] != "" && cm.Labels[constants.KieServerCMLabel] != "DETACHED" {
+					if ownerRef.Kind == "DeploymentConfig" {
+						dcObj := &oappsv1.DeploymentConfig{}
+						if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, dcObj); err != nil {
 							log.Error(err)
 						}
-						cmObj.Labels[constants.KieServerCMLabel] = "DETACHED"
-						log.Infof("%s replicas set to zero so relabeling associated ConfigMap as DETACHED", cm.Name)
-						if _, err = reconciler.UpdateObj(cmObj); err != nil {
+						// if server DC replicas equal zero, execute DELETE against console
+						if dcObj.Status.AvailableReplicas == 0 {
+							cmObj := &corev1.ConfigMap{}
+							if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, cmObj); err != nil {
+								log.Error(err)
+							}
+							cmObj.Labels[constants.KieServerCMLabel] = "DETACHED"
+							log.Infof("%s replicas set to zero so relabeling associated ConfigMap as DETACHED", cm.Name)
+							if _, err = reconciler.UpdateObj(cmObj); err != nil {
+								log.Error(err)
+							}
+						}
+					} else if ownerRef.Kind == "Deployment" {
+						deployObj := &appsv1.Deployment{}
+						if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, deployObj); err != nil {
 							log.Error(err)
+						}
+						// if server Deployment replicas equal zero, execute DELETE against console
+						if deployObj.Status.AvailableReplicas == 0 {
+							cmObj := &corev1.ConfigMap{}
+							if err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: ownerRef.Name, Namespace: cm.Namespace}, cmObj); err != nil {
+								log.Error(err)
+							}
+							cmObj.Labels[constants.KieServerCMLabel] = "DETACHED"
+							log.Infof("%s replicas set to zero so relabeling associated ConfigMap as DETACHED", cm.Name)
+							if _, err = reconciler.UpdateObj(cmObj); err != nil {
+								log.Error(err)
+							}
 						}
 					}
 				}
@@ -1066,6 +1136,7 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	reader := read.New(reconciler.Service).WithNamespace(instance.Namespace).WithOwnerObject(instance)
 	resourceMap, err := reader.ListAll(
 		&oappsv1.DeploymentConfigList{},
+		&appsv1.DeploymentList{},
 		&corev1.PersistentVolumeClaimList{},
 		&corev1.ServiceAccountList{},
 		&rbacv1.RoleList{},
@@ -1093,6 +1164,28 @@ func (reconciler *Reconciler) getDeployedResources(instance *api.KieApp) (map[re
 	for _, res := range dcs {
 		dc := res.(*oappsv1.DeploymentConfig)
 		for _, volume := range dc.Spec.Template.Spec.Volumes {
+			if volume.Secret != nil {
+				name := volume.Secret.SecretName
+				secret := &corev1.Secret{}
+				err := reconciler.Service.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: instance.GetNamespace()}, secret)
+				if err != nil && !errors.IsNotFound(err) {
+					log.Warn("Failed to load Secret", err)
+					return nil, err
+				}
+				for _, ownerRef := range secret.GetOwnerReferences() {
+					if ownerRef.UID == instance.UID {
+						secrets = append(secrets, secret)
+						break
+					}
+				}
+			}
+		}
+	}
+	// Also load secrets from Deployments
+	deps := resourceMap[reflect.TypeOf(appsv1.Deployment{})]
+	for _, res := range deps {
+		dep := res.(*appsv1.Deployment)
+		for _, volume := range dep.Spec.Template.Spec.Volumes {
 			if volume.Secret != nil {
 				name := volume.Secret.SecretName
 				secret := &corev1.Secret{}

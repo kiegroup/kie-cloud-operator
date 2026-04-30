@@ -1,35 +1,39 @@
 console:
-  deploymentConfigs:
+  deployments:
     - metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
           app: "[[.ApplicationName]]"
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-[[.Console.Name]]"
+        #[[if not .Console.OmitImageStream]]
+        annotations:
+          # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
+          image.openshift.io/triggers: |
+            [
+              {
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "[[.Console.Image]]:[[.Console.ImageTag]]",
+                  "namespace": "openshift"
+                },
+                "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.ApplicationName]]-[[.Console.Name]]\")].image"
+              }
+            ]
+        #[[end]]
       spec:
         strategy:
           type: Recreate
-        triggers:
-          #[[if not .Console.OmitImageStream]]
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "[[.ApplicationName]]-[[.Console.Name]]"
-              from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "[[.Console.Image]]:[[.Console.ImageTag]]"
-          #[[end]]
-          - type: ConfigChange
         replicas: [[.Console.Replicas]]
         selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
+          matchLabels:
+            deployment: "[[.ApplicationName]]-[[.Console.Name]]"
+            app: "[[.ApplicationName]]"
         template:
           metadata:
             name: "[[.ApplicationName]]-[[.Console.Name]]"
             labels:
-              deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
+              deployment: "[[.ApplicationName]]-[[.Console.Name]]"
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
               service: "[[.ApplicationName]]-[[.Console.Name]]"
@@ -449,7 +453,8 @@ console:
             port: 8443
             targetPort: 8443
         selector:
-          deploymentConfig: "[[.ApplicationName]]-[[.Console.Name]]"
+          deployment: "[[.ApplicationName]]-[[.Console.Name]]"
+          app: "[[.ApplicationName]]"
       metadata:
         name: "[[.ApplicationName]]-[[.Console.Name]]"
         labels:
@@ -518,42 +523,46 @@ smartRouter:
         resources:
           requests:
             storage: "64Mi"
-  deploymentConfigs:
+  deployments:
     - metadata:
         name: "[[.ApplicationName]]-smartrouter"
         labels:
           app: "[[.ApplicationName]]"
           application: "[[.ApplicationName]]"
           service: "[[.ApplicationName]]-smartrouter"
+        #[[if not .SmartRouter.OmitImageStream]]
+        annotations:
+          # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
+          image.openshift.io/triggers: |
+            [
+              {
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "[[.SmartRouter.Image]]:[[.SmartRouter.ImageTag]]",
+                  "namespace": "openshift"
+                },
+                "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.ApplicationName]]-smartrouter\")].image"
+              }
+            ]
+        #[[end]]
       spec:
         strategy:
-          rollingParams:
+          type: RollingUpdate
+          rollingUpdate:
             maxSurge: 100%
             maxUnavailable: 0
-          type: Rolling
-        triggers:
-          #[[if not .SmartRouter.OmitImageStream]]
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "[[.ApplicationName]]-smartrouter"
-              from:
-                kind: ImageStreamTag
-                namespace: "openshift"
-                name: "[[.SmartRouter.Image]]:[[.SmartRouter.ImageTag]]"
-          #[[end]]
-          - type: ConfigChange
         replicas: [[.SmartRouter.Replicas]]
         selector:
-          deploymentConfig: "[[.ApplicationName]]-smartrouter"
+          matchLabels:
+            deployment: "[[.ApplicationName]]-smartrouter"
+            app: "[[.ApplicationName]]"
         template:
           metadata:
             name: "[[.ApplicationName]]-smartrouter"
             labels:
               app: "[[.ApplicationName]]"
               application: "[[.ApplicationName]]"
-              deploymentConfig: "[[.ApplicationName]]-smartrouter"
+              deployment: "[[.ApplicationName]]-smartrouter"
               service: "[[.ApplicationName]]-smartrouter"
           spec:
             serviceAccountName: "[[$.ApplicationName]]-[[$.Constants.Product]]svc"
@@ -713,7 +722,8 @@ smartRouter:
             port: 9443
             targetPort: 9443
         selector:
-          deploymentConfig: "[[.ApplicationName]]-smartrouter"
+          deployment: "[[.ApplicationName]]-smartrouter"
+          app: "[[.ApplicationName]]"
       metadata:
         name: "[[.ApplicationName]]-smartrouter"
         labels:
@@ -770,7 +780,7 @@ servers:
   ## RANGE BEGINS
   #[[ range $index, $Map := .Servers ]]
   ## KIE server deployment config BEGIN
-  - deploymentConfigs:
+  - deployments:
       - metadata:
           name: "[[.KieName]]"
           labels:
@@ -778,29 +788,33 @@ servers:
             application: "[[$.ApplicationName]]"
             service: "[[.KieName]]"
             services.server.kie.org/kie-server-id: "[[.KieServerID]]"
+          #[[if not .OmitImageStream]]
+          annotations:
+            # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
+            image.openshift.io/triggers: |
+              [
+                {
+                  "from": {
+                    "kind": "[[.From.Kind]]",
+                    "name": "[[.From.Name]]",
+                    "namespace": "[[.From.Namespace]]"
+                  },
+                  "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.KieName]]\")].image"
+                }
+              ]
+          #[[end]]
         spec:
           revisionHistoryLimit: 10
           strategy:
-            rollingParams:
+            type: RollingUpdate
+            rollingUpdate:
               maxSurge: 100%
               maxUnavailable: 0
-            type: Rolling
-          triggers:
-            #[[if not .OmitImageStream]]
-            - type: ImageChange
-              imageChangeParams:
-                automatic: true
-                containerNames:
-                  - "[[.KieName]]"
-                from:
-                  kind: "[[.From.Kind]]"
-                  namespace: "[[.From.Namespace]]"
-                  name: "[[.From.Name]]"
-            #[[end]]
-            - type: ConfigChange
           replicas: [[.Replicas]]
           selector:
-            deploymentConfig: "[[.KieName]]"
+            matchLabels:
+              deployment: "[[.KieName]]"
+              app: "[[$.ApplicationName]]"
           template:
             metadata:
               name: "[[.KieName]]"
@@ -808,7 +822,7 @@ servers:
                 app: "[[$.ApplicationName]]"
                 application: "[[$.ApplicationName]]"
                 service: "[[.KieName]]"
-                deploymentConfig: "[[.KieName]]"
+                deployment: "[[.KieName]]"
                 services.server.kie.org/kie-server-id: "[[.KieServerID]]"
                 cluster: "jgrp.k8s.[[.KieName]]"
             spec:
@@ -1335,7 +1349,8 @@ servers:
               port: 8443
               targetPort: 8443
           selector:
-            deploymentConfig: "[[.KieName]]"
+            deployment: "[[.KieName]]"
+            app: "[[$.ApplicationName]]"
           sessionAffinity: ClientIP
           sessionAffinityConfig:
             clientIP:
@@ -1409,6 +1424,21 @@ others:
               - configmaps
               - serviceaccounts
               - pods
+            verbs:
+              - create
+              - delete
+              - deletecollection
+              - get
+              - list
+              - patch
+              - update
+              - watch
+          - apiGroups:
+              - apps
+            resources:
+              - deployments
+              - replicasets
+              - statefulsets
             verbs:
               - create
               - delete
