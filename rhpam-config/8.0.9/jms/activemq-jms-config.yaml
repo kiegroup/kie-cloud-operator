@@ -3,7 +3,7 @@ servers:
 ## RANGE BEGINS
 #[[ range $index, $Map := .Servers ]]
 ## KIE server deployment config BEGIN
-  - deploymentConfigs:
+  - deployments:
     - metadata:
         name: "[[.KieName]]"
       spec:
@@ -58,33 +58,35 @@ servers:
           service: "[[.KieName]]-amq"
         annotations:
           template.alpha.openshift.io/wait-for-ready: "true"
+          # OpenShift ImageStream trigger - replacement for removed DeploymentConfig ImageChange trigger
+          image.openshift.io/triggers: |
+            [
+              {
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]",
+                  "namespace": "openshift"
+                },
+                "fieldPath": "spec.template.spec.containers[?(@.name==\"[[.KieName]]-amq\")].image"
+              }
+            ]
       spec:
         strategy:
-          rollingParams:
+          rollingUpdate:
             maxSurge: 100%
             maxUnavailable: 0
-          type: Rolling
-        triggers:
-          - type: ImageChange
-            imageChangeParams:
-              automatic: true
-              containerNames:
-                - "[[.KieName]]-amq"
-              from:
-                kind: ImageStreamTag
-                name: "[[$.Constants.BrokerImage]]:[[$.Constants.BrokerImageTag]]"
-                namespace: "openshift"
-          - type: ConfigChange
+          type: RollingUpdate
         replicas: 1
         selector:
-          deploymentConfig: "[[.KieName]]-amq"
+          matchLabels:
+            deployment: "[[.KieName]]-amq"
         template:
           metadata:
             name: "[[.KieName]]-amq"
             labels:
               app: "[[$.ApplicationName]]"
               application: "[[$.ApplicationName]]"
-              deploymentConfig: "[[.KieName]]-amq"
+              deployment: "[[.KieName]]-amq"
               service: "[[.KieName]]-amq"
           spec:
             terminationGracePeriodSeconds: 60
@@ -173,7 +175,7 @@ servers:
               port: 8161
               targetPort: 8161
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-jolokia"
           labels:
@@ -188,7 +190,7 @@ servers:
               port: 5672
               targetPort: 5672
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-amqp"
           labels:
@@ -203,7 +205,7 @@ servers:
               port: 5671
               targetPort: 5671
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-amqp-ssl"
           labels:
@@ -218,7 +220,7 @@ servers:
               port: 1883
               targetPort: 1883
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-mqtt"
           labels:
@@ -233,7 +235,7 @@ servers:
               port: 8883
               targetPort: 8883
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-mqtt-ssl"
           labels:
@@ -248,7 +250,7 @@ servers:
               port: 61613
               targetPort: 61613
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-stomp"
           labels:
@@ -263,7 +265,7 @@ servers:
               port: 61612
               targetPort: 61612
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-stomp-ssl"
           labels:
@@ -278,7 +280,7 @@ servers:
               port: 61616
               targetPort: 61616
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-tcp"
           labels:
@@ -296,7 +298,7 @@ servers:
               port: 61617
               targetPort: 61617
           selector:
-            deploymentConfig: "[[.KieName]]-amq"
+            deployment: "[[.KieName]]-amq"
         metadata:
           name: "[[.KieName]]-amq-tcp-ssl"
           labels:
