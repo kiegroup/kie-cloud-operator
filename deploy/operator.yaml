@@ -58,9 +58,9 @@ spec:
         - name: RELATED_IMAGE_POSTGRESQL_PROXY_IMAGE_8.0.9
           value: registry.redhat.io/rhscl/postgresql-13-rhel7:latest
         - name: RELATED_IMAGE_DATAGRID_IMAGE_8.0.9
-          value: registry.redhat.io/datagrid/datagrid-8-rhel9:1.1
+          value: registry.redhat.io/datagrid/datagrid-8-rhel9:1.5
         - name: RELATED_IMAGE_BROKER_IMAGE_8.0.9
-          value: registry.redhat.io/amq7/amq-broker-rhel9:7.9
+          value: registry.redhat.io/amq7/amq-broker-rhel9:7.13
         - name: RELATED_IMAGE_PAM_KIESERVER_IMAGE_8.0.8
           value: registry.redhat.io/ibm-bamoe/bamoe-kieserver-rhel8:8.0.8
         - name: RELATED_IMAGE_PAM_CONTROLLER_IMAGE_8.0.8
