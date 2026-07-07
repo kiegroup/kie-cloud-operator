@@ -726,6 +726,7 @@ type CustomObject struct {
 	ConfigMaps             []corev1.ConfigMap             `json:"configMaps,omitempty"`
 }
 
+// +k8s:deepcopy-gen=false
 type OpenShiftObject interface {
 	client.Object
 }

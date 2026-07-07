@@ -639,7 +639,7 @@ func TestRhdmProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, rhpamkieServerImage+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.True(t, env.SmartRouter.Omit, "SmarterRouter should be omitted")
 	assert.True(t, env.Console.Omit, "Decision Central should be omitted")
 	assert.Nil(t, env.Console.PersistentVolumeClaims)
@@ -679,7 +679,7 @@ func TestRhdmProdImmutableEnvironmentWithReposPersistedWithoutStorageClass(t *te
 
 	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
 
-	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, rhpamkieServerImage+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
 }
 
@@ -708,7 +708,7 @@ func TestRhdmProdImmutableEnvironmentWithReposPersistedWithStorageClassAndCustom
 
 	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
 
-	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, rhpamkieServerImage+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
 	runCommonAssertsForKieServerPersistentStoragePVCTests(t, cr, env, "10Gi", "150Mi")
@@ -737,7 +737,7 @@ func TestRhpamProdImmutableEnvironmentWithReposPersistedWithStorageClassAndDefau
 
 	runCommonAssertsForKieServerPersistentStorageVolumeMounts(t, cr, env)
 
-	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, rhpamkieServerImage+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 
 	runCommonAssertsForKieServerPersistentStorageTests(t, cr, env)
 	runCommonAssertsForKieServerPersistentStoragePVCTests(t, cr, env, "1Gi", "10Mi")
@@ -1087,7 +1087,7 @@ func TestRhpamProdImmutableEnvironment(t *testing.T) {
 	}
 	env, err := GetEnvironment(cr, test.MockService())
 	assert.Nil(t, err, "Error getting prod environment")
-	assert.Equal(t, fmt.Sprintf(rhpamkieServerImage+":"+cr.Status.Applied.Version), env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, rhpamkieServerImage+":"+cr.Status.Applied.Version, env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0].Image)
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "WORKBENCH_SERVICE_NAME"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_PROTOCOL"), "Variable should not exist")
 	assert.Equal(t, "", getEnvVariable(env.Servers[0].DeploymentConfigs[0].Spec.Template.Spec.Containers[0], "KIE_SERVER_CONTROLLER_SERVICE"), "Variable should not exist")

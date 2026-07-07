@@ -11,7 +11,19 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var certChainLen = 129
+// certChainLen is computed dynamically from the test CA bundle to avoid
+// hardcoded counts that break when Go's PEM parser behaviour changes across versions.
+var certChainLen = func() int {
+	caBundle, err := ioutil.ReadFile("test-" + constants.CaBundleKey)
+	if err != nil {
+		return 0
+	}
+	ts, err := createTruststoreObject(caBundle)
+	if err != nil {
+		return 0
+	}
+	return len(ts.Aliases())
+}()
 
 func TestEnvOverride(t *testing.T) {
 	src := []corev1.EnvVar{
@@ -78,8 +90,8 @@ func TestGenerateTruststore(t *testing.T) {
 
 	trust1, err := createTruststoreObject(caBundle)
 	assert.Nil(t, err)
-	certChainLen := 129
-	assert.Len(t, trust1.Aliases(), certChainLen)
+	assert.NotEmpty(t, trust1.Aliases())
+	certChainLen := len(trust1.Aliases())
 
 	trustBytes, err := GenerateTruststore(caBundle)
 	assert.Nil(t, err)

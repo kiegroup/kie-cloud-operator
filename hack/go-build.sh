@@ -58,7 +58,10 @@ if [[ -z ${CI} || -n ${CEKIT_OSBS_BUILD} ]]; then
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui
         echo
 
-        operator-sdk build --go-build-args -mod=vendor ${REGISTRY}/${IMAGE}:${PRODUCT_VERSION}
+        # Build operator binary (replaces: operator-sdk build which is incompatible with Go 1.18+)
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/kie-cloud-operator ./cmd/manager
+        # Build container image
+        ${CFLAGS:-docker} build -t ${REGISTRY}/${IMAGE}:${PRODUCT_VERSION} -f build/Dockerfile .
     fi
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -mod=vendor -a -o build/_output/bin/console-cr-form ./cmd/ui
