@@ -298,6 +298,13 @@ func (in *CustomObject) DeepCopyInto(out *CustomObject) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Deployments != nil {
+		in, out := &in.Deployments, &out.Deployments
+		*out = make([]apiappsv1.Deployment, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.StatefulSets != nil {
 		in, out := &in.StatefulSets, &out.StatefulSets
 		*out = make([]apiappsv1.StatefulSet, len(*in))
